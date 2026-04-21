@@ -45,5 +45,72 @@ Desarrollado originalmente para el estudio académico de la prensa histórica (P
 
 **Software 100% Libre** - Licenciado bajo **GPL v3**. Código abierto y extensible para la comunidad académica.
 
+## 📜 Historial de Versiones (Changelog)
+
+hesiOX ha evolucionado a través de múltiples fases de innovación técnica y académica. A continuación se resumen los hitos principales:
+
+<details>
+<summary><b>[5.0.0] - Gestión Dinámica de Tipos de Ubicación (MAJOR)</b></summary>
+
+- **Gestión sin código**: Sistema completo para añadir y editar tipos geográficos desde la web.
+- **Base de datos centralizada**: Nueva tabla `tipo_ubicacion` con más de 100 tipos predefinidos.
+- **Categorización**: Tipos organizados en 7 categorías (Ciudades, Vías, Edificios, Hidrografía, etc.).
+- **API RESTful**: Endpoints completos para el mantenimiento de la taxonomía geográfica.
+</details>
+
+<details>
+<summary><b>[4.1.0] - Validación Avanzada y Colaboración Multi-Usuario</b></summary>
+
+- **Filtro Lexicográfico**: Eliminación de falsos positivos en geocodificación (gentilicios vs ubicaciones).
+- **Colaboración**: Sistema de proyectos compartidos con roles de Propietario y Colaborador.
+- **Sistema de Bloqueos (Locks)**: Prevención de conflictos de edición simultánea (timeout de 5 min).
+- **Seguridad**: Validación CSRF robusta en todas las operaciones.
+</details>
+
+<details>
+<summary><b>[2.8.0] - Capas Externas GIS y Estabilidad</b></summary>
+
+- **Soporte Multi-Formato**: Ingesta de archivos GeoJSON, KML y Shapefile (ZIP).
+- **Conversión Automática**: Integración con Geopandas para normalización GIS.
+- **Interrogación de Atributos**: Consulta de metadatos internos mediante popups.
+- **Fix Críticos**: Resolución de errores 500 y optimización de lógica de limpieza de nombres.
+</details>
+
+<details>
+<summary><b>[2.7.5] - Digitalización Vectorial GIS (INNOVACIÓN MAYOR)</b></summary>
+
+- **Digitalización Profesional**: Primera implementación DH open-source de digitalización vectorial (puntos, líneas, polígonos).
+- **Cálculos Geométricos**: Cálculo automático de longitudes (km) y áreas (hectáreas) usando algoritmos Haversine y Shoelace.
+- **Panel de Control Sirio**: Interfaz profesional para gestión de capas simultáneas.
+- **Exportación GeoJSON**: Cumplimiento con el estándar RFC 7946 para interoperabilidad con QGIS y ArcGIS.
+</details>
+
+<details>
+<summary><b>[2.7.0] - IA Advanced y Geosemántica</b></summary>
+
+- **Topografía Semántica Híbrida**: Visualización 3D combinada con curvas de nivel.
+- **Elipse de Desviación Estándar (SDE)**: Análisis de dispersión y orientación del corpus.
+- **IA Advanced Button**: Acceso directo al motor de precisión spaCy + Gemini.
+- **Automatización de Referencias**: Detección contextual del tipo de recurso (Prensa vs Libro).
+</details>
+
+<details>
+<summary><b>[1.5.0] - Auditoría TFM y Perfiles de Análisis</b></summary>
+
+- **Perfiles de Stopwords**: Tres niveles de análisis (Contenido, Estilométrico, Mixto).
+- **Auditoría Técnica**: Verificación de calidad para presentación académica (32,500+ líneas de código).
+- **Branding Sirius**: Rediseño de visualizaciones con paleta corporativa y navegación compacta.
+- **Limpieza de Proyecto**: Eliminación masiva de archivos obsoletos.
+</details>
+
+<details>
+<summary><b>[1.0.0] - Lanzamiento Inicial</b></summary>
+
+- **Core Multi-Proyecto**: Aislamiento de datos y gestión de referencias bibliográficas.
+- **Motor OCR**: Integración inicial con Tesseract.js.
+- **Base SQL**: Migración a PostgreSQL con relaciones en cascada.
+- **Visualización**: Primeras implementaciones de nubes de palabras y mapas Leaflet.
+</details>
+
 ---
 Desarrollado para el **LINHD-UNED** y la comunidad de Humanidades Digitales.
