@@ -222,10 +222,10 @@
         <div class="profile-card animate__animated animate__fadeIn">
             <div class="profile-header">
                 <div class="profile-avatar">
-                    {{ current_user.username[0].upper() }}
+                    {{ current_user.nombre[0].upper() }}
                 </div>
                 <div class="profile-info">
-                    <h2>{{ current_user.username }}</h2>
+                    <h2>{{ current_user.nombre }}</h2>
                     <p>{{ current_user.email }}</p>
                 </div>
             </div>
@@ -240,7 +240,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label text-light-adapt">Nombre de Usuario</label>
-                            <input type="text" class="form-control form-control-sirio" value="{{ current_user.username }}" readonly>
+                            <input type="text" class="form-control form-control-sirio" value="{{ current_user.nombre }}" readonly>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-light-adapt">Email</label>
