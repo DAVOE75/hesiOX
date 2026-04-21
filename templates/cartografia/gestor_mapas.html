@@ -1,0 +1,872 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Gestor de Mapas Históricos — Proyecto Sirio{% endblock %}
+{% block page_title %}Mapas Históricos{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Cartografía / Gestor de Mapas</span>
+{% endblock %}
+
+{% block top_actions %}
+<button class="btn-sirio btn-sirio-success" data-bs-toggle="modal" data-bs-target="#modalUploadMapa">
+    <i class="fa-solid fa-plus me-2"></i>Subir Nuevo Mapa
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Neutral Square Action Buttons Styling */
+    .btn-action {
+        /* border-radius: 0 !important; */
+        /* Unificado con estilo Sirio */
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 12px;
+        border: 1px solid var(--ds-border-light, #444);
+        box-shadow: none;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        background: var(--ds-bg-element, #2b2b2b);
+        color: #e0e0e0;
+        margin: 0 !important;
+        /* Managed by gap */
+    }
+
+    .btn-action:hover {
+        background: var(--ds-bg-hover, #333);
+        color: #fff;
+        border-color: var(--ds-accent-primary, #ff9800);
+        transform: none;
+        /* No lifting effect per neutral vibe */
+    }
+
+    /* All buttons neutral by default - "No colorines" */
+    .btn-alinear,
+    .btn-editar,
+    .btn-recortar,
+    .btn-desactivar,
+    .btn-activar,
+    .btn-borrar {
+        background: var(--ds-bg-element, #2b2b2b);
+        color: #e0e0e0;
+        border-color: var(--ds-border-light, #444);
+    }
+
+    /* Specific hover subtle accents instead of full colored backgrounds */
+    .btn-alinear:hover {
+        border-color: #2196f3;
+        color: #2196f3;
+    }
+
+    .btn-editar:hover {
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+
+    .btn-recortar:hover {
+        border-color: #9c27b0;
+        color: #9c27b0;
+    }
+
+    .btn-desactivar:hover {
+        border-color: #ff5722;
+        color: #ff5722;
+    }
+
+    .btn-activar:hover {
+        border-color: #4caf50;
+        color: #4caf50;
+    }
+
+    .btn-borrar:hover {
+        border-color: #f44336;
+        color: #f44336;
+    }
+
+    /* Light Mode Neutral Overrides */
+    [data-theme="light"] .btn-action {
+        background: #f0f0f0;
+        color: #333;
+        border-color: #ccc;
+    }
+
+    [data-theme="light"] .btn-action:hover {
+        background: #e0e0e0;
+        color: #000;
+        border-color: var(--ds-accent-primary, #294a60);
+    }
+
+    /* Gap between buttons */
+    .btn-action-container {
+        display: flex;
+        gap: 5px !important;
+        /* 5px separation as requested */
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    /* Premium Table Interaction */
+    .table-sirio tbody tr {
+        transition: background-color 0.2s;
+    }
+
+    .table-sirio tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    [data-theme="light"] .table-sirio tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02) !important;
+    }
+
+    /* Description Toggle Styles */
+    .desc-truncate {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .desc-expanded {
+        display: block;
+        max-height: none;
+    }
+
+    .btn-read-more {
+        cursor: pointer;
+        color: var(--ds-accent-primary, #ff9800);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 0.7rem;
+    }
+
+    .btn-read-more:hover {
+        text-decoration: underline;
+        opacity: 0.9;
+    }
+
+    /* Purple/Morado color utilities */
+    .bg-purple {
+        background-color: #7f005f !important;
+    }
+
+    .text-purple {
+        color: #7f005f !important;
+    }
+
+    .border-purple {
+        border-color: #7f005f !important;
+    }
+
+    /* === MODAL CROP SIDEBAR AWARE === */
+    @media (min-width: 992px) {
+        .modal-dialog.modal-sidebar-aware {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: var(--ds-sidebar-width, 260px);
+            width: auto;
+            /* Override bootstrap width */
+            margin: 0;
+            max-width: none;
+            height: 100%;
+            transform: none !important;
+            transition: left 0.3s ease;
+        }
+
+        /* If body has collapsed class */
+        body.sidebar-collapsed .modal-dialog.modal-sidebar-aware {
+            left: var(--ds-sidebar-width-collapsed, 65px);
+        }
+    }
+
+    /* Mobile fallback: fullscreen */
+    @media (max-width: 991.98px) {
+        .modal-dialog.modal-sidebar-aware {
+            margin: 0;
+            width: 100%;
+            max-width: none;
+            height: 100%;
+        }
+    }
+
+    .modal-dialog.modal-sidebar-aware .modal-content {
+        height: 100%;
+        border-radius: 0;
+        border: none;
+    }
+
+    /* Ghost Crosshair */
+    .ghost-crosshair {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.3;
+    }
+
+    .ghost-crosshair::before {
+        content: '';
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .ghost-crosshair::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Guía de Uso del Gestor de Mapas -->
+    <div class="card-panel card-panel-sirio-info mb-4">
+        <div class="card-header-panel">
+            <i class="fa-solid fa-circle-question me-2"></i>
+            <span>Guía Rápida: Flujo de Trabajo Cartográfico</span>
+        </div>
+        <div class="card-body-panel p-4">
+            <!-- Fundamentación Metodológica para HD -->
+            <div class="mb-4 pb-3 border-bottom border-light border-opacity-10">
+                <h6 class="text-accent small text-uppercase fw-bold mb-2" style="letter-spacing: 1px;">
+                    <i class="fa-solid fa-brain me-2"></i>Perspectiva de Humanidades Digitales
+                </h6>
+                <p class="text-secondary small mb-0" style="line-height: 1.6; color: var(--ds-text-muted) !important;">
+                    Esta herramienta permite al investigador trascender la cartografía estática, facilitando un
+                    <strong class="text-light">análisis geoespacial diacrónico</strong>.
+                    Al superponer planos históricos sobre coordenadas actuales, es posible situar el discurso
+                    periodístico del corpus en su
+                    <strong class="text-light">contexto territorial original</strong>, revelando cómo la morfología
+                    urbana y los límites
+                    geográficos de la época
+                    influyeron en la narrativa de los textos. Esta integración es clave para una hermenéutica profunda
+                    que conecte la
+                    palabra escrita con la realidad espacial de su tiempo.
+                </p>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="step-number-sirio">1</div>
+                        <div>
+                            <h6 class="text-accent mb-1"
+                                style="font-size: 0.85rem; letter-spacing: 1px; font-weight: 700;">SUBIDA</h6>
+                            <p class="text-secondary small mb-0 opacity-75"
+                                style="color: var(--ds-text-muted) !important;">Cargue su imagen (JPG/PNG). Se
+                                recomienda
+                                alta resolución para el motor <strong>Auto-IA</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="step-number-sirio">2</div>
+                        <div>
+                            <h6 class="text-accent mb-1"
+                                style="font-size: 0.85rem; letter-spacing: 1px; font-weight: 700;">RECORTE LIMPIO</h6>
+                            <p class="text-secondary small mb-0 opacity-75"
+                                style="color: var(--ds-text-muted) !important;">Elimine márgenes y zonas irrelevantes
+                                para reducir el <strong>ruido visual</strong>
+                                y optimizar el consumo de <strong>RAM</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="step-number-sirio">3</div>
+                        <div>
+                            <h6 class="text-accent mb-1"
+                                style="font-size: 0.85rem; letter-spacing: 1px; font-weight: 700;">GEORREFERENCIA PRO
+                            </h6>
+                            <p class="text-secondary small mb-0 opacity-75"
+                                style="color: var(--ds-text-muted) !important;">Use <strong>Auto-IA</strong> para
+                                detectar
+                                puntos o marque manualmente. Valide con <strong>RMSE Gauge</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="step-number-sirio">4</div>
+                        <div>
+                            <h6 class="text-accent mb-1"
+                                style="font-size: 0.85rem; letter-spacing: 1px; font-weight: 700;">SUPERPOSICIÓN</h6>
+                            <p class="text-secondary small mb-0 opacity-75"
+                                style="color: var(--ds-text-muted) !important;">Active su mapa en <strong>Mapas del
+                                    Corpus</strong>. Use el <strong>Swipe</strong> para comparar con el terreno actual.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RMSE Explanation Block -->
+            <div class="mt-4 pt-3 border-top border-light border-opacity-10 bg-dark bg-opacity-25 rounded p-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="text-warning mt-1"><i class="fa-solid fa-circle-info fa-lg"></i></div>
+                    <div>
+                        <h6 class="text-accent mb-2 small text-uppercase fw-bold" style="letter-spacing: 1px;">
+                            Interpretación del Error: RMSE (Root Mean Square Error)
+                        </h6>
+                        <p class="text-secondary small mb-3"
+                            style="color: var(--ds-text-muted) !important; line-height: 1.6;">
+                            El <strong>RMSE</strong> es el indicador crítico de la precisión geométrica de tu
+                            georreferenciación. A diferencia del error medio simple, el RMSE penaliza con mayor fuerza
+                            las desviaciones grandes, ofreciendo una medida real de la distorsión del mapa. En términos
+                            prácticos, nos indica lo cerca que están, en promedio, tus puntos de control de su ubicación
+                            real. Para lograr esta precisión, empleamos una transformación <strong>Piecewise
+                                Affine</strong> (por tramos), que corrige las deformaciones locales del papel o del
+                            escaneado sin comprometer la integridad global del documento histórico.
+                        </p>
+
+                        <h6 class="text-accent xsmall text-uppercase fw-bold mt-3 mb-2" style="letter-spacing: 1px;">
+                            RANGOS DE ACEPTACIÓN CIENTÍFICA
+                        </h6>
+                        <div class="d-flex w-100 flex-wrap flex-md-nowrap gap-0 border-start border-warning ps-3">
+                            <div class="flex-fill p-2 border-end border-secondary border-opacity-25">
+                                <span class="d-block text-secondary xsmall text-uppercase fw-bold mb-1"
+                                    style="color: #ff9800 !important;">NIVEL PRO (PUBLICABLE)</span>
+                                <strong class="text-success fs-4 d-block mb-1"><i
+                                        class="fa-solid fa-crosshairs me-2"></i>1 - 3 metros</strong>
+                                <div class="small text-muted opacity-75" style="line-height: 1.4;">
+                                    Estándar para cartografía del Siglo XIX y planos urbanos detallados. Permite
+                                    análisis espaciales rigurosos y superposiciones precisas con mapas actuales a
+                                    escalas grandes (1:10.000 o mayores). Ideal para estudios de microhistoria urbana o
+                                    análisis de cambios territoriales finos.
+                                </div>
+                            </div>
+                            <div class="flex-fill p-2 border-end border-secondary border-opacity-25">
+                                <span class="d-block text-secondary xsmall text-uppercase fw-bold mb-1"
+                                    style="color: #ff9800 !important;">NIVEL ESTÁNDAR</span>
+                                <strong class="text-secondary fs-4 d-block mb-1" style="color: #cfd8dc !important;">3 -
+                                    10 metros</strong>
+                                <div class="small text-muted opacity-75" style="line-height: 1.4;">
+                                    Aceptable para mapas regionales, provinciales o de escalas > 1:50.000. Rango
+                                    excelente para mapas de los siglos XVIII-XIX. Permite superposiciones fiables sobre
+                                    cartografía actual a escalas intermedias.
+                                </div>
+                            </div>
+                            <div class="flex-fill p-2">
+                                <span class="d-block text-secondary xsmall text-uppercase fw-bold mb-1"
+                                    style="color: #ff9800 !important;">NIVEL REFERENCIAL</span>
+                                <strong class="text-warning fs-4 d-block mb-1">10 - 50 metros</strong>
+                                <div class="small text-muted opacity-75" style="line-height: 1.4;">
+                                    Útil solo para localización aproximada (países, continentes) sin valor métrico.
+                                    Común en mapas antiguos de pequeña escala o con escasa información topográfica. Útil
+                                    para análisis visual, no métrico.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <div class="card-header-panel d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-map me-2"></i> Colección de Mapas del Proyecto</span>
+            <span class="badge bg-accent text-dark">{{ mapas|length }} mapas</span>
+        </div>
+        <div class="p-0">
+            {% if mapas %}
+            <div class="table-responsive">
+                <table class="table table-sirio table-hover mb-0">
+                    <thead>
+                        <tr class="text-warning">
+                            <th style="width: 80px;">Miniatura</th>
+                            <th style="min-width: 140px;">Información del Mapa</th>
+                            <th style="width: 340px;">Metadatos</th>
+                            <th style="width: 80px;">Año</th>
+                            <th style="width: 100px;">Escala</th>
+                            <th style="width: 120px;">Estado</th>
+                            <th style="width: 80px;">RMSE</th>
+                            <th style="width: 210px;" class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mapa in mapas %}
+                        <tr>
+                            <td style="width: 100px;">
+                                <div
+                                    class="ratio ratio-4x3 bg-dark rounded border border-secondary overflow-hidden position-relative">
+                                    {% set thumb_filename = mapa.filename.rsplit('.', 1)[0] ~ '_thumb.jpg' %}
+                                    <img src="{{ url_for('static', filename='uploads/mapas_historicos/' ~ proyecto.id ~ '/' ~ thumb_filename) }}?t={{ now }}"
+                                        alt="{{ mapa.nombre }}" style="object-fit: cover; cursor: pointer;"
+                                        loading="lazy"
+                                        onclick="window.open('{{ url_for('static', filename='uploads/mapas_historicos/' ~ proyecto.id ~ '/' ~ mapa.filename) }}', '_blank')"
+                                        title="Click para ver imagen completa">
+
+                                    {% if mapa.crop_polygon and mapa.crop_polygon != 'null' and mapa.crop_polygon !=
+                                    '[]' %}
+                                    <div class="position-absolute bg-purple rounded-circle d-flex align-items-center justify-content-center shadow-lg"
+                                        style="width: 25px; height: 25px; z-index: 10; border: 2px solid white; pointer-events: none; bottom: 5px; right: 5px;"
+                                        title="Mapa recortado">
+                                        <i class="fa-solid fa-scissors text-white" style="font-size: 0.7rem;"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <strong class="text-light">{{ mapa.nombre }}</strong>
+                                {% if mapa.crop_polygon and mapa.crop_polygon != 'null' and mapa.crop_polygon != '[]' %}
+                                <span class="badge bg-purple text-white ms-2"
+                                    style="font-size: 0.6rem; vertical-align: middle;">
+                                    <i class="fa-solid fa-scissors me-1"></i>RECORTADO
+                                </span>
+                                {% endif %}
+                                {% if mapa.descripcion %}
+                                <div class="mt-2 small text-secondary opacity-75" style="max-width: 320px;">
+                                    <div id="desc-{{ mapa.id }}"
+                                        class="desc-content {% if mapa.descripcion|length > 100 %}desc-truncate{% endif %}">
+                                        {{ mapa.descripcion }}
+                                    </div>
+                                    {% if mapa.descripcion|length > 100 %}
+                                    <a href="javascript:void(0)" class="btn-read-more" id="btn-desc-{{ mapa.id }}"
+                                        onclick="toggleDesc({{ mapa.id }})">Leer más...</a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small">
+                                    {% if mapa.autor %}<div><span class="text-muted">Autor:</span> {{ mapa.autor }}
+                                    </div>{% endif %}
+                                    {% if mapa.fuente %}<div><span class="text-muted">Fuente:</span> {{ mapa.fuente }}
+                                    </div>{% endif %}
+                                    {% if mapa.licencia %}<div><span class="text-muted">Licencia:</span> {{
+                                        mapa.licencia }}
+                                    </div>{% endif %}
+                                    {% if not (mapa.autor or mapa.fuente or mapa.licencia) %}
+                                    <span class="text-muted italic">Sin metadatos</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="small">
+                                {% if mapa.anio %}
+                                {{ mapa.anio }}
+                                {% else %}
+                                <span class="text-muted italic">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">
+                                {% if mapa.escala %}
+                                {{ mapa.escala }}
+                                {% else %}
+                                <span class="text-muted italic">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if mapa.gcps and mapa.gcps != '[]' %}
+                                <span class="badge bg-success">Georreferenciado</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="rmse-value" data-gcps="{{ mapa.gcps|e }}">
+                                    {% if mapa.gcps and mapa.gcps != '[]' %}
+                                    -
+                                    {% else %}
+                                    <span class="text-muted italic">-</span>
+                                    {% endif %}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-action-container">
+                                    <a href="{{ url_for('mapas_historicos.georreferenciador', mapa_id=mapa.id) }}"
+                                        class="btn btn-sm btn-action btn-alinear" title="Georreferenciar / Alinear">
+                                        <i class="fa-solid fa-location-crosshairs"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-action btn-editar btn-edit-mapa"
+                                        data-mapa-id="{{ mapa.id }}" data-mapa-nombre="{{ mapa.nombre|e }}"
+                                        data-mapa-anio="{{ mapa.anio or '' }}"
+                                        data-mapa-autor="{{ mapa.autor|e if mapa.autor else '' }}"
+                                        data-mapa-fuente="{{ mapa.fuente|e if mapa.fuente else '' }}"
+                                        data-mapa-licencia="{{ mapa.licencia|e if mapa.licencia else '' }}"
+                                        data-mapa-escala="{{ mapa.escala|e if mapa.escala else '' }}"
+                                        data-mapa-descripcion="{{ mapa.descripcion|e if mapa.descripcion else '' }}"
+                                        title="Editar">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <a href="{{ url_for('mapas_historicos.recortador_mapa', mapa_id=mapa.id) }}"
+                                        class="btn btn-sm btn-action btn-recortar {% if mapa.crop_polygon %}bg-purple text-white border-purple{% endif %}"
+                                        title="Recortar Márgenes {% if mapa.crop_polygon %}(Ya recortado){% endif %}">
+                                        <i class="fa-solid fa-scissors"></i>
+                                    </a>
+                                    <button
+                                        class="btn btn-sm btn-action btn-toggle-vis {% if mapa.visible %}btn-desactivar{% else %}btn-activar{% endif %}"
+                                        data-id="{{ mapa.id }}" data-visible="{{ 'true' if mapa.visible else 'false' }}"
+                                        title="{% if mapa.visible %}Quitar de Mapas del Corpus{% else %}Incluir en Mapas del Corpus{% endif %}">
+                                        <i
+                                            class="fa-solid {% if mapa.visible %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-action btn-borrar" onclick="deleteMapa({{ mapa.id }})"
+                                        title="Eliminar Mapa">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center">
+                <i class="fa-solid fa-map-location-dot fa-4x text-muted opacity-25 mb-3"></i>
+                <p class="text-secondary">No hay mapas cargados en este proyecto.</p>
+                <button class="btn btn-sirio btn-sirio-primary" data-bs-toggle="modal"
+                    data-bs-target="#modalUploadMapa">
+                    Comenzar a subir mapas
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+<!-- Modal Upload -->
+<div class="modal fade" id="modalUploadMapa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Subir Mapa Histórico</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="uploadForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Nombre descriptivo</label>
+                        <input type="text" name="nombre" class="form-control form-control-sirio"
+                            placeholder="Ej: Plano de Madrid 1850" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Año</label>
+                            <input type="number" name="anio" class="form-control form-control-sirio" placeholder="1850">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label small text-secondary">Escala</label>
+                            <input type="text" name="escala" class="form-control form-control-sirio"
+                                placeholder="Ej: 1:5.000">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Autor / Cartógrafo</label>
+                        <input type="text" name="autor" class="form-control form-control-sirio"
+                            placeholder="Ej: Francisco Coello">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Fuente / Institución</label>
+                        <input type="text" name="fuente" class="form-control form-control-sirio"
+                            placeholder="Ej: Instituto Geográfico Nacional">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Derechos de Autor</label>
+                        <select name="licencia" class="form-select form-select-sirio">
+                            <option value="CC BY 4.0" selected>CC BY 4.0 (Atribución)</option>
+                            <option value="CC BY-SA 4.0">CC BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                            <option value="CC BY-ND 4.0">CC BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                            <option value="CC BY-NC 4.0">CC BY-NC 4.0 (Atribución-NoComercial)</option>
+                            <option value="CC BY-NC-SA 4.0">CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)
+                            </option>
+                            <option value="CC BY-NC-ND 4.0">CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)
+                            </option>
+                            <option value="CC0 1.0">CC0 1.0 (Dominio Público)</option>
+                            <option value="Copyright">Copyright / Todos los derechos reservados</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Descripción / Notas</label>
+                        <textarea name="descripcion" class="form-control form-control-sirio" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Archivo de imagen (JPG, PNG, WebP, TIFF) o
+                            PDF</label>
+                        <input type="file" name="file" class="form-control form-control-sirio"
+                            accept="image/*,.tif,.tiff,.pdf" required>
+                    </div>
+                    <div class="alert alert-info small py-2 mt-3">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        Se recomienda usar imágenes de alta resolución para una mejor precisión.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sirio" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sirio btn-sirio-success" id="btnUpload">
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="uploadSpinner"></span>Subir Mapa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="modal fade" id="modalEditMapa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Editar Mapa Histórico</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" name="id" id="editMapaId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Nombre descriptivo</label>
+                        <input type="text" name="nombre" id="editMapaNombre" class="form-control form-control-sirio"
+                            required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Año</label>
+                            <input type="number" name="anio" id="editMapaAnio" class="form-control form-control-sirio">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label small text-secondary">Escala</label>
+                            <input type="text" name="escala" id="editMapaEscala"
+                                class="form-control form-control-sirio">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Autor / Cartógrafo</label>
+                        <input type="text" name="autor" id="editMapaAutor" class="form-control form-control-sirio">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Fuente / Institución</label>
+                        <input type="text" name="fuente" id="editMapaFuente" class="form-control form-control-sirio">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Derechos de Autor</label>
+                        <select name="licencia" id="editMapaLicencia" class="form-select form-select-sirio">
+                            <option value="CC BY 4.0">CC BY 4.0 (Atribución)</option>
+                            <option value="CC BY-SA 4.0">CC BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                            <option value="CC BY-ND 4.0">CC BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                            <option value="CC BY-NC 4.0">CC BY-NC 4.0 (Atribución-NoComercial)</option>
+                            <option value="CC BY-NC-SA 4.0">CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)
+                            </option>
+                            <option value="CC BY-NC-ND 4.0">CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)
+                            </option>
+                            <option value="CC0 1.0">CC0 1.0 (Dominio Público)</option>
+                            <option value="Copyright">Copyright / Todos los derechos reservados</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Descripción / Notas</label>
+                        <textarea name="descripcion" id="editMapaDescripcion" class="form-control form-control-sirio"
+                            rows="2"></textarea>
+                    </div>
+                    <div class="mb-3 pt-3 border-top border-secondary border-opacity-25">
+                        <label class="form-label small text-accent fw-bold"><i
+                                class="fa-solid fa-upload me-2"></i>Resubir Imagen del Mapa (Opcional)</label>
+                        <input type="file" name="file" id="editMapaFile" class="form-control form-control-sirio"
+                            accept="image/*,.tif,.tiff,.pdf">
+                        <small class="text-muted d-block mt-1">Si subes un archivo nuevo, se reemplazará el actual y se
+                            reseteará el recorte.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sirio" style="width: auto;"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sirio btn-sirio-success" style="width: auto;" id="btnUpdate">
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="updateSpinner"></span>Guardar
+                        Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const btn = document.getElementById('btnUpload');
+        const spinner = document.getElementById('uploadSpinner');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        fetch('{{ url_for("mapas_historicos.upload_mapa") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Se ha cargado el mapa correctamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    spinner.classList.add('d-none');
+                }
+            })
+            .catch(err => {
+                alert('Error de conexión');
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            });
+    });
+
+    const modalEdit = new bootstrap.Modal(document.getElementById('modalEditMapa'));
+
+    document.querySelectorAll('.btn-edit-mapa').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('editMapaId').value = this.dataset.mapaId;
+            document.getElementById('editMapaNombre').value = this.dataset.mapaNombre;
+            document.getElementById('editMapaAnio').value = this.dataset.mapaAnio;
+            document.getElementById('editMapaAutor').value = this.dataset.mapaAutor;
+            document.getElementById('editMapaFuente').value = this.dataset.mapaFuente;
+            document.getElementById('editMapaLicencia').value = this.dataset.mapaLicencia || 'CC BY 4.0';
+            document.getElementById('editMapaEscala').value = this.dataset.mapaEscala;
+            document.getElementById('editMapaDescripcion').value = this.dataset.mapaDescripcion;
+            modalEdit.show();
+        });
+    });
+
+    document.getElementById('editForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('editMapaId').value;
+        const formData = new FormData(this);
+
+        const btn = document.getElementById('btnUpdate');
+        const spinner = document.getElementById('updateSpinner');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        fetch(`/api/mapas_historicos/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    spinner.classList.add('d-none');
+                }
+            })
+            .catch(err => {
+                alert('Error de conexión');
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            });
+    });
+
+    function deleteMapa(id) {
+        if (!confirm('¿Estás seguro de eliminar este mapa y su georreferenciación?')) return;
+
+        fetch(`/api/mapas_historicos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Error al borrar');
+            });
+    }
+
+    // Toggle visibilidad con listeners (evita errores de plantillas en inline JS)
+    document.querySelectorAll('.btn-toggle-vis').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.dataset.id;
+            const currentVisible = this.dataset.visible === 'true';
+            const newStatus = !currentVisible;
+
+            fetch(`/api/mapas_historicos/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ visible: newStatus })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error al cambiar visibilidad');
+                    }
+                })
+                .catch(err => alert('Error de conexión'));
+        });
+    });
+
+    function toggleDesc(id) {
+        const descDiv = document.getElementById(`desc-${id}`);
+        const btn = document.getElementById(`btn-desc-${id}`);
+        if (descDiv.classList.contains('desc-truncate')) {
+            descDiv.classList.remove('desc-truncate');
+            descDiv.classList.add('desc-expanded');
+            btn.textContent = 'Leer menos';
+        } else {
+            descDiv.classList.add('desc-truncate');
+            descDiv.classList.remove('desc-expanded');
+            btn.textContent = 'Leer más...';
+        }
+    }
+
+    // Mostrar RMSE en la columna
+    document.querySelectorAll('.rmse-value').forEach(cell => {
+        try {
+            const gcpsStr = cell.getAttribute('data-gcps');
+            if (!gcpsStr) return;
+
+            const gcpsData = JSON.parse(gcpsStr);
+            if (gcpsData.rmse !== undefined && gcpsData.rmse !== null) {
+                const rmseValue = parseFloat(gcpsData.rmse).toFixed(2);
+                cell.innerHTML = `<strong>${rmseValue}m</strong>`;
+            }
+        } catch (e) {
+            // Si hay error al parsear JSON, dejar el guión
+        }
+    });
+</script>
+{% endblock %}

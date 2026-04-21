@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-04-21T07:22:14.671521",
+  "tipo_analisis": "periodistico",
+  "filtros": {
+    "proyecto_id": 34,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "secuencia",
+    "documentos_ids": []
+  },
+  "params": {
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "datos_temporales": [
+      {
+        "titulo": "El Gato Negro",
+        "id": 1230,
+        "modalidad": 0.0277,
+        "polarizacion": 0.5674,
+        "sensacionalismo": 2.574,
+        "agencia": 0.0692,
+        "propaganda": 0.6919,
+        "fecha": "1. El Gato Negro...",
+        "indice": 1
+      },
+      {
+        "titulo": "El Demonio de la Perversidad",
+        "id": 1231,
+        "modalidad": 0.5894,
+        "polarizacion": 2.1938,
+        "sensacionalismo": 0.9823,
+        "agencia": 0.0,
+        "propaganda": 0.3274,
+        "fecha": "2. El Demonio de la Per...",
+        "indice": 2
+      }
+    ],
+    "datos_individuales": [
+      {
+        "fecha": "1894-01-01",
+        "titulo": "El Gato Negro",
+        "id": 1230,
+        "modalidad": 0.0277,
+        "polarizacion": 0.5674,
+        "sensacionalismo": 2.574,
+        "agencia": 0.0692,
+        "propaganda": 0.6919
+      },
+      {
+        "fecha": "1894-01-01",
+        "titulo": "El Demonio de la Perversidad",
+        "id": 1231,
+        "modalidad": 0.5894,
+        "polarizacion": 2.1938,
+        "sensacionalismo": 0.9823,
+        "agencia": 0.0,
+        "propaganda": 0.3274
+      }
+    ],
+    "estadisticas": {
+      "promedio_modalidad": 0.30855,
+      "promedio_polarizacion": 1.3806,
+      "promedio_sensacionalismo": 1.77815,
+      "promedio_agencia": 0.0346,
+      "promedio_propaganda": 0.5096499999999999,
+      "mediana_modalidad": 0.30855,
+      "mediana_polarizacion": 1.3806,
+      "mediana_sensacionalismo": 1.77815,
+      "mediana_agencia": 0.0346,
+      "mediana_propaganda": 0.5096499999999999
+    },
+    "tipo_eje": "secuencia"
+  }
+}

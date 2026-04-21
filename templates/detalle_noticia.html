@@ -1,0 +1,2870 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Visualización — {{ noticia.titulo or 'Noticia' }}{% endblock %}
+
+{# Override Page Title logic from base #}
+{% block page_title %}
+Detalle de noticia
+<span class="ms-3 text-muted mono small opacity-50">ID: #{{ noticia.id }}</span>
+<span class="ms-2 d-inline-flex gap-1">
+  {% if prev_id %}
+  <a href="{{ url_for('noticias.detalle_noticia', id=prev_id) }}" class="btn btn-sm btn-outline-secondary"
+    title="Noticia anterior (ID: {{ prev_id }})" style="padding: 2px 7px; font-size: 0.75rem; border-radius: 3px;">
+    <i class="fa-solid fa-chevron-left"></i>
+  </a>
+  {% else %}
+  <button class="btn btn-sm btn-outline-secondary" disabled
+    style="padding: 2px 7px; font-size: 0.75rem; border-radius: 3px; opacity: 0.3;">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+  {% endif %}
+
+  {% if next_id %}
+  <a href="{{ url_for('noticias.detalle_noticia', id=next_id) }}" class="btn btn-sm btn-outline-secondary"
+    title="Noticia siguiente (ID: {{ next_id }})" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 3px;">
+    <i class="fa-solid fa-chevron-right"></i>
+  </a>
+  {% else %}
+  <button class="btn btn-sm btn-outline-secondary" disabled
+    style="padding: 2px 8px; font-size: 0.75rem; border-radius: 3px; opacity: 0.3;">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+  {% endif %}
+</span>
+{% endblock %}
+
+
+
+{% block extra_css %}
+<!-- Fuentes Google Fonts para Estilo Editorial -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:wght@400;700;900&family=Roboto+Condensed:wght@400;700&display=swap"
+  rel="stylesheet">
+
+<style>
+  /* --- LAYOUT GLOBAL & RESET --- */
+  .container-fluid {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: calc(100vh - 120px);
+    background: #0a0a0a;
+    font-family: 'Roboto Condensed', sans-serif;
+    overflow-y: auto;
+  }
+
+  /* --- SIRIO TOP ACTION BAR --- */
+  .toolbar-header {
+    padding: 10px 24px;
+    background: #111;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 60px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .btn-sirio {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #bbb;
+    border-radius: 4px;
+    white-space: nowrap;
+    padding: 6px 14px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-sirio:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  .btn-sirio-warning {
+    border-color: #ff99002c;
+    color: #ff9800;
+    background: rgba(251, 191, 36, 0.1);
+    font-weight: 600;
+  }
+
+  .btn-sirio-warning:hover {
+    background: rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+  }
+
+
+  /* --- HERO SECTION --- */
+  .news-hero {
+    padding: 40px 60px;
+    background: linear-gradient(180deg, #141414 0%, #0a0a0a 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+  }
+
+  .news-pub-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #ff9800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+
+  .news-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    line-height: 1.1;
+    color: #f5f5f5;
+    margin-bottom: 24px;
+    max-width: 1200px;
+    font-weight: 700;
+  }
+
+  .news-meta-row {
+    display: flex;
+    gap: 30px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #888;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .meta-item i {
+    color: #555;
+  }
+
+  /* --- HERO SECTION REFINEMENT --- */
+  .news-hero {
+    padding: 40px 60px;
+    background: linear-gradient(180deg, #141414 0%, #0a0a0a 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    align-items: flex-start;
+  }
+
+  .hero-main-area {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* --- FICHA TECNICA BAR (NEW) --- */
+  .fiche-technical-bar {
+    background: #1a1a1a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 60px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    font-size: 0.8rem;
+  }
+
+  .fiche-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #ff9800;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-right: 10px;
+  }
+
+  .fiche-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+  }
+
+  .fiche-label {
+    text-transform: uppercase;
+    font-size: 9px;
+    font-weight: 700;
+    color: #666;
+  }
+
+  .fiche-value {
+    font-family: 'JetBrains Mono', monospace;
+    color: #ddd;
+  }
+
+  /* --- EDITORIAL LAYOUT (STACKED) --- */
+  .editorial-layout {
+    width: 100%;
+    display: block;
+    padding-bottom: 100px;
+  }
+
+
+  /* --- LEFT COLUMN: CONTENT --- */
+  .editorial-content {
+    padding: 60px 30px;
+    background: #0f0f0f;
+    min-height: 100%;
+  }
+
+  .content-wrapper {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+
+  .news-body {
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #dcdcdc;
+    text-align: justify;
+    margin-bottom: 60px;
+    white-space: pre-wrap;
+  }
+
+  .news-body::first-letter {
+    float: left;
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    line-height: 0.7;
+    font-weight: 900;
+    margin-right: 15px;
+    margin-top: 5px;
+    color: #ff9800;
+    text-transform: uppercase;
+  }
+
+  /* OCR Box */
+  .ocr-container {
+    background: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 24px;
+    margin-top: 40px;
+  }
+
+  .ocr-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #666;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ocr-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #777;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+
+  /* --- RIGHT COLUMN: SIDEBAR --- */
+  .editorial-sidebar {
+    background: #0a0a0a;
+    /* Darker sidebar */
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0;
+    /* Remove padding for immersive map */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-widget {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  /* Widget Header Restyling */
+  .widget-header {
+    padding: 16px 20px;
+    background: #1a1a1a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #aaa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Data Table in Sidebar */
+  .data-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .data-item {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .data-item:last-child {
+    border-bottom: none;
+  }
+
+  .data-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 700;
+  }
+
+  .data-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #bbb;
+    text-align: right;
+  }
+
+  /* Map Widget */
+  .map-preview {
+    height: 500px;
+    /* Taller map */
+    width: 100%;
+    background: #000;
+    position: relative;
+    border: 1px solid #ff9800 !important;
+  }
+
+  #mapa-cartografia {
+    width: 100%;
+    height: 100%;
+    filter: grayscale(0.2) contrast(1.1) brightness(0.9);
+  }
+
+  .places-list-mini {
+    padding: 24px;
+    background: #0a0a0a;
+  }
+
+  .place-row {
+    font-size: 1rem;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #eee;
+  }
+
+  .place-row:last-child {
+    border-bottom: none;
+  }
+
+  .place-row b {
+    color: #ff9800;
+  }
+
+  .place-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .badge-theme {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+    font-weight: 400;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  /* --- LOCATION HIGHLIGHTING --- */
+  mark.highlight-lugar {
+    background-color: #ff9800 !important;
+    color: #000 !important;
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: default;
+    display: inline-block;
+    line-height: 1;
+  }
+
+  mark.highlight-lugar.active-scroll {
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
+
+  .highlight-delete-btn {
+    position: absolute;
+    top: -12px;
+    right: -10px;
+    width: 16px;
+    height: 16px;
+    background: #c62828;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+    border: 1px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+
+  .highlight-delete-btn:hover {
+    background: #e53935;
+    transform: scale(1.2);
+  }
+
+  .highlight-gps-btn {
+    position: absolute;
+    top: -12px;
+    right: 8px;
+    width: 16px;
+    height: 16px;
+    background: #ff9800;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    cursor: pointer;
+    border: 1px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+
+  .highlight-gps-btn:hover {
+    background: #ffa726;
+    transform: scale(1.2);
+  }
+
+  .highlight-vincular-btn {
+    position: absolute;
+    top: -12px;
+    right: 44px;
+    width: 16px;
+    height: 16px;
+    background: #16a34a;
+    /* Green when linked, orange when unlinked */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    cursor: pointer;
+    border: 1px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    line-height: 1;
+    transition: transform 0.2s, background-color 0.2s;
+  }
+
+  .highlight-vincular-btn:hover {
+    transform: scale(1.2);
+  }
+
+  .highlight-vincular-btn.desvinculada {
+    background: #ff9800;
+  }
+
+  .highlight-vincular-btn.desvinculada:hover {
+    background: #f57c00;
+  }
+
+  .highlight-search-btn {
+    position: absolute;
+    top: -12px;
+    right: 26px;
+    width: 16px;
+    height: 16px;
+    background: #294a60;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    cursor: pointer;
+    border: 1px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+
+  .highlight-search-btn:hover {
+    background: #294a60;
+    transform: scale(1.2);
+  }
+
+  /* Custom Context Menu */
+  .custom-context-menu {
+    position: fixed;
+    z-index: 10000;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 5px 0;
+    display: none;
+    min-width: 160px;
+  }
+
+  .context-menu-item {
+    padding: 8px 15px;
+    font-size: 12px;
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+
+  .context-menu-item:hover {
+    background: #2c3e50;
+    color: #fff;
+  }
+
+  .context-menu-item i {
+    color: #ff9800;
+  }
+
+  /* Two Column Grid and Theme Colors */
+  :root {
+    --carto-border: rgba(255, 255, 255, 0.08);
+    --btn-widget-bg: #000000;
+    /* Fondo negro puro solicitado */
+    --btn-widget-border: rgba(255, 152, 0, 0.4);
+    --btn-widget-color: #ff9800;
+    /* Naranja Sirio (#ff9800) */
+    --btn-widget-hover-bg: rgba(255, 152, 0, 0.15);
+    --btn-widget-hover-color: #fff;
+    --btn-accent-cyan: #ff9800;
+    /* El azul pasa a naranja en modo oscuro */
+    --btn-accent-cyan-border: rgba(255, 152, 0, 0.6);
+    --btn-accent-orange: #ff9800;
+    --btn-accent-orange-border: rgba(255, 152, 0, 0.6);
+  }
+
+  [data-theme="light"] {
+    --carto-border: rgba(0, 0, 0, 0.08);
+    --btn-widget-bg: #f8f9fa;
+    /* Gris muy suave solicitado */
+    --btn-widget-border: rgba(41, 74, 96, 0.4);
+    --btn-widget-color: #294a60;
+    /* Azul Sirio (#294a60) */
+    --btn-widget-hover-bg: rgba(41, 74, 96, 0.08);
+    --btn-widget-hover-color: #000;
+    --btn-accent-cyan: #294a60;
+    /* Azul Sirio en modo claro */
+    --btn-accent-cyan-border: rgba(41, 74, 96, 0.6);
+    --btn-accent-orange: #ff9800;
+    /* Naranja Sirio */
+    --btn-accent-orange-border: rgba(255, 152, 0, 0.5);
+  }
+
+  /* --- MODAL SIRIO THEMED --- */
+  .modal-sirio-content {
+    background-color: var(--btn-widget-bg, #000) !important;
+    border: 1px solid var(--btn-widget-border) !important;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-sirio-header {
+    border-bottom: 1px solid var(--carto-border) !important;
+  }
+
+  .sirio-input-group .form-control {
+    background: transparent !important;
+    border-color: var(--btn-widget-border) !important;
+    color: var(--btn-widget-hover-color, #fff) !important;
+    font-size: 0.85rem;
+  }
+
+  .sirio-input-group .form-control:focus {
+    box-shadow: 0 0 0 0.25rem var(--btn-widget-hover-bg);
+    border-color: var(--btn-widget-color) !important;
+  }
+
+  .sirio-input-group .btn-sirio-outline {
+    border-color: var(--btn-widget-border) !important;
+    color: var(--btn-widget-color) !important;
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .sirio-input-group .btn-sirio-outline:hover,
+  .sirio-input-group .btn-sirio-outline:active,
+  .sirio-input-group .btn-sirio-outline.active {
+    background: var(--btn-widget-color) !important;
+    border-color: var(--btn-widget-color) !important;
+    color: var(--btn-widget-bg, #000) !important;
+  }
+
+  .sirio-input-group .btn-sirio-outline i {
+    transition: color 0.1s;
+  }
+
+  /* Specific fix for Google Maps button hover luminosity */
+  #btn-search-google-maps:hover i,
+  #btn-search-google-maps:active i {
+    color: inherit !important;
+  }
+
+  /* Light mode adjustments for text clarity */
+  [data-theme="light"] .modal-sirio-content {
+    box-shadow: 0 10px 30px rgba(41, 74, 96, 0.15);
+  }
+
+  [data-theme="light"] .sirio-input-group .form-control {
+    color: #333 !important;
+  }
+
+  /* Geolocate Button Specifics */
+  #btn-confirmar-mapeo {
+    background: #ff9800 !important;
+    border: none !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease;
+  }
+
+  #btn-confirmar-mapeo:hover {
+    background: #ffa726 !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.4) !important;
+  }
+
+  [data-theme="light"] #btn-confirmar-mapeo {
+    background: #294a60;
+    color: #fff;
+  }
+
+  [data-theme="light"] #btn-confirmar-mapeo:hover {
+    background: #1a3240;
+    box-shadow: 0 4px 12px rgba(41, 74, 96, 0.3);
+  }
+
+  /* Mini Buttons in Sidebar Widgets */
+  .btn-mini-widget {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: auto !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #bbb;
+    font-size: 11px;
+    padding: 0 14px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-mini-widget:hover {
+    background: var(--btn-widget-hover-bg);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--btn-widget-hover-color);
+  }
+
+  [data-theme="light"] .btn-mini-widget:hover {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-mini-widget i {
+    font-size: 11px;
+    opacity: 0.9;
+  }
+
+  .btn-mini-widget.accent-cyan {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .btn-mini-widget.accent-cyan:hover {
+    border-color: #00bcd4;
+    color: #00bcd4;
+    background: rgba(0, 188, 212, 0.05);
+  }
+
+  /* Purple Accent */
+  .btn-mini-widget.accent-purple {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .btn-mini-widget.accent-purple:hover {
+    border-color: #9c27b0;
+    color: #9c27b0;
+    background: rgba(156, 39, 176, 0.05);
+  }
+
+  /* Green Accent */
+  .btn-mini-widget.accent-green {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .btn-mini-widget.accent-green:hover {
+    border-color: #4caf50;
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.05);
+  }
+
+  /* Hover Base for generic */
+  .btn-mini-widget:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  [data-theme="light"] .btn-mini-widget:hover {
+    color: inherit;
+    /* Prevent white text on hover in light mode if not specified */
+  }
+
+  /* Orange Accent */
+  .btn-mini-widget.accent-orange {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .btn-mini-widget.accent-orange:hover {
+    border-color: var(--btn-accent-orange);
+    color: var(--btn-accent-orange);
+    background: rgba(255, 152, 0, 0.05);
+  }
+
+  /* Cyan Accent */
+  .btn-mini-widget.accent-cyan {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #bbb;
+  }
+
+  .btn-mini-widget.accent-cyan:hover {
+    border-color: #00bcd4;
+    color: #00bcd4;
+    background: rgba(0, 188, 212, 0.05);
+  }
+
+  [data-theme="light"] .btn-mini-widget {
+    background: transparent;
+    border-color: #d1d5db !important;
+    /* Neutral grey border */
+    color: #4b5563 !important;
+    /* Neutral grey text */
+  }
+
+  [data-theme="light"] .btn-mini-widget.accent-purple:hover {
+    border-color: #d8b4fe !important;
+    color: #7c3aed !important;
+    background: rgba(124, 58, 237, 0.05) !important;
+  }
+
+  [data-theme="light"] .btn-mini-widget.accent-green:hover {
+    border-color: #86efac !important;
+    color: #16a34a !important;
+    background: rgba(22, 163, 74, 0.05) !important;
+  }
+
+  [data-theme="light"] .btn-mini-widget.accent-orange:hover {
+    border-color: #ffcc80 !important;
+    color: #e67e22 !important;
+    background: rgba(230, 126, 34, 0.05) !important;
+  }
+
+  [data-theme="light"] .btn-mini-widget.accent-cyan:hover {
+    border-color: #80deea !important;
+    color: #0097a7 !important;
+    background: rgba(0, 151, 167, 0.05) !important;
+  }
+
+  .btn-mini-widget.active-highlight {
+    background: rgba(255, 152, 0, 0.15) !important;
+    border-color: var(--btn-accent-orange) !important;
+    color: var(--btn-accent-orange) !important;
+  }
+
+  .place-data-highlight {
+    color: var(--btn-accent-orange);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  #sidebar-places-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 991px) {
+    #sidebar-places-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 992px) {
+    #sidebar-places-list {
+      gap: 12px 24px;
+    }
+
+    .place-row:nth-child(odd) {
+      border-right: 1px solid var(--carto-border);
+      padding-right: 12px;
+    }
+  }
+
+  .place-row {
+    margin-bottom: 0 !important;
+    border-bottom: 1px solid var(--carto-border);
+    padding-bottom: 8px;
+  }
+
+  /* Legend Styles */
+  .places-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--carto-border);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 0.65rem;
+    color: var(--app-text-muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .legend-item i {
+    font-size: 10px;
+    width: 12px;
+    text-align: center;
+  }
+
+  /* Marker Colors */
+  .marker-verified {
+    color: #22c55e !important;
+  }
+
+  .marker-unverified {
+    color: #ff9800 !important;
+  }
+
+  /* --- WORD SEARCH STYLES --- */
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 32px;
+    padding: 0 8px;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+
+  .search-wrapper:focus-within {
+    border-color: #ff9800;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.15);
+  }
+
+  .search-input {
+    background: transparent;
+    border: none;
+    color: #eee;
+    font-size: 11.5px;
+    outline: none;
+    width: 140px;
+    font-family: inherit;
+  }
+
+  .search-input::placeholder {
+    color: #666;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .search-nav-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 5px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-nav-btn:hover {
+    color: #ff9800;
+  }
+
+  [data-theme="light"] .search-nav-btn {
+    color: #555;
+    /* Ensure visibility in light mode */
+  }
+
+  [data-theme="light"] .search-nav-btn:hover {
+    color: #294a60;
+    /* Azul Sirio */
+    background: rgba(41, 74, 96, 0.1);
+  }
+
+  .search-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .search-counter {
+    font-size: 9px;
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    margin: 0 4px;
+    min-width: 35px;
+    text-align: center;
+  }
+
+  [data-theme="light"] .search-wrapper {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="light"] .search-input {
+    color: #333;
+  }
+
+  [data-theme="light"] .search-wrapper:focus-within {
+    border-color: #294a60;
+  }
+
+  /* Highlight Styles */
+  .word-highlight {
+    background-color: rgba(255, 215, 0, 0.3) !important;
+    color: inherit !important;
+    padding: 0 1px;
+    border-radius: 1px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .word-highlight.active-search {
+    background-color: #ff9800 !important;
+    color: #000 !important;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
+    border-bottom: 2px solid #fff;
+  }
+
+  [data-theme="light"] .word-highlight.active-search {
+    background-color: #294a60 !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(41, 74, 96, 0.7);
+  }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<!-- WORD SEARCH BAR -->
+<div class="search-wrapper me-2" id="word-search-container">
+  <i class="fa-solid fa-magnifying-glass opacity-50" style="font-size: 10px;"></i>
+  <input type="text" id="input-word-search" class="search-input" placeholder="Buscar en texto..." autocomplete="off">
+
+  <span id="search-counter" class="search-counter" style="display: none;">0 / 0</span>
+
+  <div class="d-flex align-items-center ms-1">
+    <button id="btn-search-prev" class="search-nav-btn" title="Anterior" disabled>
+      <i class="fa-solid fa-chevron-up"></i>
+    </button>
+    <button id="btn-search-next" class="search-nav-btn" title="Siguiente" disabled>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+    <button id="btn-search-clear" class="search-nav-btn ms-1" title="Limpiar búsqueda" style="display: none;">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('noticias.listar') }}" class="btn-sirio" title="Volver a la Biblioteca">
+  <i class="fa-solid fa-arrow-left"></i>
+  <span class="btn-text">BIBLIOTECA</span>
+</a>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('noticias.editar', id=noticia.id) }}" class="btn-sirio btn-sirio-warning"
+  title="Editar Noticia / Texto">
+  <i class="fa-solid fa-pen-to-square"></i>
+  <span class="btn-text">EDITAR</span>
+</a>
+
+<a href="{{ url_for('noticia_exportar_pdf', noticia_id=noticia.id) }}" target="_blank" class="btn-sirio"
+  title="Ver PDF Original / Generado">
+  <i class="fa-solid fa-file-pdf"></i>
+  <span class="btn-text">PDF</span>
+</a>
+
+<a href="{{ url_for('noticias.noticia_duplicar', noticia_id=noticia.id) }}" class="btn-sirio" title="Duplicar Registro">
+  <i class="fa-solid fa-copy"></i>
+  <span class="btn-text">DUPLICAR</span>
+</a>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<button id="btn-copiar-texto" class="btn-sirio" title="Copiar Texto Transcrito">
+  <i class="fa-regular fa-clone" id="icon-copiar"></i>
+  <span class="btn-text">COPIAR</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Botón Ayuda / Manual -->
+<div class="ms-1" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-html="true" data-bs-trigger="hover focus"
+  data-bs-offset="0,35"
+  title="<div class='text-warning fw-bold small'><i class='fa-solid fa-circle-question me-2'></i>MANUAL DE INTERACCIÓN</div>"
+  data-bs-content="<div class='small' style='font-size: 11px; line-height: 1.4;'>
+      <div class='mb-2 pb-1 border-bottom border-secondary border-opacity-25'>
+        <b class='text-warning'>Añadir:</b> Selecciona texto en la noticia y usa el <b class='text-info'>Botón Derecho</b>.
+      </div>
+      <div class='mb-2 pb-1 border-bottom border-secondary border-opacity-25'>
+        <b class='text-warning'>Resaltar:</b> Pincha en una ubicación de la lista inferior o del mapa.
+      </div>
+      <div class='mb-0'>
+        <b class='text-warning'>Borrar:</b> En el texto resaltado, pulsa la <b class='text-danger'>X</b> roja superior.
+      </div>
+    </div>">
+  <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- FICHA TECNICA BAR (TOP) -->
+  <div class="fiche-technical-bar">
+    <div class="fiche-title">
+      <i class="fa-solid fa-passport me-2"></i>Ficha Técnica
+    </div>
+
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 20px;"></div>
+
+    <div class="fiche-item">
+      <span class="fiche-label">Hemeroteca:</span>
+      <span class="fiche-value">
+        {{ noticia.publicacion_rel.hemeroteca_rel.nombre if noticia.publicacion_rel and
+        noticia.publicacion_rel.hemeroteca_rel else '—' }}
+      </span>
+    </div>
+
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
+
+    <div class="fiche-item">
+      <span class="fiche-label">Edición:</span>
+      <span class="fiche-value">{{ noticia.numero or '—' }}</span>
+    </div>
+
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
+
+    <div class="fiche-item">
+      <span class="fiche-label">Páginas:</span>
+      <span class="fiche-value">
+        {% if noticia.pagina_inicio %}
+        {{ noticia.pagina_inicio }}{% if noticia.pagina_fin and noticia.pagina_fin != noticia.pagina_inicio %}-{{
+        noticia.pagina_fin }}{% endif %}
+        {% else %}—{% endif %}
+      </span>
+    </div>
+
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
+
+    <div class="fiche-item">
+      <span class="fiche-label">Idioma:</span>
+      <span class="fiche-value">{{ noticia.idioma|upper if noticia.idioma else 'ES' }}</span>
+    </div>
+
+    {% if noticia.temas %}
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
+    <div class="fiche-item">
+      <span class="fiche-label">Temas:</span>
+      <div class="d-flex gap-1">
+        {% for t in (noticia.temas or '').split(',') %}
+        <a href="{{ url_for('noticias.listar', temas=t.strip()) }}" class="text-decoration-none">
+          <span class="badge-theme">{{ t.strip() }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- HERO HEADER -->
+  <header class="news-hero">
+    <div class="hero-main-area">
+      <div class="news-pub-info">
+        <i class="fa-solid fa-newspaper"></i>
+        {% if noticia.publicacion %}
+        <a href="{{ url_for('noticias.listar', publicacion=noticia.publicacion) }}"
+          class="text-decoration-none text-warning hover-white">
+          {{ noticia.publicacion }}
+        </a>
+        {% else %}
+        Publicación Desconocida
+        {% endif %}
+      </div>
+
+      <h1 class="news-title" id="titulo-noticia-copiar">
+        {{ noticia.titulo or '<span class="opacity-50 fst-italic">[Sin título asignado]</span>'|safe }}
+      </h1>
+
+      <div class="news-meta-row">
+        <div class="meta-item">
+          <i class="fa-regular fa-calendar"></i>
+          <span>{{ noticia.fecha_original or '—' }} {% if noticia.anio %}<span class="text-muted">({{ noticia.anio
+              }})</span>{% endif %}</span>
+
+          <!-- Date-based navigation -->
+          <span class="ms-2 d-inline-flex gap-1">
+            {% if prev_id_fecha %}
+            <a href="{{ url_for('noticias.detalle_noticia', id=prev_id_fecha) }}"
+              class="btn btn-sm btn-outline-secondary" title="Noticia anterior por fecha"
+              style="padding: 2px 8px; font-size: 0.7rem; border-radius: 3px;">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled
+              style="padding: 2px 8px; font-size: 0.7rem; border-radius: 3px; opacity: 0.3;">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            {% endif %}
+
+            {% if next_id_fecha %}
+            <a href="{{ url_for('noticias.detalle_noticia', id=next_id_fecha) }}"
+              class="btn btn-sm btn-outline-secondary" title="Noticia siguiente por fecha"
+              style="padding: 2px 8px; font-size: 0.7rem; border-radius: 3px;">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled
+              style="padding: 2px 8px; font-size: 0.7rem; border-radius: 3px; opacity: 0.3;">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            {% endif %}
+          </span>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-location-dot"></i>
+          {% if noticia.ciudad %}
+          <a href="{{ url_for('noticias.mapa_corpus', ciudad=noticia.ciudad) }}"
+            class="text-decoration-none text-secondary hover-warning">
+            <span>{{ noticia.ciudad }}</span>
+          </a>
+          {% else %}
+          <span>—</span>
+          {% endif %}
+        </div>
+        <div class="meta-item d-none" id="container-titulo-ubicaciones">
+          <i class="fa-solid fa-heading text-warning" title="Ubicaciones en Título"></i>
+          <span class="d-flex gap-2 flex-wrap" id="list-titulo-ubicaciones"></span>
+        </div>
+        <div class="meta-item">
+          <i class="fa-solid fa-feather"></i>
+          <span>{{ (noticia.nombre_autor ~ ' ' ~ noticia.apellido_autor).strip() if (noticia.nombre_autor or
+            noticia.apellido_autor) else 'Autor anónimo' }}</span>
+        </div>
+        {% if noticia.url %}
+        <div class="meta-item ms-auto">
+          <a href="{{ noticia.url }}" target="_blank" class="text-warning text-decoration-none hover-white">
+            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Fuente
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- SINGLE COLUMN LAYOUT -->
+  <div class="editorial-layout">
+
+    <main class="editorial-content">
+      <div class="content-wrapper">
+        <article class="news-body" id="texto-noticia-copiar">
+          {{ noticia.contenido|safe or '<span class="text-muted fst-italic opacity-50">Contenido digital no disponible.
+            Revise el OCR.</span>'|safe }}
+        </article>
+
+        <!-- OCR Footer -->
+        {% if noticia.texto_original and noticia.texto_original != 'None' and noticia.texto_original != '<p>None</p>' %}
+        <div class="ocr-container mb-5">
+          <div class="ocr-header">
+            <i class="fa-solid fa-file-invoice"></i> Transcripción OCR (Raw)
+          </div>
+          <div class="ocr-text">{{ noticia.texto_original|safe }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Cartography Section (Moved) -->
+        <section class="mt-5 pt-4 border-top border-secondary border-opacity-25">
+          <div class="sidebar-widget">
+            <div class="widget-header bg-transparent px-0 border-0 mb-3">
+              <div class="d-flex align-items-center gap-4">
+                <span class="fs-6"><i class="fa-solid fa-map-location-dot me-2 text-warning"></i>CARTOGRAFÍA Y
+                  LUGARES</span>
+
+                <!-- LOCATION SEARCH -->
+                <div class="search-wrapper ms-2" style="height: 28px; width: 220px;">
+                  <i class="fa-solid fa-location-dot opacity-50" style="font-size: 10px;"></i>
+                  <input type="text" id="input-location-search" class="search-input" placeholder="Filtrar lugares..."
+                    autocomplete="off" style="width: 100%;">
+                  <button id="btn-location-search-clear" class="search-nav-btn" title="Limpiar filtro"
+                    style="display: none;">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+
+                <a href="{{ url_for('noticias.mapa_corpus') }}" class="btn-mini-widget accent-cyan ms-auto"
+                  title="Ver Mapa Completo del Corpus">
+                  <i class="fa-solid fa-earth-americas"></i>VER MAPA COMPLETO
+                </a>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button id="btn-highlight-all" class="btn-mini-widget accent-orange"
+                  title="Resaltar Todas las Ubicaciones">
+                  <i class="fa-solid fa-highlighter"></i> RESALTAR TODO
+                </button>
+                <button id="btn-refresh-mapa" class="btn-mini-widget accent-cyan" title="Actualizar">
+                  <i class="fa-solid fa-arrows-rotate"></i> ACTUALIZAR
+                </button>
+                <button id="btn-add-lugar" class="btn-mini-widget accent-orange" title="Añadir Lugar">
+                  <i class="fa-solid fa-plus"></i> AÑADIR
+                </button>
+                <div class="dropdown d-inline-block">
+                  <button id="btn-sort-locations" class="btn-mini-widget accent-purple dropdown-toggle" title="Ordenar"
+                    data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-arrow-down-a-z"></i> ORDENAR
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item" href="#" onclick="sortLocations('name'); return false;"><i
+                          class="fa-solid fa-font me-2"></i>Por Nombre</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="sortLocations('frequency'); return false;"><i
+                          class="fa-solid fa-hashtag me-2"></i>Por Frecuencia</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="sortLocations('coordinates'); return false;"><i
+                          class="fa-solid fa-location-dot me-2"></i>Por Coordenadas</a></li>
+                  </ul>
+                </div>
+                <div class="dropdown d-inline-block">
+                  <button id="btn-export-locations" class="btn-mini-widget accent-green dropdown-toggle"
+                    title="Exportar" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-download"></i> EXPORTAR
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li><a class="dropdown-item" href="#" onclick="exportLocations('csv'); return false;"><i
+                          class="fa-solid fa-file-csv me-2"></i>CSV</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportLocations('json'); return false;"><i
+                          class="fa-solid fa-file-code me-2"></i>JSON</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportLocations('geojson'); return false;"><i
+                          class="fa-solid fa-map me-2"></i>GeoJSON</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="map-preview border border-secondary border-opacity-25 rounded-2">
+              <div id="mapa-cartografia"></div>
+            </div>
+
+            <!-- Action Icons Legend (Moved below map) -->
+            <div class="places-legend mt-3 mb-2">
+              <div class="legend-item" title="Copiar Coordenadas"><i class="fa-solid fa-clipboard opacity-75"></i>
+                Copiar</div>
+              <div class="legend-item" title="Estado de Verificación"><i
+                  class="fa-solid fa-circle-check text-success"></i> Verificada</div>
+              <div class="legend-item" title="Estado Pendiente"><i class="fa-solid fa-circle text-warning"></i>
+                Pendiente</div>
+              <div class="legend-item" title="Google Maps"><i class="fa-solid fa-earth-americas opacity-75"></i> Mapas
+              </div>
+              <div class="legend-item" title="Vinculación de la ubicación a este proyecto (no afecta verificación global)"><i class="fa-solid fa-link text-success"></i> Vinculada <i class="fa-solid fa-link-slash text-warning ms-2"></i> Desvinculada
+              </div>
+              <div class="legend-item" title="Eliminar"><i class="fa-solid fa-trash opacity-75"></i> Borrar</div>
+            </div>
+            <div class="places-list-mini bg-transparent px-0" id="sidebar-places-list">
+              <!-- JS Rendered List -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+</div>
+
+<!-- Custom Context Menu for Text Selection -->
+<div id="custom-context-menu" class="custom-context-menu">
+  <div class="context-menu-item" id="ctx-add-lugar">
+    <i class="fa-solid fa-location-dot"></i> Añadir Ubicación: <b id="ctx-selection-text" class="ms-1"></b>
+  </div>
+  <div class="context-menu-item" id="ctx-map-lugar" style="color: #03a9f4;">
+    <i class="fa-solid fa-magnifying-glass-location" style="color: #03a9f4;"></i> Buscar y Mapear: <b
+      id="ctx-selection-text-map" class="ms-1"></b>
+  </div>
+</div>
+
+<!-- Modal Editar Lugar (Preservado) -->
+<div class="modal fade" id="modalEditarLugar" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content bg-dark border-secondary">
+      <div class="modal-header border-bottom border-secondary p-3">
+        <h6 class="modal-title text-warning text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 1px;">Editar
+          Lugar</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"
+          style="width: 50px;"></button>
+      </div>
+      <div class="modal-body p-3">
+        <form id="formEditarLugar">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" id="editLugarNombreOriginal">
+          <div class="mb-2">
+            <label class="form-label text-muted small text-uppercase fw-bold" style="font-size: 10px;">Nombre</label>
+            <input type="text" class="form-control form-control-sm bg-black border-secondary text-light rounded-0"
+              id="editLugarNombre" list="datalistLugares" required>
+            <datalist id="datalistLugares"></datalist>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted small text-uppercase fw-bold"
+              style="font-size: 10px;">Frecuencia</label>
+            <input type="number" class="form-control form-control-sm bg-black border-secondary text-light rounded-0"
+              id="editLugarFrecuencia" min="1" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label text-muted small text-uppercase fw-bold" style="font-size: 10px;">Latitud</label>
+              <input type="text" class="form-control form-control-sm bg-black border-secondary text-light rounded-0"
+                id="editLugarLat" pattern="^-?[0-9]*\.?[0-9]*$" title="Debe usar punto (.) como decimal" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-muted small text-uppercase fw-bold"
+                style="font-size: 10px;">Longitud</label>
+              <input type="text" class="form-control form-control-sm bg-black border-secondary text-light rounded-0"
+                id="editLugarLon" pattern="^-?[0-9]*\.?[0-9]*$" title="Debe usar punto (.) como decimal" required>
+            </div>
+          </div>
+          <div class="d-flex gap-3 mb-3">
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input rounded-0" id="editLugarTitulo">
+              <label class="form-check-label text-secondary small" for="editLugarTitulo">Título</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input rounded-0" id="editLugarContenido">
+              <label class="form-check-label text-secondary small" for="editLugarContenido">Cuerpo</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-warning w-100 rounded-0 btn-sm fw-bold">GUARDAR CAMBIOS</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mapear Ubicación (Buscar y Mapear) -->
+<div class="modal fade" id="modalMapearUbicacion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content modal-sirio-content shadow-lg">
+      <div class="modal-header modal-sirio-header p-3">
+        <h6 class="modal-title text-warning text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 1px;">
+          <i class="fa-solid fa-magnifying-glass-location me-2"></i>Buscar y Mapear
+        </h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-3">
+        <p class="small text-muted mb-3" style="font-size: 11px;">
+          Indique el nombre real/geográfico para mapear la selección: <br>
+          <strong id="mapear-original-text" class="text-warning fst-italic"></strong>
+        </p>
+        <div class="mb-3">
+          <label class="form-label small text-warning text-uppercase fw-bold"
+            style="font-size: 9px; letter-spacing: 0.5px;">Buscar Ubicación
+            Real</label>
+          <div class="input-group input-group-sm flex-nowrap sirio-input-group">
+            <input type="text" id="mapear-search-name" class="form-control" placeholder="Ej: Cosignano"
+              list="datalistLugaresMapear" style="border-right: 0;">
+            <button class="btn btn-sirio-outline" type="button" id="btn-paste-search" title="Pegar"
+              style="border-left: 0;">
+              <i class="fa-solid fa-paste"></i>
+            </button>
+            <button class="btn btn-sirio-outline" type="button" id="btn-search-google-maps" title="Maps">
+              <i class="fa-solid fa-earth-americas"></i>
+            </button>
+          </div>
+          <div class="form-text text-secondary mt-2 fst-italic on-surface-text"
+            style="font-size: 10px; line-height: 1.3;">
+            <ol class="ps-3 mb-0">
+              <li>Pulsa el botón <strong>Mundo</strong> <i class="fa-solid fa-earth-americas text-warning mx-1"></i>
+                para abrir Google Maps.</li>
+              <li>Copia el <strong>nombre</strong> o las <strong>coordenadas</strong> (clic derecho en el mapa).</li>
+              <li>Vuelve aquí y pulsa <strong>Pegar</strong> <i class="fa-solid fa-paste text-warning mx-1"></i>.</li>
+            </ol>
+          </div>
+          <datalist id="datalistLugaresMapear"></datalist>
+        </div>
+        <button type="button" id="btn-confirmar-mapeo" class="btn btn-warning w-100 btn-sm text-uppercase fw-bold"
+          style="font-size: 10px; height: 32px; letter-spacing: 0.5px;">
+          Geolocalizar y Añadir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Copiar Texto
+  document.getElementById('btn-copiar-texto')?.addEventListener('click', function () {
+    const elemento = document.getElementById('texto-noticia-copiar');
+    if (!elemento) {
+      alert('Error: No se encontró el texto para copiar');
+      return;
+    }
+
+    // Obtener el texto limpio (sin HTML)
+    const texto = elemento.innerText || elemento.textContent;
+
+    if (!texto || texto.trim() === '') {
+      alert('No hay texto disponible para copiar');
+      return;
+    }
+
+    // Intentar copiar al portapapeles
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(() => {
+        // Éxito: cambiar icono temporalmente
+        const icon = document.getElementById('icon-copiar');
+        if (icon) {
+          icon.classList.remove('fa-regular', 'fa-clone');
+          icon.classList.add('fa-solid', 'fa-check', 'text-success');
+          setTimeout(() => {
+            icon.classList.remove('fa-solid', 'fa-check', 'text-success');
+            icon.classList.add('fa-regular', 'fa-clone');
+          }, 2000);
+        }
+      }).catch(err => {
+        console.error('Error al copiar:', err);
+        alert('Error al copiar el texto. Por favor, intente seleccionar y copiar manualmente.');
+      });
+    } else {
+      // Fallback para navegadores antiguos
+      const textArea = document.createElement('textarea');
+      textArea.value = texto;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        const icon = document.getElementById('icon-copiar');
+        if (icon) {
+          icon.classList.remove('fa-regular', 'fa-clone');
+          icon.classList.add('fa-solid', 'fa-check', 'text-success');
+          setTimeout(() => {
+            icon.classList.remove('fa-solid', 'fa-check', 'text-success');
+            icon.classList.add('fa-regular', 'fa-clone');
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error al copiar (fallback):', err);
+        alert('Error al copiar el texto. Por favor, intente seleccionar y copiar manualmente.');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  });
+
+  // --- Lógica de Resaltado de Lugares en el Texto ---
+  let originalContentHTML = "";
+  let originalTitleHTML = "";
+
+  // Variables for Word Search
+  let detectedLocations = [];
+  let currentSearchMatches = [];
+  let currentSearchIndex = -1;
+
+  function resaltarLugar(nombre) {
+    const container = document.getElementById('texto-noticia-copiar');
+    const titleContainer = document.getElementById('titulo-noticia-copiar');
+    if (!container) return;
+
+    // Guardar el contenido original si es la primera vez
+    if (!originalContentHTML) originalContentHTML = container.innerHTML;
+    if (titleContainer && !originalTitleHTML) originalTitleHTML = titleContainer.innerHTML;
+
+    // Limpiar resaltado previo
+    container.innerHTML = originalContentHTML;
+    if (titleContainer) titleContainer.innerHTML = originalTitleHTML;
+
+    // Reset Highlight All button state if active
+    const btnAll = document.getElementById('btn-highlight-all');
+    if (btnAll) {
+      btnAll.classList.remove('active-highlight', 'text-warning');
+      btnAll.classList.add('text-info');
+      btnAll.title = "Resaltar Todas las Ubicaciones";
+    }
+
+    if (!nombre) return;
+
+    // Use word boundaries to avoid matching gentilics (e.g., "Brasil" in "brasileño")
+    const safeNombre = nombre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b(${safeNombre})\\b`, 'gi');
+
+    // Retrieve full data for this location to show all buttons (including vinculación)
+    const lugarData = (window.currentLocationsData || []).find(l => l.nombre.toLowerCase() === nombre.toLowerCase());
+    const ubicacionId = lugarData?.id || '';
+    const frecDesvinc = lugarData?.frecuencia_desvinculada || 0;
+    const frec = lugarData?.frecuencia || 1;
+    const hasDesvinculadas = frecDesvinc > 0;
+    const vinculada = lugarData?.vinculada !== false;
+    const vinculadaClass = hasDesvinculadas ? ' desvinculada' : '';
+    const vinculadaIcon = hasDesvinculadas ? 'fa-link-slash' : 'fa-link';
+    const vincCount = frec - frecDesvinc;
+    const vinculadaTitle = `Frec: ${vincCount} vinc / ${frecDesvinc} desvinc (click para ${hasDesvinculadas ? 're-vincular' : 'desvincular'} 1 del proyecto)`;
+
+    const markerHTML = `<mark class="highlight-lugar" data-nombre="${nombre}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}">$1<div class="highlight-vincular-btn${vinculadaClass}" onclick="vincularLugarDesdeResaltado(this.closest('mark'), event)" title="${vinculadaTitle}"><i class="fa-solid ${vinculadaIcon}"></i></div><div class="highlight-search-btn" onclick="abrirModalMapear(this.closest('mark').dataset.nombre, event)" title="Buscar y Mapear Ubicación"><i class="fa-solid fa-magnifying-glass-location"></i></div><div class="highlight-gps-btn" onclick="irALugarEnMapa(this.closest('mark').dataset.nombre, event)" title="Ver en mapa"><i class="fa-solid fa-location-arrow"></i></div><div class="highlight-delete-btn" onclick="borrarLugarDesdeResaltado(this.closest('mark').dataset.nombre, event)" title="Eliminar esta ubicación">&times;</div></mark>`;
+
+    container.innerHTML = container.innerHTML.replace(regex, markerHTML);
+    if (titleContainer) titleContainer.innerHTML = titleContainer.innerHTML.replace(regex, markerHTML);
+
+    // Scroll hasta el primer resaltado (prioridad al título, luego cuerpo)
+    const firstHighlight = (titleContainer?.querySelector('.highlight-lugar')) || container.querySelector('.highlight-lugar');
+    if (firstHighlight) {
+      firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstHighlight.classList.add('active-scroll');
+      setTimeout(() => firstHighlight.classList.remove('active-scroll'), 2000);
+    }
+  }
+
+  window.irALugarEnMapa = function (nombre, event) {
+    if (event) event.stopPropagation();
+    if (!window.currentLocationsData || !window.mapaCartografia) return;
+
+    const lugar = window.currentLocationsData.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+    if (lugar) {
+      // Centrar mapa
+      window.mapaCartografia.setView([lugar.lat, lugar.lon], 14);
+
+      // Desplazar la página hasta el mapa
+      const mapaContainer = document.getElementById('mapa-cartografia');
+      if (mapaContainer) {
+        // Buscamos el ancestro 'section' para que se vea el título también
+        const section = mapaContainer.closest('section');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          mapaContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      // Encontrar el círculo correspondiente para abrir el popup
+      window.mapaCartografia.eachLayer(layer => {
+        if (layer instanceof L.Circle) {
+          const center = layer.getLatLng();
+          if (Math.abs(center.lat - lugar.lat) < 0.0001 && Math.abs(center.lng - lugar.lon) < 0.0001) {
+            layer.openPopup();
+            // Efecto visual en el mapa
+            const flashCircle = L.circle([lugar.lat, lugar.lon], {
+              radius: 50,
+              color: '#fff',
+              fillOpacity: 0.8,
+              weight: 2
+            }).addTo(window.mapaCartografia);
+            setTimeout(() => flashCircle.remove(), 1000);
+          }
+        }
+      });
+
+      // Feedback visual opcional
+      console.log(`[GPS] Centrando en: ${nombre}`);
+    } else {
+      console.warn(`[GPS] No se encontraron coordenadas para: ${nombre}`);
+    }
+  }
+
+  function resaltarTodosLosLugares() {
+    const container = document.getElementById('texto-noticia-copiar');
+    const titleContainer = document.getElementById('titulo-noticia-copiar');
+    if (!container || detectedLocations.length === 0) return;
+
+    if (!originalContentHTML) originalContentHTML = container.innerHTML;
+    if (titleContainer && !originalTitleHTML) originalTitleHTML = titleContainer.innerHTML;
+
+    // Reset current state to avoid nested marks
+    container.innerHTML = originalContentHTML;
+    if (titleContainer) titleContainer.innerHTML = originalTitleHTML;
+
+    // Sort locations by length descending (to avoid partial highlights of longer names)
+    const sortedLocations = [...new Set(detectedLocations)].sort((a, b) => b.length - a.length);
+
+    // Create a combined regex: \b(LocA|LocB|LocC)\b
+    const combinedRegexString = sortedLocations
+      .map(loc => loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+
+    const regex = new RegExp(`\\b(${combinedRegexString})\\b`, 'gi');
+
+    // Use a map to store the actual name matched for each group
+    const locationMap = {};
+    sortedLocations.forEach(loc => {
+      locationMap[loc.toLowerCase()] = loc;
+    });
+
+    const html = container.innerHTML;
+    window.borrarLugar = function (nombre) {
+      if (!confirm('¿Eliminar la ubicación "' + nombre + '" de la noticia?')) return;
+
+      fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ nombre: nombre })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            if (typeof limpiarResaltado === 'function') limpiarResaltado();
+            window.renderTablaYMapaUltima();
+          } else {
+            alert('Error al eliminar: ' + (data.error || 'Desconocido'));
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Error de red al eliminar ubicación.');
+        });
+    };
+
+    const renderTabla = (locations) => {
+      const markerTpl = (match) => {
+        const realName = locationMap[match.toLowerCase()] || match;
+        const lugarData = window.currentLocationsData?.find(l => l.nombre.toLowerCase() === realName.toLowerCase());
+        const ubicacionId = lugarData?.id || '';
+        const frecDesvinc = lugarData?.frecuencia_desvinculada || 0;
+        const frec = lugarData?.frecuencia || 1;
+        const hasDesvinculadas = frecDesvinc > 0;
+        const vinculada = lugarData?.vinculada !== false;
+        const vinculadaClass = hasDesvinculadas ? ' desvinculada' : '';
+        const vinculadaIcon = hasDesvinculadas ? 'fa-link-slash' : 'fa-link';
+        const vincCount = frec - frecDesvinc;
+        const vinculadaTitle = `Frec: ${vincCount} vinc / ${frecDesvinc} desvinc (click para ${hasDesvinculadas ? 're-vincular' : 'desvincular'} 1 del proyecto)`;
+        return `<mark class="highlight-lugar" data-nombre="${realName}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}">${match}<div class="highlight-vincular-btn${vinculadaClass}" onclick="vincularLugarDesdeResaltado(this.closest('mark'), event)" title="${vinculadaTitle}"><i class="fa-solid ${vinculadaIcon}"></i></div><div class="highlight-search-btn" onclick="abrirModalMapear(this.closest('mark').dataset.nombre, event)" title="Buscar y Mapear Ubicación"><i class="fa-solid fa-magnifying-glass-location"></i></div><div class="highlight-gps-btn" onclick="irALugarEnMapa(this.closest('mark').dataset.nombre, event)" title="Ver en mapa"><i class="fa-solid fa-location-arrow"></i></div><div class="highlight-delete-btn" onclick="borrarLugarDesdeResaltado(this.closest('mark').dataset.nombre, event)" title="Eliminar esta ubicación">&times;</div></mark>`;
+      };
+
+      container.innerHTML = container.innerHTML.replace(regex, markerTpl);
+      if (titleContainer) titleContainer.innerHTML = titleContainer.innerHTML.replace(regex, markerTpl);
+    };
+
+    renderTabla(sortedLocations);
+  }
+
+  function limpiarResaltado() {
+    const container = document.getElementById('texto-noticia-copiar');
+    const titleContainer = document.getElementById('titulo-noticia-copiar');
+    if (container && originalContentHTML) {
+      container.innerHTML = originalContentHTML;
+    }
+    if (titleContainer && originalTitleHTML) {
+      titleContainer.innerHTML = originalTitleHTML;
+    }
+    // Also reset word search state if active
+    const searchInput = document.getElementById('input-word-search');
+    if (searchInput && searchInput.value) {
+      searchInput.value = '';
+      updateSearchUI(0, 0);
+    }
+  }
+
+  function abrirModalEditarDesdeResaltado(nombre, event) {
+    if (event) event.stopPropagation();
+    if (!window.currentLocationsData) return;
+
+    const lugar = window.currentLocationsData.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+    if (!lugar) {
+      console.error('No se encontró el lugar para editar:', nombre);
+      return;
+    }
+
+    // Usar la función existente del sidebar (abrirModalEditar) si está disponible
+    if (typeof window.abrirModalEditar === 'function') {
+      window.abrirModalEditar(lugar);
+    } else {
+      console.error('Función abrirModalEditar no encontrada');
+    }
+  }
+
+  function borrarLugarDesdeResaltado(nombre, event) {
+    if (event) event.stopPropagation();
+    if (!confirm(`¿Eliminar la ubicación "${nombre}" de esta noticia?`)) return;
+
+    fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+      },
+      body: JSON.stringify({ nombre: nombre })
+    }).then(resp => {
+      if (resp.ok) {
+        if (typeof limpiarResaltado === 'function') limpiarResaltado();
+        window.renderTablaYMapaUltima();
+      } else {
+        alert('Error al eliminar la ubicación.');
+      }
+    });
+  }
+
+  function vincularLugarDesdeResaltado(markElement, event) {
+    if (event) event.stopPropagation();
+    
+    const ubicacionId = markElement.dataset.ubicacionId;
+    const nombre = markElement.dataset.nombre;
+
+    if (!ubicacionId) {
+      console.error('No se encontró ID de ubicación');
+      return;
+    }
+
+    // Find the button inside the mark
+    const btn = markElement.querySelector('.highlight-vincular-btn');
+    if (!btn) return;
+
+    // Get current state from cached data
+    let frecDesvinc = 0;
+    let frec = 1;
+    if (window.currentLocationsData) {
+      const lugarData = window.currentLocationsData.find(l => l.id == ubicacionId);
+      if (lugarData) {
+        frecDesvinc = lugarData.frecuencia_desvinculada || 0;
+        frec = lugarData.frecuencia || 1;
+      }
+    }
+    
+    // Determine action: if there are desvinculadas, vincular one; else desvincular one
+    const willVincular = frecDesvinc > 0;
+
+    // Persist to backend
+    fetch(`/api/ubicacion/${ubicacionId}/vincular`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+      },
+      body: JSON.stringify({ vinculada: willVincular })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log(`Location ${nombre} (ID: ${ubicacionId}) updated:`, data);
+          
+          // Show toast notification
+          const toast = document.createElement('div');
+          toast.className = 'position-fixed top-50 start-50 translate-middle px-4 py-2 rounded shadow';
+          toast.style.cssText = 'z-index: 9999; background: ' + (willVincular ? '#22c55e' : '#ff9800') + '; color: white;';
+          toast.innerHTML = `<i class="fa-solid fa-${willVincular ? 'link' : 'link-slash'} me-2"></i>${nombre} ${willVincular ? 'vinculada' : 'desvinculada'} (1 ocurrencia)`;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2000);
+          
+          // Update cached data
+          if (window.currentLocationsData) {
+            const lugarData = window.currentLocationsData.find(l => l.id == ubicacionId);
+            if (lugarData) {
+              lugarData.vinculada = data.vinculada;
+              lugarData.frecuencia_desvinculada = data.frecuencia_desvinculada || 0;
+              lugarData.frecuencia_efectiva = data.frecuencia_efectiva || lugarData.frecuencia;
+            }
+          }
+          
+          // Refresh sidebar list to reflect changes
+          window.renderTablaYMapaUltima();
+        } else {
+          console.error('Failed to save vinculada status:', data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error saving vinculada status:', error);
+      });
+  }
+
+  // --- Search & Map (Canonical Mapping) ---
+  let modalMapearUbicacion = null;
+
+  function abrirModalMapear(originalText, event) {
+    if (event) event.stopPropagation();
+    if (!modalMapearUbicacion) {
+      modalMapearUbicacion = new bootstrap.Modal(document.getElementById('modalMapearUbicacion'));
+    }
+    document.getElementById('mapear-original-text').textContent = originalText;
+    document.getElementById('mapear-search-name').value = '';
+
+    // Set confirm button handler
+    const confirmBtn = document.getElementById('btn-confirmar-mapeo');
+    confirmBtn.onclick = () => {
+      const searchName = document.getElementById('mapear-search-name').value.trim();
+      if (!searchName) {
+        alert('Por favor ingrese un nombre de búsqueda.');
+        return;
+      }
+      ejecutarAddLugarConBusqueda(originalText, searchName);
+    };
+
+    // Set Google Maps Search Handler
+    document.getElementById('btn-search-google-maps').onclick = () => {
+      const inputVal = document.getElementById('mapear-search-name').value.trim();
+      const query = inputVal || originalText; // Fallback to original text if input is empty
+      if (query) {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
+      }
+    };
+
+    // Set Paste Handler
+    document.getElementById('btn-paste-search').onclick = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('mapear-search-name').value = text;
+          // Trigger input event to update datalist if needed or just visual feedback
+          document.getElementById('mapear-search-name').dispatchEvent(new Event('input'));
+        }
+      } catch (err) {
+        console.error('Failed to read clipboard contents: ', err);
+        alert('No se pudo pegar del portapapeles. Por favor, permisos de navegador requeridos o contexto seguro (HTTPS).');
+      }
+    };
+
+    // Add autocomplete to the search input
+    const searchInput = document.getElementById('mapear-search-name');
+    const datalistMapear = document.getElementById('datalistLugaresMapear');
+
+    searchInput.oninput = function () {
+      const query = this.value;
+      if (query.length < 2) return;
+      fetch("{{ url_for('noticias.cartografia_noticia_lugares_autocomplete') }}?q=" + encodeURIComponent(query))
+        .then(res => res.json())
+        .then(data => {
+          datalistMapear.innerHTML = '';
+          data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.nombre;
+            datalistMapear.appendChild(option);
+          });
+        });
+    };
+
+    modalMapearUbicacion.show();
+  }
+
+  function ejecutarAddLugarConBusqueda(originalText, searchName) {
+    fetch("{{ url_for('noticias.cartografia_noticia_add_location', id=noticia.id) }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+      },
+      body: JSON.stringify({
+        nombre: originalText,
+        nombre_busqueda: searchName,
+        frecuencia: 1
+      })
+    }).then(resp => {
+      if (resp.ok) {
+        if (modalMapearUbicacion) modalMapearUbicacion.hide();
+        window.renderTablaYMapaUltima();
+        resaltarLugar(originalText);
+      } else {
+        alert('Error al mapear la ubicación.');
+      }
+    });
+  }
+
+  // --- Lógica de Selección de Texto para Añadir Lugares ---
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const textContainer = document.getElementById('texto-noticia-copiar');
+    const titleContainer = document.getElementById('titulo-noticia-copiar');
+    const contextMenu = document.getElementById('custom-context-menu');
+    const ctxText = document.getElementById('ctx-selection-text');
+    const ctxAddBtn = document.getElementById('ctx-add-lugar');
+
+    // Inicializar Popover de Ayuda
+    const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl, { container: 'body' })
+    })
+
+    const handleContextMenu = (e) => {
+      const selection = window.getSelection().toString().trim();
+      if (selection.length > 0 && selection.length < 50) {
+        e.preventDefault();
+        ctxText.textContent = selection;
+        const ctxMapBtn = document.getElementById('ctx-map-lugar');
+        const ctxTextMap = document.getElementById('ctx-selection-text-map');
+        ctxTextMap.textContent = selection;
+
+        // Verificar si ya existe
+        const yaExiste = detectedLocations.some(loc => loc.toLowerCase() === selection.toLowerCase());
+        if (yaExiste) {
+          ctxAddBtn.innerHTML = `<i class="fa-solid fa-circle-exclamation text-danger"></i> <span class="text-danger">Ubicación ya detectada</span>`;
+          ctxAddBtn.onclick = null;
+          ctxAddBtn.style.cursor = 'not-allowed';
+          ctxAddBtn.style.opacity = '0.7';
+
+          // Still allow re-mapping even if it exists
+          ctxMapBtn.onclick = () => {
+            abrirModalMapear(selection);
+            contextMenu.style.display = 'none';
+          };
+        } else {
+          ctxAddBtn.innerHTML = `<i class="fa-solid fa-location-dot"></i> Añadir Ubicación: <b class="ms-1">${selection}</b>`;
+          ctxAddBtn.onclick = () => {
+            ejecutarAddLugar(selection);
+            contextMenu.style.display = 'none';
+          };
+          ctxAddBtn.style.cursor = 'pointer';
+          ctxAddBtn.style.opacity = '1';
+
+          ctxMapBtn.onclick = () => {
+            abrirModalMapear(selection);
+            contextMenu.style.display = 'none';
+          };
+        }
+
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = e.pageX + 'px';
+        contextMenu.style.top = e.pageY + 'px';
+      } else {
+        contextMenu.style.display = 'none';
+      }
+    };
+
+    if (textContainer) textContainer.addEventListener('contextmenu', handleContextMenu);
+    if (titleContainer) titleContainer.addEventListener('contextmenu', handleContextMenu);
+
+    // Cerrar menú al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (!contextMenu.contains(e.target)) {
+        contextMenu.style.display = 'none';
+      }
+    });
+
+    function ejecutarAddLugar(lugar) {
+      fetch("{{ url_for('noticias.cartografia_noticia_add_location', id=noticia.id) }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ nombre: lugar, frecuencia: 1 })
+      }).then(resp => {
+        if (resp.ok) {
+          window.renderTablaYMapaUltima();
+          resaltarLugar(lugar);
+        } else {
+          alert('Error al añadir la ubicación.');
+        }
+      });
+    }
+  });
+
+  // Mapa y Tabla Logic
+  window.mapaCartografia = null;
+  window.mapaTileLayer = null;
+  let modalEditarLugar = null;
+
+  function abrirModalEditarLugar(nombre, frecuencia, enTitulo, enContenido, lat, lon) {
+    if (!modalEditarLugar) {
+      modalEditarLugar = new bootstrap.Modal(document.getElementById('modalEditarLugar'));
+    }
+    document.getElementById('editLugarNombreOriginal').value = nombre;
+    document.getElementById('editLugarNombre').value = nombre;
+    document.getElementById('editLugarFrecuencia').value = frecuencia;
+
+    // Forzar el uso de punto (.) como decimal en los inputs de texto
+    const safeLat = (lat !== undefined && lat !== null) ? String(lat).replace(',', '.') : '';
+    const safeLon = (lon !== undefined && lon !== null) ? String(lon).replace(',', '.') : '';
+
+    document.getElementById('editLugarLat').value = safeLat;
+    document.getElementById('editLugarLon').value = safeLon;
+    document.getElementById('editLugarTitulo').checked = (enTitulo === true || enTitulo === 'Sí');
+    document.getElementById('editLugarContenido').checked = (enContenido === true || enContenido === 'Sí');
+    modalEditarLugar.show();
+  }
+
+  function getTileUrlForTheme() {
+    const isDarkMode = document.documentElement.getAttribute('data-theme') !== 'light';
+    return isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  }
+
+  window.renderTablaYMapaUltima = function () {
+    fetch("{{ url_for('noticias.cartografia_noticia', id=noticia.id) }}")
+      .then(resp => {
+        if (!resp.ok) throw new Error("HTTP error " + resp.status);
+        return resp.json();
+      })
+      .then(data => {
+        window.currentLocationsData = data.ciudades || [];
+        // 1. Render Mapa
+        try {
+          if (!window.mapaCartografia) {
+            window.mapaCartografia = L.map('mapa-cartografia', {
+              zoomControl: false,
+              attributionControl: false
+            });
+
+            window.mapaTileLayer = L.tileLayer(getTileUrlForTheme(), { maxZoom: 18 }).addTo(window.mapaCartografia);
+
+            // Robust Resize Observer
+            const resizeObserver = new ResizeObserver(() => {
+              if (window.mapaCartografia) window.mapaCartografia.invalidateSize();
+            });
+            resizeObserver.observe(document.getElementById('mapa-cartografia'));
+          } else {
+            // Update only Tiles if theme changed (logic moved to observer below, 
+            // but we ensure tiles are correct here too)
+            window.mapaTileLayer.setUrl(getTileUrlForTheme());
+          }
+
+          // Clear existing markers (circles)
+          window.mapaCartografia.eachLayer(layer => {
+            if (layer instanceof L.Circle) window.mapaCartografia.removeLayer(layer);
+          });
+
+          data.ciudades.forEach(function (c) {
+            const isVerified = c.verified === true || c.verified === 1 || c.verified === 'Sí';
+            const markerColor = isVerified ? '#22c55e' : '#ff9800';
+
+            L.circle([c.lat, c.lon], {
+              color: markerColor,
+              fillColor: markerColor,
+              fillOpacity: 0.4,
+              weight: 2, // Slightly thicker for verified distinction
+              radius: 12000 + c.frecuencia * 2000
+            }).addTo(window.mapaCartografia)
+              .bindPopup(`<div style="color:#333"><b>${c.nombre}</b><br>Frecuencia: ${c.frecuencia_efectiva || c.frecuencia}${c.frecuencia_desvinculada > 0 ? ' (' + c.frecuencia_desvinculada + ' desvinculada' + (c.frecuencia_desvinculada > 1 ? 's' : '') + ')' : ''}</div>`)
+              .on('click', function () {
+                resaltarLugar(c.nombre);
+              });
+          });
+
+          // Auto-fit bounds
+          if (data.ciudades.length > 0) {
+            const bounds = data.ciudades.map(c => [c.lat, c.lon]);
+            window.mapaCartografia.fitBounds(bounds, {
+              padding: [40, 40],
+              maxZoom: 12 // Prevent extreme zoom on single markers
+            });
+          } else {
+            window.mapaCartografia.setView([40.4168, -3.7038], 5);
+          }
+
+        } catch (e) {
+          console.error('Error Leaflet:', e);
+        }
+
+        // 1.5. Render Title Locations (Metadata Bar)
+        const titleListContainer = document.getElementById('list-titulo-ubicaciones');
+        const titleSectionContainer = document.getElementById('container-titulo-ubicaciones');
+        if (titleListContainer && titleSectionContainer) {
+          titleListContainer.innerHTML = '';
+          const titleLocations = data.estadisticas.filter(e => e.en_titulo === true || e.en_titulo === 'Sí');
+
+          if (titleLocations.length > 0) {
+            titleLocations.forEach(loc => {
+              const badge = document.createElement('span');
+              badge.className = 'text-warning cursor-pointer fw-bold hover-white';
+              badge.style.fontSize = '0.8rem';
+              badge.style.borderBottom = '1px solid rgba(255, 152, 0, 0.3)';
+              badge.textContent = loc.lugar;
+              badge.onclick = () => resaltarLugar(loc.lugar);
+              titleListContainer.appendChild(badge);
+            });
+            titleSectionContainer.classList.remove('d-none');
+          } else {
+            titleSectionContainer.classList.add('d-none');
+          }
+        }
+
+        // 2. Render List (New Sidebar Widget)
+        const listContainer = document.getElementById('sidebar-places-list');
+        listContainer.innerHTML = '';
+
+        if (data.estadisticas && data.estadisticas.length > 0) {
+          data.estadisticas.sort((a, b) => b.frecuencia - a.frecuencia);
+          cachedLocationsData = data.estadisticas; // Cache for sort/export
+          detectedLocations = data.estadisticas.map(e => e.lugar); // Actualizar lista de detectados
+
+          data.estadisticas.forEach(function (e) {
+            const item = document.createElement('div');
+            item.className = 'place-row cursor-pointer';
+            item.dataset.lugar = e.lugar.toLowerCase();
+            item.style.cursor = 'pointer';
+            item.onclick = () => resaltarLugar(e.lugar);
+            item.innerHTML = `
+              <div class="d-flex align-items-center gap-2 w-100" style="overflow:hidden;">
+                <b class="text-light text-truncate" style="min-width: 80px; font-size: 0.95rem; flex-shrink: 1;" title="${e.lugar}">${e.lugar}</b>
+                
+                <div class="d-flex align-items-center gap-3 ms-4 small flex-nowrap" style="font-size: 0.7rem; opacity: 0.9;">
+                  <span class="text-muted location-frequency"><b class="place-data-highlight">Frecuencia:</b>&nbsp;${e.frecuencia_efectiva || e.frecuencia}${e.frecuencia_desvinculada > 0 ? ' <span class="text-warning">(-' + e.frecuencia_desvinculada + ')</span>' : ''}</span>
+                  <span class="text-muted" style="font-size: 8.5px;"><b class="place-data-highlight">Coordenadas:</b>&nbsp;[${e.lat ? e.lat.toFixed(4) : '?'}&nbsp;/&nbsp;${e.lon ? e.lon.toFixed(4) : '?'}]</span>
+                  ${(e.en_titulo === true || e.en_titulo === 'Sí') ? '<i class="fa-solid fa-heading text-warning" title="En Título" style="font-size:9px;"></i>' : ''}
+                </div>
+
+<div class="d-flex gap-2 ms-auto align-items-center flex-shrink-0">
+    <button class="btn btn-link p-1 text-muted hover-info btn-copy-coords" title="Copiar Coordenadas"
+        data-lat="${e.lat}" data-lon="${e.lon}"><i class="fa-solid fa-clipboard" style="font-size:11px;"></i></button>
+    <button class="btn btn-link p-1 hover-success btn-verify-location ${e.verified ? 'text-success' : 'text-muted'}"
+        title="${e.verified ? 'Verificada' : 'Marcar como verificada'}" data-verified="${e.verified || false}"><i
+            class="fa-solid fa-${e.verified ? 'circle-check' : 'circle'}" style="font-size:11px;"></i></button>
+    <button class="btn btn-link p-1 text-muted hover-primary btn-google-maps" title="Abrir en Google Maps"
+        data-lat="${e.lat}" data-lon="${e.lon}" ${!e.lat || !e.lon ? 'disabled' : ''}><i
+            class="fa-solid fa-earth-americas" style="font-size:11px;"></i></button>
+    <button class="btn btn-link p-1 hover-success btn-vincular-lugar ${e.vinculada !== false ? 'text-success' : 'text-warning'}"
+        title="${e.frecuencia_desvinculada > 0 ? 'Frec: ' + (e.frecuencia_efectiva || e.frecuencia) + ' vinc / ' + e.frecuencia_desvinculada + ' desvinc (click para desvincular 1 del proyecto)' : 'Todas vinculadas al proyecto (click para desvincular 1)'}" 
+        data-vinculada="${e.vinculada !== false}" data-ubicacion-id="${e.id}" data-frecuencia-desvinculada="${e.frecuencia_desvinculada || 0}" data-frecuencia="${e.frecuencia}"><i
+            class="fa-solid fa-${e.vinculada !== false && (!e.frecuencia_desvinculada || e.frecuencia_desvinculada == 0) ? 'link' : 'link-slash'}" style="font-size:12px;"></i></button>
+    <button class="btn btn-link p-1 text-muted hover-danger btn-borrar-lugar" title="Borrar"><i
+            class="fa-solid fa-trash" style="font-size:12px;"></i></button>
+</div>              </div>
+            `;
+
+            // Listener Borrar
+            item.querySelector('.btn-borrar-lugar').onclick = function (event) {
+              event.stopPropagation();
+              if (!confirm('¿Eliminar esta ubicación de la noticia?')) return;
+              fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ nombre: e.lugar })
+              }).then(() => window.renderTablaYMapaUltima());
+            };
+
+            // Listener Copy Coordinates
+            item.querySelector('.btn-copy-coords').onclick = function (event) {
+              event.stopPropagation();
+              const lat = this.dataset.lat;
+              const lon = this.dataset.lon;
+              if (lat && lon && lat !== 'null' && lon !== 'null') {
+                navigator.clipboard.writeText(`${lat}, ${lon}`).then(() => {
+                  // Toast notification
+                  const toast = document.createElement('div');
+                  toast.className = 'position-fixed top-50 start-50 translate-middle bg-success text-white px-4 py-2 rounded shadow';
+                  toast.style.zIndex = '9999';
+                  toast.innerHTML = '<i class="fa-solid fa-check me-2"></i>Coordenadas copiadas';
+                  document.body.appendChild(toast);
+                  setTimeout(() => toast.remove(), 2000);
+                }).catch(err => console.error('Error copying:', err));
+              }
+            };
+
+            // Listener Verify Location
+            item.querySelector('.btn-verify-location').onclick = function (event) {
+              event.stopPropagation();
+              const currentVerified = this.dataset.verified === 'true';
+              const newVerified = !currentVerified;
+              this.dataset.verified = newVerified;
+
+              if (newVerified) {
+                this.classList.remove('text-muted');
+                this.classList.add('text-success');
+                this.title = 'Verificada';
+                this.querySelector('i').className = 'fa-solid fa-circle-check';
+              } else {
+                this.classList.remove('text-success');
+                this.classList.add('text-muted');
+                this.title = 'Marcar como verificada';
+                this.querySelector('i').className = 'fa-solid fa-circle';
+              }
+
+              // Persist to backend
+              fetch(`/api/ubicacion/${e.id}/verificar`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ verificada: newVerified })
+              })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    console.log(`Location ${e.lugar} (ID: ${e.id}) verified status saved:`, newVerified);
+                  } else {
+                    console.error('Failed to save verification status:', data.error);
+                    // Revert UI changes on error
+                    this.dataset.verified = currentVerified;
+                    if (currentVerified) {
+                      this.classList.remove('text-muted');
+                      this.classList.add('text-success');
+                      this.title = 'Verificada';
+                      this.querySelector('i').className = 'fa-solid fa-circle-check';
+                    } else {
+                      this.classList.remove('text-success');
+                      this.classList.add('text-muted');
+                      this.title = 'Marcar como verificada';
+                      this.querySelector('i').className = 'fa-solid fa-circle';
+                    }
+                  }
+                })
+                .catch(error => {
+                  console.error('Error saving verification status:', error);
+                  // Revert UI changes on error
+                  this.dataset.verified = currentVerified;
+                  if (currentVerified) {
+                    this.classList.remove('text-muted');
+                    this.classList.add('text-success');
+                    this.title = 'Verificada';
+                    this.querySelector('i').className = 'fa-solid fa-circle-check';
+                  } else {
+                    this.classList.remove('text-success');
+                    this.classList.add('text-muted');
+                    this.title = 'Marcar como verificada';
+                    this.querySelector('i').className = 'fa-solid fa-circle';
+                  }
+                });
+            };
+
+            // Listener Google Maps
+            item.querySelector('.btn-google-maps').onclick = function (event) {
+              event.stopPropagation();
+              const lat = this.dataset.lat;
+              const lon = this.dataset.lon;
+              if (lat && lon && lat !== 'null' && lon !== 'null') {
+                window.open(`https://www.google.com/maps?q=${lat},${lon}`, '_blank');
+              }
+            };
+
+            // Listener Vincular/Desvincular
+            item.querySelector('.btn-vincular-lugar').onclick = function (event) {
+              event.stopPropagation();
+              const ubicacionId = this.dataset.ubicacionId;
+              const frecDesvinc = parseInt(this.dataset.frecuenciaDesvinculada) || 0;
+              const frec = parseInt(this.dataset.frecuencia) || 1;
+              
+              // Determine action: if there are desvinculadas, vincular one; else desvincular one
+              const willVincular = frecDesvinc > 0;
+
+              // Persist to backend
+              fetch(`/api/ubicacion/${ubicacionId}/vincular`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ vinculada: willVincular })
+              })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    console.log(`Location ${e.lugar} (ID: ${ubicacionId}) updated:`, data);
+                    
+                    // Update button data attributes
+                    this.dataset.frecuenciaDesvinculada = data.frecuencia_desvinculada || 0;
+                    this.dataset.vinculada = data.vinculada;
+                    
+                    // Update button UI
+                    const newFrecDesvinc = data.frecuencia_desvinculada || 0;
+                    if (newFrecDesvinc > 0) {
+                      this.classList.remove('text-success');
+                      this.classList.add('text-warning');
+                      this.querySelector('i').className = 'fa-solid fa-link-slash';
+                    } else {
+                      this.classList.remove('text-warning');
+                      this.classList.add('text-success');
+                      this.querySelector('i').className = 'fa-solid fa-link';
+                    }
+                    
+                    // Update tooltip
+                    const vincCount = frec - newFrecDesvinc;
+                    this.title = `Frec: ${vincCount} vinc / ${newFrecDesvinc} desvinc (click para ${newFrecDesvinc > 0 ? 'vincular' : 'desvincular'} 1)`;
+                    
+                    // Update frequency display in sidebar
+                    const freqSpan = item.querySelector('.location-frequency');
+                    if (freqSpan) {
+                      const efectiva = data.frecuencia_efectiva || frec;
+                      freqSpan.innerHTML = `Frecuencia: ${efectiva}${newFrecDesvinc > 0 ? ' <span class="text-warning">(-' + newFrecDesvinc + ')</span>' : ''}`;
+                    }
+                    
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed top-50 start-50 translate-middle px-4 py-2 rounded shadow';
+                    toast.style.cssText = 'z-index: 9999; background: ' + (willVincular ? '#22c55e' : '#ff9800') + '; color: white;';
+                    toast.innerHTML = `<i class="fa-solid fa-${willVincular ? 'link' : 'link-slash'} me-2"></i>${data.nombre} ${willVincular ? 'vinculada' : 'desvinculada'} (1 ocurrencia)`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2000);
+                  } else {
+                    console.error('Failed to save vinculada status:', data.error);
+                  }
+                })
+                .catch(error => {
+                  console.error('Error saving vinculada status:', error);
+                });
+            };
+
+            listContainer.appendChild(item);
+          });
+        } else {
+          listContainer.innerHTML = '<div class="text-center text-muted small py-4 fst-italic">Sin lugares detectados</div>';
+        }
+        filterLocations();
+      })
+      .catch(err => {
+        console.error("Error Cartografia:", err);
+        document.getElementById('sidebar-places-list').innerHTML = `<div class="p-4 text-center text-danger small"><i class="fa-solid fa-circle-exclamation me-2"></i>Error al cargar ubicaciones: ${err.message}</div>`;
+      })
+      .finally(() => {
+        // Al terminar de renderizar la tabla/mapa, si el resaltado masivo estaba activo, re-aplicarlo
+        const btnAll = document.getElementById('btn-highlight-all');
+        if (btnAll && btnAll.classList.contains('active-highlight')) {
+          resaltarTodosLosLugares();
+        }
+      });
+  };
+
+  // Theme Change Registry
+  const themeObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme' && window.mapaTileLayer) {
+        window.mapaTileLayer.setUrl(getTileUrlForTheme());
+      }
+    });
+  });
+  themeObserver.observe(document.documentElement, { attributes: true });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.renderTablaYMapaUltima();
+
+    document.getElementById('btn-highlight-all').onclick = (e) => {
+      e.preventDefault();
+      const btn = e.currentTarget;
+      const isHighlighted = btn.classList.contains('active-highlight');
+
+      if (isHighlighted) {
+        limpiarResaltado();
+        btn.classList.remove('active-highlight', 'text-warning');
+        btn.title = "Resaltar Todas las Ubicaciones";
+      } else {
+        resaltarTodosLosLugares();
+        btn.classList.add('active-highlight', 'text-warning');
+        btn.classList.remove('text-info');
+        btn.title = "Limpiar Resaltado";
+      }
+    };
+
+    document.getElementById('btn-refresh-mapa').onclick = (e) => {
+      e.preventDefault();
+      window.renderTablaYMapaUltima();
+    };
+
+    document.getElementById('btn-add-lugar').onclick = (e) => {
+      e.preventDefault();
+      const lugar = prompt('Ingrese el nombre de la ciudad o lugar:');
+      if (lugar) {
+        fetch("{{ url_for('noticias.cartografia_noticia_add_location', id=noticia.id) }}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: lugar, frecuencia: 1 })
+        }).then(() => window.renderTablaYMapaUltima());
+      }
+    };
+
+    // Form Submit Editar Lugar
+    document.getElementById('formEditarLugar').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const originalName = document.getElementById('editLugarNombreOriginal').value;
+      const nombre = document.getElementById('editLugarNombre').value;
+      const frecuencia = document.getElementById('editLugarFrecuencia').value;
+      const enTitulo = document.getElementById('editLugarTitulo').checked ? 'Sí' : 'No';
+      const enContenido = document.getElementById('editLugarContenido').checked ? 'Sí' : 'No';
+      const lat = document.getElementById('editLugarLat').value;
+      const lon = document.getElementById('editLugarLon').value;
+
+      fetch("{{ url_for('noticias.cartografia_noticia_edit_location', id=noticia.id) }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+          nombre_anterior: originalName,
+          nombre: nombre,
+          frecuencia: frecuencia,
+          en_titulo: enTitulo,
+          en_contenido: enContenido,
+          lat: lat,
+          lon: lon
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            if (modalEditarLugar) modalEditarLugar.hide();
+            window.renderTablaYMapaUltima();
+          } else {
+            alert('Error: ' + (data.error || 'No se pudo editar'));
+          }
+        })
+        .catch(err => alert('Error de red al conectar con el servidor'));
+    });
+
+    // Autocomplete para el nombre del lugar
+    const inputNombreLugar = document.getElementById('editLugarNombre');
+    const datalistLugares = document.getElementById('datalistLugares');
+    let suggestionsData = [];
+    let latestRequestId = 0; // Para evitar condiciones de carrera
+
+    function tryUpdateCoordinates(name) {
+      const match = suggestionsData.find(s => s.nombre === name);
+      if (match) {
+        // console.log("Coordenadas encontradas para:", name, match);
+        document.getElementById('editLugarLat').value = match.lat;
+        document.getElementById('editLugarLon').value = match.lon;
+      }
+    }
+
+    inputNombreLugar?.addEventListener('input', function () {
+      const query = this.value;
+
+      // Intentar actualizar coordenadas si hay coincidencia exacta con lo que ya tenemos
+      tryUpdateCoordinates(query);
+
+      if (query.length < 2) return;
+
+      const requestId = ++latestRequestId;
+
+      fetch("{{ url_for('noticias.cartografia_noticia_lugares_autocomplete') }}?q=" + encodeURIComponent(query))
+        .then(res => res.json())
+        .then(data => {
+          if (requestId !== latestRequestId) return; // Ignorar respuestas antiguas
+
+          suggestionsData = data;
+          datalistLugares.innerHTML = '';
+          data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.nombre;
+            datalistLugares.appendChild(option);
+          });
+
+          // Re-intentar actualizar si el usuario escribió muy rápido y la data llegó después
+          tryUpdateCoordinates(inputNombreLugar.value);
+        })
+        .catch(err => console.error('Error in place autocomplete:', err));
+    });
+
+    // Evento 'change' para asegurar que se actualice al seleccionar del datalist con ratón/teclado
+    inputNombreLugar?.addEventListener('change', function () {
+      tryUpdateCoordinates(this.value);
+    });
+  });
+
+  // --- WORD SEARCH LOGIC ---
+  const wordSearchInput = document.getElementById('input-word-search');
+  const searchCounter = document.getElementById('search-counter');
+  const btnPrev = document.getElementById('btn-search-prev');
+  const btnNext = document.getElementById('btn-search-next');
+  const btnClear = document.getElementById('btn-search-clear');
+
+  function updateSearchUI(current, total) {
+    if (total > 0) {
+      searchCounter.textContent = `${current + 1} / ${total}`;
+      searchCounter.style.display = 'inline';
+      btnPrev.disabled = false;
+      btnNext.disabled = false;
+      btnClear.style.display = 'flex';
+    } else {
+      searchCounter.style.display = 'none';
+      btnPrev.disabled = true;
+      btnNext.disabled = true;
+      btnClear.style.display = 'none';
+    }
+  }
+
+  function handleWordSearch() {
+    const query = wordSearchInput ? wordSearchInput.value.trim() : '';
+    const container = document.getElementById('texto-noticia-copiar');
+    if (!container) return;
+
+    // Backup original content
+    if (!originalContentHTML) {
+      originalContentHTML = container.innerHTML;
+    }
+
+    // Reset content and highlights
+    container.innerHTML = originalContentHTML;
+    currentSearchMatches = [];
+    currentSearchIndex = -1;
+
+    if (query.length < 2) {
+      updateSearchUI(0, 0);
+      return;
+    }
+
+    // Perform search
+    const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${safeQuery})`, 'gi');
+
+    // Simple implementation using innerHTML replacement
+    const newHtml = originalContentHTML.replace(regex, `<mark class="word-highlight">$1</mark>`);
+    container.innerHTML = newHtml;
+
+    currentSearchMatches = Array.from(container.querySelectorAll('.word-highlight'));
+
+    if (currentSearchMatches.length > 0) {
+      currentSearchIndex = 0;
+      scrollToSearchMatch(0);
+    }
+
+    updateSearchUI(currentSearchIndex, currentSearchMatches.length);
+  }
+
+  function scrollToSearchMatch(index) {
+    currentSearchMatches.forEach((m, i) => {
+      m.classList.toggle('active-search', i === index);
+    });
+
+    const target = currentSearchMatches[index];
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function navigateSearch(direction) {
+    if (currentSearchMatches.length === 0) return;
+
+    currentSearchIndex += direction;
+    if (currentSearchIndex >= currentSearchMatches.length) currentSearchIndex = 0;
+    if (currentSearchIndex < 0) currentSearchIndex = currentSearchMatches.length - 1;
+
+    scrollToSearchMatch(currentSearchIndex);
+    updateSearchUI(currentSearchIndex, currentSearchMatches.length);
+  }
+
+  if (wordSearchInput) {
+    wordSearchInput.addEventListener('input', () => {
+      handleWordSearch();
+    });
+
+    wordSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        navigateSearch(1);
+      }
+    });
+  }
+
+  if (btnNext) btnNext.addEventListener('click', () => navigateSearch(1));
+  if (btnPrev) btnPrev.addEventListener('click', () => navigateSearch(-1));
+  if (btnClear) btnClear.addEventListener('click', () => {
+    wordSearchInput.value = '';
+    handleWordSearch();
+  });
+  // --- LOCATION SEARCH LOGIC ---
+  const locationSearchInput = document.getElementById('input-location-search');
+  const btnLocationClear = document.getElementById('btn-location-search-clear');
+
+  window.filterLocations = function () {
+    const query = locationSearchInput ? locationSearchInput.value.trim().toLowerCase() : '';
+    const items = document.querySelectorAll('#sidebar-places-list .place-row');
+
+    if (btnLocationClear) {
+      btnLocationClear.style.display = query.length > 0 ? 'flex' : 'none';
+    }
+
+    items.forEach(item => {
+      const lugar = item.dataset.lugar || '';
+      if (lugar.includes(query)) {
+        item.style.setProperty('display', 'flex', 'important');
+      } else {
+        item.style.setProperty('display', 'none', 'important');
+      }
+    });
+
+    const emptyMsg = document.getElementById('locations-empty-msg');
+    if (items.length > 0 && Array.from(items).every(i => i.style.display === 'none')) {
+      if (!emptyMsg) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.id = 'locations-empty-msg';
+        emptyMsg.className = 'text-center py-4 opacity-50 small';
+        emptyMsg.innerHTML = '<i class="fa-solid fa-map-location-dot d-block fs-2 mb-2"></i>No hay lugares que coincidan con la búsqueda';
+        const listContainer = document.getElementById('sidebar-places-list');
+        if (listContainer) listContainer.appendChild(emptyMsg);
+      }
+    } else if (emptyMsg) {
+      emptyMsg.remove();
+    }
+  };
+
+  // --- SORT LOCATIONS ---
+  let currentSortCriteria = 'frequency'; // default
+  let cachedLocationsData = [];
+
+  window.sortLocations = function (criteria) {
+    currentSortCriteria = criteria;
+
+    if (!cachedLocationsData || cachedLocationsData.length === 0) {
+      console.warn('No locations data to sort');
+      return;
+    }
+
+    let sorted = [...cachedLocationsData];
+
+    switch (criteria) {
+      case 'name':
+        sorted.sort((a, b) => a.lugar.localeCompare(b.lugar));
+        break;
+      case 'frequency':
+        sorted.sort((a, b) => b.frecuencia - a.frecuencia);
+        break;
+      case 'coordinates':
+        sorted.sort((a, b) => {
+          if (!a.lat && !b.lat) return 0;
+          if (!a.lat) return 1;
+          if (!b.lat) return -1;
+          return a.lat - b.lat;
+        });
+        break;
+    }
+
+    // Re-render list with sorted data
+    const listContainer = document.getElementById('sidebar-places-list');
+    listContainer.innerHTML = '';
+
+    sorted.forEach(function (e) {
+      const item = document.createElement('div');
+      item.className = 'place-row cursor-pointer';
+      item.dataset.lugar = e.lugar.toLowerCase();
+      item.style.cursor = 'pointer';
+      item.onclick = () => resaltarLugar(e.lugar);
+      item.innerHTML = `
+        <div class="d-flex align-items-center gap-2 w-100" style="overflow:hidden;">
+          <b class="text-light text-truncate" style="min-width: 80px; font-size: 0.95rem; flex-shrink: 1;" title="${e.lugar}">${e.lugar}</b>
+          
+          <div class="d-flex align-items-center gap-3 ms-4 small flex-nowrap" style="font-size: 0.7rem; opacity: 0.9;">
+            <span class="text-muted"><b class="place-data-highlight">Frecuencia:</b>&nbsp;${e.frecuencia}</span>
+            <span class="text-muted" style="font-size: 8.5px;"><b class="place-data-highlight">Coordenadas:</b>&nbsp;[${e.lat ? e.lat.toFixed(4) : '?'}&nbsp;/&nbsp;${e.lon ? e.lon.toFixed(4) : '?'}]</span>
+            ${(e.en_titulo === true || e.en_titulo === 'Sí') ? '<i class="fa-solid fa-heading text-warning" title="En Título" style="font-size:9px;"></i>' : ''}
+          </div>
+
+          <div class="d-flex gap-2 ms-auto align-items-center flex-shrink-0">
+            <button class="btn btn-link p-1 text-muted hover-info btn-copy-coords" title="Copiar Coordenadas" data-lat="${e.lat}" data-lon="${e.lon}"><i class="fa-solid fa-clipboard" style="font-size:11px;"></i></button>
+            <button class="btn btn-link p-1 text-muted hover-success btn-verify-location ${e.verified ? 'text-success' : ''}" title="${e.verified ? 'Verificada' : 'Marcar como verificada'}" data-verified="${e.verified || false}"><i class="fa-solid fa-${e.verified ? 'circle-check' : 'circle'}" style="font-size:11px;"></i></button>
+            <button class="btn btn-link p-1 text-muted hover-primary btn-google-maps" title="Abrir en Google Maps" data-lat="${e.lat}" data-lon="${e.lon}" ${!e.lat || !e.lon ? 'disabled' : ''}><i class="fa-solid fa-earth-americas" style="font-size:11px;"></i></button>
+            <button class="btn btn-link p-1 text-muted hover-warning btn-editar-lugar" title="Editar"><i class="fa-solid fa-pencil" style="font-size:12px;"></i></button>
+            <button class="btn btn-link p-1 text-muted hover-danger btn-borrar-lugar" title="Borrar"><i class="fa-solid fa-trash" style="font-size:12px;"></i></button>
+          </div>
+        </div>
+      `;
+
+      // Re-attach event listeners
+      item.querySelector('.btn-copy-coords').onclick = function (event) {
+        event.stopPropagation();
+        const lat = this.dataset.lat;
+        const lon = this.dataset.lon;
+        if (lat && lon && lat !== 'null' && lon !== 'null') {
+          navigator.clipboard.writeText(`${lat}, ${lon}`).then(() => {
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed top-50 start-50 translate-middle bg-success text-white px-4 py-2 rounded shadow';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = '<i class="fa-solid fa-check me-2"></i>Coordenadas copiadas';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+          });
+        }
+      };
+
+      item.querySelector('.btn-verify-location').onclick = function (event) {
+        event.stopPropagation();
+        const currentVerified = this.dataset.verified === 'true';
+        const newVerified = !currentVerified;
+        this.dataset.verified = newVerified;
+        if (newVerified) {
+          this.classList.add('text-success');
+          this.title = 'Verificada';
+          this.querySelector('i').className = 'fa-solid fa-circle-check';
+        } else {
+          this.classList.remove('text-success');
+          this.title = 'Marcar como verificada';
+          this.querySelector('i').className = 'fa-solid fa-circle';
+        }
+      };
+
+      item.querySelector('.btn-google-maps').onclick = function (event) {
+        event.stopPropagation();
+        const lat = this.dataset.lat;
+        const lon = this.dataset.lon;
+        if (lat && lon && lat !== 'null' && lon !== 'null') {
+          window.open(`https://www.google.com/maps?q=${lat},${lon}`, '_blank');
+        }
+      };
+
+      item.querySelector('.btn-borrar-lugar').onclick = function (event) {
+        event.stopPropagation();
+        if (!confirm('¿Eliminar esta ubicación de la noticia?')) return;
+        fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({ nombre: e.lugar })
+        }).then(() => window.renderTablaYMapaUltima());
+      };
+
+      item.querySelector('.btn-editar-lugar').onclick = function (event) {
+        event.stopPropagation();
+        abrirModalEditarLugar(e.lugar, e.frecuencia, e.en_titulo, e.en_contenido, e.lat, e.lon);
+      };
+
+      listContainer.appendChild(item);
+    });
+
+    filterLocations();
+  };
+
+  // --- EXPORT LOCATIONS ---
+  window.exportLocations = function (format) {
+    if (!cachedLocationsData || cachedLocationsData.length === 0) {
+      alert('No hay ubicaciones para exportar');
+      return;
+    }
+
+    let content, filename, mimeType;
+
+    switch (format) {
+      case 'csv':
+        const csvRows = ['Lugar,Frecuencia,En Título,Latitud,Longitud'];
+        cachedLocationsData.forEach(e => {
+          csvRows.push(`"${e.lugar}",${e.frecuencia},"${e.en_titulo || 'No'}",${e.lat || ''},${e.lon || ''}`);
+        });
+        content = csvRows.join('\n');
+        filename = 'ubicaciones_{{ noticia.id }}.csv';
+        mimeType = 'text/csv';
+        break;
+
+      case 'json':
+        content = JSON.stringify(cachedLocationsData, null, 2);
+        filename = 'ubicaciones_{{ noticia.id }}.json';
+        mimeType = 'application/json';
+        break;
+
+      case 'geojson':
+        const features = cachedLocationsData
+          .filter(e => e.lat && e.lon)
+          .map(e => ({
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(e.lon), parseFloat(e.lat)]
+            },
+            properties: {
+              name: e.lugar,
+              frequency: e.frecuencia,
+              in_title: e.en_titulo || false
+            }
+          }));
+
+        const geojson = {
+          type: 'FeatureCollection',
+          features: features
+        };
+        content = JSON.stringify(geojson, null, 2);
+        filename = 'ubicaciones_{{ noticia.id }}.geojson';
+        mimeType = 'application/geo+json';
+        break;
+    }
+
+    // Download file
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  if (locationSearchInput) {
+    locationSearchInput.addEventListener('input', filterLocations);
+  }
+
+  if (btnLocationClear) {
+    btnLocationClear.addEventListener('click', () => {
+      locationSearchInput.value = '';
+      filterLocations();
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,213 @@
+<div class="table-responsive" style="overflow: visible !important;">
+    <table class="table table-sirio table-hover align-middle mb-0" id="tablaPasajeros" style="width: 100% !important; table-layout: fixed; border-collapse: separate; border-spacing: 0;">
+        <thead>
+            <tr class="table-header-center">
+                <th style="width:30px;" class="text-center">
+                    <input type="checkbox" id="checkAllPasajeros" class="form-check-input bg-dark border-secondary" style="cursor: pointer;">
+                </th>
+                <th style="width:40px;">
+                    <div class="resizer"></div>
+                </th>
+                <th style="width:auto;">
+                    <a href="javascript:void(0)" onclick="ordenarPasajeros('apellidos')" class="text-decoration-none text-accent">
+                        APELLIDOS {% if sort_by == 'apellidos' %}<i class="fa-solid fa-sort-{{ 'down' if order == 'desc' else 'up' }}"></i>{% else %}<i class="fa-solid fa-sort"></i>{% endif %}
+                    </a>
+                    <div class="resizer"></div>
+                </th>
+                <th style="width:14%;">
+                    <a href="javascript:void(0)" onclick="ordenarPasajeros('nombre')" class="text-decoration-none text-accent">
+                        NOMBRE {% if sort_by == 'nombre' %}<i class="fa-solid fa-sort-{{ 'down' if order == 'desc' else 'up' }}"></i>{% else %}<i class="fa-solid fa-sort"></i>{% endif %}
+                    </a>
+                    <div class="resizer"></div>
+                </th>
+                <th style="width:6%;">
+                    <a href="javascript:void(0)" onclick="ordenarPasajeros('edad')" class="text-decoration-none text-accent">
+                        EDAD {% if sort_by == 'edad' %}<i class="fa-solid fa-sort-{{ 'down' if order == 'desc' else 'up' }}"></i>{% else %}<i class="fa-solid fa-sort"></i>{% endif %}
+                    </a>
+                    <div class="resizer"></div>
+                </th>
+                <th style="width:6%;">SEXO <div class="resizer"></div></th>
+                <th style="width:8%;">PASAJE <div class="resizer"></div></th>
+                <th style="width:10%;">ORIGEN <div class="resizer"></div></th>
+                <th style="width:10%;">DESTINO <div class="resizer"></div></th>
+                <th class="text-center" style="width:6%;">FUENTES <div class="resizer"></div></th>
+                <th class="text-center" style="width:3%;">I-M <div class="resizer"></div></th>
+                <th class="text-center" style="width:3%;">I-B <div class="resizer"></div></th>
+                <th class="text-center" style="width:3%;">R-S <div class="resizer"></div></th>
+                <th class="text-center" style="width:3%;">O-G <div class="resizer"></div></th>
+                <th style="width:8%;">ESTADO <div class="resizer"></div></th>
+                <th class="text-center" data-resizer="false" style="width: 100px;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody class="align-middle">
+                {% for p in pasajeros %}
+                <tr class="passenger-row 
+                    {% if p.pasaje %}
+                        {% set p_pasaje_lower = p.pasaje.lower() %}
+                        {% if '1ª' in p_pasaje_lower %}row-clase-1a
+                        {% elif '2ª' in p_pasaje_lower %}row-clase-2a
+                        {% elif '3ª' in p_pasaje_lower %}row-clase-3a
+                        {% elif 'trip' in p_pasaje_lower %}row-clase-trip
+                        {% endif %}
+                    {% endif %}" 
+                    data-passenger-id="{{ p.id }}"
+                    data-relatives='{{ p.get_relaciones_flat()|tojson }}'
+                    data-bs-toggle="collapse" data-bs-target="#detail-{{ p.id }}" style="cursor:pointer;">
+                    <td class="text-center" onclick="event.stopPropagation();">
+                        <input type="checkbox" class="form-check-input bg-dark border-secondary cursor-pointer pasajero-check" value="{{ p.id }}">
+                    </td>
+                    <td class="text-center text-muted" style="font-size:0.7rem;">
+                        <i class="fa-solid fa-chevron-right toggle-icon" id="icon-{{ p.id }}"></i>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-accent">
+                            {{ p.apellidos.split('(')[0].strip() }}
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            {% set seen_tipos = [] %}
+                            {% for rel in p.relaciones_como_sujeto %}
+                                {% set upper_tipo = rel.tipo_relacion|upper %}
+                                {% if upper_tipo not in seen_tipos %}
+                                    {% set _ = seen_tipos.append(upper_tipo) %}
+                                    {% set relatives = [] %}
+                                    {% for r in p.relaciones_como_sujeto %}
+                                        {% if r.tipo_relacion|upper == upper_tipo %}
+                                            {% set _ = relatives.append(r.relacionado.nombre.strip() ~ ' ' ~ r.relacionado.apellidos.split('(')[0].strip()) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="badge bg-dark border border-accent text-accent x-small px-1" style="font-size: 0.55rem; cursor: help;" title="{{ upper_tipo }} de {{ relatives|join(', ') }}">
+                                        <i class="fa-solid fa-link me-1"></i>{{ upper_tipo }}
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">{{ p.municipio or '' }}</small>
+                    </td>
+                    <td class="text-accent fw-bold">{{ p.nombre }}</td>
+                    <td>
+                        {% if p.edad %}
+                            {% if p.edad < 1 %}
+                                {% set meses = (p.edad * 12)|round|int %}
+                                {{ meses }} {% if meses == 1 %}mes{% else %}meses{% endif %}
+                            {% else %}
+                                {{ p.edad|int }}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ p.sexo or '-' }}</td>
+                    <td>
+                        {% if p.pasaje %}
+                            {% set p_pasaje_lower = p.pasaje.lower() %}
+                            {% set badge_color = 'var(--sirio-clase-1a)' if '1ª' in p_pasaje_lower 
+                                            else 'var(--sirio-clase-2a)' if '2ª' in p_pasaje_lower 
+                                            else 'var(--sirio-clase-3a)' if '3ª' in p_pasaje_lower 
+                                            else 'var(--sirio-clase-trip)' if 'trip' in p_pasaje_lower 
+                                            else 'var(--bs-secondary)' %}
+                            <span class="badge" style="background-color: {{ badge_color }}; color: white; font-weight: 600; font-size: 0.65rem; padding: 0.35em 0.65em;">
+                                {{ p.pasaje }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.puerto_embarque or '-' }}</td>
+                    <td>{{ p.ciudad_destino_final or '-' }}</td>
+                    <td class="text-center">
+                        {% if p.publicaciones %}
+                            <span class="badge border border-accent text-accent bg-accent-alpha" 
+                                  style="font-size: 0.85rem; min-width: 32px; padding: 0.35rem;" 
+                                  data-bs-toggle="tooltip" 
+                                  title="{{ p.publicaciones|length }} fuentes encontradas (ver detalle)">
+                                {{ p.publicaciones|length }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted" style="opacity: 0.3;">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">{% if p.en_lista_italia_mvd %}<i class="fa-solid fa-check text-success"></i>{% endif %}</td>
+                    <td class="text-center">{% if p.en_lista_italia_ba %}<i class="fa-solid fa-check text-success"></i>{% endif %}</td>
+                    <td class="text-center">{% if p.en_lista_ravena_sp %}<i class="fa-solid fa-check text-success"></i>{% endif %}</td>
+                    <td class="text-center">{% if p.en_lista_orione_ge %}<i class="fa-solid fa-check text-success"></i>{% endif %}</td>
+                    <td>
+                        {% if p.estado == 'SOBREVIVIENTE' %}<span class="text-success small">Sobreviviente</span>
+                        {% elif p.estado == 'FALLECIDO/A' %}<span class="text-danger small">Fallecido</span>
+                        {% elif p.estado == 'DESAPARECIDO/A' %}<span class="text-warning small">Desaparecido</span>
+                        {% else %}<span class="text-muted small">Desconocido</span>{% endif %}
+                    </td>
+                    <td class="text-center" onclick="event.stopPropagation()">
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{{ url_for('pasajeros.ficha', id=p.id) }}" class="btn-admin-action btn-admin-action-success" title="Ver Ficha" style="width: 28px;">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('pasajeros.editar', id=p.id) }}" class="btn-admin-action btn-admin-action-success" title="Editar" style="width: 28px;">
+                                <i class="fa-solid fa-edit"></i>
+                            </a>
+                            <button class="btn-admin-action btn-admin-action-danger" onclick="borrarPasajero({{ p.id }}, '{{ p.nombre|replace("'", "\\'") }} {{ p.apellidos|replace("'", "\\'") }}')" title="Borrar" style="width: 28px;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="collapse" id="detail-{{ p.id }}">
+                    <td colspan="16" class="p-0">
+                        <div class="bg-dark-subtle border-top border-secondary p-3 shadow-inner">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <small class="text-accent fw-bold text-uppercase d-block mb-2">Presencia en Prensa:</small>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for pub in p.publicaciones %}
+                                        <span class="badge border border-accent text-accent bg-accent-alpha" style="font-size:0.7rem;">
+                                            {{ pub.nombre }}
+                                        </span>
+                                        {% endfor %}
+                                        {% if not p.publicaciones %}
+                                        <small class="text-muted italic" style="font-size: 0.7rem;">Sin menciones vinculadas.</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-accent fw-bold text-uppercase d-block mb-2">Acciones Rápidas:</small>
+                                    <button class="btn btn-sirio btn-xs w-100 buscar-prensa-btn" data-pasajero="{{ p.id }}">Buscar en Noticias</button>
+                                    <div class="prensa-results-{{ p.id }} small mt-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not pasajeros %}
+                <tr>
+                    <td colspan="16" class="text-center py-5 text-muted italic">
+                        No se han encontrado pasajeros con los filtros seleccionados.
+                    </td>
+                </tr>
+                {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages and total_pages > 1 %}
+<div class="d-flex justify-content-center mt-3">
+    <nav aria-label="Navegación de pasajeros">
+        <ul class="pagination pagination-sirio">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="javascript:void(0)" onclick="cambiarPagina({{ page - 1 }})" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% for p_num in range([1, page - 2]|max, [total_pages, page + 2]|min + 1) %}
+            <li class="page-item {% if p_num == page %}active{% endif %}">
+                <a class="page-link" href="javascript:void(0)" onclick="cambiarPagina({{ p_num }})">{{ p_num }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="javascript:void(0)" onclick="cambiarPagina({{ page + 1 }})" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}

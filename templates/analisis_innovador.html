@@ -1,0 +1,760 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Laboratorio de IA — Proyecto Sirio{% endblock %}
+{% block page_title %}Laboratorio de IA <span class="badge"
+    style="font-size: 12px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6; vertical-align: middle; margin-left: 10px;">SECCIÓN
+    EN DESARROLLO</span>{% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block top_actions %}
+<button class="btn-sirio active" data-analisis="semantico" title="Cambio Semántico Diacrónico">
+    <i class="fa-solid fa-wave-square"></i>
+    <span class="btn-text">Semántica</span>
+</button>
+
+<button class="btn-sirio" data-analisis="intertextualidad" title="Detección de Intertextualidad">
+    <i class="fa-solid fa-shuffle"></i>
+    <span class="btn-text">Circulación</span>
+</button>
+
+<button class="btn-sirio" data-analisis="emociones" title="Rueda de Emociones (Plutchik)">
+    <i class="fa-solid fa-palette"></i>
+    <span class="btn-text">Emociones</span>
+</button>
+
+<button class="btn-sirio" data-analisis="sirio_chat" title="Sirio Chat (IA Semántica)">
+    <i class="fa-solid fa-robot"></i>
+    <span class="btn-text">Corpus Chat</span>
+</button>
+
+<button class="btn-sirio" data-analisis="sesgos" title="Análisis de Sesgos y Género">
+    <i class="fa-solid fa-scale-balanced"></i>
+    <span class="btn-text">Sesgos</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Filtros -->
+<button id="btn-filtros" class="btn-sirio" title="Configurar filtros de análisis" data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasFiltros">
+    <i class="fa-solid fa-filter"></i>
+    <span class="btn-text">Filtros</span>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- Panel de ayuda contextual -->
+<div class="d-flex justify-content-center align-items-center w-100 position-absolute start-0"
+    style="padding-top: 0px; z-index: 80; pointer-events: none;">
+    <div class="px-3 py-1 rounded-pill d-flex gap-3 align-items-center"
+        style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: 1px solid rgba(155, 89, 182, 0.2); color: rgba(255,255,255,0.8); font-size: 0.75rem; font-family: var(--ds-font-ui);">
+        <span><i class="fa-solid fa-wand-magic-sparkles me-1" style="color: #9b59b6;"></i> <b>Laboratorio de IA</b> de
+            Vanguardia</span>
+        <span class="opacity-50">|</span>
+        <span><i class="fa-solid fa-flask me-1" style="color: #9b59b6;"></i> Métodos experimentales para
+            humanidades</span>
+    </div>
+</div>
+
+<!-- Container principal -->
+<div id="analisis-container"
+    style="width: 100%; height: 100%; padding: 40px 40px 40px 40px; overflow-y: auto; position: relative;">
+
+    <!-- Loading inicial -->
+    <div id="loading-state"
+        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 10, 10, 0.95); z-index: 1000;">
+        <div class="spinner-border text-accent mb-3" role="status"
+            style="width: 3rem; height: 3rem; color: #9b59b6 !important;"></div>
+        <span class="text-muted" style="font-family: var(--ds-font-mono);">Cargando análisis innovador...</span>
+    </div>
+
+    <!-- VIEWS: ANÁLISIS INNOVADOR -->
+
+    <!-- 1. Cambio Semántico Diacrónico -->
+    <div id="view-semantico" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-wave-square me-2"></i>Deriva Semántica y Evolución Conceptual
+            </h3>
+            <div class="alert alert-info bg-dark border-secondary text-light mb-4"
+                style="border-left: 4px solid #9b59b6 !important;">
+                <i class="fa-solid fa-circle-info me-3 text-info float-start fa-2x"></i>
+                <div>
+                    <p class="mb-1"><strong>¿Qué es la Deriva Semántica?</strong></p>
+                    <p class="small mb-2" style="opacity: 0.85;">
+                        Identifica cómo cambia la relevancia y el contexto de uso de conceptos clave a lo largo del
+                        tiempo. No solo mide frecuencia, sino la <strong>varianza en el peso relativo
+                            (importancia)</strong> de los términos dentro del régimen discursivo analizado.
+                    </p>
+                    <p class="small mb-0" style="opacity: 0.85;">
+                        <strong>Utilidad:</strong> Permite detectar cuándo conceptos fundamentales ganan centralidad o
+                        caen en desuso, revelando cambios en las agendas ideológicas o transformaciones socioculturales
+                        capturadas en el historial del corpus.
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Gráfico 100% ancho -->
+                <div class="col-12 mb-4">
+                    <div class="glass-panel p-3" style="background: rgba(155, 89, 182, 0.05);">
+                        <canvas id="chart-semantico" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Panel inferior: Lista y Asistente IA -->
+                <div class="col-md-5">
+                    <div class="glass-panel p-3 h-100">
+                        <h5 class="text-white-50 small mb-3">Conceptos con Mayor Variación (Deriva)</h5>
+                        <div id="semantico-lista" class="list-group list-group-flush"
+                            style="max-height: 250px; overflow-y: auto;">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="glass-panel p-3 h-100">
+                        <button id="btn-ia-semantica" class="btn btn-sirio btn-sirio-primary w-100 mb-2"
+                            onclick="interpretarSemanticaIA()">
+                            <i class="fa-solid fa-microchip me-2"></i>Interpretar Evolución con IA
+                        </button>
+                        <div id="resultado-ia-semantica" class="p-3 mt-2 rounded bg-dark border border-secondary"
+                            style="display: none; font-size: 13px; color: #ccc; max-height: 350px; overflow-y: auto;">
+                            <!-- AI output -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Intertextualidad y Circulación -->
+    <div id="view-intertextualidad" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-shuffle me-2"></i>Circulación e Intertextualidad
+            </h3>
+            <div class="alert alert-info bg-dark border-secondary text-light mb-4"
+                style="border-left: 4px solid #9b59b6 !important;">
+                <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                Detecta la <b>recirculación de textos</b> (reprint culture). Identifica noticias o párrafos exactos que
+                se repiten en el corpus para mapear redes de influencia y propagación temática.
+            </div>
+            <div class="row g-3">
+                <!-- Grafo (8/12) -->
+                <div class="col-lg-8 mb-3">
+                    <div class="glass-panel p-3 h-100"
+                        style="background: rgba(0,0,0,0.3); min-height: 550px; position: relative; border: 1px solid rgba(155, 89, 182, 0.2);">
+                        <div id="intertextualidad-red" style="width: 100%; height: 520px;"></div>
+                        <div class="position-absolute bottom-0 end-0 p-3 opacity-50 small text-white"
+                            style="pointer-events: none;">
+                            <i class="fa-solid fa-mouse me-1"></i> Zoom: Rueda | Navegar: Arrastrar
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interpretación IA (4/12) -->
+                <div class="col-lg-4 mb-3">
+                    <div class="glass-panel p-4 h-100 d-flex flex-column">
+                        <h5 class="text-accent mb-3"><i class="fa-solid fa-diagram-project me-2"></i>Análisis de
+                            Topología</h5>
+                        <p class="small text-muted mb-4">
+                            Los nodos representan documentos y las aristas la similitud léxica significativa.
+                            Clústeres densos indican **recirculación intensa** de un mismo discurso o noticia viral.
+                        </p>
+
+                        <div class="flex-grow-1">
+                            <ul class="small text-muted mb-4 ps-3" style="list-style-type: square;">
+                                <li class="mb-2"><b>Nodos Grandes:</b> Documentos con mayor riqueza léxica única.</li>
+                                <li class="mb-2"><b>Enlaces Gruesos:</b> Alto grado de copia o citación textual.</li>
+                                <li><b>Comunidades:</b> Grupos que comparten el mismo régimen de verdad.</li>
+                            </ul>
+                        </div>
+
+                        <button id="btn-ia-intertextualidad" class="btn btn-sirio btn-sirio-primary w-100 mb-2"
+                            onclick="interpretarIntertextualidadIA()">
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Interpretar Red con IA
+                        </button>
+                        <div id="resultado-ia-intertextualidad" class="p-3 mt-2 rounded bg-dark border border-secondary"
+                            style="display: none; font-size: 13px; color: #ccc; max-height: 350px; overflow-y: auto;">
+                            <!-- AI output -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 3. Emociones de Plutchik -->
+    <div id="view-emociones" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-palette me-2"></i>Rueda de Emociones (Plutchik)
+            </h3>
+            <div class="alert alert-info bg-dark border-secondary text-light mb-4"
+                style="border-left: 4px solid #9b59b6 !important;">
+                <i class="fa-solid fa-circle-info me-3 text-info float-start fa-2x"></i>
+                <div>
+                    <p class="mb-1"><strong>¿Qué es la Rueda de Plutchik?</strong></p>
+                    <p class="small mb-2" style="opacity: 0.85;">
+                        Es un modelo psicobiológico que organiza las emociones en 8 categorías fundamentales y sus
+                        opuestos. En este laboratorio, lo utilizamos como un <strong>motor de análisis
+                            léxico-emocional</strong> para cuantificar el pulso afectivo latente en los documentos
+                        seleccionados.
+                    </p>
+                    <p class="small mb-0" style="opacity: 0.85;">
+                        <strong>Utilidad y Resultados:</strong> Se emplea en el ámbito de las humanidades digitales para
+                        realizar "lectura distante". Permite identificar climas de opinión y sesgos emocionales
+                        dominantes, devolviendo una <strong>huella cuantitativa del discurso</strong> (Ira, Miedo,
+                        Confianza, etc.) que revela la verdadera naturaleza e intensidad del sentir depositado en el
+                        corpus histórico.
+                    </p>
+                </div>
+            </div>
+            <!-- ROW 1: Radar y Leyenda -->
+            <div class="row mb-5">
+                <div class="col-lg-7">
+                    <div class="glass-panel p-3 h-100">
+                        <canvas id="chart-emociones-radar" height="350"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="glass-panel p-4 h-100">
+                        <h5 class="text-accent mb-3"><i class="fa-solid fa-book-open me-2"></i>Guía Visual Estática</h5>
+                        <p class="small text-muted mb-2">Interpreta la morfología de la Huella Octogonal:</p>
+                        <ul class="small text-muted mb-4 pt-2 ps-3" style="list-style-type: square;">
+                            <li class="mb-2"><strong>Equilibrio (Redonda):</strong> El discurso del corpus ostenta un
+                                balance emocional estable sin tensiones pronunciadas.</li>
+                            <li class="mb-2"><strong>Picos Superiores (Ira/Miedo):</strong> Denotan contextos de
+                                agitación, conflicto inminente o crisis sistémica.</li>
+                            <li><strong>Picos Inferiores (Alegría):</strong> Expresan alta filiación, retóricas
+                                dogmáticas positivas o periodos de bonanza.</li>
+                        </ul>
+
+                        <button id="btn-ia-radar" class="btn btn-sirio btn-sirio-primary w-100 mb-2"
+                            onclick="interpretarEmocionesIA('radar')">
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Interpretar Radar con IA
+                        </button>
+                        <div id="resultado-ia-radar" class="p-3 mt-2 rounded bg-dark border border-secondary"
+                            style="display: none; font-size: 13px; color: #ccc; max-height: 350px; overflow-y: auto;">
+                            <!-- AI output -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: Evolución Temporal y Leyenda (100% Ancho) -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <div class="glass-panel p-3">
+                        <canvas id="chart-emociones-lineas" height="300"></canvas>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="glass-panel p-4">
+                        <div class="row align-items-start">
+                            <div class="col-lg-7">
+                                <h5 class="text-accent mb-3"><i class="fa-solid fa-chart-line me-2"></i>Diacronía:
+                                    Pautas de Interpretación</h5>
+                                <ul class="small text-muted mb-0 ps-3" style="list-style-type: square;">
+                                    <li class="mb-2"><strong>Cruces ("Tijeras"):</strong> Puntos de inflexión narrativa.
+                                        Un régimen emocional cede o sobrepasa abruptamente a otro consolidado.
+                                        Representan cambios de paradigma en el corpus.</li>
+                                    <li><strong>Alta Volatilidad (Altibajos):</strong> Representa inestabilidad
+                                        estilística, crisis o irregularidad en la frecuencia de términos afectivos del
+                                        discurso.</li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-5">
+                                <button id="btn-ia-timeline" class="btn btn-sirio btn-sirio-primary w-100 mb-2"
+                                    onclick="interpretarEmocionesIA('timeline')">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Interpretar Diacronía con IA
+                                </button>
+                                <div id="resultado-ia-timeline" class="p-3 mt-2 rounded bg-dark border border-secondary"
+                                    style="display: none; font-size: 13px; color: #ccc; max-height: 350px; overflow-y: auto;">
+                                    <!-- AI output -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Análisis de Sesgos -->
+    <div id="view-sesgos" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-scale-balanced me-2"></i>Análisis de Sesgos y Perspectiva
+            </h3>
+            <div class="alert alert-info bg-dark border-secondary text-light mb-4"
+                style="border-left: 4px solid #9b59b6 !important;">
+                <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                Identifica **asimetrías discursivas** mediante lexicones de raíces. Mide la presencia relativa de
+                categorías
+                contrapuestas (Género, Clase, Alcance) para revelar el punto de vista dominante del corpus.
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-7">
+                    <div class="glass-panel p-4 h-100">
+                        <canvas id="chart-sesgos-radar" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="glass-panel p-4 h-100 d-flex flex-column">
+                        <h5 class="text-accent mb-3"><i class="fa-solid fa-eye me-2"></i>Interpretación de Sesgos</h5>
+                        <p class="small text-muted mb-4 text-justify">
+                            El análisis de radar muestra la intensidad de uso de términos asociados a polos opuestos. Un
+                            balance equilibrado
+                            indica neutralidad retórica, mientras que picos hacia un polo señalan un **sesgo de
+                            representación**.
+                        </p>
+
+                        <div class="flex-grow-1">
+                            <ul class="list-unstyled small text-muted mb-4">
+                                <li class="mb-3 d-flex align-items-center">
+                                    <div class="badge bg-primary me-2" style="width: 12px; height: 12px; padding:0;">
+                                    </div>
+                                    <span><b>Focos de Poder:</b> Elites vs Popular</span>
+                                </li>
+                                <li class="mb-3 d-flex align-items-center">
+                                    <div class="badge bg-warning me-2" style="width: 12px; height: 12px; padding:0;">
+                                    </div>
+                                    <span><b>Representación:</b> Masc vs Fem</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <div class="badge bg-info me-2" style="width: 12px; height: 12px; padding:0;">
+                                    </div>
+                                    <span><b>Ámbito:</b> Local vs Global</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button id="btn-ia-sesgos" class="btn btn-sirio btn-sirio-primary w-100 mb-2"
+                            onclick="interpretarSesgosIA()">
+                            <i class="fa-solid fa-microchip me-2"></i>Análisis Crítico con IA
+                        </button>
+                        <div id="resultado-ia-sesgos" class="p-3 mt-2 rounded bg-dark border border-secondary"
+                            style="display: none; font-size: 13px; color: #ccc; max-height: 350px; overflow-y: auto;">
+                            <!-- AI output -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Corpus Chat (IA Semántica) -->
+    <div id="view-sirio_chat" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-robot me-2"></i>Corpus Chat Interface
+                <span class="badge ms-2"
+                    style="font-size: 10px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; vertical-align: middle;">EXPERIMENTAL</span>
+            </h3>
+            <!-- Avisos y Explicación RAG -->
+            <div class="row mb-4 g-3">
+                <div class="col-md-6">
+                    <div class="alert alert-info bg-dark border-secondary text-light h-100 mb-0"
+                        style="border-left: 4px solid #9b59b6 !important; background: rgba(155, 89, 182, 0.05) !important;">
+                        <h6 class="text-accent mb-2"><i class="fa-solid fa-brain me-2"></i>¿Cómo funciona el sistema RAG?</h6>
+                        <p class="small mb-0" style="opacity: 0.85; text-align: justify;">
+                            La <b>Generación Aumentada por Recuperación (RAG)</b> permite a la IA analizar tu corpus antes de responder. 
+                            El sistema recupera los fragmentos más relevantes y los procesa junto a tu consulta, lo que garantiza una 
+                            <b>trazabilidad exacta</b> a los documentos originales, evitando alucinaciones y asegurando respuestas fundamentadas.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning bg-dark border-warning border-opacity-25 text-light h-100 mb-0"
+                        style="border-left: 4px solid #ffc107 !important; background: rgba(255, 193, 7, 0.05) !important;">
+                        <h6 class="text-warning mb-2"><i class="fa-solid fa-coins me-2"></i>Control de Costes y Facturación</h6>
+                        <p class="small mb-0" style="opacity: 0.85; text-align: justify;">
+                            El uso de esta interfaz consume créditos de tus claves de API (configurables en <b>Mi Perfil</b>) para proveedores 
+                            como <b>OpenAI</b>, <b>Google Gemini</b> o <b>Anthropic (Claude)</b>. Cada consulta procesa miles de tokens de contexto; 
+                            te recomendamos monitorizar tu consumo para evitar cargos inesperados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="glass-panel p-4 bg-black bg-opacity-50"
+                        style="height: 500px; display: flex; flex-direction: column;">
+                        <div id="sirio-chat-box" class="flex-grow-1 overflow-y-auto mb-3 p-3 custom-scrollbar"
+                            style="background: rgba(0,0,0,0.3); border-radius: 8px;">
+                            <div class="chat-message bot mb-3">
+                                <div
+                                    class="message-content p-2 rounded bg-accent bg-opacity-10 border border-accent border-opacity-20 text-white small">
+                                    <i class="fa-solid fa-robot me-2"></i><b>Corpus IA:</b> Hola, ¿cómo puedo ayudarte a
+                                    analizar este corpus histórico hoy?
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="sirio-chat-input" class="form-control-sirio"
+                                placeholder="Escribe tu pregunta sobre los documentos...">
+                            <button class="btn btn-accent" id="btn-sirio-chat-send"
+                                style="background: #9b59b6; border: none; color: #fff;"><i
+                                    class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Análisis de Sesgos y Género -->
+    <div id="view-sesgos" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: #9b59b6 !important;">
+                <i class="fa-solid fa-scale-balanced me-2"></i>Sesgos de Género y Poder
+                <span class="badge ms-2"
+                    style="font-size: 10px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; vertical-align: middle;">DEMO
+                    / EJEMPLO</span>
+            </h3>
+            <div class="alert alert-info bg-dark border-secondary text-light mb-4"
+                style="border-left: 4px solid #9b59b6 !important;">
+                <i class="fa-solid fa-circle-info me-2 text-info"></i>
+                Identifica automáticamente sesgos en la representación de género y estructuras de poder. Analiza
+                asociaciones de roles y visibilización de colectivos.
+            </div>
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="glass-panel p-3">
+                        <canvas id="chart-sesgos-comparativa" height="350"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="glass-panel p-3">
+                        <h6 class="text-accent mb-3 small"><i class="fa-solid fa-mars-and-venus me-2"></i>Principales
+                            Estereotipos Detectados</h6>
+                        <div id="sesgos-nube" style="height: 250px; background: rgba(0,0,0,0.2); border-radius: 8px;"
+                            class="p-3 d-flex flex-wrap gap-2 align-items-center justify-content-center">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end bg-dark text-light border-start border-accent" tabindex="-1" id="offcanvasFiltros"
+    aria-labelledby="offcanvasFiltrosLabel"
+    style="width: 400px; --bs-offcanvas-border-width: 2px; margin-top: 60px; border-color: #9b59b6 !important;">
+    <div class="offcanvas-header border-bottom border-secondary py-3"
+        style="background: linear-gradient(135deg, rgba(155, 89, 182, 0.15), rgba(155, 89, 182, 0.05));">
+        <h5 class="offcanvas-title fw-bold d-flex align-items-center" id="offcanvasFiltrosLabel"
+            style="font-size: 1.1rem; letter-spacing: 1px; color: #9b59b6;">
+            <i class="fa-solid fa-filter me-2"></i> FILTROS DE ANÁLISIS
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4 custom-scrollbar">
+        <!-- Info del proyecto activo -->
+        <div class="alert border-0 py-2 px-3 mb-4"
+            style="font-size: 0.85rem; background: rgba(155, 89, 182, 0.15); border-left: 3px solid #9b59b6 !important;">
+            <i class="fa-solid fa-folder-open me-2 text-accent"></i>
+            <strong>Proyecto activo:</strong>
+            <div class="mt-1 ms-4">
+                <span class="text-white">{{ proyecto.nombre if proyecto else 'No seleccionado' }}</span>
+            </div>
+        </div>
+
+        <form id="form-filtros">
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                    <i class="fa-solid fa-tags me-1"></i> Temas
+                </label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-tema" data-search="true">
+                    <option value="">(Todos los temas)</option>
+                    {% for tema in temas %}
+                    <option value="{{ tema }}">{{ tema }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                    <i class="fa-solid fa-newspaper me-1"></i> Publicación
+                </label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-publicacion">
+                    <option value="">(Todas las publicaciones)</option>
+                    {% for pub in publicaciones %}
+                    <option value="{{ pub.id_publicacion }}">{{ pub.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                    <i class="fa-solid fa-globe me-1"></i> País
+                </label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-pais" data-search="true">
+                    <option value="">(Todos los países)</option>
+                    {% for pais in paises %}
+                    <option value="{{ pais }}">{{ pais }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-6 mb-4">
+                    <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                        <i class="fa-solid fa-calendar me-1"></i> Desde
+                    </label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-desde">
+                </div>
+                <div class="col-6 mb-4">
+                    <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                        <i class="fa-solid fa-calendar me-1"></i> Hasta
+                    </label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-hasta">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                    <i class="fa-solid fa-keyboard me-1"></i> Conceptos (Semántica)
+                </label>
+                <textarea class="form-control form-control-sm form-control-sirio" id="filtro-conceptos" rows="2"
+                    placeholder="Ej: barco, mar, capitan (separados por comas)"></textarea>
+                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                    <i class="fa-solid fa-info-circle me-1"></i> Si se deja vacío, se calculan automáticamente.
+                </small>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                    <i class="fa-solid fa-database me-1"></i> Límite de Documentos
+                </label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-limite">
+                    <option value="50" selected>50 documentos (Rápido)</option>
+                    <option value="100">100 documentos (Equilibrado)</option>
+                    <option value="200">200 documentos (Extenso)</option>
+                    <option value="500">500 documentos (Muy extenso)</option>
+                    <option value="1000">1000 documentos (Big Data)</option>
+                </select>
+            </div>
+
+            <!-- SECCIÓN IA GENERATIVA -->
+            <div class="mt-4 pt-4 border-top border-accent border-opacity-25">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="text-accent fw-bold mb-0 d-flex align-items-center">
+                        <i class="fa-solid fa-brain me-2"></i> POTENCIADOR IA
+                        <span class="badge bg-success ms-2" style="font-size: 0.65rem;">EMBEDDINGS</span>
+                    </h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="switch-ia" checked style="cursor: pointer;">
+                        <label class="form-check-label small text-muted ms-1" for="switch-ia">
+                            <strong>Activo</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 py-2 px-3 mb-3"
+                    style="font-size: 0.75rem; background: rgba(76, 175, 80, 0.15);">
+                    <i class="fa-solid fa-check-circle me-1"></i>
+                    Búsqueda semántica con <strong>embeddings vectoriales</strong> activada (Google Gemini 3072D).
+                </div>
+
+                <div id="ia-controls">
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                            Modelo IA para Chat
+                        </label>
+                        <select class="form-select form-select-sm form-control-sirio sirio-select"
+                            id="filtro-modelo-ia">
+                            <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (Rápido)</option>
+                            <option value="gemini-2.0-pro">Gemini 2.0 Pro (Avanzado)</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                            <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-info-circle me-1"></i> Para el Corpus Chat
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                            Temperatura
+                            <span class="text-warning" id="temp-value">0.3</span>
+                        </label>
+                        <input type="range" class="form-range" id="filtro-temperatura" min="0" max="1" step="0.1"
+                            value="0.3" style="cursor: pointer;">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted" style="font-size: 0.65rem;">Preciso</small>
+                            <small class="text-muted" style="font-size: 0.65rem;">Creativo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-top border-secondary d-grid gap-3">
+                <button type="button" class="btn w-100 py-3 d-flex justify-content-center align-items-center"
+                    id="btn-aplicar-filtros" style="background: #9b59b6; color: #fff; font-weight: 600; border: none;">
+                    <i class="fa-solid fa-check me-2"></i>APLICAR FILTROS
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="offcanvas">
+                    <i class="fa-solid fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modals %}
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- Librerías Externas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+
+<!-- Reutilizamos el JS de análisis avanzado -->
+<script src="{{ url_for('static', filename='js/analisis_avanzado.js') }}?v=1.2"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Forzar el primer análisis disponible con un pequeño delay para estabilidad
+        setTimeout(() => {
+            if (window.cambiarVista) {
+                console.log('[DEBUG] Iniciando vista por defecto: semantico');
+                cambiarVista('semantico');
+            }
+        }, 100);
+
+        // ============================================
+        // FILTROS - Actualizar temperatura
+        // ============================================
+        const tempSlider = document.getElementById('filtro-temperatura');
+        const tempValue = document.getElementById('temp-value');
+        if (tempSlider && tempValue) {
+            tempSlider.addEventListener('input', (e) => {
+                tempValue.textContent = e.target.value;
+            });
+        }
+
+        // ============================================
+        // CORPUS CHAT - Funcionalidad RAG
+        // ============================================
+        const chatInput = document.getElementById('sirio-chat-input');
+        const chatSendBtn = document.getElementById('btn-sirio-chat-send');
+        const chatBox = document.getElementById('sirio-chat-box');
+
+        function addMessage(content, isBot = false, docs = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isBot ? 'bot' : 'user'} mb-3`;
+
+            let html = `
+                <div class="message-content p-2 rounded ${isBot ? 'bg-accent bg-opacity-10 border border-accent border-opacity-20' : 'bg-secondary bg-opacity-20'} text-white small">
+                    ${isBot ? '<i class="fa-solid fa-robot me-2"></i><b>Corpus IA:</b> ' : '<i class="fa-solid fa-user me-2"></i><b>Tú:</b> '}
+                    ${content}
+                </div>
+            `;
+
+            // Si hay documentos usados, mostrarlos
+            if (docs && docs.length > 0) {
+                html += '<div class="mt-2 ms-3"><small class="text-white opacity-75"><i class="fa-solid fa-book me-1"></i>Documentos consultados:</small><ul class="small text-white opacity-50 mt-1 mb-0">';
+                docs.forEach(doc => {
+                    html += `<li><a href="${doc.url}" class="text-info" target="_blank">ID ${doc.id}: ${doc.titulo}</a> (${doc.similitud}% similitud)</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            messageDiv.innerHTML = html;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message bot mb-3';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="message-content p-2 rounded bg-accent bg-opacity-10 border border-accent border-opacity-20 text-white small">
+                    <i class="fa-solid fa-robot me-2"></i><b>Corpus IA:</b> 
+                    <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+                    Analizando documentos...
+                </div>
+            `;
+            chatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendMessage() {
+            const pregunta = chatInput.value.trim();
+            if (!pregunta) return;
+
+            // Mostrar mensaje del usuario
+            addMessage(pregunta, false);
+            chatInput.value = '';
+            chatInput.disabled = true;
+            chatSendBtn.disabled = true;
+
+            // Mostrar indicador de escritura
+            showTypingIndicator();
+
+            try {
+                // Obtener valores de los filtros
+                const modeloIA = document.getElementById('filtro-modelo-ia')?.value || 'gemini-2.0-flash';
+                const temperatura = parseFloat(document.getElementById('filtro-temperatura')?.value || 0.3);
+
+                const response = await fetch('/api/analisis/innovador/corpus_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pregunta: pregunta,
+                        modelo: modeloIA,
+                        temperatura: temperatura,
+                        num_documentos: 5
+                    })
+                });
+
+                const data = await response.json();
+
+                removeTypingIndicator();
+
+                if (data.exito) {
+                    addMessage(data.respuesta, true, data.documentos_usados);
+                } else {
+                    addMessage(`❌ Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage(`❌ Error de conexión: ${error.message}`, true);
+                console.error('Error:', error);
+            } finally {
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        // Event listeners
+        chatSendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+</script>
+{% endblock %}

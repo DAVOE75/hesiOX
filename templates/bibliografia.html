@@ -1,0 +1,695 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Bibliografía del Estudio — Proyecto Sirio{% endblock %}
+{% block page_title %}Bibliografía del Estudio{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Referencias S.S. Sirio (1906)</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('noticias.listar') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="fa-solid fa-arrow-left me-1"></i> Volver
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Header removed -->
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-warning">
+                <div class="card-body text-center">
+                    <h3 class="text-warning mb-0">{{ total_numeros }}</h3>
+                    <small class="text-light">Números únicos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-info">
+                <div class="card-body text-center">
+                    <h3 class="text-info mb-0">{{ total_articulos }}</h3>
+                    <small class="text-light">Artículos totales</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h3 class="text-secondary mb-0">{{ numeros_multiples }}</h3>
+                    <small class="text-light">Referencias reutilizadas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-success">
+                <div class="card-body text-center">
+                    <h3 class="text-success mb-0">{{ ((total_articulos / total_numeros) if total_numeros > 0 else
+                        0)|round(1) }}</h3>
+                    <small class="text-light">Promedio por número</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y opciones -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-light small">
+                        <svg width="14" height="14" fill="currentColor" class="me-1">
+                            <path d="M2 2h12v2H2zM4 6h8v2H4zM6 10h4v2H6z" />
+                        </svg>
+                        Filtrar por publicación
+                    </label>
+                    <select id="filtroPublicacion" class="form-select bg-dark text-light border-secondary">
+                        <option value="">Todas las publicaciones</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light small">
+                        <svg width="14" height="14" fill="currentColor" class="me-1">
+                            <circle cx="7" cy="7" r="6" stroke="currentColor" fill="none" />
+                        </svg>
+                        Filtrar por idioma
+                    </label>
+                    <select id="filtroIdioma" class="form-select bg-dark text-light border-secondary">
+                        <option value="">Todos los idiomas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light small">
+                        <svg width="14" height="14" fill="currentColor" class="me-1">
+                            <path d="M8 2v12M2 8h12" />
+                        </svg>
+                        Ordenar por
+                    </label>
+                    <select id="ordenarPor" class="form-select bg-dark text-light border-secondary">
+                        <option value="numero">Número de referencia</option>
+                        <option value="titulo">Título</option>
+                        <option value="autor">Autor</option>
+                        <option value="fecha">Fecha</option>
+                        <option value="publicacion">Publicación</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button id="btnAplicarFiltros" class="btn btn-warning w-100">
+                        <svg width="14" height="14" fill="currentColor" class="me-1">
+                            <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5" fill="none" />
+                            <line x1="9" y1="9" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" />
+                        </svg>
+                        Aplicar filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opciones de exportación -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body">
+            <h5 class="text-warning mb-3">
+                <svg width="18" height="18" fill="currentColor" class="me-2">
+                    <path d="M12 2v10l3-3m-3 3l-3-3m-5 9h10" />
+                </svg>
+                Exportar Bibliografía
+            </h5>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('bibliografia_exportar', formato='bibtex') }}"
+                    class="btn btn-outline-warning btn-sm">
+                    <svg width="14" height="14" fill="currentColor" class="me-1">
+                        <rect x="2" y="2" width="10" height="12" />
+                    </svg>
+                    BibTeX (.bib)
+                </a>
+                <a href="{{ url_for('bibliografia_exportar', formato='ris') }}" class="btn btn-outline-info btn-sm">
+                    <svg width="14" height="14" fill="currentColor" class="me-1">
+                        <circle cx="7" cy="7" r="5" />
+                    </svg>
+                    RIS (.ris)
+                </a>
+                <a href="{{ url_for('bibliografia_exportar', formato='txt', estilo='chicago') }}"
+                    class="btn btn-outline-secondary btn-sm">
+                    <svg width="14" height="14" fill="currentColor" class="me-1">
+                        <path d="M3 3h8v8H3z" />
+                    </svg>
+                    Texto plano (.txt)
+                </a>
+            </div>
+
+            <hr class="border-secondary my-3">
+
+            <!-- SELECTOR DE PROYECTO -->
+            <h5 class="text-warning mb-3">
+                <svg width="18" height="18" fill="currentColor" class="me-2">
+                    <path d="M3 3h5l2 2h5v8H3z" />
+                </svg>
+                Proyecto Activo
+            </h5>
+            <div class="alert alert-dark border-warning mb-2 p-2">
+                <strong>📂 {{ proyecto_activo.nombre if proyecto_activo else 'Sin proyecto' }}</strong>
+            </div>
+            <div class="btn-group w-100" role="group">
+                <a href="{{ url_for('listar_proyectos') }}" class="btn btn-outline-warning btn-sm">
+                    Ver todos los proyectos
+                </a>
+                <a href="{{ url_for('crear_proyecto') }}" class="btn btn-outline-success btn-sm">
+                    + Nuevo proyecto
+                </a>
+            </div>
+
+            <small class="text-muted d-block mt-2">
+                Descarga la bibliografía en formato compatible con gestores de referencias (Zotero, Mendeley, EndNote)
+            </small>
+        </div>
+    </div>
+
+    <!-- Lista de referencias -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-transparent border-secondary">
+            <h5 class="text-light mb-0">Referencias Bibliográficas Ordenadas</h5>
+        </div>
+        <div class="card-body">
+            {% if referencias_agrupadas %}
+            {% for numero in referencias_agrupadas.keys()|sort %}
+            {% set refs = referencias_agrupadas[numero] %}
+            {% set ref_principal = refs[0] %}
+
+            <div class="mb-4 pb-4 border-bottom border-secondary">
+                <!-- Número de referencia -->
+                <div class="d-flex align-items-start mb-3">
+                    <div class="me-3">
+                        <span class="badge bg-warning text-dark" style="font-size: 1.2rem; padding: 8px 14px;">
+                            [{% if numero >= 999999 %}S/N{% else %}{{ numero }}{% endif %}]
+                        </span>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <!-- Cita formateada -->
+                        <div class="mb-2">
+                            <strong class="text-light">
+                                {% if ref_principal.autor %}
+                                {{ ref_principal.autor }}.
+                                {% else %}
+                                Anónimo.
+                                {% endif %}
+                            </strong>
+
+                            {% if ref_principal.titulo %}
+                            <span class="text-info">"{{ ref_principal.titulo }}".</span>
+                            {% endif %}
+
+                            {% if ref_principal.publicacion %}
+                            <em class="text-warning">{{ ref_principal.publicacion }}</em>
+                            {% endif %}
+
+                            {% if ref_principal.fecha_original %}
+                            <span class="text-light">({% if ref_principal.fecha_original and ref_principal.fecha_original|length == 10 and '-' in ref_principal.fecha_original %}{{ ref_principal.fecha_original[8:10] }}/{{ ref_principal.fecha_original[5:7] }}/{{ ref_principal.fecha_original[0:4] }}{% else %}{{ ref_principal.fecha_original }}{% endif %})</span>
+                            {% elif ref_principal.anio %}
+                            <span class="text-light">({{ ref_principal.anio }})</span>
+                            {% endif %}
+
+                            {% if ref_principal.pagina_inicio %}
+                            {% if ref_principal.pagina_fin %}
+                            <span class="text-secondary">pp. {{ ref_principal.pagina_inicio }}-{{
+                                ref_principal.pagina_fin }}</span>
+                            {% else %}
+                            <span class="text-secondary">p. {{ ref_principal.pagina_inicio }}</span>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <!-- URL si existe -->
+                        {% if ref_principal.url %}
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                Disponible en:
+                                <a href="{{ ref_principal.url }}" target="_blank" class="text-info">
+                                    {{ ref_principal.url[:80] }}{% if ref_principal.url|length > 80 %}...{% endif %}
+                                </a>
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Información adicional -->
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                {% if ref_principal.idioma %}
+                                <span class="badge bg-secondary me-1">{{ ref_principal.idioma }}</span>
+                                {% endif %}
+                                {% if ref_principal.tipo_recurso %}
+                                <span class="badge bg-dark me-1">{{ ref_principal.tipo_recurso }}</span>
+                                {% endif %}
+                                {% if refs|length > 1 %}
+                                <span class="badge bg-info text-dark">
+                                    {{ refs|length }} versiones/menciones
+                                </span>
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Botón para ver detalles -->
+                        <div class="mt-2">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('editar', id=ref_principal.id) }}"
+                                    class="btn btn-sirio btn-sirio-secondary btn-sm" title="Abrir editor completo">
+                                    <svg width="12" height="12" fill="currentColor" class="me-1">
+                                        <path d="M2 10l8-8 2 2-8 8H2v-2z" />
+                                    </svg>
+                                    Ver
+                                </a>
+                                
+                                <button class="btn btn-sirio btn-sirio-warning btn-sm editar-cita-bib" 
+                                    data-id="{{ ref_principal.id }}" 
+                                    data-numero="{% if numero < 999999 %}{{ numero }}{% endif %}" 
+                                    data-tipo="{{ ref_principal.tipo_recurso or 'prensa' }}"
+                                    title="Edición Rápida">
+                                    <i class="fa-solid fa-pen me-1"></i> Editar
+                                </button>
+
+                                <button class="btn btn-sirio btn-sirio-info btn-sm copiar-cita-bib" data-numero="{{ numero }}"
+                                    data-autor="{{ ref_principal.autor or 'Anónimo' }}"
+                                    data-titulo="{{ ref_principal.titulo or '' }}"
+                                    data-publicacion="{{ ref_principal.publicacion or '' }}"
+                                    data-fecha="{{ ref_principal.fecha_original or ref_principal.anio or '' }}"
+                                    data-paginas="{% if ref_principal.pagina_inicio %}{% if ref_principal.pagina_fin %}{{ ref_principal.pagina_inicio }}-{{ ref_principal.pagina_fin }}{% else %}{{ ref_principal.pagina_inicio }}{% endif %}{% endif %}">
+                                    <svg width="12" height="12" fill="currentColor" class="me-1">
+                                        <rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor"
+                                            fill="none" />
+                                        <rect x="4" y="4" width="6" height="6" rx="0.5" stroke="currentColor"
+                                            fill="none" />
+                                    </svg>
+                                    Copiar cita
+                                </button>
+                                
+                                <button class="btn btn-sirio btn-sirio-danger btn-sm eliminar-cita-bib" data-ids="{{ refs | map(attribute='id') | join(',') }}" title="Eliminar de la lista">
+                                    <svg width="12" height="12" fill="currentColor" class="me-1">
+                                        <path d="M2.5 3h9M4 3V2a1 1 0 011-1h2a1 1 0 011 1v1M5 5v5M7 5v5M3 4h6l-.5 6c0 .5-.5 1-1 1H4.5c-.5 0-1-.5-1-1L3 4z" />
+                                    </svg>
+                                    Eliminar
+                                </button>
+                            </div>
+
+                            {% if refs|length > 1 %}
+                            <button class="btn btn-sirio btn-sirio-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#refs-{{ numero }}">
+                                <svg width="12" height="12" fill="currentColor" class="me-1">
+                                    <path d="M4 6l4 4 4-4" />
+                                </svg>
+                                Ver todas las versiones ({{ refs|length }})
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Versiones adicionales (colapsable) -->
+                        {% if refs|length > 1 %}
+                        <div class="collapse mt-3" id="refs-{{ numero }}">
+                            <div class="card bg-black border-secondary">
+                                <div class="card-header bg-transparent border-secondary">
+                                    <small class="text-warning">Versiones de esta referencia:</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group list-group-flush">
+                                        {% for ref in refs %}
+                                        <div class="list-group-item bg-transparent border-secondary text-light">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1 text-info">
+                                                        {{ ref.titulo or '(Sin título)' }}
+                                                    </h6>
+                                                    <small class="text-muted d-block">
+                                                        {% if ref.publicacion %}{{ ref.publicacion }} | {% endif %}
+                                                        {{ ref.fecha_original or ref.anio or 'Sin fecha' }} - {{ ref.medio or 'Sin medio' }}
+                                                    </small>
+                                                </div>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <a href="{{ url_for('editar', id=ref.id) }}"
+                                                    class="btn btn-sm btn-sirio btn-sirio-secondary" title="Ver registro completo">
+                                                    Ver
+                                                </a>
+                                                <button class="btn btn-sm btn-sirio btn-sirio-warning editar-cita-bib" 
+                                                    data-id="{{ ref.id }}" 
+                                                    data-numero="{% if ref.numero_referencia %}{{ ref.numero_referencia }}{% endif %}" 
+                                                    data-tipo="{{ ref.tipo_recurso or 'prensa' }}"
+                                                    title="Edición rápida">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                            </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-warning">
+                <svg width="16" height="16" fill="currentColor" class="me-2">
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" fill="none" />
+                    <text x="8" y="12" text-anchor="middle" font-size="14" font-weight="bold">!</text>
+                </svg>
+                No hay referencias bibliográficas asignadas.
+                <a href="{{ url_for('noticias.listar') }}" class="alert-link">Edita los artículos</a>
+                y marca "Incluir en estudio" para asignar números de referencia.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+<!-- Modal Edición Rápida -->
+<div class="modal fade" id="editarReferenciaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content text-light" style="background:var(--ds-bg-sidebar, #1e1e1e);border:1px solid rgba(255,152,0,0.3)">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title text-warning"><i class="fa-solid fa-pen-to-square me-2"></i>Edición Rápida de Referencia</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-editar-referencia">
+                    <input type="hidden" id="edit-ref-id">
+                    <p class="text-muted small mb-3">Modifica rápidamente las propiedades de citación para esta referencia en tu bibliografía del proyecto.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-accent fw-bold small">Número de Referencia</label>
+                        <input type="number" id="edit-ref-numero" class="form-control" style="background:#0d0d0d;color:#fff;border-color:rgba(255,152,0,0.4);" placeholder="Ej. 1">
+                        <small class="text-muted">Déjalo vacío si es un artículo sin número vinculado.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-accent fw-bold small">Tipo de Recurso</label>
+                        <select id="edit-ref-tipo" class="form-select" style="background:#0d0d0d;color:#fff;border-color:rgba(255,152,0,0.4);">
+                            <option value="prensa">Noticia / Artículo de Prensa</option>
+                            <option value="libro">Libro / Monografía</option>
+                            <option value="articulo_revista">Artículo Académico / Revista</option>
+                            <option value="web">Página Web / Recurso Online</option>
+                            <option value="documental">Documental / Película / Multimedia</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-accent fw-bold small">Estilo de Cita</label>
+                        <select id="edit-ref-estilo" class="form-select" style="background:#0d0d0d;color:#fff;border-color:rgba(255,152,0,0.4);">
+                            <option value="apa" selected>APA (7ª Edición)</option>
+                            <option value="chicago">Chicago (Notes/Bibliography)</option>
+                            <option value="mla">MLA (9ª Edición)</option>
+                            <option value="vancouver">Vancouver (ICMJE)</option>
+                            <option value="ieee">IEEE</option>
+                        </select>
+                        <small class="text-muted">Nota: El estilo se usa al insertar citas en el editor.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btn-guardar-referencia">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nota informativa -->
+    <div class="alert alert-info mt-4">
+        <h6 class="alert-heading">
+            <svg width="16" height="16" fill="currentColor" class="me-2">
+                <circle cx="8" cy="8" r="7" />
+                <text x="8" y="12" text-anchor="middle" font-size="12" fill="white" font-weight="bold">i</text>
+            </svg>
+            Sobre la reutilización de referencias
+        </h6>
+        <p class="mb-0" style="font-size: 0.9rem;">
+            Cuando un mismo artículo de prensa se cita múltiples veces en diferentes capítulos de tu estudio,
+            <strong>mantén el mismo número de referencia</strong>. Esto es correcto en la metodología científica:
+            una fuente única tiene un número único, independientemente de cuántas veces la cites. Las "versiones"
+            listadas aquí representan posibles duplicados o variaciones del mismo artículo en la base de datos.
+        </p>
+    </div>
+</div>
+
+<script>
+    // Funcionalidad de filtros
+    document.addEventListener('DOMContentLoaded', function () {
+        // Poblar filtros dinámicamente
+        const referencias = document.querySelectorAll('[data-numero]');
+        const publicaciones = new Set();
+        const idiomas = new Set();
+
+        referencias.forEach(ref => {
+            const pub = ref.closest('.mb-4').querySelector('em.text-warning')?.textContent;
+            if (pub) publicaciones.add(pub);
+
+            const badges = ref.closest('.mb-4').querySelectorAll('.badge');
+            badges.forEach(badge => {
+                if (badge.classList.contains('bg-secondary')) {
+                    idiomas.add(badge.textContent.trim());
+                }
+            });
+        });
+
+        const filtroPub = document.getElementById('filtroPublicacion');
+        const filtroIdioma = document.getElementById('filtroIdioma');
+
+        Array.from(publicaciones).sort().forEach(pub => {
+            const option = document.createElement('option');
+            option.value = pub;
+            option.textContent = pub;
+            filtroPub.appendChild(option);
+        });
+
+        Array.from(idiomas).sort().forEach(idioma => {
+            const option = document.createElement('option');
+            option.value = idioma;
+            option.textContent = idioma;
+            filtroIdioma.appendChild(option);
+        });
+
+        // Aplicar filtros
+        document.getElementById('btnAplicarFiltros').addEventListener('click', function () {
+            const pubSeleccionada = filtroPub.value;
+            const idiomaSeleccionado = filtroIdioma.value;
+            const ordenSeleccionado = document.getElementById('ordenarPor').value;
+
+            document.querySelectorAll('.mb-4.pb-4').forEach(item => {
+                let mostrar = true;
+
+                if (pubSeleccionada) {
+                    const pub = item.querySelector('em.text-warning')?.textContent;
+                    if (pub !== pubSeleccionada) mostrar = false;
+                }
+
+                if (idiomaSeleccionado) {
+                    const badges = Array.from(item.querySelectorAll('.badge.bg-secondary'));
+                    const tieneIdioma = badges.some(b => b.textContent.trim() === idiomaSeleccionado);
+                    if (!tieneIdioma) mostrar = false;
+                }
+
+                item.style.display = mostrar ? 'block' : 'none';
+            });
+
+            // Aplicar ordenamiento
+            const container = document.querySelector('.card-body');
+            const items = Array.from(container.querySelectorAll('.mb-4.pb-4'));
+
+            items.sort((a, b) => {
+                let valA, valB;
+
+                switch (ordenSeleccionado) {
+                    case 'numero':
+                        let textA = a.querySelector('.badge.bg-warning')?.textContent.trim().replace('[', '').replace(']', '') || '0';
+                        let textB = b.querySelector('.badge.bg-warning')?.textContent.trim().replace('[', '').replace(']', '') || '0';
+                        valA = textA === 'S/N' ? 999999 : parseInt(textA);
+                        valB = textB === 'S/N' ? 999999 : parseInt(textB);
+                        return valA - valB;
+
+                    case 'titulo':
+                        valA = a.querySelector('span.text-info')?.textContent || '';
+                        valB = b.querySelector('span.text-info')?.textContent || '';
+                        return valA.localeCompare(valB);
+
+                    case 'autor':
+                        valA = a.querySelector('strong.text-light')?.textContent || '';
+                        valB = b.querySelector('strong.text-light')?.textContent || '';
+                        return valA.localeCompare(valB);
+
+                    case 'fecha':
+                        valA = a.querySelector('span.text-light')?.textContent || '';
+                        valB = b.querySelector('span.text-light')?.textContent || '';
+                        return valA.localeCompare(valB);
+
+                    case 'publicacion':
+                        valA = a.querySelector('em.text-warning')?.textContent || '';
+                        valB = b.querySelector('em.text-warning')?.textContent || '';
+                        return valA.localeCompare(valB);
+                }
+                return 0;
+            });
+
+            items.forEach(item => container.appendChild(item));
+        });
+
+        // Initialize Edit Style from localStorage
+        const storedStyle = localStorage.getItem('hesiox_citation_style');
+        if (storedStyle) {
+            document.getElementById('edit-ref-estilo').value = storedStyle;
+        }
+
+        // Copiar cita al portapapeles
+        document.querySelectorAll('.copiar-cita-bib').forEach(btn => {
+            btn.addEventListener('click', function () {
+                let numero = this.dataset.numero;
+                if (parseInt(numero) >= 999999) numero = "S/N";
+                
+                const autor = this.dataset.autor;
+                const titulo = this.dataset.titulo;
+                const publicacion = this.dataset.publicacion;
+                const fecha = this.dataset.fecha || 's.f.';
+                const paginas = this.dataset.paginas;
+                const estilo = localStorage.getItem('hesiox_citation_style') || 'apa';
+
+                let cita = "";
+                if (estilo === 'apa') {
+                    cita = `${autor} (${fecha}). ${titulo}. ${publicacion ? `*${publicacion}*` : ''}. ${paginas ? `pp. ${paginas}` : ''}`;
+                } else if (estilo === 'chicago') {
+                    cita = `${autor}. "${titulo}." ${publicacion ? `*${publicacion}*` : ''} (${fecha})${paginas ? `: ${paginas}` : ''}.`;
+                } else if (estilo === 'mla') {
+                    cita = `${autor}. "${titulo}." *${publicacion || 'S/Publicación'}*, ${fecha}${paginas ? `, pp. ${paginas}` : ''}.`;
+                } else if (estilo === 'vancouver') {
+                    cita = `${autor}. ${titulo}. ${publicacion ? publicacion : ''}. ${fecha}${paginas ? `; ${paginas}` : ''}.`;
+                } else {
+                    // Default / Original / IEEE
+                    cita = `[${numero}] ${autor}. "${titulo}". ${publicacion || ''} (${fecha})`;
+                    if (paginas) cita += `, pp. ${paginas}`;
+                    cita += '.';
+                }
+
+                // Remove markdown asterisks for plain text clipboard if needed, or leave them for rich text (clipboard.writeText is plain text, so we'll strip them)
+                cita = cita.replace(/\*/g, '');
+
+                navigator.clipboard.writeText(cita).then(() => {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<svg width="12" height="12" fill="currentColor" class="me-1"><path d="M3 9l3 3 7-7"/></svg>Copiado';
+                    this.classList.remove('btn-sirio');
+                    this.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-sirio');
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Eliminar cita
+        document.querySelectorAll('.eliminar-cita-bib').forEach(btn => {
+            btn.addEventListener('click', function () {
+                if(confirm('¿Seguro que quieres eliminar esta referencia de tu bibliografía?')) {
+                    const idsStr = this.dataset.ids;
+                    const ids = idsStr.split(',').map(id => parseInt(id, 10));
+                    
+                    fetch('/api/bibliografia/eliminar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ ids: ids })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const container = this.closest('.mb-4');
+                            if (container) container.remove();
+                        } else {
+                            alert('Hubo un error al eliminar: ' + data.error);
+                        }
+                    })
+                    .catch(e => {
+                        alert('Error de conexión.');
+                        console.error(e);
+                    });
+                }
+            });
+        });
+        
+        // Modal Edición Rápida
+        const editModal = new bootstrap.Modal(document.getElementById('editarReferenciaModal'));
+        document.querySelectorAll('.editar-cita-bib').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const numero = this.dataset.numero;
+                const tipo = this.dataset.tipo;
+                
+                document.getElementById('edit-ref-id').value = id;
+                document.getElementById('edit-ref-numero').value = numero || '';
+                
+                const tipoSelect = document.getElementById('edit-ref-tipo');
+                let OptionExists = false;
+                Array.from(tipoSelect.options).forEach(opt => {
+                    if (opt.value === tipo) OptionExists = true;
+                });
+                if (OptionExists) {
+                    tipoSelect.value = tipo;
+                } else {
+                    tipoSelect.value = 'prensa'; // fallback
+                }
+                
+                editModal.show();
+            });
+        });
+        
+        document.getElementById('btn-guardar-referencia').addEventListener('click', function() {
+            const id = document.getElementById('edit-ref-id').value;
+            const numero = document.getElementById('edit-ref-numero').value;
+            const tipo = document.getElementById('edit-ref-tipo').value;
+            const estilo = document.getElementById('edit-ref-estilo').value;
+            
+            // Guardar estilo en localStorage para copias futuras
+            localStorage.setItem('hesiox_citation_style', estilo);
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+            
+            fetch('/api/bibliografia/editar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    id: parseInt(id, 10),
+                    numero_referencia: numero || null,
+                    tipo_recurso: tipo
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error de conexión.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+    });
+</script>
+
+{% endblock %}

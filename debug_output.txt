@@ -1,0 +1,4 @@
+  File "/opt/hesiox/debug_scope.py", line 30
+    print(f"CONTENT LENGTH: {len(p.contenido) if p.contenido else 0}")
+    ^^^^^
+SyntaxError: expected 'except' or 'finally' block

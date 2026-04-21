@@ -1,0 +1,106 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Manual de Usuario — Proyecto Sirio{% endblock %}
+{% block page_title %}Manual de Usuario{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('ayuda') }}">Ayuda</a></li>
+<li class="breadcrumb-item active" aria-current="page">Manual Completo</li>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('ayuda') }}" class="btn btn-outline-warning btn-sm">
+    <i class="fa-solid fa-arrow-left me-1"></i> Volver a Ayuda
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para el contenido del manual (markdown renderizado) */
+    .manual-container {
+        color: #e0e0e0;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding-bottom: 50px;
+    }
+
+    .manual-container h1,
+    .manual-container h2,
+    .manual-container h3 {
+        color: #ff9800;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-family: 'Roboto Condensed', sans-serif;
+    }
+
+    .manual-container h1 {
+        font-size: 2rem;
+        border-bottom: 1px solid #444;
+        padding-bottom: 10px;
+    }
+
+    .manual-container h2 {
+        font-size: 1.6rem;
+    }
+
+    .manual-container h3 {
+        font-size: 1.3rem;
+        color: #ffb74d;
+    }
+
+    .manual-container p {
+        margin-bottom: 15px;
+    }
+
+    .manual-container code {
+        background: rgba(255, 152, 0, 0.1);
+        color: #ffb74d;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9em;
+    }
+
+    .manual-container pre {
+        background: #121212;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        overflow-x: auto;
+    }
+
+    .manual-container ul,
+    .manual-container ol {
+        margin-bottom: 15px;
+        padding-left: 20px;
+    }
+
+    .manual-container li {
+        margin-bottom: 5px;
+    }
+
+    .manual-container blockquote {
+        border-left: 4px solid #ff9800;
+        padding-left: 15px;
+        color: #aaa;
+        background: rgba(255, 152, 0, 0.05);
+        padding: 10px 15px;
+        margin: 20px 0;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .manual-container img {
+        max-width: 100%;
+        border-radius: 6px;
+        margin: 20px 0;
+        border: 1px solid #444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="manual-container">
+    {{ content | safe }}
+</div>
+{% endblock %}

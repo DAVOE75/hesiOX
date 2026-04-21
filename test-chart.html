@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-theme="dark">
+<div class="chart-container" style="height: 300px; position:relative"><canvas id="familyDistributionChart"></canvas></div>
+<div class="chart-container" style="height: 300px; position:relative"><canvas id="familySurvivalChart"></canvas></div>
+<div class="chart-container" style="height: 300px; position:relative"><canvas id="familyClassChart"></canvas></div>
+<div id="out"></div>
+
+<script>
+    let charts = {};
+    const familyData = {
+      'class_distribution': {'1ª Clase': {'1 Persona (Solo)': 17, '10+ Personas': 10, '2 Personas (Pareja)': 4, '3-4 Personas': 3}, '2ª Clase': {'1 Persona (Solo)': 18, '2 Personas (Pareja)': 6, '3-4 Personas': 14}, '3ª Clase': {'1 Persona (Solo)': 460, '10+ Personas': 10, '2 Personas (Pareja)': 140, '3-4 Personas': 85, '5-9 Personas': 44}, 'Tripulación': {'1 Persona (Solo)': 117, '2 Personas (Pareja)': 10}}, 
+      'distribution': {'1 Persona (Solo)': 612, '10+ Personas': 20, '2 Personas (Pareja)': 160, '3-4 Personas': 102, '5-9 Personas': 44}, 
+      'survival': {'1 Persona (Solo)': {'survived': 492, 'total': 612}, '10+ Personas': {'survived': 5, 'total': 20}, '2 Personas (Pareja)': {'survived': 125, 'total': 160}, '3-4 Personas': {'survived': 70, 'total': 102}, '5-9 Personas': {'survived': 29, 'total': 44}}
+    };
+
+    function renderFamilyDistribution(familyData) {
+        if (!familyData || !familyData.distribution) return;
+        const ctx = document.getElementById('familyDistributionChart')?.getContext('2d');
+        if (!ctx) return;
+        
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+        const color = isLight ? '#294a60' : '#00a2ff';
+
+        const labels = Object.keys(familyData.distribution);
+        const data = Object.values(familyData.distribution);
+
+        charts.familyDistribution = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Pasajeros',
+                    data: data,
+                    backgroundColor: color,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: 'rgba(128,128,128,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: textColor},
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderFamilySurvival(familyData) {
+        if (!familyData || !familyData.survival) return;
+        const ctx = document.getElementById('familySurvivalChart')?.getContext('2d');
+        const isLight = false;
+        const textColor = '#aaa';
+        const colorSurv = '#00ff55';
+        const colorDead = '#ff2d75';
+
+        const labels = Object.keys(familyData.survival);
+        const survivedData = labels.map(l => familyData.survival[l].survived);
+        const deadData = labels.map(l => familyData.survival[l].total - familyData.survival[l].survived);
+
+        charts.familySurvival = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Supervivientes', data: survivedData, backgroundColor: colorSurv, borderRadius: 2 },
+                    { label: 'Fallecidos/Desaparecidos', data: deadData, backgroundColor: colorDead, borderRadius: 2 }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: textColor } },
+                },
+                scales: {
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: 'rgba(128,128,128,0.1)' }
+                    },
+                    x: {
+                        stacked: true,
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderFamilyClass(familyData) {
+        const ctx = document.getElementById('familyClassChart')?.getContext('2d');
+        const textColor = '#aaa';
+        const classes = ['1ª Clase', '2ª Clase', '3ª Clase', 'Tripulación'];
+        const sizeLabels = ['1 Persona (Solo)', '2 Personas (Pareja)', '3-4 Personas', '5-9 Personas', '10+ Personas'];
+        const colors = ['#00a2ff', '#00ff55', '#ff9d00', '#ff2d75', '#a200ff'];
+
+        const datasets = sizeLabels.map((sl, idx) => {
+            return {
+                label: sl,
+                data: classes.map(c => (familyData.class_distribution[c] || {})[sl] || 0),
+                backgroundColor: colors[idx]
+            };
+        });
+
+        charts.familyClass = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: classes,
+                datasets: datasets
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: { color: textColor, boxWidth: 10 } 
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: true,
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    },
+                    x: {
+                        stacked: true,
+                        ticks: { color: textColor },
+                        grid: { color: 'rgba(128,128,128,0.1)' }
+                    }
+                }
+            }
+        });
+    }
+
+    window.onload = function() {
+        try { renderFamilyDistribution(familyData); document.getElementById('out').innerHTML += "OK 1<br>"; } catch(e) { document.getElementById('out').innerHTML += "ERR 1: " + e + "<br>"; }
+        try { renderFamilySurvival(familyData); document.getElementById('out').innerHTML += "OK 2<br>"; } catch(e) { document.getElementById('out').innerHTML += "ERR 2: " + e + "<br>"; }
+        try { renderFamilyClass(familyData); document.getElementById('out').innerHTML += "OK 3<br>"; } catch(e) { document.getElementById('out').innerHTML += "ERR 3: " + e + "<br>"; }
+    }
+</script>
+</body>
+</html>

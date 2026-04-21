@@ -1,0 +1,670 @@
+{% extends "base.html" %}
+
+{% block title %}Blog · HesiOX{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========= BLOG LISTA — Premium Article Layout (Public) ========= */
+.blog-home-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.blog-hero {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,152,0,0.05) 0%, transparent 60%);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 3.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+
+
+.blog-hero h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.blog-hero-subtitle {
+    font-size: 1.05rem;
+    color: #000 !important; /* Negro puro para máxima legibilidad */
+    font-style: italic;
+    font-family: 'Merriweather', serif;
+    max-width: 700px;
+    margin: 0;
+    position: relative;
+    z-index: 5;
+    opacity: 1 !important;
+}
+
+.blog-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.01);
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 1rem;
+    border-radius: 999px; 
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    border: 1px solid rgba(255,152,0, 0.2); /* Borde más visible */
+    color: #444; /* Oscurecido para legibilidad */
+    background: rgba(255,255,255,0.02);
+    transition: all 0.2s ease;
+}
+.filter-chip:hover {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-1px);
+}
+.filter-chip.active {
+    background: var(--ds-accent-primary, #ff9800);
+    border-color: var(--ds-accent-primary, #ff9800);
+    color: #000;
+    box-shadow: 0 4px 12px rgba(255,152,0, 0.2);
+}
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+/* Card principal */
+.blog-card {
+    background: var(--ds-bg-card, #111);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
+                box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
+                border-color 0.25s ease;
+    position: relative;
+}
+.blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(var(--ds-accent-rgb,255,152,0),0.25);
+    border-color: rgba(var(--ds-accent-rgb,255,152,0),0.25);
+}
+.blog-card.destacada {
+    border-color: rgba(var(--ds-accent-rgb,255,152,0),0.4);
+}
+.blog-card.destacada::before {
+    content: '★';
+    position: absolute;
+    top: 0.6rem;
+    right: 0.7rem;
+    font-size: 0.75rem;
+    color: var(--ds-accent-primary, #ff9800);
+    z-index: 5;
+}
+
+.blog-card-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.blog-card-img-placeholder {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg,
+        rgba(255,255,255,0.03) 0%,
+        rgba(var(--ds-accent-rgb,255,152,0),0.05) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.blog-card-img-placeholder i {
+    font-size: 2.5rem;
+    opacity: 0.15;
+    color: var(--ds-accent-primary, #ff9800);
+}
+
+.blog-card-body {
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.blog-categoria-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    background: rgba(var(--ds-accent-rgb,255,152,0),0.12);
+    color: var(--ds-accent-primary, #ff9800);
+    border: 1px solid rgba(var(--ds-accent-rgb,255,152,0),0.2);
+    margin-bottom: 0.6rem;
+}
+
+.blog-card-titulo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ds-text-primary, #fff);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.6rem;
+    transition: color 0.2s;
+}
+.blog-card-titulo:hover {
+    color: var(--ds-accent-primary, #ff9800);
+}
+
+.blog-card-resumen {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--ds-text-secondary, #888);
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.blog-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.72rem;
+    color: var(--ds-text-muted, #666);
+}
+
+.blog-card-meta .meta-author {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: var(--ds-text-secondary, #999);
+}
+
+.blog-card-leer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--ds-accent-primary, #ff9800);
+    text-decoration: none;
+    transition: gap 0.2s ease;
+}
+.blog-card-leer:hover {
+    gap: 0.6rem;
+    color: #fff !important;
+}
+
+/* Estado vacío */
+.blog-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    text-align: center;
+    opacity: 0.5;
+}
+
+/* Paginación */
+.blog-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2rem;
+}
+.page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--ds-text-secondary, #aaa);
+    background: transparent;
+    transition: all 0.2s;
+}
+.page-btn:hover, .page-btn.active {
+    background: var(--ds-accent-primary, #ff9800);
+    border-color: var(--ds-accent-primary, #ff9800);
+    color: #000;
+}
+
+/* Light Mode Overrides */
+[data-theme="light"] .blog-card {
+    background: #fff;
+    border-color: rgba(0,0,0,0.08);
+}
+[data-theme="light"] .blog-card:hover {
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+[data-theme="light"] .blog-card-resumen {
+    color: #555;
+}
+[data-theme="light"] .blog-card-meta {
+    color: #888;
+    border-color: rgba(0,0,0,0.07);
+}
+[data-theme="light"] .blog-hero {
+    background: linear-gradient(135deg, rgba(41,74,96,0.06) 0%, transparent 60%);
+    border-color: rgba(0,0,0,0.06);
+}
+[data-theme="light"] .blog-filters {
+    background: rgba(0,0,0,0.02);
+    border-color: rgba(0,0,0,0.06);
+}
+[data-theme="light"] .filter-chip {
+    border-color: rgba(255,152,0, 0.3);
+    color: #222;
+}
+
+/* Admin Buttons Specific Styling */
+.btn-admin-sirio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    border: 1px solid var(--ds-accent-primary, #ff9800) !important;
+}
+
+.btn-admin-sirio.outline {
+    background: transparent;
+    color: var(--ds-accent-primary, #ff9800) !important;
+}
+
+.btn-admin-sirio.outline:hover {
+    background: rgba(255,152,0,0.1);
+    color: #fff !important;
+    border-color: #fff !important;
+}
+
+.btn-admin-sirio.filled {
+    background: var(--ds-accent-primary, #ff9800);
+    color: #000 !important;
+}
+
+.btn-admin-sirio.filled:hover {
+    background: #e68a00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,152,0,0.2);
+}
+
+/* Subscription Newsletter Section */
+.blog-newsletter-section {
+    position: relative;
+    margin: 4rem 2rem 2rem 2rem;
+    padding: 4rem 2rem;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(17, 17, 17, 0.6) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 152, 0, 0.15);
+    overflow: hidden;
+    text-align: center;
+}
+
+.blog-newsletter-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 152, 0, 0.03) 0%, transparent 70%);
+    z-index: -1;
+    animation: rotate-slow 20s linear infinite;
+}
+
+@keyframes rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.newsletter-content {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.newsletter-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.newsletter-content p {
+    color: var(--ds-text-secondary, #aaa);
+    font-size: 1.05rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.subscribe-form {
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.subscribe-form:focus-within {
+    border-color: var(--ds-accent-primary, #ff9800);
+    box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
+}
+
+.subscribe-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    color: #fff;
+    font-size: 1rem;
+    outline: none !important;
+}
+
+.subscribe-btn {
+    background: var(--ds-accent-primary, #ff9800);
+    color: #000;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.subscribe-btn:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.subscribe-btn:active {
+    transform: translateY(0);
+}
+
+.subscribe-btn i {
+    transition: transform 0.3s ease;
+}
+
+.subscribe-btn:hover i {
+    transform: translateX(3px) rotate(-10deg);
+}
+
+#subscribe-message {
+    margin-top: 1.2rem;
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .blog-newsletter-section {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+    border-color: rgba(255, 152, 0, 0.2);
+}
+
+[data-theme="light"] .newsletter-content h3 { color: #111; }
+[data-theme="light"] .newsletter-content p { color: #555; }
+[data-theme="light"] .subscribe-form { background: #fff; border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .subscribe-input { color: #000; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 blog-home-wrapper">
+
+    <!-- Admin Tools (Solo si está logueado como admin) -->
+    {% if current_user.is_authenticated and current_user.rol == 'admin' %}
+    <div class="d-flex justify-content-end gap-3 mb-4">
+        <a href="{{ url_for('blog.admin_lista') }}" class="btn-admin-sirio outline">
+            <i class="fa-solid fa-sliders"></i> Gestionar Blog
+        </a>
+        <a href="{{ url_for('blog.admin_nueva') }}" class="btn-admin-sirio filled">
+            <i class="fa-solid fa-plus"></i> Nueva Entrada
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Hero del blog -->
+    <div class="blog-hero">
+        <p class="text-accent smaller text-uppercase fw-bold mb-1" style="letter-spacing: 2px;">
+            <i class="fa-solid fa-graduation-cap me-2"></i>Cuaderno de Investigación
+        </p>
+        <h2>Novedades del Proyecto</h2>
+        <p class="blog-hero-subtitle">
+            Crónicas de investigación, metodología digital, hallazgos y reflexiones del equipo HesiOX.
+        </p>
+    </div>
+
+    <!-- Filtros de categoría -->
+    {% if categorias %}
+    <div class="blog-filters">
+        <a href="{{ url_for('blog.lista') }}"
+           class="filter-chip {% if not categoria_filtro %}active{% endif %}">
+            <i class="fa-solid fa-layer-group"></i> Todas
+        </a>
+        {% for cat in categorias %}
+        <a href="{{ url_for('blog.lista', categoria=cat) }}"
+           class="filter-chip {% if categoria_filtro == cat %}active{% endif %}">
+            {{ cat }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Grid de entradas -->
+    {% if entradas %}
+    <div class="blog-grid">
+        {% for entrada in entradas %}
+        <article class="blog-card {% if entrada.destacado %}destacada{% endif %}">
+
+            {% if entrada.imagen_portada %}
+            <img src="{{ entrada.imagen_portada if entrada.imagen_portada.startswith('http') else url_for('static', filename=entrada.imagen_portada) }}"
+                 alt="{{ entrada.titulo }}" class="blog-card-img" loading="lazy">
+            {% else %}
+            <div class="blog-card-img-placeholder">
+                <i class="fa-solid fa-feather-pointed"></i>
+            </div>
+            {% endif %}
+
+            <div class="blog-card-body">
+                <span class="blog-categoria-badge">{{ entrada.categoria or 'General' }}</span>
+
+                <a href="{{ url_for('blog.detalle', slug=entrada.slug) }}" class="blog-card-titulo">
+                    {{ entrada.titulo }}
+                </a>
+
+                <p class="blog-card-resumen">{{ entrada.get_resumen_corto(180) }}</p>
+
+                <div class="blog-card-meta">
+                    <div class="meta-author">
+                        <i class="fa-solid fa-user-pen" style="color: var(--ds-accent-primary); opacity:0.7;"></i>
+                        {{ entrada.autor.nombre }}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span title="Fecha de publicación">
+                            <i class="fa-regular fa-calendar me-1"></i>
+                            {{ entrada.publicado_en.strftime('%d/%m/%Y') if entrada.publicado_en else '—' }}
+                        </span>
+                        <span title="Vistas">
+                            <i class="fa-regular fa-eye me-1"></i>{{ entrada.vistas }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <a href="{{ url_for('blog.detalle', slug=entrada.slug) }}" class="blog-card-leer">
+                        Leer entrada <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if paginacion.pages > 1 %}
+    <div class="blog-pagination">
+        {% if paginacion.has_prev %}
+        <a href="{{ url_for('blog.lista', pagina=paginacion.prev_num, categoria=categoria_filtro) }}"
+           class="page-btn" title="Anterior">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in paginacion.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if num %}
+            <a href="{{ url_for('blog.lista', pagina=num, categoria=categoria_filtro) }}"
+               class="page-btn {% if num == paginacion.page %}active{% endif %}">{{ num }}</a>
+            {% else %}
+            <span class="page-btn" style="cursor:default">…</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if paginacion.has_next %}
+        <a href="{{ url_for('blog.lista', pagina=paginacion.next_num, categoria=categoria_filtro) }}"
+           class="page-btn" title="Siguiente">
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="blog-empty">
+        <i class="fa-solid fa-feather-pointed fa-3x mb-3 text-secondary"></i>
+        <h4 class="text-muted">Sin entradas publicadas</h4>
+        <p class="text-muted small">
+            {% if categoria_filtro %}No hay entradas en la categoría "{{ categoria_filtro }}".
+            {% else %}Aún no se han publicado entradas en este blog.{% endif %}
+        </p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('blog.admin_nueva') }}" class="btn btn-warning mt-3">
+            <i class="fa-solid fa-plus me-2"></i>Escribir primera entrada
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Newsletter Section -->
+    <section class="blog-newsletter-section">
+        <div class="newsletter-content">
+            <p class="text-accent smaller text-uppercase fw-bold mb-2" style="letter-spacing: 2px;">
+                <i class="fa-solid fa-paper-plane me-2"></i> Mantente informado
+            </p>
+            <h3>Suscríbete al Cuaderno</h3>
+            <p>Recibe directamente en tu correo las últimas investigaciones, crónicas y hallazgos digitales del equipo HesiOX.</p>
+            
+            <form id="form-suscribe-blog" class="subscribe-form">
+                <input type="email" name="email" class="subscribe-input" placeholder="Tu correo electrónico..." required>
+                <button type="submit" class="subscribe-btn">
+                    Suscribirme <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </form>
+            <div id="subscribe-message"></div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-suscribe-blog');
+    const messageDiv = document.getElementById('subscribe-message');
+    const btn = form.querySelector('.subscribe-btn');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = form.querySelector('input[name="email"]').value;
+        const formData = new FormData();
+        formData.append('email', email);
+
+        // UI Feedback
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+        messageDiv.innerHTML = '';
+
+        fetch("{{ url_for('blog.subscribe') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': "{{ csrf_token() }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.innerHTML = `<span class="text-success"><i class="fa-solid fa-check-double me-2"></i> ${data.message}</span>`;
+                form.reset();
+                // Success animation
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+                btn.style.background = '#28a745';
+                btn.style.color = '#fff';
+            } else {
+                messageDiv.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-exclamation me-2"></i> ${data.message}</span>`;
+                btn.disabled = false;
+                btn.innerHTML = 'Suscribirme <i class="fa-solid fa-chevron-right"></i>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messageDiv.innerHTML = '<span class="text-danger">Error de conexión. Inténtalo más tarde.</span>';
+            btn.disabled = false;
+            btn.innerHTML = 'Suscribirme <i class="fa-solid fa-chevron-right"></i>';
+        });
+    });
+});
+</script>
+{% endblock %}

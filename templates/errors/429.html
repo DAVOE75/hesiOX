@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Demasiadas Peticiones - hesiOX{% endblock %}
+
+{% block content %}
+<div class="error-page" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div class="error-container text-center" style="max-width: 600px; padding: 40px;">
+        <!-- Icono de error -->
+        <div class="error-icon" style="font-size: 120px; margin-bottom: 30px;">
+            ⏱️
+        </div>
+
+        <!-- Código de error -->
+        <h1 class="error-code"
+            style="font-size: 72px; font-weight: 700; color: var(--app-accent, #ff9800); margin-bottom: 20px;">
+            429
+        </h1>
+
+        <!-- Mensaje principal -->
+        <h2 style="font-size: 28px; margin-bottom: 20px; color: #fff;">
+            Demasiadas Peticiones
+        </h2>
+
+        <!-- Descripción -->
+        <p class="text-muted" style="font-size: 18px; margin-bottom: 30px; line-height: 1.6;">
+            {{ message or 'Has excedido el límite de peticiones permitidas. Por favor, espera un momento antes de
+            intentar de nuevo.' }}
+        </p>
+
+        {% if retry_after %}
+        <div class="alert alert-warning" style="margin-bottom: 30px;">
+            <strong>⏰ Tiempo de espera:</strong> {{ retry_after|replace('per', 'por')|replace('minute', 'minuto')|replace('second', 'segundo')|replace('hour', 'hora') }}
+        </div>
+        {% endif %}
+
+        <!-- Información adicional -->
+        <div class="info-box"
+            style="background: rgba(255, 152, 0, 0.1); border: 1px solid var(--app-accent, #ff9800); border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: left;">
+            <h4 style="color: var(--app-accent, #ff9800); margin-bottom: 15px;">
+                💡 ¿Por qué veo este mensaje?
+            </h4>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>Protegemos nuestros servidores limitando el número de peticiones por usuario</li>
+                <li>Esto ayuda a mantener el servicio rápido y estable para todos</li>
+                <li>Los límites se restablecen automáticamente después de un tiempo</li>
+            </ul>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="error-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-warning" style="margin-right: 10px;">
+                <i class="fa fa-home"></i> Ir al Dashboard
+            </a>
+            <button onclick="window.history.back()" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Volver Atrás
+            </button>
+        </div>
+
+        <!-- Contador de tiempo (opcional) -->
+        <div id="countdown" style="margin-top: 30px; font-size: 14px; color: #888;">
+            <!-- Se puede añadir un contador JavaScript aquí -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .error-page {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%);
+    }
+
+    .error-icon {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-warning {
+        background: var(--app-accent, #ff9800);
+        color: #000;
+        border: none;
+    }
+
+    .btn-warning:hover {
+        background: #ffa726;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+    }
+
+    .btn-secondary {
+        background: #424242;
+        color: #fff;
+        border: 1px solid #666;
+    }
+
+    .btn-secondary:hover {
+        background: #525252;
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    // Opcional: Auto-reload después de cierto tiempo
+    {% if retry_after %}
+    setTimeout(function () {
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) {
+            countdownEl.innerHTML = '<p>Recargando página...</p>';
+        }
+        window.location.reload();
+    }, 60000); // 60 segundos
+    {% endif %}
+</script>
+{% endblock %}

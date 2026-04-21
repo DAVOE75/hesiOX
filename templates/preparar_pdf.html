@@ -1,0 +1,150 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Imprimir Noticia — Proyecto Sirio{% endblock %}
+{% block page_title %}Preparar Impresión de Noticia{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Generar PDF</span>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" style="height: 100%; display: flex; flex-direction: column;">
+    
+    <form action="{{ url_for('noticias.noticia_generar_pdf_final') }}" method="POST" target="_blank" id="form-pdf" class="w-100" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="id" value="{{ ref.id }}">
+        <div class="mb-3">
+            <label class="form-label-sirio">Motor OCR</label>
+            <div class="input-group" title="Elija el motor OCR según la calidad y rapidez que necesite">
+                <span class="input-group-text"><i class="fa-solid fa-robot"></i></span>
+                <select name="ocr_engine" class="form-select form-select-sirio">
+                    <option value="tesseract" selected>Tesseract (local, rápido)</option>
+                    <option value="ocrspace" style="background-color:#e6f7ff;font-weight:bold;">OCR.space (web, máxima calidad)</option>
+                </select>
+            </div>
+            <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
+                <i class="fa-solid fa-circle-info me-1"></i>
+                <strong>Recomendado:</strong> Para documentos antiguos o baja calidad, usa <span style="color:#007bff;font-weight:bold;">OCR.space</span>.<br>
+                <span class="text-muted">Tesseract es más rápido y funciona sin internet, pero la calidad puede ser inferior.</span>
+            </div>
+        </div>
+        
+        <style>
+            /* Fijar el ancho y evitar que el botón cambie de tamaño */
+            #form-pdf .btn-sirio {
+                width: 200px !important;
+                min-width: 200px !important;
+                max-width: 200px !important;
+                flex: 0 0 200px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                align-items: center;
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+        <!-- Toolbar Header -->
+        <header class="toolbar-header" style="flex: 0 0 auto;">
+            <div class="d-flex align-items-center w-100 gap-3">
+                <a href="{{ request.referrer or url_for('noticias.listar') }}" class="btn-sirio-secondary text-nowrap">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Volver
+                </a>
+                
+                <button type="submit" class="btn-sirio text-nowrap" style="width: 200px; justify-content: center;">
+                    <i class="fa-solid fa-print me-2"></i> Generar PDF
+                </button>
+
+                <div class="vr mx-2 h-50 opacity-25"></div>
+                
+                <span class="text-muted small text-truncate"><i class="fa-solid fa-info-circle me-1"></i> Edite los datos para la impresión (no afecta a la base de datos)</span>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="row g-3 p-3 m-0" style="flex: 1; overflow-y: auto;">
+            
+            <!-- Columna Izquierda: Metadatos -->
+            <div class="col-lg-4">
+                <div class="card-panel h-100">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-list me-2"></i> Metadatos del Documento</span>
+                    </div>
+                    <div class="p-3 d-flex flex-column gap-3">
+                        
+                        <div>
+                            <label class="form-label-sirio">Título</label>
+                            <input type="text" name="titulo" class="form-control form-control-sirio" value="{{ ref.titulo or '' }}">
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label-sirio">Autor</label>
+                                <input type="text" name="autor" class="form-control form-control-sirio" value="{{ ref.autor or '' }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-sirio">Fecha</label>
+                                <input type="text" name="fecha_original" class="form-control form-control-sirio" value="{% if ref.fecha_original and ref.fecha_original|length == 10 and '-' in ref.fecha_original %}{{ ref.fecha_original[8:10] }}/{{ ref.fecha_original[5:7] }}/{{ ref.fecha_original[0:4] }}{% else %}{{ ref.fecha_original or '' }}{% endif %}">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label-sirio">Publicación</label>
+                            <input type="text" name="publicacion" class="form-control form-control-sirio" value="{{ ref.publicacion or '' }}">
+                        </div>
+
+                        <div>
+                            <label class="form-label-sirio">Descripción Publicación</label>
+                            <textarea name="descripcion_publicacion" class="form-control form-control-sirio" rows="2">{{ ref.descripcion_publicacion or (ref.publicacion_rel.descripcion if ref.publicacion_rel else '') }}</textarea>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="form-label-sirio">Número</label>
+                                <input type="text" name="numero" class="form-control form-control-sirio" value="{{ ref.numero or '' }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label-sirio">Páginas</label>
+                                <input type="text" name="paginas" class="form-control form-control-sirio" value="{{ ref.paginas or '' }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label-sirio">Ciudad</label>
+                                <input type="text" name="ciudad" class="form-control form-control-sirio" value="{{ ref.ciudad or '' }}">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label-sirio">Temas</label>
+                            <input type="text" name="temas" class="form-control form-control-sirio" value="{{ ref.temas or '' }}">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Contenido -->
+            <div class="col-lg-8">
+                <div class="card-panel h-100 d-flex flex-column">
+                    <div class="card-header-panel flex-shrink-0">
+                        <span><i class="fa-solid fa-align-left me-2"></i> Contenido y Notas</span>
+                    </div>
+                    <div class="p-3 d-flex flex-column gap-3 flex-grow-1" style="min-height: 0;">
+                        
+                        <div class="flex-grow-1 d-flex flex-column" style="min-height: 0;">
+                            <label class="form-label-sirio">Contenido / Transcripción</label>
+                            <textarea name="contenido" class="form-control form-control-sirio flex-grow-1" style="resize: none;">{{ ref.contenido or '' }}</textarea>
+                        </div>
+
+                        <div class="flex-shrink-0">
+                            <label class="form-label-sirio">Notas / Descripción</label>
+                            <textarea name="notas" class="form-control form-control-sirio" rows="4">{{ ref.notas or '' }}</textarea>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endblock %}

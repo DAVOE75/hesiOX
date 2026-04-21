@@ -1,0 +1,1149 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Procesamiento del Discurso — Proyecto Sirio{% endblock %}
+{% block page_title %}Procesamiento del Discurso{% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Menú desplegable estilo Sirio (Mapa Base style) */
+  .dropdown-menu-sirio {
+    z-index: 100000 !important; /* Forzar visibilidad absoluta incluso sobre modales */
+    background: rgba(18, 18, 18, 0.98) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 152, 0, 0.4) !important;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.9) !important;
+    padding: 0.5rem 0 !important;
+    border-radius: 8px !important;
+    margin-top: 10px !important;
+  }
+  
+  .dropdown-menu-sirio .dropdown-item {
+    font-family: var(--ds-font-ui, monospace);
+    font-size: 11px !important;
+    letter-spacing: 0.8px;
+    padding: 12px 18px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  
+  .dropdown-menu-sirio .dropdown-item:hover {
+    background: rgba(255, 152, 0, 0.1) !important;
+    color: #fff !important;
+    border-left-color: var(--ds-accent-primary);
+    padding-left: 22px !important;
+  }
+  
+  .dropdown-menu-sirio .dropdown-item.active {
+    background: rgba(255, 152, 0, 0.15) !important;
+    color: var(--ds-accent-primary) !important;
+    border-left-color: var(--ds-accent-primary);
+  }
+  
+  .selection-tick {
+    display: none;
+    color: var(--ds-accent-primary);
+  }
+  
+  .dropdown-item.active .selection-tick {
+    display: inline-block !important;
+  }
+
+  /* Altair & Layout Normalization */
+  .altair-container canvas {
+    background: transparent !important;
+  }
+  .vega-embed.has-actions {
+    background: transparent !important;
+  }
+  .header-actions-wrapper {
+    display: flex;
+    align-items: center;
+    /* height: 60px; REMOVED to allow natural header height */
+    gap: 8px;
+    padding: 11px 16px;
+    /* overflow-x: auto; - REMOVED to allow dropdown visibility */
+    /* white-space: nowrap; */
+  }
+  .header-actions-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  .header-actions-wrapper .btn-sirio {
+    height: 32px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .header-actions-wrapper .btn-sirio i {
+    font-size: 14px;
+    margin-right: 0px;
+  }
+  .header-actions-wrapper .vr {
+    height: 30px;
+    align-self: center;
+  }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<div class="header-actions-wrapper" style="overflow: visible !important;">
+  <button class="btn-sirio active" data-analisis="dashboard" title="Dashboard">
+    <i class="fa-solid fa-chart-line"></i>
+    <span class="btn-text">Dashboard</span>
+  </button>
+
+  <!-- Dropdown para Análisis Específicos (Mapa Base Style) -->
+  <div class="dropdown d-inline-block">
+    <button class="btn-sirio dropdown-toggle" type="button" id="dropdownAnalisisExtra" data-bs-toggle="dropdown" aria-expanded="false" title="Análisis Literarios y Discursivos">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span class="btn-text">Análisis Específicos</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-sirio border-info shadow-lg" aria-labelledby="dropdownAnalisisExtra" style="min-width: 220px;">
+      <li>
+        <button class="dropdown-item d-flex align-items-center py-2" data-analisis="sentimiento">
+          <i class="fa-solid fa-face-smile me-2" style="width: 20px;"></i> 
+          <span>SENTIMIENTO</span>
+          <i class="fa-solid fa-check ms-auto selection-tick"></i>
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center py-2" data-analisis="retorica">
+          <i class="fa-solid fa-theater-masks me-2" style="width: 20px;"></i> 
+          <span>RETÓRICA</span>
+          <i class="fa-solid fa-check ms-auto selection-tick"></i>
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center py-2" data-analisis="periodistico">
+          <i class="fa-solid fa-newspaper me-2" style="width: 20px;"></i>
+          <span>PERIODÍSTICO</span>
+          <i class="fa-solid fa-check ms-auto selection-tick"></i>
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center py-2" data-analisis="dramatico">
+          <i class="fa-solid fa-person-burst me-2" style="width: 20px;"></i>
+          <span>DRAMÁTICO</span>
+          <i class="fa-solid fa-check ms-auto selection-tick"></i>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <button class="btn-sirio" data-analisis="topics" title="Modelado de Tópicos">
+    <i class="fa-solid fa-brain"></i>
+    <span class="btn-text">Tópicos</span>
+  </button>
+
+  <button class="btn-sirio" data-analisis="estilo" title="Análisis Estilométrico">
+    <i class="fa-solid fa-pen-fancy"></i>
+    <span class="btn-text">Estilo</span>
+  </button>
+
+  <button class="btn-sirio" data-analisis="ngramas" title="Análisis de N-gramas">
+    <i class="fa-solid fa-spell-check"></i>
+    <span class="btn-text">N-gramas</span>
+  </button>
+
+  <button class="btn-sirio" data-analisis="clustering" title="Clustering de Documentos">
+    <i class="fa-solid fa-object-group"></i>
+    <span class="btn-text">Clustering</span>
+  </button>
+
+  <div class="vr mx-1 opacity-25"></div>
+
+  <button id="btn-filtros" class="btn-sirio" title="Configurar filtros de análisis" data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasFiltros">
+    <i class="fa-solid fa-filter"></i>
+    <span class="btn-text">Filtros</span>
+  </button>
+
+  <button id="btn-exportar" class="btn-sirio" title="Exportar resultados">
+    <i class="fa-solid fa-download"></i>
+    <span class="btn-text">Exportar</span>
+  </button>
+
+  <div class="vr mx-1 opacity-25"></div>
+
+  <!-- IA Potency Selector -->
+  <div class="dropdown">
+    <button class="btn-sirio dropdown-toggle" type="button" id="dropdownIA" data-bs-toggle="dropdown"
+      aria-expanded="false" title="Potencia de Inteligencia Artificial">
+      <i class="fa-solid fa-microchip"></i>
+      <span class="btn-text" id="label-ia-potency">POTENCIA IA</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-sirio border-warning shadow-lg" aria-labelledby="dropdownIA" style="min-width: 250px;">
+      <li><a class="dropdown-item active" href="#" onclick="setIAPotency('flash', this)">
+          <i class="fa-solid fa-bolt me-2" style="color: #ff9800;"></i> GEMINI 2.0 FLASH (RÁPIDO)
+        </a></li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('pro', this)">
+          <i class="fa-solid fa-brain me-2" style="color: #888;"></i> GEMINI PRO (PRECISO)
+        </a></li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('gemini-3-flash', this)">
+          <i class="fa-solid fa-star me-2" style="color: #ff9800;"></i> GEMINI 3 FLASH (NEXT-GEN)
+        </a></li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('gemini-3-pro', this)">
+          <i class="fa-solid fa-crown me-2" style="color: #888;"></i> GEMINI 3 PRO (ELITE)
+        </a></li>
+      <li>
+        <hr class="dropdown-divider opacity-25">
+      </li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('openai', this)">
+          <i class="fa-solid fa-microchip me-2" style="color: #4caf50;"></i> OPENAI GPT-4O
+        </a></li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('anthropic', this)">
+          <i class="fa-solid fa-feather me-2" style="color: #f44336;"></i> CLAUDE 3.5 SONNET
+        </a></li>
+      <li><a class="dropdown-item" href="#" onclick="setIAPotency('llama', this)">
+          <i class="fa-solid fa-server me-2" style="color: #fff;"></i> LLAMA 3 (LOCAL)
+        </a></li>
+    </ul>
+  </div>
+
+  <div class="vr mx-1 opacity-25"></div>
+
+
+  <!-- Ayuda Filtros -->
+  <div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+    title="<strong>Filtros de Análisis</strong><br><small>Visualización y Datos</small><hr class='my-1'>En 'Configuración de Filtros' puedes aumentar la cantidad de documentos a analizar (Límite IA/NLP), así como el estilo de gráfica o el dato a representar en el eje X.">
+    <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Panel de ayuda contextual -->
+<div class="d-flex justify-content-center align-items-center w-100 position-absolute start-0"
+  style="padding-top: 0px; z-index: 80; pointer-events: none;">
+  <div class="px-3 py-1 rounded-pill d-flex gap-3 align-items-center"
+    style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-size: 0.75rem; font-family: var(--ds-font-ui);">
+    <span><i class="fa-solid fa-info-circle me-1 text-accent"></i> <b>Selecciona</b> un tipo de análisis arriba</span>
+    <span class="opacity-50">|</span>
+    <span><i class="fa-solid fa-mouse-pointer me-1 text-accent"></i> <b>Interactúa</b> con las visualizaciones</span>
+    <span class="opacity-50">|</span>
+    <span><i class="fa-solid fa-filter me-1 text-accent"></i> <b>Filtra</b> por hemeroteca, publicación, país</span>
+  </div>
+</div>
+
+<!-- Container principal -->
+<div id="analisis-container" style="width: 100%; height: 100%; padding: 40px; overflow-y: auto; position: relative;">
+
+  <!-- Loading inicial -->
+  <div id="loading-state"
+    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 10, 10, 0.95); z-index: 1000;">
+    <div class="spinner-border text-accent mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+    <span class="text-muted" style="font-family: var(--ds-font-mono);">Cargando análisis...</span>
+  </div>
+
+  <!-- Dashboard: Vista general -->
+  <div id="view-dashboard" class="analisis-view" style="display: none;">
+    <div class="row g-4">
+      <!-- Métricas generales -->
+      <div class="col-12">
+        <div class="glass-panel p-4">
+          <h3 class="text-accent mb-3"><i class="fa-solid fa-chart-bar me-2"></i>Métricas Generales</h3>
+          <div class="row g-3" id="metricas-generales">
+            <!-- Se llenarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Arco de Sentimiento -->
+      <div class="col-12 col-lg-6 d-flex align-items-stretch">
+        <div class="glass-panel p-3 w-100 d-flex flex-column">
+          <h5 class="mb-3 text-info"><i class="fa-solid fa-wave-square me-2"></i>Arco Narrativo de Sentimiento</h5>
+          <div id="altair-sentimiento-arco" class="altair-container w-100 flex-grow-1" style="min-height: 350px;"></div>
+        </div>
+      </div>
+
+      <!-- Tópicos principales (preview) -->
+      <div class="col-12 col-lg-6 d-flex align-items-stretch">
+        <div class="glass-panel p-4 w-100 d-flex flex-column">
+          <h4 class="mb-3"><i class="fa-solid fa-brain me-2"></i>Tópicos Principales</h4>
+          <div id="topics-preview" class="custom-scrollbar flex-grow-1" style="overflow-y: auto;">
+            <!-- Se llenarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- N-gramas frecuentes -->
+      <div class="col-12">
+        <div class="glass-panel p-4" style="height: 400px; min-height: 400px;">
+          <h4 class="mb-3"><i class="fa-solid fa-spell-check me-2"></i>Frases Más Frecuentes (Bigramas)</h4>
+          <canvas id="chart-ngramas-preview"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sentimiento detallado -->
+  <div id="view-sentimiento" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-face-smile me-2"></i>Análisis de Sentimiento Temporal</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué mide?</strong> El tono emocional de tus textos a lo largo del tiempo.
+          <strong>Sentimiento</strong> va de -1 (negativo) a +1 (positivo). <strong>Subjetividad</strong> de 0
+          (objetivo) a 1 (opinión). Útil para detectar períodos de crisis o cambios en el discurso.
+          <span class="text-info d-block mt-1 fst-italic"><i class="fa-solid fa-lightbulb me-1"></i>
+            <strong>Tip:</strong> Haz clic sobre "Sentimiento" o "Subjetividad" en la leyenda del gráfico para
+            activar/desactivar cada línea.</span>
+        </small>
+      </div>
+      <div class="row g-4">
+        <div style="height: 400px; min-height: 400px;">
+          <canvas id="chart-sentimiento-full"></canvas>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(var(--ds-accent-rgb), 0.1);">
+            <div class="text-muted small">Sentimiento Promedio</div>
+            <div class="h2 text-accent mt-2" id="stat-sentimiento-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(23, 162, 184, 0.1);">
+            <div class="text-muted small">Subjetividad Promedio</div>
+            <div class="h2 text-info mt-2" id="stat-subjetividad-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(40, 167, 69, 0.1);">
+            <div class="text-muted small">Documentos Analizados</div>
+            <div class="h2 text-success mt-2" id="stat-docs-count">-</div>
+          </div>
+        </div>
+
+        <!-- Guía de Interpretación -->
+        <div class="col-12">
+          <div class="alert alert-sirio-interpretation border-warning mt-2">
+            <h6 class="text-warning mb-3"><i class="fa-solid fa-lightbulb me-2"></i>Guía de Interpretación</h6>
+            <div class="row g-3 small">
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid #ff9800;">
+                  <strong class="text-warning">📰 Noticias (Sentimiento ~0, Subjetividad ~0.2)</strong>
+                  <p class="mb-0 mt-2 text-muted">Textos periodísticos factuales sin opinión. Ejemplo: "El gobierno
+                    anunció nuevas medidas económicas el jueves pasado."</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(40, 167, 69, 0.1); border-left: 3px solid #28a745;">
+                  <strong class="text-success">💬 Opinión/Editorial (Sentimiento variable, Subjetividad ~0.7)</strong>
+                  <p class="mb-0 mt-2 text-muted">Artículos con juicios de valor. Ejemplo: "Esta decisión es sumamente
+                    preocupante para el futuro."</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(23, 162, 184, 0.1); border-left: 3px solid #17a2b8;">
+                  <strong class="text-info">📖 Poesía/Lírica (Sentimiento ±0.5, Subjetividad ~0.9)</strong>
+                  <p class="mb-0 mt-2 text-muted">Textos emotivos y metafóricos. Ejemplo: "La luna derramaba su luz
+                    melancólica sobre mi alma desolada."</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(220, 53, 69, 0.1); border-left: 3px solid #dc3545;">
+                  <strong class="text-info">🎭 Teatro/Diálogo (Sentimiento extremo ±1, Subjetividad ~0.5)</strong>
+                  <p class="mb-0 mt-2 text-muted">Expresiones dramáticas intensas. Ejemplo: "¡Jamás te perdonaré esta
+                    terrible traición!"</p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 p-2 rounded" style="background: rgba(0, 0, 0, 0.3);">
+              <small class="text-muted">
+                <strong>💡 Tip:</strong> <strong>Sentimiento +1</strong> = muy positivo, <strong>-1</strong> = muy
+                negativo, <strong>0</strong> = neutral.
+                <strong>Subjetividad 1</strong> = pura opinión, <strong>0</strong> = objetivo.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis Retórico -->
+  <div id="view-retorica" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-theater-masks me-2"></i>Análisis de Recursos Retóricos</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué detecta?</strong> Recursos retóricos en el discurso periodístico: <strong>ironía</strong>
+          (contraste sentimiento/marcadores),
+          <strong>metáforas bélicas</strong> (vocabulario militar en contextos no bélicos), y <strong>lenguaje
+            emocional</strong> (intensidad emocional mediante palabras cargadas).
+        </small>
+      </div>
+
+      <div class="row g-4">
+        <!-- Ironía Temporal -->
+        <div class="col-12">
+          <div style="height: 350px; min-height: 350px;">
+            <h5 class="mb-3"><i class="fa-solid fa-comment-dots me-2"></i>Ironía Temporal</h5>
+            <canvas id="chart-ironia-temporal"></canvas>
+          </div>
+        </div>
+
+        <!-- Metáforas Bélicas -->
+        <div class="col-12">
+          <div style="height: 350px; min-height: 350px;">
+            <h5 class="mb-3"><i class="fa-solid fa-shield-alt me-2"></i>Metáforas Bélicas</h5>
+            <canvas id="chart-metaforas-belicas"></canvas>
+          </div>
+        </div>
+
+        <!-- Lenguaje Emocional -->
+        <div class="col-12">
+          <div style="height: 350px; min-height: 350px;">
+            <h5 class="mb-3"><i class="fa-solid fa-heart me-2"></i>Intensidad Emocional</h5>
+            <canvas id="chart-lenguaje-emocional"></canvas>
+          </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(var(--ds-accent-rgb), 0.1);">
+            <div class="text-muted small">Promedio Ironía</div>
+            <div class="h2 text-accent mt-2" id="stat-ironia-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(220, 53, 69, 0.1);">
+            <div class="text-muted small">Promedio Metáforas Bélicas</div>
+            <div class="h2 text-danger mt-2" id="stat-metafora-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-center p-3 rounded" style="background: rgba(255, 193, 7, 0.1);">
+            <div class="text-muted small">Promedio Lenguaje Emocional</div>
+            <div class="h2 text-warning mt-2" id="stat-emocional-avg">-</div>
+          </div>
+        </div>
+
+        <!-- Guía de Interpretación -->
+        <div class="col-12">
+          <div class="alert alert-sirio-interpretation border-warning mt-2">
+            <h6 class="text-warning mb-3"><i class="fa-solid fa-lightbulb me-2"></i>Guía de Interpretación</h6>
+            <div class="row g-3 small">
+              <div class="col-md-4">
+                <div class="p-3 rounded" style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid #ff9800;">
+                  <strong class="text-warning">🎭 Ironía</strong>
+                  <p class="mb-2 mt-2 text-muted">Detecta contraste entre sentimiento y marcadores irónicos ("por
+                    supuesto", "naturalmente", "como era de esperar").
+                    Útil para identificar editoriales satíricas o críticas veladas.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(255,152,0,0.2);">
+                    <div class="mb-1"><strong class="text-warning-emphasis">Escala de valores:</strong></div>
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-2:</strong> Tono directo, sin ironía</div>
+                      <div>• <strong>2-5:</strong> Ironía leve o sutil</div>
+                      <div>• <strong>5-10:</strong> Ironía moderada</div>
+                      <div>• <strong>&gt;10:</strong> Ironía marcada, sátira</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded" style="background: rgba(220, 53, 69, 0.1); border-left: 3px solid #dc3545;">
+                  <strong class="text-danger">⚔️ Metáforas Bélicas</strong>
+                  <p class="mb-2 mt-2 text-muted">Identifica vocabulario militar ("guerra", "batalla", "ataque") en
+                    contextos no bélicos (economía, política). Revela estrategias discursivas de confrontación.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(220,53,69,0.2);">
+                    <div class="mb-1"><strong class="text-danger-emphasis">Escala de valores:</strong></div>
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-3:</strong> Lenguaje neutral</div>
+                      <div>• <strong>3-6:</strong> Metáforas ocasionales</div>
+                      <div>• <strong>6-12:</strong> Discurso confrontacional</div>
+                      <div>• <strong>&gt;12:</strong> Retórica bélica intensa</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 rounded" style="background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107;">
+                  <strong class="text-warning">💥 Lenguaje Emocional</strong>
+                  <p class="mb-2 mt-2 text-muted">Mide intensidad emocional mediante palabras cargadas ("terrible",
+                    "maravilloso") e intensificadores ("muy", "sumamente"). Indica tono apasionado vs. objetivo.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(255,193,7,0.2);">
+                    <div class="mb-1"><strong class="text-warning-emphasis">Escala de valores:</strong></div>
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-5:</strong> Tono objetivo, informativo</div>
+                      <div>• <strong>5-10:</strong> Carga emocional moderada</div>
+                      <div>• <strong>10-20:</strong> Lenguaje apasionado</div>
+                      <div>• <strong>&gt;20:</strong> Alta intensidad emocional</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nota metodológica -->
+            <div class="mt-3 pt-3 text-center" style="border-top: 1px solid rgba(255,255,255,0.1);">
+              <small class="text-muted">
+                <i class="fa-solid fa-calculator me-1"></i>
+                <strong>Nota metodológica:</strong> Todos los valores están normalizados por cada 100 palabras para
+                permitir
+                comparación entre textos de diferente longitud. Valores más altos indican mayor presencia del recurso
+                retórico.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis Periodístico -->
+  <div id="view-periodistico" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-newspaper me-2"></i>Análisis Periodístico Integral</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué analiza?</strong> Cinco dimensiones del discurso periodístico: <strong>modalidad</strong>
+          (certeza),
+          <strong>polarización</strong> (nosotros vs. ellos), <strong>sensacionalismo</strong> (dramatización),
+          <strong>voz y agencia</strong> (responsabilidad), y <strong>propaganda</strong> (persuasión).
+        </small>
+      </div>
+
+      <div class="row g-4">
+        <!-- Modalidad -->
+        <div class="col-12 col-lg-6">
+          <div style="height: 300px; min-height: 300px;">
+            <h5 class="mb-3"><i class="fa-solid fa-scale-balanced me-2"></i>Modalidad Lingüística</h5>
+            <canvas id="chart-modalidad"></canvas>
+          </div>
+        </div>
+
+        <!-- Polarización -->
+        <div class="col-12 col-lg-6">
+          <div style="height: 300px; min-height: 300px;">
+            <h5 class="mb-3"><i class="fa-solid fa-people-arrows me-2"></i>Polarización</h5>
+            <canvas id="chart-polarizacion"></canvas>
+          </div>
+        </div>
+
+        <!-- Sensacionalismo -->
+        <div class="col-12 col-lg-6">
+          <div style="height: 300px; min-height: 300px;">
+            <h5 class="mb-3"><i class="fa-solid fa-bolt me-2"></i>Sensacionalismo</h5>
+            <canvas id="chart-sensacionalismo"></canvas>
+          </div>
+        </div>
+
+        <!-- Voz y Agencia -->
+        <div class="col-12 col-lg-6">
+          <div style="height: 300px; min-height: 300px;">
+            <h5 class="mb-3"><i class="fa-solid fa-user-check me-2"></i>Voz y Agencia</h5>
+            <canvas id="chart-agencia"></canvas>
+          </div>
+        </div>
+
+        <!-- Propaganda -->
+        <div class="col-12">
+          <div style="height: 300px; min-height: 300px;">
+            <h5 class="mb-3"><i class="fa-solid fa-bullhorn me-2"></i>Propaganda</h5>
+            <canvas id="chart-propaganda"></canvas>
+          </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="col-12 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded" style="background: rgba(52, 152, 219, 0.1);">
+            <div class="text-muted small">Modalidad</div>
+            <div class="h3 text-info mt-2" id="stat-modalidad-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded" style="background: rgba(231, 76, 60, 0.1);">
+            <div class="text-muted small">Polarización</div>
+            <div class="h3 text-danger mt-2" id="stat-polarizacion-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-2">
+          <div class="text-center p-3 rounded" style="background: rgba(241, 196, 15, 0.1);">
+            <div class="text-muted small">Sensacionalismo</div>
+            <div class="h3 text-warning mt-2" id="stat-sensacionalismo-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+          <div class="text-center p-3 rounded" style="background: rgba(46, 204, 113, 0.1);">
+            <div class="text-muted small">Voz y Agencia</div>
+            <div class="h3 text-success mt-2" id="stat-agencia-avg">-</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+          <div class="text-center p-3 rounded" style="background: rgba(155, 89, 182, 0.1);">
+            <div class="text-muted small">Propaganda</div>
+            <div class="h3" style="color: #9b59b6;" id="stat-propaganda-avg">-</div>
+          </div>
+        </div>
+
+        <!-- Guía de Interpretación -->
+        <div class="col-12">
+          <div class="alert alert-sirio-interpretation border-warning mt-2">
+            <h6 class="text-warning mb-3"><i class="fa-solid fa-lightbulb me-2"></i>Guía de Interpretación</h6>
+            <div class="row g-3 small">
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 rounded" style="background: rgba(52, 152, 219, 0.1); border-left: 3px solid #3498db;">
+                  <strong style="color: #3498db;">⚖️ Modalidad</strong>
+                  <p class="mb-2 mt-2 text-muted">Certeza vs. tentatividad en el discurso.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(52,152,219,0.2);">
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-3:</strong> Tentativo</div>
+                      <div>• <strong>3-6:</strong> Equilibrado</div>
+                      <div>• <strong>6-10:</strong> Asertivo</div>
+                      <div>• <strong>&gt;10:</strong> Dogmático</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 rounded" style="background: rgba(231, 76, 60, 0.1); border-left: 3px solid #e74c3c;">
+                  <strong class="text-danger">🔀 Polarización</strong>
+                  <p class="mb-2 mt-2 text-muted">Lenguaje "nosotros vs. ellos".</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(231,76,60,0.2);">
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-2:</strong> Inclusivo</div>
+                      <div>• <strong>2-5:</strong> Polarización leve</div>
+                      <div>• <strong>5-10:</strong> Divisivo</div>
+                      <div>• <strong>&gt;10:</strong> Extremo</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-4">
+                <div class="p-3 rounded" style="background: rgba(241, 196, 15, 0.1); border-left: 3px solid #f1c40f;">
+                  <strong class="text-warning">⚡ Sensacionalismo</strong>
+                  <p class="mb-2 mt-2 text-muted">Dramatización y urgencia.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(241,196,15,0.2);">
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-3:</strong> Informativo</div>
+                      <div>• <strong>3-6:</strong> Ocasional</div>
+                      <div>• <strong>6-12:</strong> Moderado</div>
+                      <div>• <strong>&gt;12:</strong> Amarillismo</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="p-3 rounded" style="background: rgba(46, 204, 113, 0.1); border-left: 3px solid #2ecc71;">
+                  <strong class="text-success">👤 Voz y Agencia</strong>
+                  <p class="mb-2 mt-2 text-muted">Claridad de responsabilidad.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(46,204,113,0.2);">
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-3:</strong> Agencia difusa</div>
+                      <div>• <strong>3-6:</strong> Mixta</div>
+                      <div>• <strong>6-10:</strong> Clara</div>
+                      <div>• <strong>&gt;10:</strong> Muy explícita</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-6">
+                <div class="p-3 rounded" style="background: rgba(155, 89, 182, 0.1); border-left: 3px solid #9b59b6;">
+                  <strong style="color: #9b59b6;">📢 Propaganda</strong>
+                  <p class="mb-2 mt-2 text-muted">Técnicas persuasivas.</p>
+                  <div class="mt-2 pt-2" style="border-top: 1px solid rgba(155,89,182,0.2);">
+                    <div class="text-muted" style="font-size: 0.85em;">
+                      <div>• <strong>0-2:</strong> Neutral</div>
+                      <div>• <strong>2-5:</strong> Persuasión moderada</div>
+                      <div>• <strong>5-10:</strong> Propagandístico</div>
+                      <div>• <strong>&gt;10:</strong> Propaganda intensa</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nota metodológica -->
+            <div class="mt-3 pt-3 text-center" style="border-top: 1px solid rgba(255,255,255,0.1);">
+              <small class="text-muted">
+                <i class="fa-solid fa-calculator me-1"></i>
+                <strong>Nota metodológica:</strong> Valores normalizados por cada 100 palabras. Permite comparar textos
+                de diferente longitud.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topic Modeling -->
+  <div id="view-topics" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-brain me-2"></i>Modelado de Tópicos (LDA)</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué descubre?</strong> Los temas principales en tu corpus mediante palabras que co-ocurren. Ideal
+          para explorar grandes colecciones sin leerlas, comparar publicaciones o detectar eventos históricos.</small>
+      </div>
+      <div class="row g-4">
+        <div class="col-12 col-lg-6">
+          <h5 class="mb-3">Tópicos Descubiertos</h5>
+          <div id="topics-list" class="custom-scrollbar" style="max-height: 500px; overflow-y: auto;">
+            <!-- Se llenarán dinámicamente -->
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <h5 class="mb-3">Distribución de Documentos</h5>
+          <div style="height: 500px; min-height: 500px; position: relative;">
+            <canvas id="chart-topics-distribution"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coocurrencia de entidades -->
+  <div id="view-entidades" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-project-diagram me-2"></i>Red de Coocurrencia de Entidades</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué muestra?</strong> Las personas, lugares y organizaciones que aparecen juntas en los mismos
+          documentos. Revela conexiones históricas, actores principales y redes sociales ocultas en tus fuentes.</small>
+      </div>
+      <div id="network-entidades"
+        style="width: 100%; height: 600px; min-height: 600px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+        <!-- Red vis.js -->
+      </div>
+      <div class="mt-3 text-muted small">
+        <i class="fa-solid fa-info-circle me-1"></i>
+        Las líneas conectan entidades que aparecen juntas en los mismos documentos. El grosor indica frecuencia de
+        coocurrencia.
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis estilométrico -->
+  <div id="view-estilo" class="analisis-view" style="display: none;">
+    <div class="glass-panel p-4">
+      <h3 class="text-accent mb-4"><i class="fa-solid fa-pen-fancy me-2"></i>Análisis Estilométrico</h3>
+      <div class="alert"
+        style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+        <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+          <strong>¿Qué analiza?</strong> Las características del estilo de escritura: riqueza léxica (TTR), complejidad
+          sintáctica y longitud de textos. Compara entre publicaciones o períodos para detectar cambios en el
+          periodismo.</small>
+      </div>
+      <div class="row g-4">
+        <div class="col-12 col-md-6">
+          <h5 class="mb-3">Palabras por Oración</h5>
+          <div style="position: relative; height: 400px; min-height: 400px;">
+            <canvas id="chart-palabras-oracion"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <h5 class="mb-3">Diversidad Léxica (TTR)</h5>
+          <div style="position: relative; height: 400px; min-height: 400px;">
+            <canvas id="chart-diversidad-lexica"></canvas>
+          </div>
+        </div>
+        <div class="col-12">
+          <h5 class="mb-3">Comparación entre Publicaciones</h5>
+          <div style="position: relative; height: 500px; min-height: 500px;">
+            <canvas id="chart-estilo-comparativo"></canvas>
+          </div>
+        </div>
+
+        <div class="col-12 opacity-25">
+          <hr>
+        </div>
+
+        <!-- Dispersión Léxica (Movido de Análisis Literario) -->
+        <div class="col-12">
+          <div class="p-3">
+            <h5 class="mb-3 text-warning"><i class="fa-solid fa-dna me-2"></i>Dispersión Léxica (Narrative Flow)</h5>
+            <div class="alert alert-sirio-interpretation border-warning py-2 mb-3"
+              style="background: rgba(255, 152, 0, 0.05);">
+              <small class="text-muted"><i class="fa-solid fa-lightbulb me-1"></i>
+                <strong>Interpretación:</strong> Cada línea vertical representa la aparición de un término a lo largo
+                del documento (de principio a fin). Una alta densidad de "rayas" indica que un concepto es central en
+                esa sección del texto.
+              </small>
+            </div>
+            <div id="altair-dispersion" class="altair-container w-100" style="min-height: 400px;"></div>
+          </div>
+        </div>
+
+        <!-- Heatmap Estilístico (Movido de Análisis Literario) -->
+        <div class="col-12">
+          <div class="p-3">
+            <h5 class="mb-3 text-accent"><i class="fa-solid fa-th me-2"></i>Mapa de Calor Estilístico</h5>
+
+            <!-- Leyenda de métricas del heatmap -->
+            <div class="card mb-3"
+              style="background: rgba(255, 152, 0, 0.03); border: 1px solid rgba(255, 152, 0, 0.15);">
+              <div class="card-body py-3 px-4">
+                <p class="mb-3 fw-bold small text-accent"><i class="fa-solid fa-info-circle me-1"></i> Leyenda de
+                  Métricas Estilométricas</p>
+                <div class="row g-3">
+                  <div class="col-lg-6">
+                    <div class="d-flex gap-3 align-items-start">
+                      <span class="badge bg-secondary text-white flex-shrink-0"
+                        style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Div. Léxica</span>
+                      <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                        <strong class="text-light d-block mb-1">Diversidad Léxica (TTR)</strong>
+                        Mide la riqueza del vocabulario mediante la ratio entre palabras únicas y el total de palabras.
+                        Un valor alto (>0.7) indica vocabulario variado y sofisticado; bajo (<0.4) sugiere repetición
+                          léxica o especialización temática. </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="d-flex gap-3 align-items-start">
+                        <span class="badge bg-secondary text-white flex-shrink-0"
+                          style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Pal/Orac</span>
+                        <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                          <strong class="text-light d-block mb-1">Palabras por Oración</strong>
+                          Promedio de palabras por oración que refleja la complejidad sintáctica del texto. Valores
+                          altos (>25) indican estructuras complejas con subordinadas; valores bajos (<15) señalan estilo
+                            directo y conciso. </div>
+                        </div>
+                      </div>
+                      <div class="col-lg-6">
+                        <div class="d-flex gap-3 align-items-start">
+                          <span class="badge bg-secondary text-white flex-shrink-0"
+                            style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Long. Pal</span>
+                          <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                            <strong class="text-light d-block mb-1">Longitud de Palabra</strong>
+                            Número medio de caracteres por palabra como indicador de sofisticación léxica. Palabras
+                            largas (>6 caracteres) suelen asociarse a registros formales, técnicos o académicos;
+                            palabras cortas (<4.5) a lenguaje coloquial. </div>
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="d-flex gap-3 align-items-start">
+                            <span class="badge bg-secondary text-white flex-shrink-0"
+                              style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Puntuación</span>
+                            <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                              <strong class="text-light d-block mb-1">Densidad de Puntuación</strong>
+                              Proporción de signos de puntuación respecto al total de tokens. Alta densidad sugiere
+                              estilo fragmentado o énfasis expresivo; baja densidad indica fluidez narrativa y períodos
+                              extensos.
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="d-flex gap-3 align-items-start">
+                            <span class="badge bg-secondary text-white flex-shrink-0"
+                              style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Hapax Leg.</span>
+                            <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                              <strong class="text-light d-block mb-1">Hapax Legomena</strong>
+                              Ratio de palabras que aparecen una sola vez en el texto (hapax). Valores elevados (>0.5)
+                              indican alta originalidad léxica y evitación de repeticiones; valores bajos sugieren
+                              vocabulario recurrente o texto breve.
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="d-flex gap-3 align-items-start">
+                            <span class="badge bg-secondary text-white flex-shrink-0"
+                              style="min-width: 110px; padding: 6px 10px; font-size: 0.75rem;">Pronombres</span>
+                            <div class="text-muted" style="line-height: 1.6; font-size: 0.85rem;">
+                              <strong class="text-light d-block mb-1">Ratio de Pronombres</strong>
+                              Porcentaje de pronombres sobre el total de palabras como medida de personalización del
+                              discurso. Uso frecuente (>8%) caracteriza textos narrativos o autobiográficos; uso
+                              reducido (<3%) es típico de textos descriptivos o técnicos. </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="alert alert-sirio-interpretation border-warning py-2 mb-3"
+                      style="background: rgba(255, 152, 0, 0.05);">
+                      <small class="text-muted"><i class="fa-solid fa-lightbulb me-1"></i>
+                        <strong>Interpretación:</strong> Compara la complejidad de varios documentos a la vez. Los
+                        colores más
+                        intensos indican una mayor diversidad léxica o sentencias más largas.
+                      </small>
+                    </div>
+
+                    <div id="altair-estilo-heatmap" class="altair-container w-100" style="min-height: 400px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- N-gramas -->
+          <div id="view-ngramas" class="analisis-view" style="display: none;">
+            <div class="glass-panel p-4">
+              <h3 class="text-accent mb-4"><i class="fa-solid fa-spell-check me-2"></i>Análisis de N-gramas</h3>
+              <div class="alert"
+                style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+                  <strong>¿Qué encuentra?</strong> Las frases y expresiones más frecuentes en tu corpus (2-4 palabras
+                  consecutivas). Descubre fórmulas, colocaciones y el vocabulario característico de la época o
+                  fuente.</small>
+              </div>
+
+              <!-- Controles -->
+              <div class="mb-4 d-flex gap-3 align-items-center">
+                <label class="text-muted">Tipo:</label>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-sirio active" data-n="2">Bigramas</button>
+                  <button class="btn btn-sm btn-sirio" data-n="3">Trigramas</button>
+                  <button class="btn btn-sm btn-sirio" data-n="4">4-gramas</button>
+                </div>
+                <label class="text-muted ms-3">Mostrar top:</label>
+                <select id="ngramas-top" class="form-select form-select-sm" style="width: auto;">
+                  <option value="10">10</option>
+                  <option value="20" selected>20</option>
+                  <option value="30">30</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+
+              <div style="height: 500px; min-height: 500px;">
+                <canvas id="chart-ngramas-full"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clustering -->
+          <div id="view-clustering" class="analisis-view" style="display: none;">
+            <div class="glass-panel p-4">
+              <h3 class="text-accent mb-4"><i class="fa-solid fa-object-group me-2"></i>Clustering de Documentos</h3>
+              <div class="alert"
+                style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                <small class="text-muted"><i class="fa-solid fa-info-circle me-1"></i>
+                  <strong>¿Qué agrupa?</strong> Documentos similares por contenido usando algoritmos de machine
+                  learning.
+                  Visualiza en 2D cómo se organizan tus textos por temática, útil para encontrar patrones y
+                  outliers.</small>
+              </div>
+
+              <!-- Controles -->
+              <div class="mb-4 d-flex gap-3 align-items-center">
+                <label class="text-muted">Número de clusters:</label>
+                <select id="clustering-n" class="form-select form-select-sm" style="width: auto;">
+                  <option value="3">3</option>
+                  <option value="5" selected>5</option>
+                  <option value="7">7</option>
+                  <option value="10">10</option>
+                </select>
+                <button id="btn-recalcular-clustering" class="btn btn-sm btn-sirio-primary">
+                  <i class="fa-solid fa-redo me-1"></i>Recalcular
+                </button>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-12 col-lg-8">
+                  <h5 class="mb-3">Visualización t-SNE</h5>
+                  <div style="position: relative; height: 500px; min-height: 500px;">
+                    <canvas id="chart-clustering-scatter"></canvas>
+                  </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                  <h5 class="mb-3">Palabras Clave por Cluster</h5>
+                  <div id="cluster-keywords" class="custom-scrollbar" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Se llenarán dinámicamente -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Análisis Dramático (Teatro) -->
+          <div id="view-dramatico" class="analisis-view" style="display: none;">
+            <!-- El contenido se inyectará dinámicamente desde JS -->
+          </div>
+
+
+
+        </div>
+        {% endblock %}
+
+        {% block modals %}
+        <!-- Modal: Gestor de Identidades (Alias) -->
+        <div class="modal fade" id="modalAlias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content glass-panel border-warning" style="background: rgba(15, 15, 15, 0.95) !important; backdrop-filter: blur(20px);">
+              <div class="modal-header border-secondary border-opacity-25 py-3">
+                <h5 class="modal-title text-warning fw-bold" id="modalAliasLabel">
+                  <i class="fa-solid fa-users-gear me-2"></i>GESTOR DE IDENTIDADES
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-4">
+                <p class="text-muted small mb-4">
+                  Selecciona un personaje de la izquierda y asígnale un <strong>Nombre Canónico</strong> a la derecha para unificar sus intervenciones. 
+                  Útil para corregir duplicados como "D. CARLOS" y "DON CARLOS".
+                </p>
+                
+                <div id="alias-list-container" class="custom-scrollbar" style="max-height: 400px; overflow-y: auto;">
+                  <table class="table table-dark table-hover align-middle">
+                    <thead>
+                      <tr class="small text-muted text-uppercase text-center">
+                        <th class="text-start">Nombre Detectado</th>
+                        <th></th>
+                        <th>Nombre Canónico (Unificado)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="alias-table-body">
+                      <!-- Se inyecta por JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetAliases()">Restablecer Todo</button>
+                <div class="ms-auto">
+                  <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cerrar</button>
+                  <button type="button" class="btn btn-warning btn-sm fw-bold px-4" onclick="saveAndApplyAliases()">Aplicar y Recalcular</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offcanvas de filtros -->
+        <div class="offcanvas offcanvas-end bg-dark text-light border-start border-warning" tabindex="-1"
+          id="offcanvasFiltros" aria-labelledby="offcanvasFiltrosLabel"
+          style="width: 400px; --bs-offcanvas-border-width: 2px; margin-top: 60px;">
+          <div class="offcanvas-header border-bottom border-secondary py-3"
+            style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.05));">
+            <h5 class="offcanvas-title text-warning fw-bold d-flex align-items-center" id="offcanvasFiltrosLabel"
+              style="font-size: 1.1rem; letter-spacing: 1px;">
+              <i class="fa-solid fa-filter me-2"></i> FILTROS DE ANÁLISIS
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
+              style="width: 60px;"></button>
+          </div>
+          <div class="offcanvas-body p-4 custom-scrollbar">
+            <form id="form-filtros">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Temas</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-tema">
+                  <option value="">(Todos los temas)</option>
+                  {% for tema in temas %}
+                  <option value="{{ tema }}">{{ tema }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-4">
+                <label
+                  class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Publicación</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-publicacion">
+                  <option value="">(Todas las publicaciones)</option>
+                  {% for pub in publicaciones %}
+                  <option value="{{ pub.id_publicacion }}">{{ pub.nombre }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">País</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-pais">
+                  <option value="">(Todos los países)</option>
+                  {% for pais in paises %}
+                  <option value="{{ pais }}">{{ pais }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Eje Principal
+                  (X)</label>
+                <div class="p-3 rounded border border-secondary" style="background: rgba(255,255,255,0.03);">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="eje_x" id="eje_x_fecha" value="fecha" checked>
+                    <label class="form-check-label small" for="eje_x_fecha" style="cursor: pointer;">
+                      <i class="fa-regular fa-calendar me-1"></i> Cronológico (Fecha)
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="eje_x" id="eje_x_secuencia" value="secuencia">
+                    <label class="form-check-label small" for="eje_x_secuencia" style="cursor: pointer;">
+                      <i class="fa-solid fa-list-ol me-1"></i> Secuencial (Capítulos)
+                    </label>
+                  </div>
+                </div>
+                <small class="text-muted mt-2 d-block" style="font-size: 0.7rem;">
+                  <i class="fa-solid fa-circle-info me-1"></i> Ideal para libros/capítulos con la misma fecha.
+                </small>
+
+                <!-- Nuevo: Selector de Documentos Específicos (solo visible en Secuencial) -->
+                <div id="container-filtro-documentos" class="mt-4" style="display: none;">
+                  <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Documentos
+                    Específicos</label>
+                  <select class="form-control form-control-sm form-control-sirio" id="filtro-documentos" multiple
+                    style="height: 180px; padding: 10px; font-size: 0.8rem;">
+                    <!-- Se llenará dinámicamente -->
+                  </select>
+                  <small class="text-muted mt-2 d-block" style="font-size: 0.7rem;">
+                    <i class="fa-solid fa-keyboard me-1"></i> Mantén <b>Ctrl</b> presionado para selección múltiple.
+                  </small>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-6 mb-4">
+                  <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Desde</label>
+                  <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-desde">
+                </div>
+                <div class="col-6 mb-4">
+                  <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Hasta</label>
+                  <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-hasta">
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Límite de
+                  Documentos</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-limite">
+                  <option value="100">100 documentos (Rápido)</option>
+                  <option value="300" selected>300 documentos (Equilibrado)</option>
+                  <option value="500">500 documentos (Extenso)</option>
+                  <option value="1000">1000 documentos (Muy extenso)</option>
+                  <option value="2000">2000 documentos (Corporativo)</option>
+                  <option value="5000">5000 documentos (Big Data)</option>
+                  <option value="0">(Analizar TODOS)</option>
+                </select>
+              </div>
+              
+              <!-- Filtros dinámicos específicos de módulos (ej: Dramático) -->
+              <div id="sidebar-dynamic-filters" class="mt-2 mb-4" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;"></div>
+
+              <div class="mt-5 pt-4 border-top border-secondary d-grid gap-3">
+                <button type="button"
+                  class="btn btn-sirio active w-100 py-3 d-flex justify-content-center align-items-center"
+                  id="btn-aplicar-filtros">
+                  <i class="fa-solid fa-check me-2"></i>APLICAR FILTROS
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="offcanvas">
+                  <i class="fa-solid fa-times me-2"></i>Cerrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endblock %}
+
+        {% block extra_js %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+
+        <!-- Vega, Vega-Lite, and Vega-Embed for Altair visualizations -->
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+        <!-- Chart.js Zoom Plugin dependencies -->
+        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+        <script src="{{ url_for('static', filename='js/analisis_avanzado.js') }}?v={{ range(1000, 9999) | random }}"></script>
+        {% endblock %}

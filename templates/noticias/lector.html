@@ -1,0 +1,1682 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Modo Lector / Revisión{% endblock %}
+{% block page_title %}EXPLORADOR DE TEXTOS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CSS SCOPED TO LECTOR VIEW ONLY */
+
+    /* Ensure the main content area allows full flex growth */
+    .desktop-content {
+        overflow: hidden !important;
+        /* Prevent double scrollbars */
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Buttons in Header */
+    .desktop-header .btn-sirio,
+    .desktop-header .btn {
+        width: auto !important;
+        min-width: 0;
+        padding: 4px 10px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+    }
+
+    /* Typography */
+    .prose {
+        font-family: 'Merriweather', serif;
+        font-size: 1.15rem;
+        /* Increased from inherit */
+        line-height: 1.8;
+        color: var(--ds-text-main);
+        max-width: 900px;
+        margin: 0 auto;
+        white-space: pre-wrap;
+    }
+
+    .prose p {
+        margin-bottom: 1.5rem;
+    }
+
+    .big-text {
+        font-family: 'Merriweather', serif;
+        font-size: 1.25rem;
+        /* Increased from 1.1em */
+        line-height: 1.6;
+    }
+
+    /* --- INLINED CRITICAL STYLES (Fix for 404) --- */
+    /* Toolbar & Buttons */
+    .reader-image-toolbar {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 30, 30, 0.8);
+        backdrop-filter: blur(8px);
+        padding: 8px 16px;
+        border-radius: 50px;
+        display: flex;
+        gap: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-image-action {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .btn-image-action:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.1);
+    }
+
+    .btn-image-action.action-danger:hover {
+        background: rgba(220, 53, 69, 0.2);
+        color: #ff6b6b;
+    }
+
+    .toolbar-divider {
+        width: 1px;
+        background: rgba(255, 255, 255, 0.2);
+        height: 24px;
+        align-self: center;
+    }
+
+    .image-counter {
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        align-self: center;
+        min-width: 40px;
+        text-align: center;
+        user-select: none;
+        opacity: 0.8;
+    }
+
+    /* Divider */
+    .reader-divider {
+        width: 12px;
+        background-color: var(--ds-bg-sidebar);
+        cursor: col-resize;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background-color 0.2s;
+        z-index: 10;
+    }
+
+    .reader-divider:hover,
+    .reader-divider:active {
+        background-color: var(--ds-accent-primary);
+    }
+
+    .divider-handle {
+        width: 2px;
+        height: 20px;
+        background-color: #666;
+        border-radius: 1px;
+    }
+
+    #reader-text-panel, #reader-image-panel {
+        transition: width 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    /* Help Icon Style */
+    .btn-help-lector {
+        cursor: help;
+        font-size: 1.1rem;
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 8px;
+    }
+
+    .btn-help-lector:hover {
+        transform: scale(1.1);
+    }
+
+    /* Sticky Header Logic */
+    .noticia-header {
+        position: sticky;
+        top: -24px;
+        /* Align with #reader-text-panel padding */
+        background-color: var(--ds-bg-element);
+        z-index: 1 !important;
+        margin-top: -24px;
+        padding-top: 24px;
+        margin-left: -24px;
+        margin-right: -24px;
+        padding-left: 24px;
+        padding-right: 24px;
+        /* box-shadow: 0 10px 10px -10px rgba(0,0,0,0.5); */
+    }
+
+    #reader-container.reader-theme-sepia .noticia-header {
+        background-color: var(--ds-bg-panel) !important;
+    }
+
+    #reader-container.reader-theme-night .noticia-header {
+        background-color: #000 !important;
+    }
+
+    /* --- PREMIUM STYLE MENU (Lector) --- */
+    .dropdown-menu-premium {
+        background: rgba(20, 20, 20, 0.9) !important;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+    }
+
+    .dropdown-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--ds-accent-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .theme-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .theme-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .theme-btn.active {
+        border-color: var(--ds-accent-primary);
+        box-shadow: 0 0 8px var(--ds-accent-primary);
+    }
+
+    .theme-default {
+        background-color: #ffffff;
+    }
+
+    .theme-sepia {
+        background-color: #f4ecd8;
+    }
+
+    .theme-night {
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+    }
+
+    /* Font Classes */
+    .font-serif {
+        font-family: 'Merriweather', serif !important;
+    }
+
+    .font-sans {
+        font-family: 'Roboto Condensed', sans-serif !important;
+    }
+
+    #reader-container.reader-theme-sepia {
+        --ds-bg-app: #f4ecd8;
+        --ds-bg-sidebar: #e8e0cc;
+        --ds-bg-element: #fdf6e3;
+        --ds-bg-panel: #fdf6e3;
+        --ds-text-main: #5b4636;
+        --ds-text-muted: #8f7c6d;
+        --ds-border-color: #d3c4b1;
+        --ds-accent-primary: #a67c52;
+    }
+
+    #reader-container.reader-theme-sepia .prose {
+        color: #5b4636;
+    }
+
+    #reader-container.reader-theme-sepia,
+    #reader-container.reader-theme-sepia #reader-text-panel,
+    #reader-container.reader-theme-sepia #reader-image-panel,
+    #reader-container.reader-theme-sepia .noticia-header {
+        background-color: var(--ds-bg-panel) !important;
+        color: var(--ds-text-main) !important;
+    }
+
+    #reader-container.reader-theme-sepia .btn-sirio-secondary {
+        background: rgba(91, 70, 54, 0.05);
+        color: #5b4636;
+        border-color: rgba(91, 70, 54, 0.2);
+    }
+
+    #reader-container.reader-theme-sepia .btn-sirio-secondary:hover {
+        background: rgba(91, 70, 54, 0.15);
+        color: #3e2f24;
+    }
+
+    #reader-container.reader-theme-night {
+        --ds-bg-app: #000000;
+        --ds-bg-sidebar: #000000;
+        --ds-bg-element: #000000;
+        --ds-bg-panel: #000000;
+        --ds-text-main: #e0e0e0;
+        --ds-text-muted: #888888;
+        --ds-border-color: #333333;
+    }
+
+    #reader-container.reader-theme-night .prose {
+        color: #e0e0e0;
+    }
+
+    #reader-container.reader-theme-night,
+    #reader-container.reader-theme-night #reader-text-panel {
+        background-color: #000 !important;
+    }
+
+    #reader-container.reader-theme-night .fa-solid {
+        color: #ccc;
+    }
+
+    /* Reader Status Button */
+    .reader-status-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #888;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .reader-status-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .reader-status-btn.border-success {
+        border-color: #28a745 !important;
+        color: #28a745 !important;
+        background: rgba(40, 167, 69, 0.1);
+    }
+
+    .reader-status-btn.border-success:hover {
+        background: rgba(40, 167, 69, 0.2);
+    }
+
+    /* Stat Chip */
+    .reader-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #888;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-right: 8px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    /* Tabs */
+    #readerTabs {
+        gap: 4px;
+        margin-bottom: -1px;
+        position: relative;
+        z-index: 10;
+    }
+
+    #readerTabs .nav-link {
+        border: 1px solid transparent;
+        border-radius: 6px 6px 0 0;
+        color: var(--ds-text-muted);
+        padding: 8px 16px;
+        font-family: 'Roboto Condensed', sans-serif;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    #readerTabs .nav-link.active {
+        background: var(--ds-bg-element);
+        border: 1px solid var(--ds-border-light);
+        border-bottom-color: var(--ds-bg-element);
+        color: var(--ds-accent-primary) !important;
+        font-weight: 700;
+    }
+
+    /* Edit Mode */
+    [contenteditable="true"] {
+        outline: 2px dashed var(--ds-accent-primary);
+        outline-offset: 4px;
+        background: var(--ds-accent-alpha);
+        cursor: text;
+        border-radius: 4px;
+    }
+
+    /* Header Controls */
+    #reader-header {
+        height: 60px;
+        background-color: var(--bs-body-bg);
+        /* Use theme bg instead of #0f0f0f */
+        border-bottom: 1px solid var(--bs-border-color);
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 15px;
+        z-index: 1040;
+        /* High z-index */
+        position: relative;
+    }
+
+    .reader-control-group {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 200px;
+    }
+
+    .reader-control-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--bs-secondary);
+        /* Changed from #666 for better contrast in light mode */
+        margin-bottom: 2px;
+        font-weight: 600;
+    }
+
+    /* Removing duplicate .reader-divider and .divider-handle styles */
+
+    /* Stat Chip */
+    .reader-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: var(--ds-text-dim);
+    }
+
+    /* Scroll Handle */
+    .scroll-handle {
+        width: 44px;
+        height: 44px;
+        background: var(--ds-accent-primary);
+        color: #000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        cursor: pointer;
+    }
+
+    /* Aura Background */
+    #aura-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        overflow: hidden;
+        display: none;
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    body.aura-active #aura-canvas {
+        display: block;
+    }
+
+    .aura-blob {
+        position: absolute;
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0) 70%);
+        border-radius: 50%;
+        filter: blur(80px);
+        animation: aura-float 25s infinite alternate ease-in-out;
+        opacity: 0.6;
+    }
+
+    /* Aura Variations (rest of styles omitted for brevity, keeping defaults) */
+    @keyframes aura-float {
+        0% {
+            transform: translate(0, 0) rotate(0deg) scale(1);
+        }
+
+        100% {
+            transform: translate(10%, 15%) rotate(5deg) scale(1.15);
+        }
+    }
+
+    /* Progress Bar */
+    #reading-progress-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    #reading-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--ds-accent-primary);
+        transition: width 0.1s ease-out;
+    }
+
+    /* Focus Mode */
+    body.focus-mode .desktop-sidebar,
+    body.focus-mode .desktop-header,
+    body.focus-mode .breadcrumb-container {
+        display: none !important;
+    }
+
+    body.focus-mode .desktop-body-row {
+        height: 100vh !important;
+    }
+
+    body.focus-mode main {
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+
+    /* Floating Exit Focus */
+    #btn-exit-focus {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--ds-accent-rgb, 255, 152, 0), 0.85);
+        color: #000;
+        cursor: pointer;
+    }
+
+    body.focus-mode #btn-exit-focus {
+        display: flex;
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex gap-1" id="header-reader-tabs">
+    <button class="btn-sirio btn-sirio-secondary active" id="btn-tab-detalle" onclick="switchReaderTab('detalle-tab')"
+        title="Vista Detalle">
+        <i class="fa-solid fa-file-lines"></i> <span class="btn-text">Detalle</span>
+    </button>
+    <button class="btn-sirio btn-sirio-secondary" id="btn-tab-fragmentos" onclick="switchReaderTab('fragmentos-tab')"
+        title="Vista Fragmentos">
+        <i class="fa-solid fa-align-left"></i> <span class="btn-text">Fragmentos</span>
+    </button>
+    <button class="btn-sirio btn-sirio-secondary" id="btn-tab-texto" onclick="switchReaderTab('texto-tab')"
+        title="Texto Puro">
+        <i class="fa-solid fa-font"></i> <span class="btn-text">Texto</span>
+    </button>
+</div>
+<div class="vr mx-2 opacity-25" style="height: 24px; align-self: center;"></div>
+<div class="d-flex gap-1">
+    <button id="btn-editar-inline" class="btn-sirio btn-sirio-secondary disabled" title="Editar">
+        <i class="fa-solid fa-pen-to-square"></i> <span class="btn-text">Editar</span>
+    </button>
+    <div id="edit-actions" class="d-flex gap-1" style="display: none !important;">
+        <button id="btn-save-content" class="btn-sirio btn-sirio-primary" title="Guardar">
+            <i class="fa-solid fa-floppy-disk"></i> <span class="btn-text">Guardar</span>
+        </button>
+        <button id="btn-cancel-edit" class="btn-sirio" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <button id="btn-resumir-ia" class="btn-sirio btn-sirio-secondary disabled" title="Resumir IA">
+        <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> <span class="btn-text">Resumir IA</span>
+    </button>
+
+    <!-- Ajustes Dropdown (Full Version) -->
+    <div class="dropdown">
+        <button class="btn-sirio btn-sirio-secondary dropdown-toggle h-100" type="button" id="dropdownMenuReader"
+            data-bs-toggle="dropdown" aria-expanded="false" title="Ajustes (A)">
+            <i class="fa-solid fa-font"></i> <span class="btn-text">Estilo</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 dropdown-menu-premium p-3"
+            aria-labelledby="dropdownMenuReader" style="width: 250px;">
+            <li class="mb-3">
+                <label class="dropdown-label">TIPOGRAFÍA</label>
+                <div class="btn-group w-100" role="group">
+                    <button class="btn btn-xs btn-outline-secondary active" id="btn-font-serif"
+                        onclick="setReaderFont('serif')" style="font-family: 'Merriweather', serif;">Serif</button>
+                    <button class="btn btn-xs btn-outline-secondary" id="btn-font-sans" onclick="setReaderFont('sans')"
+                        style="font-family: 'Roboto Condensed', sans-serif;">Sans</button>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="dropdown-label mb-0">TAMAÑO</label>
+                    <span id="font-size-val" class="text-white small" style="font-family: monospace;">100%</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-xs btn-outline-secondary flex-grow-1" onclick="adjustFontSize(-1)"><i
+                            class="fa-solid fa-minus"></i></button>
+                    <button class="btn btn-xs btn-outline-secondary flex-grow-1" onclick="adjustFontSize(1)"><i
+                            class="fa-solid fa-plus"></i></button>
+                </div>
+            </li>
+            <li class="mb-3">
+                <label class="dropdown-label">TEMA</label>
+                <div class="d-flex justify-content-between gap-2 px-2">
+                    <div class="theme-btn theme-default active" onclick="setReaderTheme('default')" title="Claro"></div>
+                    <div class="theme-btn theme-sepia" onclick="setReaderTheme('sepia')" title="Sepia"></div>
+                    <div class="theme-btn theme-night" onclick="setReaderTheme('night')" title="Noche"></div>
+                </div>
+            </li>
+            <li class="pt-2 border-top border-secondary">
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="toggle-aura" onclick="toggleAura()">
+                    <label class="form-check-label text-secondary small" for="toggle-aura"
+                        style="font-size: 0.8rem;">Aura Ambiental</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="toggle-lens-btn"
+                        onclick="toggleLens(!lensActive)">
+                    <label class="form-check-label text-secondary small" for="toggle-lens-btn"
+                        style="font-size: 0.8rem;">Lupa Investigador</label>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="vr mx-1 opacity-25" style="height: 24px; align-self: center;"></div>
+    <a id="btn-ver-detalle" class="btn-sirio btn-sirio-secondary btn-nav border-end-0 d-none" target="_blank"
+        title="Ver Detalle"><i class="fa-solid fa-up-right-from-square"></i></a>
+    <button id="btn-focus-mode" class="btn-sirio btn-sirio-secondary btn-nav border-end-0" title="Modo Foco (F)"><i
+            class="fa-solid fa-expand"></i></button>
+    <button id="btn-citar-news" class="btn-sirio btn-sirio-secondary btn-nav" title="Citar"><i
+            class="fa-solid fa-quote-right"></i></button>
+
+    <div class="ms-1 ps-1 btn-help-lector" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Guía Rápida</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>[F]</strong>: Modo Foco</li><li><strong>[A]</strong>: Ajustes de Estilo</li><li><strong>[R]</strong>: Resumir con IA</li></ul>">
+        <i class="fa-solid fa-circle-question text-warning"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- MAIN CONTENT WRAPPER: Flex Column, Full Height -->
+<div class="d-flex flex-column flex-grow-1 w-100 h-100 overflow-hidden position-relative">
+
+    <!-- Floating Exit Focus -->
+    <button id="btn-exit-focus" title="Salir de Modo Foco (F / Esc)"><i class="fa-solid fa-compress"></i></button>
+
+    <!-- 1. HEADER FILTERS / CORPUS SELECTORS -->
+    <div class="d-flex align-items-center px-4 pt-3 pb-3 border-bottom gap-4 flex-nowrap flex-shrink-0"
+        style="background: var(--ds-bg-sidebar); min-height: 80px; z-index: 5;">
+        <ul class="nav nav-tabs d-none" id="readerTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="detalle-tab" data-bs-toggle="tab"
+                    data-bs-target="#vista-detalle" type="button"></button></li>
+            <li class="nav-item">
+                <button class="nav-link" id="fragmentos-tab" data-bs-toggle="tab" data-bs-target="#vista-fragmentos"
+                    type="button">FRAGMENTOS</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="texto-tab" data-bs-toggle="tab" data-bs-target="#vista-texto"
+                    type="button">TEXTO</button>
+            </li>
+        </ul>
+
+        <!-- Publicacion -->
+        <div class="d-flex flex-column gap-1" style="flex: 1 1 350px;">
+            <label class="text-muted text-uppercase fw-bold x-small mb-0 opacity-50"
+                style="font-size: 0.6rem;">Publicación</label>
+            <div class="sirio-filter-container w-100">
+                <select id="select-publicacion" class="form-select form-select-sm header-select" data-search="true">
+                    <option value="">Publicación...</option>
+                </select>
+            </div>
+        </div>
+        <!-- Noticia -->
+        <div class="d-flex flex-column gap-1" style="flex: 2 1 600px;">
+            <label class="text-muted text-uppercase fw-bold x-small mb-0 opacity-50" style="font-size: 0.6rem;">Noticia
+                / Texto</label>
+            <div class="sirio-filter-container w-100">
+                <select id="select-noticia" class="form-select form-select-sm header-select" data-search="true"
+                    disabled>
+                    <option value="">Noticia...</option>
+                </select>
+            </div>
+        </div>
+        <!-- Nav Buttons -->
+        <div class="btn-group mb-0 pb-0 flex-shrink-0 ms-auto">
+            <button id="btn-prev-news" class="btn-sirio btn-sirio-secondary" disabled style="width: 30px !important;"><i
+                    class="fa-solid fa-chevron-left"></i></button>
+            <button id="btn-next-news" class="btn-sirio btn-sirio-secondary" disabled style="width: 30px !important;"><i
+                    class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <!-- 2. READER CONTAINER (Flex Grow) -->
+    <div id="reader-container" class="flex-grow-1 d-flex flex-row overflow-hidden position-relative"
+        style="background: var(--ds-bg-element);">
+
+        <!-- AURA & OVERLAYS -->
+        <div id="aura-canvas">
+            <div class="aura-blob aura-1"></div>
+            <div class="aura-blob aura-2"></div>
+            <div class="aura-blob aura-3"></div>
+        </div>
+        <div id="reading-progress-container">
+            <div id="reading-progress-fill"></div>
+        </div>
+        <div class="sentiment-pulse-container" id="sentiment-pulse-container">
+            <div class="sentiment-pulse-bar" id="sentiment-pulse-bar"></div>
+        </div>
+        <div id="mini-map-reader" class="mini-map-floating d-none"></div>
+
+        <!-- LEFT PANEL: TEXT CONTENT (Flex Grow) -->
+        <div id="reader-text-panel" class="h-100 overflow-auto p-4 flex-grow-1 position-relative"
+            style="transition: width 0.3s ease; width: 100%;">
+            <!-- Loading -->
+            <div id="reader-loading"
+                class="position-absolute top-0 start-0 w-100 h-100 flex-column justify-content-center align-items-center"
+                style="z-index: 20; display: none; background: rgba(0,0,0,0.8);">
+                <div class="spinner-border text-primary mb-3"></div>
+                <h6 class="text-muted">Cargando documento...</h6>
+            </div>
+            <!-- Empty State -->
+            <div id="reader-empty"
+                class="text-center py-5 text-muted h-100 d-flex flex-column justify-content-center align-items-center">
+                <i class="fa-solid fa-book-open fa-3x mb-3 opacity-25"></i>
+                <h5>Seleccione un documento para comenzar</h5>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content h-100" id="readerTabsContent" style="display: none;">
+                <!-- Detalle -->
+                <div class="tab-pane fade show active h-100" id="vista-detalle">
+                    <div class="noticia-header mb-4 pb-3 border-bottom">
+                        <h2 class="h4 fw-medium mb-2" id="doc-titulo" style="font-family: 'Playfair Display', serif;">
+                        </h2>
+                        <div class="text-muted small d-flex align-items-center gap-2">
+                            <span id="doc-fecha"></span> | <span id="doc-publicacion"></span>
+                            <div class="ms-auto d-flex gap-2">
+                                <div class="vr mx-1 opacity-25" style="height: 24px; align-self: center;"></div>
+
+                                <!-- Render Stat Chips -->
+                                <span class="reader-stat-chip" title="Singularidad (Proyección Geométrica)"
+                                    style="cursor:help;">
+                                    <i class="fa-solid fa-gem me-1" id="singularity-icon" style="color: #888;"></i>
+                                    <span id="singularity-score">--%</span>
+                                </span>
+                                <span class="reader-stat-chip"><i class="fa-solid fa-font me-1"></i> <span
+                                        id="stat-words">0</span></span>
+                                <span class="reader-stat-chip"><i class="fa-solid fa-eye me-1"></i> <span
+                                        id="stat-views">1</span></span>
+                                <button id="btn-toggle-incluido-lector" class="reader-stat-chip reader-status-btn ms-2"
+                                    onclick="toggleStatusLector()" style="display:none;"><i
+                                        class="fa-solid fa-pause"></i> <span>STATUS</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="noticia-body prose" id="doc-contenido"></div>
+                </div>
+                <!-- Fragmentos -->
+                <div class="tab-pane fade h-100" id="vista-fragmentos">
+                    <div id="doc-fragmentos" class="d-flex flex-column gap-3"></div>
+                </div>
+                <!-- Texto -->
+                <div class="tab-pane fade h-100" id="vista-texto">
+                    <div class="d-flex justify-content-end mb-2"><button class="btn btn-xs btn-outline-secondary"
+                            onclick="copiarTextoPuro()">Copiar</button></div>
+                    <pre class="p-3 rounded border text-wrap" id="doc-texto-puro"
+                        style="font-family: monospace; font-size: 0.9em;"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIVIDER -->
+        <div id="reader-divider" class="reader-divider" style="display: none;">
+            <div class="divider-handle"></div>
+        </div>
+
+        <!-- RIGHT PANEL: IMAGE (Fixed/Resizable) -->
+        <div id="reader-image-panel" class="h-100 border-start position-relative"
+            style="width: 0; display: none; overflow: hidden; background-color: var(--ds-bg-panel);">
+            <div class="reader-image-toolbar">
+                <button id="btn-prev-image" class="btn-image-action" onclick="changeImage(-1)" title="Imagen Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                <div id="image-current-counter" class="image-counter">1/1</div>
+                <button id="btn-next-image" class="btn-image-action" onclick="changeImage(1)" title="Siguiente Imagen"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-image-action" onclick="zoomImage(0.1)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                <button class="btn-image-action" onclick="zoomImage(-0.1)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+                <button class="btn-image-action" onclick="rotateImage()" title="Girar 90°"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+                <button class="btn-image-action" onclick="resetImage()" title="Restablecer"><i class="fa-solid fa-arrows-to-dot"></i></button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-image-action action-danger" onclick="toggleImagePanel()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="image-viewer-container"
+                class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden position-relative"
+                style="background-color: var(--ds-bg-app);">
+                <img id="doc-image-scan" src="" alt="Scan" style="max-width: 90%; max-height: 90%;">
+                <div id="investigator-lens"
+                    style="position: absolute; width: 180px; height: 180px; border: 3px solid var(--ds-accent-primary); border-radius: 50%; display: none; pointer-events: none; z-index: 1000; background-color: #000;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Resumen -->
+<div class="modal fade" id="modalResumen" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="background-color: var(--ds-bg-panel); color: var(--ds-text-main);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--ds-border-color);">
+                <h5 class="modal-title">Resumen Inteligente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resumen-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Generando análisis con Gemini Pro...</p>
+                </div>
+                <div id="resumen-content" style="display:none;">
+                    <div class="card border-0 shadow-sm mb-4" style="background-color: var(--ds-bg-element);">
+                        <div class="card-body">
+                            <h4 class="fw-bold mb-3 text-primary h5" id="res-titulo"></h4>
+                            <div id="res-texto" class="prose mb-3"></div>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase text-muted small fw-bold mb-2 ps-1">Puntos Clave</h6>
+                    <ul id="res-puntos" class="list-group shadow-sm rounded border-0"></ul>
+                </div>
+                <div id="resumen-error" style="display:none;" class="alert alert-danger"><span
+                        id="res-error-msg"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cita -->
+<div class="modal fade" id="modalCita" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content"
+            style="background-color: var(--ds-bg-panel); color: var(--ds-text-main); border: 1px solid var(--ds-border-color);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--ds-border-color);">
+                <h5 class="modal-title">Citar</h5><button type="button" class="btn-close" data-bs-dismiss="modal"
+                    style="width: 20px;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="text-muted small fw-bold text-uppercase mb-1">APA</label><code
+                        id="cita-apa" class="d-block p-3 bg-black text-light rounded border border-secondary"
+                        style="font-size: 0.9em;"></code></div>
+                <div><label class="text-muted small fw-bold text-uppercase mb-1">URL</label><code id="cita-url"
+                        class="d-block p-3 bg-black text-light rounded border border-secondary"
+                        style="font-size: 0.9em;"></code></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS (Re-using logic from original file) -->
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        console.log("[Reader] Rebuilt Init");
+        const selectPublicacion = document.getElementById('select-publicacion');
+        const selectNoticia = document.getElementById('select-noticia');
+        const docContenido = document.getElementById('doc-contenido');
+        const docTextoPuro = document.getElementById('doc-texto-puro');
+        const docFragmentos = document.getElementById('doc-fragmentos');
+        const imagePanel = document.getElementById('reader-image-panel');
+        const textPanel = document.getElementById('reader-text-panel');
+        const imgElement = document.getElementById('doc-image-scan');
+        const divider = document.getElementById('reader-divider');
+        const container = document.getElementById('reader-container');
+
+        let currentNewsId = null;
+        let lastLoadedId = null;
+        let isLoadingNews = false;
+        let isEditing = false;
+        let originalContent = "";
+        let originalTitle = ""; // Fix: Declare variable
+        let scale = 1, pannedX = 0, pannedY = 0, rotation = 0;
+        let isDragging = false, startX = 0, startY = 0;
+
+        // Init Choices (Selects)
+        const initChoice = (el, search = false) => new Choices(el, { searchEnabled: search, position: 'bottom', itemSelectText: '', shouldSort: false, placeholder: true });
+        const choicePub = initChoice(selectPublicacion, true);
+        const choiceNot = initChoice(selectNoticia, true);
+
+        // Load Publications
+        try {
+            const res = await fetch('/api/publicaciones_list');
+            const pubs = await res.json();
+            choicePub.setChoices(pubs.map(p => ({ value: p, label: p })), 'value', 'label', true);
+        } catch (e) { console.error(e); }
+
+        // Publication Change
+        selectPublicacion.addEventListener('change', async function () {
+            const pub = this.value;
+            choiceNot.clearChoices();
+            choiceNot.disable();
+            if (!pub) return;
+            try {
+                const res = await fetch(`/api/noticias/simple_list?publicacion=${encodeURIComponent(pub)}`);
+                const notches = await res.json();
+                choiceNot.setChoices(notches.map(n => ({ value: n.id, label: n.label })), 'value', 'label', true);
+                choiceNot.enable();
+            } catch (e) { console.error(e); }
+        });
+
+        // Multi-image state
+        let currentImages = [];
+        let currentImageIdx = 0;
+
+        // News Change
+        selectNoticia.addEventListener('change', async function () {
+            const id = this.value;
+            if (!id || id === lastLoadedId || isLoadingNews) return;
+            isLoadingNews = true; lastLoadedId = id;
+            document.getElementById('reader-loading').style.display = 'flex';
+            try {
+                const res = await fetch(`/api/noticia/contenido/${id}`);
+                const data = await res.json();
+                if (data.id) {
+                    currentNewsId = data.id;
+                    const readerEmpty = document.getElementById('reader-empty');
+                    readerEmpty.style.setProperty('display', 'none', 'important');
+                    readerEmpty.classList.remove('d-flex'); // Ensure flex is removed
+                    document.getElementById('readerTabsContent').style.display = 'block';
+                    document.getElementById('doc-titulo').textContent = data.titulo || "Sin Título";
+                    document.getElementById('doc-fecha').textContent = data.fecha || "S/F";
+                    document.getElementById('doc-publicacion').textContent = data.publicacion || "S/P";
+                    docContenido.innerHTML = data.contenido_html || "";
+                    originalContent = data.contenido_html || "";
+                    originalTitle = data.titulo || "Sin Título"; // Fix: Update on load
+                    docTextoPuro.textContent = data.texto_puro || "";
+
+                    // Stats
+                    const words = (data.texto_puro || "").split(/\s+/).filter(w => w.length > 0).length;
+                    document.getElementById('stat-words').textContent = words;
+
+                    // Images handling
+                    currentImages = data.imagenes || [];
+                    currentImageIdx = 0;
+                    console.log("[Reader] News loaded. Images:", currentImages);
+
+                    if (currentImages.length > 0) {
+                        console.log("[Reader] Displaying panel. URL:", currentImages[0]);
+                        imgElement.src = currentImages[0];
+                        imagePanel.style.display = 'block';
+                        divider.style.display = 'flex';
+                        textPanel.style.width = '75%'; imagePanel.style.width = '25%';
+                        resetImage();
+                        updateImageToolbar();
+                    } else {
+                        console.log("[Reader] No images found. Hiding panel.");
+                        imagePanel.style.display = 'none'; divider.style.display = 'none';
+                        textPanel.style.width = '100%';
+                    }
+
+
+                    // Sync Header Tabs
+                    document.getElementById('btn-editar-inline').classList.remove('disabled');
+                    document.getElementById('btn-resumir-ia').classList.remove('disabled');
+                    document.getElementById('btn-ver-detalle').href = `/noticias/detalle/${data.id}`;
+                    document.getElementById('btn-ver-detalle').classList.remove('d-none');
+
+                    // Verification Badge Logic
+                    const btnStatus = document.getElementById('btn-toggle-incluido-lector');
+                    btnStatus.style.display = 'inline-flex';
+                    btnStatus.querySelector('span').textContent = data.incluido ? "VERIFICADA" : "NO VERIFICADA";
+                    btnStatus.querySelector('i').className = data.incluido ? "fa-solid fa-check-circle text-success" : "fa-solid fa-circle-xmark text-muted";
+                    // Optional: Change button style based on status
+                    if (data.incluido) {
+                        btnStatus.classList.add('border-success');
+                        btnStatus.classList.remove('border-secondary');
+                    } else {
+                        btnStatus.classList.add('border-secondary');
+                        btnStatus.classList.remove('border-success');
+                    }
+                    // Populate Fragments
+                    if (docFragmentos) {
+                        console.log("[Reader] Loading fragments for ID:", id);
+                        docFragmentos.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin opacity-50"></i><p class="small text-muted mt-2">Buscando fragmentos geográficos...</p></div>';
+                        try {
+                            const resC = await fetch(`/api/cartografia_noticia/${id}`);
+                            if (!resC.ok) {
+                                alert("Error API Fragmentos: " + resC.status);
+                                throw new Error("API response not OK: " + resC.status);
+                            }
+                            const dataC = await resC.json();
+                            console.log("[Reader] Fragments received:", dataC.ciudades ? dataC.ciudades.length : 0);
+
+                            if (dataC.ciudades && dataC.ciudades.length > 0) {
+                                docFragmentos.innerHTML = dataC.ciudades.map(l => `
+                                    <div class="p-3 rounded border border-light bg-element fragment-item mb-2" style="cursor: pointer; transition: transform 0.2s;" 
+                                         onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"
+                                         onclick="irALugarEnMapa('${l.nombre.replace(/'/g, "\\'")}', ${l.lat}, ${l.lon})">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold text-accent small">${l.nombre.toUpperCase()}</span>
+                                            <span class="badge bg-dark text-muted x-small">Frecuencia: ${l.frecuencia}</span>
+                                        </div>
+                                        <div class="small opacity-75">${l.en_titulo ? 'Mencionado en título.' : 'Mencionado en el cuerpo del texto.'}</div>
+                                    </div>
+                                `).join('');
+                            } else {
+                                console.log("[Reader] No fragments found for ID:", id);
+                                docFragmentos.innerHTML = `
+                                    <div class="text-center text-muted small py-5">
+                                        <i class="fa-solid fa-map-pin fa-2x mb-3 opacity-25"></i>
+                                        <p>No se han detectado fragmentos geográficos en este documento.</p>
+                                        <button class="btn btn-xs btn-outline-secondary mt-2" onclick="location.reload()">Reintentar</button>
+                                    </div>`;
+                            }
+                        } catch (e) {
+                            console.error("[Reader] Error loading fragments:", e);
+                            alert("Error al cargar fragmentos: " + e.message);
+                            docFragmentos.innerHTML = '<div class="text-center text-danger small py-4"><i class="fa-solid fa-triangle-exclamation mb-2"></i><br>Error al cargar fragmentos.</div>';
+                        }
+                    }
+                } // End if(data.id)
+            } catch (e) { console.error(e); }
+            finally {
+                isLoadingNews = false;
+                document.getElementById('reader-loading').style.display = 'none';
+            }
+        });
+
+        // Navigation Buttons Logic
+        const btnPrev = document.getElementById('btn-prev-news');
+        const btnNext = document.getElementById('btn-next-news');
+
+
+
+        // We need to store the loaded notices globally to navigate
+        let loadedNotices = [];
+
+        selectPublicacion.addEventListener('change', async function () {
+            const pub = this.value;
+            // Clear choices
+            choiceNot.clearStore();
+            choiceNot.clearInput();
+
+            if (!pub) {
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+                return;
+            }
+            try {
+                const res = await fetch(`/api/noticias/simple_list?publicacion=${encodeURIComponent(pub)}`);
+                const notches = await res.json();
+                loadedNotices = notches; // Store for nav
+
+                // Refresh Choices
+                choiceNot.setChoices(notches.map(n => ({ value: n.id, label: n.label, customProperties: n })), 'value', 'label', true);
+                choiceNot.enable();
+
+                // Update buttons state
+                updateNavState();
+
+            } catch (e) { console.error(e); }
+        });
+
+        function updateNavState() {
+            if (!currentNewsId || loadedNotices.length === 0) {
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+                return;
+            }
+            const idx = loadedNotices.findIndex(n => n.id == currentNewsId);
+            if (idx === -1) {
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+            } else {
+                btnPrev.disabled = (idx === 0);
+                btnNext.disabled = (idx === loadedNotices.length - 1);
+            }
+        }
+
+        btnPrev.addEventListener('click', () => {
+            const idx = loadedNotices.findIndex(n => n.id == currentNewsId);
+            if (idx > 0) {
+                const prevId = loadedNotices[idx - 1].id;
+                choiceNot.setChoiceByValue(prevId); // Update select visual
+                // Manually trigger change or load directly
+                // setChoiceByValue doesn't always trigger 'change' event in all versions
+                selectNoticia.value = prevId;
+                selectNoticia.dispatchEvent(new Event('change'));
+            }
+        });
+
+        btnNext.addEventListener('click', () => {
+            const idx = loadedNotices.findIndex(n => n.id == currentNewsId);
+            if (idx !== -1 && idx < loadedNotices.length - 1) {
+                const nextId = loadedNotices[idx + 1].id;
+                choiceNot.setChoiceByValue(nextId);
+                selectNoticia.value = nextId;
+                selectNoticia.dispatchEvent(new Event('change'));
+            }
+        });
+
+
+        // Image Zoom Logic
+        const imgContainer = document.getElementById('image-viewer-container');
+
+        window.zoomImage = (d) => {
+            scale = Math.max(0.1, Math.min(5, scale + d));
+            updateTransform();
+        };
+
+        window.rotateImage = () => {
+            rotation = (rotation + 90) % 360;
+            updateTransform();
+        };
+
+        window.resetImage = () => {
+            scale = 1;
+            pannedX = 0;
+            pannedY = 0;
+            rotation = 0;
+            updateTransform();
+        };
+
+        function updateTransform() {
+            imgElement.style.transform = `translate(${pannedX}px, ${pannedY}px) scale(${scale}) rotate(${rotation}deg)`;
+        }
+
+        // Wheel Zoom
+        if (imgContainer) {
+            imgContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = Math.sign(e.deltaY) * -0.1;
+                zoomImage(delta);
+            }, { passive: false });
+        }
+
+        // Image Switching Logic
+        window.changeImage = (delta) => {
+            const newIdx = currentImageIdx + delta;
+            if (newIdx >= 0 && newIdx < currentImages.length) {
+                currentImageIdx = newIdx;
+                imgElement.src = currentImages[currentImageIdx];
+                resetImage();
+                updateImageToolbar();
+            }
+        };
+
+        function updateImageToolbar() {
+            const counter = document.getElementById('image-current-counter');
+            const btnPrevImg = document.getElementById('btn-prev-image');
+            const btnNextImg = document.getElementById('btn-next-image');
+
+            if (currentImages.length <= 1) {
+                counter.style.display = 'none';
+                btnPrevImg.style.display = 'none';
+                btnNextImg.style.display = 'none';
+            } else {
+                counter.style.display = 'block';
+                btnPrevImg.style.display = 'flex';
+                btnNextImg.style.display = 'flex';
+                counter.textContent = `${currentImageIdx + 1}/${currentImages.length}`;
+                btnPrevImg.style.opacity = currentImageIdx === 0 ? '0.3' : '1';
+                btnPrevImg.style.pointerEvents = currentImageIdx === 0 ? 'none' : 'auto';
+                btnNextImg.style.opacity = currentImageIdx === currentImages.length - 1 ? '0.3' : '1';
+                btnNextImg.style.pointerEvents = currentImageIdx === currentImages.length - 1 ? 'none' : 'auto';
+            }
+        }
+
+        // Mouse Drag to Pan
+        let isDraggingImg = false;
+        let startXImg, startYImg;
+
+        imgContainer.addEventListener('mousedown', (e) => {
+            if (scale <= 1) return; // Only pan if zoomed in? Optional.
+            isDraggingImg = true;
+            startXImg = e.clientX - pannedX;
+            startYImg = e.clientY - pannedY;
+            imgContainer.style.cursor = 'grabbing';
+        });
+
+        imgContainer.addEventListener('mousemove', (e) => {
+            if (!isDraggingImg) return;
+            e.preventDefault();
+            pannedX = e.clientX - startXImg;
+            pannedY = e.clientY - startYImg;
+            updateTransform();
+        });
+
+        imgContainer.addEventListener('mouseup', () => { isDraggingImg = false; imgContainer.style.cursor = 'grab'; });
+        imgContainer.addEventListener('mouseleave', () => { isDraggingImg = false; imgContainer.style.cursor = 'grab'; });
+
+        // Toggle Image Panel
+        window.toggleImagePanel = () => {
+            if (imagePanel.style.display === 'none') {
+                imagePanel.style.display = 'block'; divider.style.display = 'flex';
+                textPanel.style.width = '75%'; imagePanel.style.width = '25%';
+            } else {
+                imagePanel.style.display = 'none'; divider.style.display = 'none';
+                textPanel.style.width = '100%';
+            }
+        };
+
+        // Tab Switcher Pro
+        window.switchReaderTab = (tabId) => {
+            console.log("[Reader] Switching to tab:", tabId);
+            const triggerEl = document.getElementById(tabId);
+            if (!triggerEl) {
+                console.error("[Reader] Tab trigger not found:", tabId);
+                alert("Error: No se encontró el activador de la pestaña " + tabId);
+                return;
+            }
+
+            // Ensure container is visible
+            const tabsContent = document.getElementById('readerTabsContent');
+            if (tabsContent) {
+                tabsContent.style.display = 'block';
+                tabsContent.style.opacity = '1';
+                tabsContent.style.visibility = 'visible';
+            }
+
+            try {
+                const tab = bootstrap.Tab.getOrCreateInstance(triggerEl);
+                tab.show();
+            } catch (err) {
+                console.error("[Reader] Bootstrap Tab Error:", err);
+                // Fallback: manually toggle classes
+                const targetId = triggerEl.getAttribute('data-bs-target');
+                if (targetId) {
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active', 'show'));
+                    const targetPane = document.querySelector(targetId);
+                    if (targetPane) targetPane.classList.add('active', 'show');
+                }
+            }
+
+            // Sync Header Buttons
+            const btnId = 'btn-tab-' + tabId.replace('-tab', '');
+            document.querySelectorAll('#header-reader-tabs .btn-sirio').forEach(b => {
+                b.classList.toggle('active', b.id === btnId);
+            });
+
+            // Force redraw/calculation if needed
+            window.dispatchEvent(new Event('resize'));
+        };
+
+        // irALugarEnMapa Stub for Lector
+        window.irALugarEnMapa = (nombre) => {
+            console.log("[Lector] Buscando fragmento:", nombre);
+            // Switch to Detail view first
+            switchReaderTab('detalle-tab');
+
+            // Small delay to ensure tab is visible
+            setTimeout(() => {
+                // Search for text in docContenido
+                const text = docContenido.innerText;
+                const index = text.toLowerCase().indexOf(nombre.toLowerCase());
+                if (index !== -1) {
+                    // Create a range to scroll to
+                    const walker = document.createTreeWalker(docContenido, NodeFilter.SHOW_TEXT, null, false);
+                    let currentPos = 0;
+                    let node;
+                    while (node = walker.nextNode()) {
+                        if (currentPos + node.length > index) {
+                            const range = document.createRange();
+                            range.setStart(node, index - currentPos);
+                            range.setEnd(node, Math.min(index - currentPos + nombre.length, node.length));
+
+                            // Scroll to parent element or range
+                            node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                            // Visual highlight effect
+                            const em = document.createElement('mark');
+                            em.style.backgroundColor = 'rgba(255, 152, 0, 0.4)';
+                            em.style.color = 'inherit';
+                            em.style.transition = 'background 1s';
+                            range.surroundContents(em);
+                            setTimeout(() => {
+                                // Remove highlight
+                                const parent = em.parentNode;
+                                while (em.firstChild) parent.insertBefore(em.firstChild, em);
+                                parent.removeChild(em);
+                                parent.normalize();
+                            }, 2000);
+                            break;
+                        }
+                        currentPos += node.length;
+                    }
+                }
+            }, 300);
+        };
+
+        // Resume AI
+        document.getElementById('btn-resumir-ia').addEventListener('click', async () => {
+            const m = new bootstrap.Modal(document.getElementById('modalResumen'));
+            m.show();
+            // ... (rest of logic same) ...
+            try {
+                const res = await fetch(`/api/noticia/resumir/${currentNewsId}`, { method: 'POST' });
+                const data = await res.json();
+                document.getElementById('res-titulo').textContent = data.titulo_conceptual;
+                document.getElementById('res-texto').innerHTML = (data.resumen || "").split('\n').map(p => `<p>${p}</p>`).join('');
+                const pts = document.getElementById('res-puntos');
+                pts.innerHTML = '';
+                (data.puntos_clave || []).forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = "list-group-item border-0";
+                    li.innerHTML = `<i class="fa-solid fa-check text-success me-2"></i>${p}`;
+                    pts.appendChild(li);
+                });
+                document.getElementById('resumen-loading').style.display = 'none';
+                document.getElementById('resumen-content').style.display = 'block';
+            } catch (e) {
+                document.getElementById('resumen-error').style.display = 'block';
+                document.getElementById('resumen-error').textContent = "Error al resumir.";
+            }
+        });
+
+        // Initialize Global References for Style Menu
+        window.container = container;
+        window.docContenido = docContenido;
+        window.textPanel = textPanel;
+        window.lensActive = false;
+
+        // Font/Theme Settings
+        window.setReaderFont = (t) => {
+            docContenido.classList.remove('font-serif', 'font-sans');
+            docContenido.classList.add(`font-${t}`);
+            document.getElementById('btn-font-serif').classList.toggle('active', t === 'serif');
+            document.getElementById('btn-font-sans').classList.toggle('active', t === 'sans');
+        };
+        window.adjustFontSize = (d) => {
+            let currentSize = parseInt(docContenido.style.fontSize) || 120;
+            let s = currentSize + (d * 10);
+            docContenido.style.fontSize = s + '%';
+            document.getElementById('font-size-val').textContent = s + '%';
+        };
+        // Initialize at 120%
+        docContenido.style.fontSize = '120%';
+        document.getElementById('font-size-val').textContent = '120%';
+        window.setReaderTheme = (t) => {
+            container.classList.remove('reader-theme-sepia', 'reader-theme-night');
+            if (t !== 'default') container.classList.add(`reader-theme-${t}`);
+            // Update active state for buttons
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`.theme-${t}`);
+            if (activeBtn) activeBtn.classList.add('active');
+        };
+        window.toggleAura = () => document.body.classList.toggle('aura-active');
+
+        // Focus Mode
+        const btnFocus = document.getElementById('btn-focus-mode');
+        const toggleFocus = () => {
+            document.body.classList.toggle('focus-mode');
+            btnFocus.innerHTML = document.body.classList.contains('focus-mode') ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+        };
+        btnFocus.addEventListener('click', toggleFocus);
+        document.getElementById('btn-exit-focus').addEventListener('click', toggleFocus);
+
+        // --- CITATIONS ---
+        const btnCitar = document.getElementById('btn-citar-news');
+        const modalCita = new bootstrap.Modal(document.getElementById('modalCita'));
+        btnCitar.addEventListener('click', () => {
+            const titulo = document.getElementById('doc-titulo').textContent;
+            const fecha = document.getElementById('doc-fecha').textContent;
+            const pub = document.getElementById('doc-publicacion').textContent;
+            const url = window.location.origin + "/noticias/detalle/" + currentNewsId;
+            // APA: Apellido, A. A. (Fecha). Título. Publicación. Recuperado de URL
+            const apa = `Hesiox Reader. (${fecha}). ${titulo}. ${pub}. [hesiOX Platform]`;
+            document.getElementById('cita-apa').textContent = apa;
+            document.getElementById('cita-url').textContent = url;
+            modalCita.show();
+        });
+        window.copyCita = (type) => { // Make available via onclick
+            const text = document.getElementById('cita-' + type).textContent;
+            navigator.clipboard.writeText(text);
+            // alert("Copiado"); // Optional feedback
+            const btn = document.querySelector(`button[onclick="copyCita('${type}')"]`);
+            if (btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                setTimeout(() => btn.innerHTML = originalHTML, 1000);
+            }
+        };
+
+        // --- SENTIMENT PULSE LOGIC ---
+        const pulseBar = document.getElementById('sentiment-pulse-bar');
+        const sentimentLexicon = {
+            positive: ['éxito', 'victoria', 'progreso', 'bien', 'bueno', 'excelente', 'paz', 'esperanza', 'avance', 'logro', 'favorable', 'seguro', 'crecimiento', 'alegría', 'positivo', 'libertad', 'unión', 'mejor', 'gran', 'claro'],
+            negative: ['crisis', 'guerra', 'muerte', 'atentado', 'terror', 'miedo', 'fracaso', 'error', 'peligro', 'violencia', 'caos', 'tragedia', 'pérdida', 'conflicto', 'tensión', 'riesgo', 'pobreza', 'negativo', 'mal', 'difícil', 'caída', 'huelga', 'protesta']
+        };
+        const updateSentimentPulse = () => {
+            if (!textPanel || !pulseBar) return;
+            const paragraphs = textPanel.querySelectorAll('p, div.big-text');
+            let visibleText = "";
+            const panelRect = textPanel.getBoundingClientRect();
+            paragraphs.forEach(p => {
+                const rect = p.getBoundingClientRect();
+                if (rect.top < panelRect.bottom && rect.bottom > panelRect.top) {
+                    visibleText += " " + p.textContent.toLowerCase();
+                }
+            });
+            if (!visibleText.trim()) return;
+            let posCount = 0, negCount = 0;
+            visibleText.split(/\W+/).forEach(w => {
+                if (w.length < 3) return;
+                if (sentimentLexicon.positive.includes(w)) posCount++;
+                if (sentimentLexicon.negative.includes(w)) negCount++;
+            });
+            const total = posCount + negCount;
+            let score = 0;
+            if (total > 0) score = (posCount - negCount) / total;
+            let color = '#888'; // Neutral
+            let shadow = 'rgba(136, 136, 136, 0.3)';
+            if (score > 0.15) { color = '#00bcd4'; shadow = 'rgba(0, 188, 212, 0.5)'; }
+            else if (score < -0.15) { color = '#ff5722'; shadow = 'rgba(255, 87, 34, 0.5)'; }
+            pulseBar.style.backgroundColor = color;
+            // pulseBar.style.color = color; // Not needed for empty div
+            pulseBar.style.boxShadow = `0 0 15px ${shadow}`;
+
+            // Also update Singularity Index (Mock Simulation based on score/complexity)
+            const singularityEl = document.getElementById('singularity-score');
+            if (singularityEl) {
+                // Simulation: Use length of text + sentiment intensity
+                let rarity = Math.abs(score * 100) + (visibleText.length % 50);
+                rarity = Math.min(100, Math.max(0, rarity)).toFixed(0);
+                singularityEl.textContent = rarity + "%";
+
+                const icon = document.getElementById('singularity-icon');
+                if (icon) {
+                    if (rarity > 80) icon.style.color = '#ff9800'; // High rarity
+                    else if (rarity > 40) icon.style.color = '#00bcd4';
+                    else icon.style.color = '#888';
+                }
+            }
+        };
+        // Throttle helper
+        function throttle(func, limit) {
+            let lastFunc, lastRan;
+            return function () {
+                const context = this, args = arguments;
+                if (!lastRan) { func.apply(context, args); lastRan = Date.now(); }
+                else {
+                    clearTimeout(lastFunc);
+                    lastFunc = setTimeout(function () {
+                        if ((Date.now() - lastRan) >= limit) { func.apply(context, args); lastRan = Date.now(); }
+                    }, limit - (Date.now() - lastRan));
+                }
+            }
+        }
+        if (textPanel) textPanel.addEventListener('scroll', throttle(updateSentimentPulse, 200));
+
+        // Trigger pulse on load
+        const observer = new MutationObserver(() => {
+            updateSentimentPulse();
+            updateNavState(); // Check buttons
+        });
+        observer.observe(docTextoPuro, { childList: true, characterData: true, subtree: true });
+
+
+        // --- INLINE EDITING ---
+        const btnEditInline = document.getElementById('btn-editar-inline');
+        const editActions = document.getElementById('edit-actions');
+        const btnSave = document.getElementById('btn-save-content');
+        const btnCancel = document.getElementById('btn-cancel-edit');
+
+        btnEditInline.addEventListener('click', () => isEditing ? exitEditMode(false) : enterEditMode());
+        btnCancel.addEventListener('click', () => exitEditMode(false));
+        btnSave.addEventListener('click', saveInlineChanges);
+
+        function enterEditMode() {
+            isEditing = true;
+            container.classList.add('editing-view');
+            btnEditInline.classList.remove('btn-sirio-secondary');
+            btnEditInline.classList.add('btn-sirio-primary');
+            btnEditInline.querySelector('.btn-text').textContent = "Editando...";
+            editActions.style.setProperty('display', 'flex', 'important');
+            docContenido.contentEditable = "true";
+            document.getElementById('doc-titulo').contentEditable = "true";
+            // Make fragments editable too if needed
+        }
+        function exitEditMode(saved) {
+            isEditing = false;
+            container.classList.remove('editing-view');
+            btnEditInline.classList.remove('btn-sirio-primary');
+            btnEditInline.classList.add('btn-sirio-secondary');
+            btnEditInline.querySelector('.btn-text').textContent = "Editar";
+            editActions.style.setProperty('display', 'none', 'important');
+            docContenido.contentEditable = "false";
+            document.getElementById('doc-titulo').contentEditable = "false";
+            if (!saved) {
+                docContenido.innerHTML = originalContent;
+                document.getElementById('doc-titulo').textContent = originalTitle || "";
+            }
+        }
+        async function saveInlineChanges() {
+            const nuevoContenido = docContenido.innerHTML;
+            const nuevoTitulo = document.getElementById('doc-titulo').innerText;
+            btnSave.classList.add('disabled');
+            try {
+                const res = await fetch(`/api/noticia/update_content/${currentNewsId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenido: nuevoContenido, titulo: nuevoTitulo })
+                });
+                if (res.ok) {
+                    originalContent = nuevoContenido;
+                    originalTitle = nuevoTitulo; // Fix: Update on save
+                    alert("Guardado exitosamente");
+                    exitEditMode(true);
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + (err.error || "No se pudo guardar"));
+                }
+            } catch (e) { console.error(e); alert("Error de conexión"); }
+            finally { btnSave.classList.remove('disabled'); }
+        }
+
+        // --- INVESTIGATOR LENS ---
+        window.lensActive = false;
+        const lens = document.getElementById('investigator-lens');
+        const toggleLensBtn = document.getElementById('toggle-lens-btn');
+        window.toggleLens = (active) => {
+            window.lensActive = active;
+            lens.style.display = active ? 'block' : 'none';
+            document.body.classList.toggle('lens-active', active);
+            if (toggleLensBtn) toggleLensBtn.checked = active;
+        };
+
+        imgContainer.addEventListener('mousemove', (e) => {
+            if (!window.lensActive) return;
+            const rect = imgContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            lens.style.left = (x - lens.offsetWidth / 2) + 'px';
+            lens.style.top = (y - lens.offsetHeight / 2) + 'px';
+
+            const zoom = 2.5;
+            const imgRect = imgElement.getBoundingClientRect();
+            // Calculate position relative to image, not container
+            const bx = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+            const by = ((e.clientY - imgRect.top) / imgRect.height) * 100;
+
+            lens.style.backgroundImage = `url('${imgElement.src}')`;
+            lens.style.backgroundSize = (imgRect.width * zoom) + 'px ' + (imgRect.height * zoom) + 'px';
+            lens.style.backgroundPosition = `${bx}% ${by}%`;
+        });
+
+        // --- RESIZABLE DIVIDER LOGIC ---
+        let isResizing = false;
+
+        divider.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none'; // Prevent text selection
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerRect = container.getBoundingClientRect();
+            const pointerRelativeXpos = e.clientX - containerRect.left;
+
+            // Calculate percentage
+            // Limit between 20% and 80%
+            let newWidthPercent = (pointerRelativeXpos / containerRect.width) * 100;
+            newWidthPercent = Math.max(20, Math.min(80, newWidthPercent));
+
+            textPanel.style.width = `${newWidthPercent}%`;
+            imagePanel.style.width = `${100 - newWidthPercent}%`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+
+        // --- NAVIGATION UPDATE LOGIC ---
+        function updateNavButtons() {
+            if (!choiceNot) return;
+            const val = selectNoticia.value;
+            const options = Array.from(selectNoticia.options).filter(opt => opt.value);
+            const index = options.findIndex(opt => opt.value == val);
+
+            btnPrev.disabled = (index <= 0);
+            btnNext.disabled = (index === -1 || index >= options.length - 1);
+            btnPrev.onclick = () => { if (index > 0) changeNews(options[index - 1].value); };
+            btnNext.onclick = () => { if (index < options.length - 1) changeNews(options[index + 1].value); };
+        }
+        function changeNews(id) {
+            selectNoticia.value = id;
+            choiceNot.setChoiceByValue(id.toString());
+            selectNoticia.dispatchEvent(new Event('change'));
+        }
+        // Hook into change events
+        const originalPubChange = selectPublicacion.onchange; // Note: onchange vs addEventListener might conflict if not careful, sticking to listeners
+        // We need to call updateNavButtons after loading list
+
+        // COPY TEXT
+        window.copiarTextoPuro = () => { navigator.clipboard.writeText(docTextoPuro.textContent); alert("Copiado."); };
+
+        // STATUS TOGGLE
+        window.toggleStatusLector = async () => {
+            if (!currentNewsId) return;
+            const btn = document.getElementById('btn-toggle-incluido-lector');
+
+            try {
+                const res = await fetch(`/api/noticia/toggle_incluido/${currentNewsId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Update Text
+                    btn.querySelector('span').textContent = data.incluido ? "VERIFICADA" : "NO VERIFICADA";
+                    // Update Icon
+                    btn.querySelector('i').className = data.incluido ? "fa-solid fa-check-circle text-success" : "fa-solid fa-circle-xmark text-muted";
+                    // Update Border/Style
+                    if (data.incluido) {
+                        btn.classList.add('border-success');
+                        btn.classList.remove('border-secondary');
+                    } else {
+                        btn.classList.add('border-secondary');
+                        btn.classList.remove('border-success');
+                    }
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        /* SENTIMENT PULSE BAR */
+        // Note: This CSS should ideally be in a <style> block or a .css file,
+        // but is placed here as per the instruction's provided context.
+        // If this is a JS file, this block will be a comment.
+        /*
+        .sentiment-pulse-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: transparent;
+            z-index: 10;
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        */
+        // --- KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.contentEditable === 'true') {
+                if (e.key !== 'Escape') return;
+            }
+            switch (e.key.toLowerCase()) {
+                case 'arrowright': if (!btnNext.disabled) btnNext.click(); break;
+                case 'arrowleft': if (!btnPrev.disabled) btnPrev.click(); break;
+                case 'e': e.preventDefault(); if (!btnEditInline.classList.contains('disabled')) btnEditInline.click(); break;
+                case 'f': e.preventDefault(); btnFocus.click(); break;
+                case 'escape':
+                    if (isEditing) exitEditMode(false);
+                    if (document.body.classList.contains('focus-mode')) toggleFocus();
+                    break;
+            }
+        });
+
+        // --- AUTO-LOAD FROM URL PARAMETER ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const noticiaIdFromUrl = urlParams.get('id');
+        
+        if (noticiaIdFromUrl) {
+            try {
+                // Obtener información de la noticia para saber su publicación
+                const res = await fetch(`/api/noticia/contenido/${noticiaIdFromUrl}`);
+                const data = await res.json();
+                
+                if (data.publicacion) {
+                    // Seleccionar la publicación primero
+                    selectPublicacion.value = data.publicacion;
+                    choicePub.setChoiceByValue(data.publicacion);
+                    selectPublicacion.dispatchEvent(new Event('change'));
+                    
+                    // Esperar un momento para que cargue la lista de noticias
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Seleccionar la noticia específica
+                    selectNoticia.value = noticiaIdFromUrl;
+                    choiceNot.setChoiceByValue(noticiaIdFromUrl);
+                    selectNoticia.dispatchEvent(new Event('change'));
+                }
+            } catch (e) {
+                console.error('Error al cargar noticia desde URL:', e);
+            }
+        }
+
+    });
+</script>
+{% endblock %}

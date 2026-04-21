@@ -1,0 +1,2104 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Mapas de Distribución - S.S. Sirio{% endblock %}
+{% block page_title %}Geografía Humana{% endblock %}
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
+<style>
+    /* --- PROFESSIONAL LAYOUT --- */
+    .desktop-main.immersive-layout .desktop-content {
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    .map-container {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+        background: #0b0b0d;
+    }
+
+    /* --- SIDE PANEL (LEFT) --- */
+    .map-floating-panel {
+        position: absolute;
+        top: 80px;
+        left: 20px;
+        width: 350px;
+        z-index: 1000;
+        background: rgba(20, 20, 25, 0.9);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 100px);
+    }
+
+    .panel-header {
+        padding: 16px;
+        background: rgba(255, 152, 0, 0.05);
+        border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+        border-radius: 12px 12px 0 0;
+        cursor: grab;
+    }
+
+    .panel-header:active {
+        cursor: grabbing;
+    }
+
+    .panel-title {
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #ff9800;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    .panel-content {
+        padding: 24px;
+        overflow-y: visible !important;
+    }
+
+    .label-sirio {
+        display: block;
+        color: #888;
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* --- ANALYTIC PANEL (RIGHT) --- */
+    .analytic-overlay {
+        position: absolute;
+        top: 80px;
+        left: 400px;
+        width: 320px;
+        z-index: 1000;
+        background: var(--ds-bg-panel, rgba(20, 20, 25, 0.9));
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        border-radius: 12px;
+        padding: 24px;
+        color: var(--ds-text-main, white);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .analytic-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: #ff9800;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+        display: block;
+        border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+        padding: 10px;
+        margin: -24px -24px 20px -24px;
+        border-radius: 12px 12px 0 0;
+        background: rgba(255, 152, 0, 0.05);
+        font-weight: 800;
+        cursor: grab;
+    }
+
+    .analytic-title:active {
+        cursor: grabbing;
+    }
+
+    .viz-group {
+        margin-bottom: 24px;
+    }
+
+    .viz-label {
+        font-size: 0.65rem;
+        color: #666;
+        margin-bottom: 10px;
+        display: block;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .btn-analitica {
+        background: rgba(255, 255, 255, 0.05);
+        color: #ccc;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: 0.3s;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn-analitica:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .btn-analitica.active {
+        background: #ff9800 !important;
+        color: #000 !important;
+        border-color: #ff9800 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 0 20px rgba(255, 152, 0, 0.4) !important;
+    }
+
+    .btn-analitica i {
+        font-size: 0.9rem;
+        width: 16px;
+        text-align: center;
+    }
+
+    /* --- INFO & LEGEND --- */
+    .info {
+        padding: 12px 16px;
+        font: 0.8rem var(--ds-font-headers), sans-serif;
+        background: rgba(30, 30, 35, 0.9) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        color: #fff !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .info h4 {
+        margin: 0 0 8px;
+        color: #ff9800 !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+    }
+
+    .legend {
+        line-height: 22px;
+        color: #bbb;
+        background: rgba(20, 20, 25, 0.9) !important;
+        padding: 15px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .legend i {
+        width: 14px;
+        height: 14px;
+        float: left;
+        margin-right: 12px;
+        opacity: 0.8;
+        border-radius: 3px;
+        margin-top: 4px;
+    }
+
+    /* --- BOTTOM STATS --- */
+    .map-stats-panel {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 900;
+        background: rgba(25, 25, 30, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        padding: 10px 40px;
+        display: flex;
+        gap: 40px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+    }
+
+    .stat-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 2px;
+        color: #fff;
+    }
+
+    .stat-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        color: #888;
+        font-weight: 700;
+    }
+
+    /* --- CUSTOM ICONS --- */
+    .family-marker-icon {
+        background: #ff9800 !important;
+        border: 2px solid rgba(0, 0, 0, 0.4) !important;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff !important;
+        font-weight: 900;
+        font-size: 10px;
+        box-shadow: 0 0 15px rgba(255, 152, 0, 0.6);
+    }
+
+    .family-marker-verified {
+        background: #00ff00 !important;
+        color: #000 !important;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.8), inset 0 0 10px rgba(0, 0, 0, 0.5) !important;
+        border: 3px solid #000000 !important;
+        font-weight: 900 !important;
+    }
+
+    .badge-sirio {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    /* --- DYNAMIC 3D EXTRUSION LEVELS --- */
+    .poly-3d-level-0 { filter: none; }
+    .poly-3d-level-1 { filter: drop-shadow(0 0.5px 0 #333) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15)); }
+    .poly-3d-level-2 { filter: drop-shadow(0 0.5px 0 #444) drop-shadow(0 1px 0 #222) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2)); }
+    .poly-3d-level-3 { filter: drop-shadow(0 1px 0 #444) drop-shadow(0 1.5px 0 #222) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.25)); }
+    .poly-3d-level-4 { filter: drop-shadow(0 1px 0 #555) drop-shadow(0 2px 0 #222) drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3)); }
+    .poly-3d-level-5 { filter: drop-shadow(0 1.5px 0 #555) drop-shadow(0 2.5px 0 #222) drop-shadow(0 5px 6px rgba(0, 0, 0, 0.35)); }
+
+    .poly-3d-top {
+        transition: transform 0.2s ease, filter 0.2s ease;
+        pointer-events: auto;
+    }
+
+    .poly-3d-top:hover {
+        transform: scale(1.005);
+        filter: brightness(1.05) drop-shadow(0 0 6px rgba(255, 152, 0, 0.3)) !important;
+        z-index: 1100 !important;
+    }
+
+    /* Choices.js Z-Index Fix for Floating Panels (Aggressive) */
+    .choices {
+        z-index: 1;
+        position: relative;
+    }
+    .choices.is-open {
+        z-index: 99999 !important;
+    }
+    .choices__list--dropdown {
+        z-index: 100000 !important;
+        background: #1a1a1f !important;
+        border: 1px solid rgba(255, 152, 0, 0.6) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+    }
+
+    .map-floating-panel {
+        overflow: visible !important;
+    }
+
+    .leaflet-popup-content {
+        color: #fff !important;
+        font-family: var(--ds-font-headers), sans-serif !important;
+    }
+
+    .sirio-family-popup {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    .sirio-family-popup::-webkit-scrollbar { width: 4px; }
+    .sirio-family-popup::-webkit-scrollbar-thumb { background: rgba(255,152,0,0.3); border-radius: 10px; }
+
+    /* Theme-Aware Tooltips & Popups (Floating Panels) */
+    .leaflet-tooltip.sirio-popup-custom,
+    .leaflet-popup.sirio-popup-custom .leaflet-popup-content-wrapper {
+        background: var(--ds-bg-panel, #1a1a1a) !important;
+        color: var(--ds-text-main, #ffffff) !important;
+        border-radius: 12px !important;
+        border: 2px solid var(--ds-accent-primary, #ff9800) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+        padding: 5px !important;
+        pointer-events: auto !important;
+    }
+
+    .leaflet-popup.sirio-popup-custom .leaflet-popup-content {
+        margin: 10px 15px !important;
+        color: #fff !important;
+        font-family: var(--ds-font-mono, 'JetBrains Mono', monospace) !important;
+    }
+
+    .leaflet-popup.sirio-popup-custom .leaflet-popup-close-button {
+        color: #ff9800 !important;
+        font-size: 1.4rem !important;
+        padding: 8px !important;
+        transition: 0.3s !important;
+        right: 8px !important;
+        top: 8px !important;
+        z-index: 2000 !important;
+    }
+
+    /* Block tooltips when a popup is open per user request */
+    #map.sirio-popups-locked .leaflet-tooltip {
+        display: none !important;
+        pointer-events: none !important;
+    }
+
+    .leaflet-popup.sirio-popup-custom .leaflet-popup-close-button:hover {
+        color: #fff !important;
+        background: rgba(255, 152, 0, 0.2) !important;
+        border-radius: 0 10px 0 10px !important;
+    }
+
+    .leaflet-popup.sirio-popup-custom .leaflet-popup-tip {
+        background: var(--ds-accent-primary, #ff9800) !important;
+    }
+
+    .leaflet-tooltip-bottom:before { border-bottom-color: var(--ds-accent-primary, #ff9800) !important; }
+
+    .map-floating-panel,
+    .analytic-overlay,
+    .map-stats-panel,
+    .legend,
+    .info {
+        font-family: var(--ds-font-ui, sans-serif) !important;
+    }
+
+    .panel-title,
+    .analytic-title,
+    .stat-label,
+    .viz-label,
+    .label-sirio {
+        font-family: var(--ds-font-headers, sans-serif) !important;
+    }
+
+    .sirio-family-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 0.75rem;
+        font-family: var(--ds-font-ui, monospace);
+        color: var(--ds-text-main, #ddd) !important;
+    }
+
+    .sirio-family-table th {
+        text-align: left;
+        color: var(--ds-accent-primary, #ff9800) !important;
+        text-transform: uppercase;
+        font-size: 0.6rem;
+        letter-spacing: 1.5px;
+        padding: 8px 4px;
+        border-bottom: 2px solid rgba(255, 152, 0, 0.3);
+    }
+
+    .sirio-family-table td {
+        padding: 8px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: middle;
+    }
+
+    .sirio-family-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .sirio-family-table .member-name {
+        font-weight: 700;
+        color: var(--ds-text-main, #fff);
+    }
+
+    .sirio-journey-arc {
+        filter: drop-shadow(0 0 2px rgba(255,255,255,0.2));
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: visibleStroke;
+        transition: stroke-width 0.3s ease, opacity 0.3s ease;
+    }
+    .sirio-journey-arc:hover {
+        opacity: 1 !important;
+        stroke-width: 8px !important;
+        filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+    }
+
+    .sirio-trajectory-title {
+        display: inline-block;
+        transition: 0.3s;
+    }
+
+    .sirio-passenger-reveal {
+        display: none;
+        max-height: 120px;
+        overflow-y: auto;
+        font-size: 0.65rem;
+        font-family: var(--ds-font-ui), sans-serif;
+        margin-top: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        border: 1px solid rgba(255, 152, 0, 0.15);
+        color: #aaa;
+        line-height: 1.5;
+    }
+
+    .sirio-trajectory-title:hover ~ .sirio-passenger-reveal,
+    .sirio-passenger-reveal:hover {
+        display: block;
+    }
+
+    .sirio-passenger-reveal a:hover {
+        color: #ff9800 !important;
+        text-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
+    }
+
+    /* Remove white focus outline from map elements and path bounding boxes */
+    .leaflet-interactive:focus,
+    .leaflet-container :focus,
+    path.leaflet-interactive:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Light mode support (disabled for popups per request) */
+    body.light-mode .map-floating-panel {
+        background: #fff;
+        color: #294a60;
+    }
+
+    /* --- AI INSIGHT STYLES --- */
+    .btn-ai-magic {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(79, 70, 229, 0.15)) !important;
+        border: 1px solid rgba(147, 51, 234, 0.3) !important;
+        color: #e0e7ff !important;
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-ai-magic:hover {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(79, 70, 229, 0.3)) !important;
+        border-color: rgba(147, 51, 234, 0.6) !important;
+        box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+    }
+    .btn-ai-magic i {
+        color: #a78bfa !important;
+    }
+    
+    .ai-insight-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 850px;
+        max-height: 85vh;
+        background: rgba(15, 15, 20, 0.98);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(147, 51, 234, 0.3);
+        border-radius: 24px;
+        z-index: 10000;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 60px rgba(147, 51, 234, 0.1);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: aiModalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes aiModalFadeIn {
+        from { opacity: 0; transform: translate(-50%, -45%) scale(0.98); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    .ai-modal-header {
+        padding: 24px 32px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(to right, rgba(147, 51, 234, 0.1), transparent);
+    }
+    .ai-modal-title {
+        font-family: var(--ds-font-headers);
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        letter-spacing: 0.5px;
+    }
+    .ai-modal-body {
+        padding: 32px;
+        overflow-y: auto;
+        color: #e5e7eb;
+        line-height: 1.8;
+        font-family: var(--ds-font-ui);
+        font-size: 0.95rem;
+    }
+    .ai-modal-body h1, .ai-modal-body h2, .ai-modal-body h3 {
+        color: #a78bfa;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-family: var(--ds-font-headers);
+    }
+    .ai-modal-body strong { color: #fff; }
+    .ai-modal-footer {
+        padding: 16px 32px;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: right;
+    }
+    
+    .ai-loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 15, 0.9);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        color: #fff;
+        backdrop-filter: blur(5px);
+    }
+
+    .ai-status-pill {
+        background: rgba(167, 139, 250, 0.1);
+        color: #a78bfa;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        border: 1px solid rgba(167, 139, 250, 0.3);
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-container">
+    <div id="map"></div>
+
+    <!-- PANEL ANALÍTICO AVANZADO (Derecha) -->
+    <div class="analytic-overlay" id="analyticPanel">
+        <span class="analytic-title digitize-draggable-handle"><i class="fa-solid fa-flask-vial me-2"></i> Inteligencia Cartográfica</span>
+
+        <div class="viz-group">
+            <span class="viz-label">Análisis de Densidad</span>
+            <button class="btn-analitica" id="btn-heatmap"><i class="fa-solid fa-fire text-warning"></i> Mapa de Calor
+                (KDE)</button>
+            <button class="btn-analitica" id="btn-families"><i class="fa-solid fa-dna text-info"></i> Grupos y Linajes
+                Familiares</button>
+            <button class="btn-analitica" id="btn-trajectories"><i class="fa-solid fa-compass text-success"></i> Arcos
+                Migratorios</button>
+            <div id="trajectories-options" class="ms-3 mb-3 p-2 rounded bg-black bg-opacity-25 border-start border-success" style="display: none; font-size: 0.65rem;">
+                <label class="viz-label mb-2" style="font-size: 0.55rem; opacity: 0.7;">Segmentación de Arcos</label>
+                <div class="d-flex flex-column gap-1">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="arcType" id="arcAll" value="all" checked>
+                        <label class="form-check-label text-light" for="arcAll">Todos</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="arcType" id="arcIda" value="ida">
+                        <label class="form-check-label text-light" for="arcIda">Ida - Continuar viaje a Destino</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="arcType" id="arcRegreso" value="regreso">
+                        <label class="form-check-label text-light" for="arcRegreso">Regreso - Retorno a Origen</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="viz-group">
+            <span class="viz-label">Dinámicas de la Tragedia</span>
+            <button class="btn-analitica" id="btn-mortality"><i class="fa-solid fa-skull-crossbones text-danger"></i>
+                Tasa de Fatalidad por Origen</button>
+        </div>
+
+        <div class="viz-group">
+            <span class="viz-label">Demografía Selectiva</span>
+            <div class="d-flex gap-2">
+                <button class="btn btn-analitica" id="btn-filter-children" style="margin-bottom:0;"><i
+                        class="fa-solid fa-child"></i> Niños</button>
+                <button class="btn btn-analitica" id="btn-filter-women" style="margin-bottom:0;"><i
+                        class="fa-solid fa-venus"></i> Mujeres</button>
+            </div>
+            <button class="btn btn-sirio-outline w-100 mt-3" id="btn-refresh-map-data" style="font-size: 0.65rem;">
+                <i class="fa-solid fa-sync me-1"></i> REFRESCAR DATOS
+            </button>
+            <button class="btn btn-outline-warning btn-sm w-100 mt-2 border-secondary" id="btn-reset-analitica"
+                style="font-size: 0.65rem;">RESETEAR ANÁLISIS</button>
+        </div>
+
+        <div class="viz-group pt-2 border-top border-secondary border-opacity-10">
+            <span class="viz-label">Estudio Poblacional (IA)</span>
+            <button class="btn-analitica btn-ai-magic" id="btn-ai-insight">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Obtener Perfil IA
+            </button>
+        </div>
+    </div>
+
+    <!-- Panel de Control Flotante (Izquierda) -->
+    <div class="map-floating-panel" id="filterPanel">
+        <div class="panel-header digitize-draggable-handle">
+            <h6 class="panel-title"><i class="fa-solid fa-magnifying-glass-location me-2"></i> Explorador Base</h6>
+        </div>
+        <div class="panel-content">
+            <div class="mb-4">
+                <label class="label-sirio">Estructura de Datos</label>
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="viewMode" id="modeClusters">
+                    <label class="btn btn-outline-sirio btn-sm py-2" for="modeClusters" style="font-family: var(--ds-font-headers);">Concentración</label>
+                    <input type="radio" class="btn-check" name="viewMode" id="modeChoropleth" checked>
+                    <label class="btn btn-outline-sirio btn-sm py-2" for="modeChoropleth" style="font-family: var(--ds-font-headers);">Escala Política</label>
+                </div>
+            </div>
+
+            <div id="choroplethOptions" style="display: block;">
+                <label class="label-sirio">Escala Geográfica</label>
+                <select id="geoLevel" class="form-select form-select-sm bg-dark text-light border-secondary mb-4 py-2" style="font-family: var(--ds-font-ui);">
+                    <option value="paises">Países</option>
+                    <option value="regions" selected>Regiones</option>
+                    <option value="provincias">Provincias</option>
+                </select>
+            </div>
+
+            <label class="label-sirio">Segmentación Social</label>
+            <select id="classFilter" class="form-select form-select-sm bg-dark text-light border-secondary py-2 mb-3">
+                <option value="all">Todas las clases</option>
+                <option value="1ª Clase">1ª Clase</option>
+                <option value="2ª Clase">2ª Clase</option>
+                <option value="3ª Clase">3ª Clase y/o Emigrante</option>
+                <option value="TRIPULACIÓN">Tripulación</option>
+            </select>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="survivorsOnly">
+                <label class="form-check-label small text-light opacity-75" for="survivorsOnly"
+                    style="font-size: 0.7rem;">FILTRAR SUPERVIVIENTES</label>
+            </div>
+
+            <label class="label-sirio">Pasajero Específico</label>
+            <select id="passengerFilter" class="form-select form-select-sm bg-dark text-light border-secondary py-2 mb-4" style="font-family: var(--ds-font-ui);" data-search="true">
+                <option value="all">Todos los pasajeros</option>
+            </select>
+
+            <label class="label-sirio">Nacionalidad</label>
+            <select id="nationalityFilter" class="form-select form-select-sm bg-dark text-light border-secondary py-2 mb-4" style="font-family: var(--ds-font-ui);" data-search="true">
+                <option value="all">Todas las nacionalidades</option>
+            </select>
+
+            <label class="label-sirio">Tamaño Familiar</label>
+            <select id="familySizeFilter" class="form-select form-select-sm bg-dark text-light border-secondary py-2">
+                <option value="all">Cualquier tamaño</option>
+                <option value="1">Individual (1)</option>
+                <option value="2">2 miembros</option>
+                <option value="3">3 miembros</option>
+                <option value="4">4 miembros</option>
+                <option value="5">5 miembros</option>
+                <option value="6">6 miembros</option>
+                <option value="7">7 miembros</option>
+                <option value="8">8 miembros</option>
+                <option value="9">9 miembros</option>
+                <option value="10">10+ miembros</option>
+            </select>
+        </div>
+    </div>
+
+    {% block top_actions %}
+    <div class="header-actions-wrapper">
+        <!-- 1. MAPA BASE -->
+        <div class="dropdown d-inline-block">
+            <button class="btn-sirio dropdown-toggle" type="button" id="dropdownBasemap" data-bs-toggle="dropdown"
+                aria-expanded="false" title="Cambiar mapa base">
+                <i class="fa-solid fa-map"></i>
+                <span class="btn-text">MAPA BASE</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-sirio border-info shadow-lg" aria-labelledby="dropdownBasemap">
+                <li><a class="dropdown-item active d-flex align-items-center" href="#"
+                        onclick="setBaseMap('auto', this)">
+                        <i class="fa-solid fa-sync me-2"></i> AUTOMÁTICO
+                    </a></li>
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('osm', this)">
+                        <i class="fa-solid fa-road me-2"></i> OPENSTREETMAP
+                    </a></li>
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('satellite', this)">
+                        <i class="fa-solid fa-satellite me-2"></i> SATÉLITE
+                    </a></li>
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('topo', this)">
+                        <i class="fa-solid fa-mountain me-2"></i> TOPOGRÁFICO
+                    </a></li>
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('voyager', this)">
+                        <i class="fa-solid fa-compass me-2"></i> HÍBRIDO (VOYAGER)
+                    </a></li>
+                <hr class="dropdown-divider opacity-25">
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('light', this)">
+                        <i class="fa-regular fa-sun me-2"></i> CARTO LIGHT (CLARO)
+                    </a></li>
+                <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="setBaseMap('dark', this)">
+                        <i class="fa-solid fa-moon me-2"></i> CARTO DARK (OSCURO)
+                    </a></li>
+            </ul>
+        </div>
+
+        <!-- 2. EDICIÓN MANUAL -->
+        <button type="button" class="btn-sirio" id="btn-toggle-manual-edit"
+            title="Modo Edición Manual: Activa este modo para arrastrar los marcadores y corregir ubicaciones.">
+            <i class="fa-solid fa-arrows-up-down-left-right text-warning"></i>
+            <span class="btn-text">Edición Manual</span>
+        </button>
+
+        <div class="vr mx-1 opacity-25"></div>
+
+        <a href="{{ url_for('pasajeros.listado') }}" class="btn-sirio">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span class="btn-text">Volver</span>
+        </a>
+
+        <div class="ms-1 ps-1" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+            title="<strong>Mapa de Pasajeros</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>Base</strong>: Exploración por clase social y supervivencia.</li><li><strong>Inteligencia</strong>: Distribución por familias y densidad regional.</li><li><strong>Edición</strong>: Modo manual para corregir coordenadas arrastrando pines.</li></ul>">
+            <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+        </div>
+    </div>
+    {% endblock %}
+    <div class="map-stats-panel">
+        <div class="stat-block">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Censo Total</span>
+        </div>
+        <div class="stat-block">
+            <span class="stat-value text-success" id="stat-survived">0</span>
+            <span class="stat-label">Vivos</span>
+        </div>
+        <div class="stat-block">
+            <span class="stat-value text-danger" id="stat-deceased">0</span>
+            <span class="stat-label">Pérdidas/Desaparecidas</span>
+        </div>
+    </div>
+
+    <!-- MODAL DE ANÁLISIS IA -->
+    <div id="aiInsightModal" class="ai-insight-modal">
+        <div class="ai-modal-header">
+            <div class="ai-modal-title">
+                <i class="fa-solid fa-brain text-info" style="color: #a78bfa !important;"></i>
+                Análisis Inteligente de Población
+            </div>
+            <button class="btn-close btn-close-white" onclick="closeAIModal()"></button>
+        </div>
+        <div class="ai-modal-body" id="aiInsightBody">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="ai-modal-footer">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4" onclick="closeAIModal()" style="border-radius: 10px !important; font-size: 0.7rem;">CERRAR INFORME</button>
+        </div>
+        <div id="aiLoading" class="ai-loading-overlay">
+            <div class="ai-status-pill">Sirio AI Analytics</div>
+            <div class="spinner-border text-info mb-3" role="status" style="width: 3rem; height: 3rem; color: #a78bfa !important;"></div>
+            <div class="small text-uppercase fw-bold tracking-wider opacity-75">Sintetizando patrones poblacionales...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-curve@1.0.0/leaflet.curve.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="{{ url_for('static', filename='js/gis_manager.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([39.8879, 4.2625], 6);
+
+        // --- CUSTOM PANES FOR Z-INDEX MANAGEMENT ---
+        map.createPane('choroplethPane');
+        map.getPane('choroplethPane').style.zIndex = 350; // Below overlayPane (400)
+
+        map.createPane('analyticPane');
+        map.getPane('analyticPane').style.zIndex = 600; 
+        map.getPane('analyticPane').style.pointerEvents = 'none';
+
+        map.createPane('heatmapPane');
+        map.getPane('heatmapPane').style.zIndex = 650;
+        map.getPane('heatmapPane').style.pointerEvents = 'none';
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // --- POPUP LOCKING LOGIC ---
+        map.on('popupopen', () => document.getElementById('map').classList.add('sirio-popups-locked'));
+        map.on('popupclose', () => document.getElementById('map').classList.remove('sirio-popups-locked'));
+
+        let geoData = [];
+        let familyData = [];
+        let heatmapLayer = null;
+        let trajectoriesLayer = L.layerGroup([], { pane: 'analyticPane' });
+        let familyLayer = L.layerGroup();
+        let choroplethLayer = null;
+        const clusters = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+
+        // --- BASE MAP LOGIC ---
+        let _currentBaseMap = 'auto';
+        const getTileUrl = (type, isDarkMode) => {
+            switch (type) {
+                case 'osm': return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                case 'satellite': return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+                case 'topo': return 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+                case 'voyager': return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+                case 'light': return 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                case 'dark': return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                case 'auto':
+                default:
+                    return isDarkMode
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            }
+        };
+
+        window.mapaTileLayer = L.tileLayer(getTileUrl('auto', true), { maxZoom: 19 }).addTo(map);
+
+        window.setBaseMap = function (type, element) {
+            _currentBaseMap = type;
+            const dropdown = document.getElementById('dropdownBasemap');
+            const items = dropdown.nextElementSibling.querySelectorAll('.dropdown-item');
+            items.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+
+            const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            map.removeLayer(window.mapaTileLayer);
+            window.mapaTileLayer = L.tileLayer(getTileUrl(type, isDark), { maxZoom: 19 }).addTo(map);
+        };
+
+        // --- MANUAL EDIT LOGIC ---
+        window._isManualEdit = false;
+        const btnToggleManual = document.getElementById('btn-toggle-manual-edit');
+
+        function updateManualEditBtnState() {
+            if (!btnToggleManual) return;
+            if (window._isManualEdit) {
+                btnToggleManual.classList.add('btn-sirio-primary');
+                btnToggleManual.title = "Modo Edición Manual: ACTIVO. Arrastra los marcadores para corregir posiciones.";
+            } else {
+                btnToggleManual.classList.remove('btn-sirio-primary');
+                btnToggleManual.title = "Activar Modo Edición Manual para corregir coordenadas arrastrando pines.";
+            }
+        }
+
+        if (btnToggleManual) {
+            btnToggleManual.addEventListener('click', function () {
+                window._isManualEdit = !window._isManualEdit;
+                updateManualEditBtnState();
+                renderBase(); // Re-render markers with draggability
+            });
+        }
+
+        async function handleMarkerDragEnd(id, newLatLng) {
+            try {
+                const response = await fetch('/pasajeros/api/update-coordinates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, lat: newLatLng.lat, lon: newLatLng.lng })
+                });
+                const res = await response.json();
+                if (res.success) {
+                    // Update local data
+                    const p = geoData.find(x => x.id === id);
+                    if (p) { p.lat = newLatLng.lat; p.lon = newLatLng.lng; }
+                    console.log(`Coordenadas actualizadas para pasajero ${id}`);
+                } else {
+                    alert("Error al actualizar coordenadas: " + res.error);
+                }
+            } catch (e) {
+                console.error("Error en handleMarkerDragEnd:", e);
+            }
+        }
+
+        const locationCoords = {
+            'Napoles': [40.8518, 14.2681],
+            'Genova': [44.4056, 8.9463],
+            'Barcelona': [41.3851, 2.1734],
+            'Cabo de Palos': [37.604, -0.655],
+            'Cartagena': [37.605, -0.986],
+            'Gibraltar': [35.95, -5.60],
+            'Montevideo': [-34.9011, -56.1645],
+            'Buenos Aires': [-34.6037, -58.3816],
+            'Santos': [-23.9608, -46.3339],
+            'Rio de Janeiro': [-22.9068, -43.1729],
+            'Rio Janeiro': [-22.9068, -43.1729],
+            'Cadiz': [36.5271, -6.2886],
+            'Marseille': [43.2965, 5.3698],
+            'Palermo': [38.1157, 13.3615],
+            'Southampton': [50.9097, -1.4044],
+            'Plymouth': [50.3755, -4.1427],
+            'Buckfastleigh': [50.4816, -3.7788]
+        };
+
+        const wreckPoint = locationCoords['Cabo de Palos'];
+        const rescuePoint = locationCoords['Cartagena'];
+
+        // --- CORE DATA ASSETS ---
+        async function init() {
+            try {
+                const [mapResp, familyResp] = await Promise.all([
+                    fetch('/pasajeros/api/map-data'),
+                    fetch('/pasajeros/api/family-data')
+                ]);
+                geoData = await mapResp.json();
+                familyData = await familyResp.json();
+
+                // Construir mapeo de ID de pasajero -> Tamaño de su familia
+                window.passengerFamilySize = {};
+                familyData.forEach(fam => {
+                    if (fam.members) {
+                        fam.members.forEach(m => {
+                            window.passengerFamilySize[m.id] = fam.count;
+                        });
+                    }
+                });
+
+                populatePassengerFilter();
+                populateNationalityFilter();
+                updateStats();
+
+                // Check for passenger_id in URL params to auto-focus their migratory arc
+                const urlParams = new URLSearchParams(window.location.search);
+                const focusPassengerId = urlParams.get('pasajero_id');
+
+                if (focusPassengerId) {
+                    const selector = document.getElementById('passengerFilter');
+                    if (selector) {
+                        selector.value = focusPassengerId;
+                        if (window.choicesInstances && window.choicesInstances['passengerFilter']) {
+                            window.choicesInstances['passengerFilter'].setChoiceByValue(focusPassengerId.toString());
+                        }
+                    }
+                    // Auto-render trajectory for this passenger as requested
+                    renderTrajectories(true);
+                } else {
+                    renderBase();
+                }
+            } catch (e) {
+                console.error("Error during init:", e);
+            }
+        }
+
+        function populateNationalityFilter() {
+            const nFilter = document.getElementById('nationalityFilter');
+            if (!nFilter) return;
+
+            const countries = [...new Set(geoData.map(p => p.pais).filter(c => c))].sort();
+            
+            if (window.choicesInstances && window.choicesInstances['nationalityFilter']) {
+                window.choicesInstances['nationalityFilter'].destroy();
+                delete window.choicesInstances['nationalityFilter'];
+            }
+            nFilter.removeAttribute('data-choices-initialized');
+            nFilter.removeAttribute('data-choice-init');
+
+            nFilter.innerHTML = '<option value="all">Todas las nacionalidades</option>';
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                nFilter.appendChild(opt);
+            });
+
+            if (typeof window.reinitChoices === 'function') {
+                window.reinitChoices(nFilter.parentElement);
+            }
+        }
+
+        function populatePassengerFilter() {
+            const pFilter = document.getElementById('passengerFilter');
+            const filteredData = filterLocal(geoData);
+            const sortedData = [...filteredData].sort((a,b) => (a.apellidos || "").localeCompare(b.apellidos || ""));
+            
+            // Destroy if already initialized to force a fresh set with search enabled
+            if (window.choicesInstances && window.choicesInstances['passengerFilter']) {
+                window.choicesInstances['passengerFilter'].destroy();
+                delete window.choicesInstances['passengerFilter'];
+            }
+            pFilter.removeAttribute('data-choices-initialized');
+            pFilter.removeAttribute('data-choice-init'); // Match standard spelling
+
+            // Fill with options
+            pFilter.innerHTML = '<option value="all">Todos los pasajeros</option>';
+            sortedData.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.apellidos || ""}, ${p.nombre || ""}`;
+                pFilter.appendChild(opt);
+            });
+
+            // Re-initialize via global helper
+            if (typeof window.reinitChoices === 'function') {
+                window.reinitChoices(pFilter.parentElement);
+            }
+        }
+
+        function updateStats() {
+            const filtered = filterLocal(geoData);
+            document.getElementById('stat-total').innerText = filtered.length;
+            document.getElementById('stat-survived').innerText = filtered.filter(p => p.estado === 'SOBREVIVIENTE').length;
+            document.getElementById('stat-deceased').innerText = filtered.filter(p => p.estado && (p.estado.includes('FALLECIDO') || p.estado.includes('DESAPARECIDO'))).length;
+        }
+
+        function formatAge(age) {
+            if (!age) return '?';
+            const ageNum = parseFloat(age);
+            if (ageNum < 1) {
+                const months = Math.round(ageNum * 12);
+                return months === 1 ? '1 mes' : (months === 0 ? '< 1 mes' : `${months} meses`);
+            } else {
+                const years = Math.floor(ageNum);
+                return years === 1 ? '1 año' : `${years} años`;
+            }
+        }
+
+        function filterLocal(data) {
+            const clase = document.getElementById('classFilter').value;
+            const survives = document.getElementById('survivorsOnly').checked;
+            const childOnly = document.getElementById('btn-filter-children').classList.contains('active');
+            const womenOnly = document.getElementById('btn-filter-women').classList.contains('active');
+            const sizeFilter = document.getElementById('familySizeFilter').value;
+            const nationality = document.getElementById('nationalityFilter')?.value || 'all';
+
+            return data.filter(p => {
+                if (nationality !== 'all' && p.pais !== nationality) return false;
+                // Robust class matching (handles "1ª" matching "1ª Clase", etc.)
+                if (clase !== 'all') {
+                    if (!p.clase) return false;
+                    const pClase = p.clase.toString().toUpperCase();
+                    const fClase = clase.toString().toUpperCase();
+                    // Match if filter is contained in value or vice-versa, or if first words match (e.g. "1ª")
+                    const firstWordFilter = fClase.split(' ')[0];
+                    if (!pClase.includes(firstWordFilter) && !pClase.includes(fClase)) return false;
+                }
+                if (survives && p.estado && (p.estado.includes('FALLECIDO') || p.estado.includes('DESAPARECIDO'))) return false;
+                if (childOnly && (!p.edad || p.edad >= 14)) return false;
+                if (womenOnly && p.sexo !== 'Mujer') return false;
+
+                if (sizeFilter !== 'all') {
+                    const size = window.passengerFamilySize ? (window.passengerFamilySize[p.id] || 1) : 1;
+                    if (sizeFilter === '10+') {
+                        if (size < 10) return false;
+                    } else {
+                        if (size != parseInt(sizeFilter)) return false;
+                    }
+                }
+
+                // Ensure they have minimal data for trajectory if that's what we need
+                if (!p.lat || !p.lon) {
+                    // If it's for trajectories, they might still have origin/dest ports
+                    // but filterLocal is general. We'll keep it as is.
+                }
+
+                return true;
+            });
+        }
+
+        // --- VISUALIZATION ENGINES ---
+        function clearAnalyticLayers() {
+            if (heatmapLayer) map.removeLayer(heatmapLayer);
+            map.removeLayer(trajectoriesLayer);
+            map.removeLayer(familyLayer);
+            trajectoriesLayer.clearLayers();
+            familyLayer.clearLayers();
+            const btns = document.querySelectorAll('.btn-analitica');
+            btns.forEach(b => b.classList.remove('active'));
+            document.getElementById('trajectories-options').style.display = 'none';
+        }
+
+        function renderBase() {
+            const mode = document.querySelector('input[name="viewMode"]:checked').id;
+            clusters.clearLayers();
+            if (choroplethLayer) map.removeLayer(choroplethLayer);
+
+            if (mode === 'modeClusters') {
+                document.getElementById('choroplethOptions').style.display = 'none';
+                const filtered = filterLocal(geoData);
+                filtered.forEach(p => {
+                    if (p.lat && p.lon) {
+                        let marker;
+                        if (window._isManualEdit) {
+                            // In manual mode, use a standard marker for better visibility and draggability
+                            marker = L.marker([p.lat, p.lon], { draggable: true });
+                            marker.on('dragend', (e) => handleMarkerDragEnd(p.id, e.target.getLatLng()));
+                        } else {
+                            marker = L.circleMarker([p.lat, p.lon], {
+                                radius: 6, weight: 1, color: '#000', opacity: 1, fillOpacity: 0.8,
+                                fillColor: p.clase && p.clase.includes('1ª') ? '#00d4ff' : (p.clase && p.clase.includes('2ª') ? '#00ff88' : '#ff9800')
+                            });
+                        }
+                        marker.bindTooltip(`
+                            <div class="sirio-family-popup" style="min-width: 200px;">
+                                <a href="/pasajeros/ficha/${p.id}" class="text-decoration-none" style="color:#ff9800; font-size: 0.9rem; font-weight: bold;">
+                                    <b>${p.nombre} ${p.apellidos}</b>
+                                </a>
+                                <br>
+                                <small class="opacity-50 text-uppercase" style="font-size: 0.6rem;">${p.municipio ? p.municipio + ', ' : ''}${p.provincia || p.region || p.pais}</small>
+                                <hr class="my-2 opacity-25">
+                                <div class="small">
+                                    <span class="opacity-75">Edad:</span> <span class="fw-bold">${formatAge(p.edad)}</span><br>
+                                    <span class="opacity-75">Clase:</span> <span class="fw-bold">${p.clase}</span><br>
+                                    <span class="opacity-75">Estado:</span> <span class="fw-bold text-success">${p.estado}</span>
+                                </div>
+                            </div>
+                        `, { className: 'sirio-popup-custom', sticky: true, interactive: true, opacity: 1 });
+                        clusters.addLayer(marker);
+                    }
+                });
+                map.addLayer(clusters);
+            } else {
+                document.getElementById('choroplethOptions').style.display = 'block';
+                renderChoropleth(false);
+            }
+        }
+
+        // --- UTILS PERFIL GEOGRÁFICO ---
+        const isoMapping = {
+            'espana': 'ESP', 'italia': 'ITA', 'argentina': 'ARG', 'uruguay': 'URY',
+            'brasil': 'BRA', 'siria': 'SYR', 'libano': 'LBN', 'turquia': 'TUR',
+            'suiza': 'CHE', 'alemania': 'DEU', 'eeuu': 'USA', 'croacia': 'HRV',
+            'chequia': 'CZE', 'eslovaquia': 'SVK', 'eslovenia': 'SVN', 'polonia': 'POL',
+            'rumania': 'ROU', 'ucrania': 'UKR', 'inglaterra': 'GBR', 'austria': 'AUT', 
+            'hungria': 'HUN', 'montenegro': 'MNE', 'francia': 'FRA', 'rusia': 'RUS'
+        };
+        // Add variations for specific DB names to map back to these ISO keys
+        const countryAliases = {
+            'reinounido': 'inglaterra',
+            'imperiootomano': 'turquia',
+            'imperioaustrohungaro': 'austria',
+            'austrohungria': 'austria',
+            'estadosunidos': 'eeuu',
+            'bolivia': 'bolivia' // Add if needed
+        };
+
+        const historicalEntities = {
+            'austro-hungria': ['AUT', 'HUN', 'HRV', 'CZE', 'SVK', 'SVN', 'POL', 'ROU', 'UKR'],
+            'imperio-otomano': ['TUR', 'SYR', 'LBN', 'ISR', 'JOR', 'IRQ', 'SAU', 'EGY', 'GRV', 'BGR']
+        };
+
+        async function renderChoropleth(isMortalityMode) {
+            const level = document.getElementById('geoLevel').value;
+            const filtered = filterLocal(geoData);
+
+            // Stats aggregation
+            const counts = {};
+            const deaths = {};
+            filtered.forEach(p => {
+                const normPais = normalizeName(p.pais);
+                const isoKey = countryAliases[normPais] || normPais;
+                const iso = isoMapping[isoKey] || '';
+                const name = normalizeName(level === 'paises' ? p.pais : (level === 'regions' ? p.region : p.provincia));
+                const key = iso + ":" + name;
+                if (name) {
+                    counts[key] = (counts[key] || 0) + 1;
+                    if (p.estado && (p.estado.includes('FALLECIDO') || p.estado.includes('DESAPARECIDO'))) {
+                        deaths[key] = (deaths[key] || 0) + 1;
+                    }
+                }
+            });
+
+            // Fetch GeoJSON Dynamically (Truncated for brevity in this replace call, but keeping logic)
+            let geoFiles = [];
+            if (level === 'paises') {
+                geoFiles = ['/static/geojson/world_countries.json'];
+            } else {
+                const activeCountries = new Set();
+                filtered.forEach(p => {
+                    const normPais = normalizeName(p.pais);
+                    if (normPais) activeCountries.add(normPais);
+                });
+
+                const levelNum = level === 'regions' ? 1 : 2;
+                activeCountries.forEach(pais => {
+                    const iso = isoMapping[pais];
+                    if (iso) {
+                        let n = levelNum;
+                        if (iso === 'GBR' && levelNum === 2) n = 3; // Use LAD for GBR provinces
+                        geoFiles.push(`/static/geojson/gadm41_${iso}_${n}.json`);
+                    }
+                });
+
+                if (geoFiles.length === 0) {
+                    geoFiles = [`/static/geojson/gadm41_ITA_${levelNum}.json`, `/static/geojson/gadm41_ESP_${levelNum}.json`];
+                }
+            }
+
+            const getFeatureISO = (f) => {
+                const p = f.properties;
+                return p.GID_0 || p.ISO || p.ISO_A3 || p.iso_a3 || p.ADM0_A3 || p.ADM0_ISO || p['ISO3166-1-Alpha-3'] || p.ISO_INJECTED || '';
+            };
+
+            const layers = (await Promise.all(geoFiles.map(async f => {
+                try {
+                    const r = await fetch(f);
+                    if (!r.ok) return null;
+                    const d = await r.json();
+                    const m = f.match(/gadm41_([A-Z]{3})_/);
+                    if (m && d.features) {
+                        d.features.forEach(feat => {
+                            if (!feat.properties.GID_0 && !feat.properties.ISO) feat.properties.ISO_INJECTED = m[1];
+                        });
+                    }
+                    return d;
+                } catch(e) { return null; }
+            }))).filter(l => l !== null);
+            let unfiteredFeatures = layers.flatMap(l => l.features);
+
+            // NOTE: Historical merge block removed to ensure visual integrity and database alignment
+
+            // Sort features by count
+            unfiteredFeatures.sort((a, b) => {
+                const getFeatureNameKey = (f) => {
+                    const l0 = f.properties.ADMIN || f.properties.COUNTRY || f.properties.NAME_0 || f.properties.name || f.properties.NAME;
+                    const l1 = f.properties.NAME_1;
+                    const l2 = f.properties.LAD13NM || f.properties.NAME_2;
+                    const iso = getFeatureISO(f);
+                    const name = normalizeName(level === 'paises' ? l0 : (level === 'provincias' ? (l2 || l1) : l1));
+                    return iso + ":" + name;
+                };
+                return (counts[getFeatureNameKey(a)] || 0) - (counts[getFeatureNameKey(b)] || 0);
+            });
+
+            const combined = { type: "FeatureCollection", features: unfiteredFeatures };
+            if (choroplethLayer) map.removeLayer(choroplethLayer);
+
+            choroplethLayer = L.geoJson(combined, {
+                pane: 'choroplethPane',
+                style: function (f) {
+                    const iso = getFeatureISO(f);
+                    const l0 = f.properties.ADMIN || f.properties.COUNTRY || f.properties.NAME_0 || f.properties.name || f.properties.NAME || f.properties.sovereignt;
+                    const l1 = f.properties.NAME_1 || f.properties.name || f.properties.NAME;
+                    const l2 = f.properties.LAD13NM || f.properties.NAME_2 || f.properties.name || f.properties.NAME;
+                    let nf = level === 'paises' ? l0 : (level === 'provincias' ? (l2 || l1) : l1);
+                    if (level === 'regions' && iso === 'GBR' && (!nf || nf === 'NA')) nf = 'England';
+                    const name = normalizeName(nf);
+                    const key = iso + ":" + name;
+                    const val = counts[key] || 0;
+                    const mortality = val > 0 ? (deaths[key] || 0) / val : 0;
+
+                    let color = '#333';
+                    if (isMortalityMode) {
+                        color = mortality > 0.6 ? '#800026' : mortality > 0.4 ? '#BD0026' : mortality > 0.2 ? '#E31A1C' : mortality > 0 ? '#FEB24C' : '#333';
+                    } else {
+                        color = val > 50 ? '#800026' : val > 20 ? '#BD0026' : val > 10 ? '#E31A1C' : val > 5 ? '#FC4E2A' : val > 0 ? '#FEB24C' : '#333';
+                    }
+
+                    // DYNAMIC HEIGHT LEVEL
+                    let levelClass = 'poly-3d-level-0';
+                    if (val > 40) levelClass = 'poly-3d-level-5';
+                    else if (val > 20) levelClass = 'poly-3d-level-4';
+                    else if (val > 10) levelClass = 'poly-3d-level-3';
+                    else if (val > 5) levelClass = 'poly-3d-level-2';
+                    else if (val > 0) levelClass = 'poly-3d-level-1';
+
+                    let classNameStr = levelClass;
+                    if (val > 0) {
+                        classNameStr = 'poly-3d-top ' + levelClass;
+                    }
+
+                    return {
+                        weight: 1,
+                        opacity: 1,
+                        color: '#444',
+                        dashArray: '',
+                        fillOpacity: 0.8,
+                        fillColor: color,
+                        className: classNameStr
+                    };
+                },
+                onEachFeature: function (f, layer) {
+                    const iso = getFeatureISO(f);
+                    const l0 = f.properties.ADMIN || f.properties.COUNTRY || f.properties.NAME_0 || f.properties.name || f.properties.NAME || f.properties.sovereignt;
+                    const l1 = f.properties.NAME_1 || f.properties.name || f.properties.NAME;
+                    const l2 = f.properties.LAD13NM || f.properties.NAME_2 || f.properties.name || f.properties.NAME;
+                    let nf = level === 'paises' ? l0 : (level === 'provincias' ? (l2 || l1) : l1);
+                    if (level === 'regions' && iso === 'GBR' && (!nf || nf === 'NA')) nf = 'England';
+                    const name = normalizeName(nf);
+                    const key = iso + ":" + name;
+                    const val = counts[key] || 0;
+
+                    layer.on({
+                        mouseover: e => {
+                            const activeAnalytic = document.querySelector('.btn-analitica.active');
+                            const excludePopups = ['btn-heatmap', 'btn-families', 'btn-trajectories'];
+                            if (activeAnalytic && excludePopups.includes(activeAnalytic.id)) return;
+
+                            const d = deaths[key] || 0;
+                            if (val === 0) return;
+
+                            const pct = val > 0 ? Math.round((d / val) * 100) : 0;
+                            const countryDisplayNames = {
+                                'espana': 'España', 'italia': 'Italia', 'siria': 'Siria', 'argentina': 'Argentina',
+                                'eeuu': 'Estados Unidos', 'austria': 'Imperio Austro-Húngaro', 'turquia': 'Turquía / Imp. Otomano',
+                                'uruguay': 'Uruguay', 'brasil': 'Brasil', 'libano': 'Líbano', 'croacia': 'Croacia',
+                                'montenegro': 'Montenegro', 'suiza': 'Suiza', 'alemania': 'Alemania'
+                            };
+                            const displayName = (level === 'paises' && countryDisplayNames[name]) ? countryDisplayNames[name] : (level === 'paises' ? l0 : (l1 + " " + (l2 || "")));
+
+                            const tooltip = L.tooltip({ sticky: true, className: 'sirio-popup-custom', opacity: 1, interactive: true })
+                                .setContent(`
+                                    <div class="sirio-family-popup" style="min-width: 150px;">
+                                        <strong style="color:var(--ds-accent-primary); font-size:0.85rem;">${displayName}</strong><br>
+                                        <small class="opacity-50 text-uppercase">${level === 'paises' ? "País" : (level === 'provincias' ? "Provincia" : "Región")}</small>
+                                        <hr class="my-2 opacity-25">
+                                        <div class="small">
+                                            Pasajeros: <span class="fw-bold">${val}</span><br>
+                                            Fallecidos: <span class="fw-bold text-danger">${d}</span> (${pct}%)
+                                        </div>
+                                    </div>
+                                `);
+                            layer.bindTooltip(tooltip).openTooltip(e.latlng);
+                        }
+                    });
+                }
+            }).addTo(map);
+        }
+
+        function normalizeName(n) {
+            if (!n) return "";
+            // Handle pipe separator if database contains "Region | Province"
+            let str = n.toString();
+            if (str.includes('|')) str = str.split('|').pop().trim();
+
+            const variations = {
+                'sardegna': ['cerdena', 'sardinia', 'sardegna'],
+                'piemonte': ['piamonte', 'piemonte'],
+                'lazio': ['lacio', 'lazio'],
+                'oristano': ['oristan', 'oristano'],
+                'napoli': ['napoles', 'napoli'],
+                'torino': ['turin', 'torino'],
+                'milano': ['milan', 'milano'],
+                'genova': ['genova', 'genova'],
+                'venezia': ['venecia', 'venezia'],
+                'firenze': ['florencia', 'firenze'],
+                'palermo': ['palermo', 'palermo'],
+                'messina': ['mesina', 'messina'],
+                'reggiocalabria': ['regiodecalabria', 'reggiocalabria', 'regio de calabria'],
+                'bergamo': ['bergamo', 'bergamo'],
+                'udine': ['udine', 'udine'],
+                'padova': ['padua', 'padova'],
+                'siracusa': ['siracusa', 'siracusa'],
+                'ravenna': ['ravena', 'ravenna'],
+                'verona': ['verona', 'verona'],
+                'viterbo': ['viterbo', 'viterbo'],
+                'vicenza': ['vicenza', 'vicenza'],
+                'cagliari': ['caller', 'cagliari'],
+                'sassari': ['sassari', 'tattari'],
+                'espana': ['espana', 'espana', 'spain', 'espagne', 'espanya'],
+                'italia': ['italia', 'italy', 'italie', 'italien'],
+                'brasil': ['brasil', 'brazil', 'bresil'],
+                'eeuu': ['estadosunidos', 'eeuu', 'usa', 'unitedstates', 'unitedstatesofamerica', 'estatounidos', 'us'],
+                'alemania': ['alemania', 'germany', 'allemagne', 'deutschland'],
+                'francia': ['francia', 'france', 'frankreich'],
+                'rusia': ['rusia', 'russia', 'russianfederation'],
+                'inglaterra': ['inglaterra', 'england', 'unitedkingdom', 'reinounido', 'reine-uni', 'uk'],
+                'siria': ['siria', 'syria', 'syrie'],
+                'argentina': ['argentina', 'argentine'],
+                'uruguay': ['uruguay'],
+                'croacia': ['croacia', 'croatia', 'croatie'],
+                'montenegro': ['montenegro'],
+                'libano': ['libano', 'lebanon', 'liban'],
+                'suiza': ['suiza', 'switzerland', 'suisse', 'helvetia'],
+                'austria': ['austria', 'autriche', 'austria-hungary', 'austro-hungria', 'austrohungria', 'hungria', 'hungary', 'imperioaustrohungaro', 'imperioaustrohungaro'],
+                'turquia': ['turquia', 'turkey', 'turquie', 'imperiootomano', 'ottomanempire', 'ottoman', 'ankara', 'ancara'],
+                'buenosaires': ['buenosaires', 'buenos aires', 'baires', 'capitalfederal', 'cf', 'buenosayres'],
+                'santafe': ['santafe', 'santa fe', 'provincianodesantafe'],
+                'montevideo': ['montevideo'],
+                'saopaulo': ['saopaulo', 'sao paulo']
+            };
+
+            const countryDisplayNames = {
+                'espana': 'España',
+                'italia': 'Italia',
+                'siria': 'Siria',
+                'argentina': 'Argentina',
+                'eeuu': 'Estados Unidos',
+                'austria': 'Imperio Austro-Húngaro',
+                'turquia': 'Turquía / Imp. Otomano',
+                'uruguay': 'Uruguay',
+                'brasil': 'Brasil',
+                'libano': 'Líbano',
+                'croacia': 'Croacia',
+                'montenegro': 'Montenegro',
+                'suiza': 'Suiza',
+                'alemania': 'Alemania',
+                'francia': 'Francia',
+                'rusia': 'Rusia',
+                'inglaterra': 'Reino Unido / Inglaterra'
+            };
+
+            let norm = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+                .replace(/provincia de/gi, "")
+                .replace(/departamento de/gi, "")
+                .replace(/department of/gi, "")
+                .replace(/provincia/gi, "")
+                .replace(/departamento/gi, "")
+                .replace(/[\s-]/g, "").trim();
+            for (const [key, vars] of Object.entries(variations)) {
+                if (vars.includes(norm)) return key;
+                // Double check variations without spaces/accents already done by 'norm'
+            }
+            return norm;
+        }
+
+        // --- ANALYTIC ACTIONS ---
+        function renderHeatmap(force = false) {
+            if (!force && document.getElementById('btn-heatmap').classList.contains('active')) {
+                clearAnalyticLayers();
+                return;
+            }
+            clearAnalyticLayers();
+            const filtered = filterLocal(geoData);
+            const points = filtered.map(p => [p.lat, p.lon, 0.5]);
+            heatmapLayer = L.heatLayer(points, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 10,
+                pane: 'heatmapPane'
+            }).addTo(map);
+            document.getElementById('btn-heatmap').classList.add('active');
+        }
+        document.getElementById('btn-heatmap').onclick = () => renderHeatmap();
+
+        function renderFamilies(force = false) {
+            if (!force && document.getElementById('btn-families').classList.contains('active')) {
+                clearAnalyticLayers();
+                return;
+            }
+            clearAnalyticLayers();
+            const sizeFilter = document.getElementById('familySizeFilter')?.value || 'all';
+            const survivorsOnly = document.getElementById('survivorsOnly')?.checked || false;
+            const clase = document.getElementById('classFilter')?.value || 'all';
+            const pFilter = document.getElementById('passengerFilter');
+            let passengerId = pFilter ? pFilter.value : 'all';
+            if (!passengerId || passengerId === '') passengerId = 'all';
+
+            const childOnly = document.getElementById('btn-filter-children')?.classList.contains('active');
+            const womenOnly = document.getElementById('btn-filter-women')?.classList.contains('active');
+
+            let markerCount = 0;
+            const normalizedClaseFilter = clase.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+            const firstWordFilter = normalizedClaseFilter.split(' ')[0];
+
+            familyData.forEach(fam => {
+                // Filter members by survivor status AND class
+                const members = fam.members.filter(m => {
+                    const ageNum = m.edad ? parseFloat(m.edad) : null;
+                    const sexNorm = (m.sexo || "").toString().toUpperCase().trim();
+                    if (survivorsOnly && m.estado !== 'SOBREVIVIENTE') return false;
+                    if (childOnly && (ageNum === null || ageNum >= 14)) return false;
+                    if (womenOnly && sexNorm !== 'MUJER') return false;
+                    
+                    if (clase !== 'all') {
+                        // FIX: Added safety check for missing/null class
+                        if (!m.clase) return false;
+                        const mClaseNorm = m.clase.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                        if (!mClaseNorm.includes(firstWordFilter) && !mClaseNorm.includes(normalizedClaseFilter)) return false;
+                    }
+                    return true;
+                });
+
+                if (members.length === 0) return;
+
+                // Si hay un pasajero específico, solo mostrar su familia
+                if (passengerId !== 'all') {
+                    const hasTarget = members.some(m => m.id == passengerId);
+                    if (!hasTarget) return;
+                }
+
+                // Use total family count for the size filter to keep it consistent with pin view
+                const displayCount = members.length;
+                const totalCount = fam.count || 1;
+                
+                if (sizeFilter !== 'all') {
+                    if (sizeFilter === '10+') {
+                        if (totalCount < 10) return;
+                    } else {
+                        if (totalCount != parseInt(sizeFilter)) return;
+                    }
+                }
+
+                const isVerified = fam.is_verified || false;
+                const iconClass = isVerified ? 'family-marker-icon family-marker-verified' : 'family-marker-icon';
+
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class="${iconClass}">${displayCount}</div>`,
+                    iconSize: [20, 20]
+                });
+                const marker = L.marker([fam.lat, fam.lon], { icon }).addTo(familyLayer);
+                markerCount++;
+
+                const typeIcon = isVerified ? '<i class="fa-solid fa-dna text-success me-1"></i> ' : '<i class="fa-solid fa-users text-warning me-1"></i> ';
+                const typeLabel = isVerified ? '<div class="badge-sirio bg-success text-dark mt-1 mb-1">Linaje Confirmado</div>' : '<div class="badge-sirio bg-warning text-dark mt-1 mb-1">Grupo Sugerido</div>';
+
+                const tableRows = members.map(m => {
+                    const statusClass = m.estado === 'SOBREVIVIENTE' ? 'text-success' : 'text-danger';
+                    
+                    // Formatear Edad (Meses para < 1, Años para >= 1)
+                    let ageDisplay = formatAge(m.edad);
+
+                    // Separamos el nombre del parentesco si existe
+                    const parts = m.nombre.split(' (');
+                    const cleanName = parts[0];
+                    const rel = parts.length > 1 ? ` (${parts[1]}` : '';
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="member-name">
+                                    <a href="/pasajeros/ficha/${m.id}" target="_blank" style="color: inherit; text-decoration: none; border-bottom: 1px dashed rgba(255,255,255,0.2);">
+                                        ${cleanName}
+                                    </a>
+                                </div>
+                                <div class="small opacity-75" style="font-size: 0.65rem; color: #888;">${rel}</div>
+                            </td>
+                            <td class="text-center">${ageDisplay}</td>
+                            <td class="text-end fw-bold ${statusClass}">${m.estado}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const content = `
+                    <div class="sirio-family-popup" style="min-width: 280px; padding-bottom: 5px; font-family: var(--ds-font-mono, 'JetBrains Mono', monospace);">
+                        <strong style="color:#ff9800; font-size:1rem; letter-spacing:1px;">${typeIcon}${fam.surname}</strong><br>
+                        <small class="opacity-50 text-uppercase" style="font-size:0.6rem; letter-spacing:1px;">${fam.province}</small>
+                        <hr style="border-color: rgba(255,152,0,0.5); margin: 5px 0 10px 0;">
+                        ${typeLabel}
+                        
+                        <table class="sirio-family-table">
+                            <thead>
+                                <tr>
+                                    <th>Pasajero / Relación</th>
+                                    <th class="text-center">Edad</th>
+                                    <th class="text-end">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                marker.bindPopup(content, { className: 'sirio-popup-custom', maxWidth: 400 });
+            });
+            familyLayer.addTo(map);
+            document.getElementById('btn-families').classList.add('active');
+            console.log(`Families rendered: ${markerCount} groups found.`);
+        }
+
+        document.getElementById('btn-families').onclick = () => renderFamilies();
+
+        function renderTrajectories(force = false) {
+            if (!force && document.getElementById('btn-trajectories').classList.contains('active')) {
+                clearAnalyticLayers();
+                return;
+            }
+            console.log("Rendering trajectories (Dynamic Chronology Mode)...");
+            clearAnalyticLayers();
+            const trajOptions = document.getElementById('trajectories-options');
+            trajOptions.style.display = 'block';
+
+            const passengerId = document.getElementById('passengerFilter').value;
+            const arcType = document.querySelector('input[name="arcType"]:checked')?.value || 'all';
+
+            const filtered = filterLocal(geoData).filter(p => {
+                if (passengerId !== 'all' && p.id != passengerId) return false;
+                // Consider arrived if they have a final destination or arrived flag
+                const arrived = p.ha_llegado_destino || p.ciudad_destino_final || p.puerto_retorno;
+                const wrecked = p.ha_naufragado || (p.situacion_post_naufragio && p.situacion_post_naufragio !== 'Ninguno');
+                return arrived || wrecked;
+            });
+
+            const routes = {};
+
+            filtered.forEach(p => {
+                const stops = [];
+                const embort = (p.puerto_embarque || "").trim().toUpperCase();
+                const destStr = (p.ciudad_destino_final || p.ciudad_destino || "").trim().toUpperCase();
+
+                // Helper to add stop with duplication check
+                const addStop = (coord, name, date, phase) => {
+                    if (!coord) return;
+                    let dateStr = "";
+                    if (date) {
+                        const d = new Date(date);
+                        if (!isNaN(d)) {
+                            dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        } else if (typeof date === 'string') {
+                            dateStr = date;
+                        }
+                    }
+                    
+                    if (stops.length === 0 || stops[stops.length-1].name !== name) {
+                        stops.push({ coord: [...coord], name, date: dateStr, phase: phase || 'pre' }); 
+                    } else if (dateStr && !stops[stops.length-1].date) {
+                        stops[stops.length-1].date = dateStr;
+                    }
+                };
+
+                // 1. Hometown / Birthplace (Stop 0)
+                if (p.lat && p.lon) {
+                    addStop([p.lat, p.lon], p.municipio || p.pais || "Origen", null, 'pre');
+                }
+
+                // 2. Journey Chronology based on specific boarding dates/ports (S.S. Sirio itinerary)
+                
+                // Segment: Nápoles
+                if (p.fecha_emb_napoles || embort.includes('NAPOLES')) {
+                    addStop(locationCoords['Napoles'], "Nápoles", p.fecha_emb_napoles, 'pre');
+                }
+
+                // Segment: Génova
+                if (p.fecha_emb_genova || embort.includes('GÉNOVA') || embort.includes('GENOVA')) {
+                    addStop(locationCoords['Genova'], "Génova", p.fecha_emb_genova, 'pre');
+                }
+
+                // Slot for Palermo if it ever appears in specific data (optional but kept as fallback for trip info)
+                // if (p.fecha_emb_palermo) addStop(locationCoords['Palermo'], "Palermo");
+
+                // Segment: Barcelona (Can be boarding OR intermediate OR destination)
+                if (p.fecha_emb_barcelona || embort.includes('BARCELONA') || destStr.includes('BARCELONA')) {
+                    let bcnDate = p.fecha_emb_barcelona;
+                    if (!bcnDate && destStr.includes('BARCELONA') && p.fecha_retorno) {
+                        bcnDate = p.fecha_retorno;
+                    }
+                    addStop(locationCoords['Barcelona'], "Barcelona", bcnDate, 'pre');
+                }
+
+                // 3. THE WRECK (If applicable)
+                if (p.ha_naufragado) {
+                    addStop(wreckPoint, "Naufragio (Cabo de Palos)", p.fecha_hundimiento, 'pre');
+                }
+
+                // 4. Rescue / Survival Leg
+                const isSurvivor = p.estado === 'SOBREVIVIENTE' || (p.estado && p.estado.includes('SOBREVIVIENTE'));
+                
+                if (isSurvivor && p.ha_naufragado) {
+                    if (p.en_lista_italia_ba || p.en_lista_italia_mvd) {
+                         addStop(rescuePoint, "Rescate (España)", p.fecha_llegada_cartagena, 'post');
+                         if (p.en_lista_italia_ba) addStop(locationCoords['Buenos Aires'], "Buenos Aires (vía Italia)", p.fecha_retorno, 'post');
+                         else if (p.en_lista_italia_mvd) addStop(locationCoords['Montevideo'], "Montevideo (vía Italia)", p.fecha_retorno, 'post');
+                    } else if (p.en_lista_ravena_sp) {
+                         addStop(locationCoords['Santos'], "Brasil (vía Ravena)", p.fecha_retorno, 'post');
+                    } else if (p.en_lista_diana_bcn) {
+                         addStop(locationCoords['Barcelona'], "Barcelona (vía Diana)", p.fecha_retorno, 'post');
+                    } else if (p.en_lista_orione_ge) {
+                         addStop(locationCoords['Genova'], "Génova (vía Orione)", p.fecha_retorno, 'post');
+                    } else if (p.situacion_post_naufragio && p.situacion_post_naufragio.includes('Retorno')) {
+                         addStop(rescuePoint, "Rescate (España/Cartagena)", p.fecha_llegada_cartagena, 'post');
+                         const returnPort = p.puerto_retorno || "Génova";
+                         if (locationCoords[returnPort]) addStop(locationCoords[returnPort], `Retorno a ${returnPort}`, p.fecha_retorno, 'post');
+                         else if (returnPort.toUpperCase().includes('GENOVA')) addStop(locationCoords['Genova'], "Retorno a Génova", p.fecha_retorno, 'post');
+                         else if (returnPort.toUpperCase().includes('BARCELONA')) addStop(locationCoords['Barcelona'], "Retorno a Barcelona", p.fecha_retorno, 'post');
+                    } else if (destStr) {
+                         addStop(rescuePoint, "Rescate (España)", p.fecha_llegada_cartagena, 'post');
+                         // Dest handling follows
+                    }
+                }
+
+                // 5. Final Destination (if not handled by specific ship list)
+                const lastStopName = stops.length > 0 ? stops[stops.length-1].name : "";
+                if (isSurvivor && !lastStopName.includes('vía') && !lastStopName.includes('Génova') && !lastStopName.includes('Barcelona') && !lastStopName.includes('Retorno')) {
+                    let destCoord = null;
+                    if (destStr.includes('BUENOS AIRES') || destStr.includes('BARES')) { destCoord = locationCoords['Buenos Aires']; }
+                    else if (destStr.includes('MONTEVIDEO') || destStr.includes('MVD')) { destCoord = locationCoords['Montevideo']; }
+                    else if (destStr.includes('SANTOS') || destStr.includes('SP')) { destCoord = locationCoords['Santos']; }
+                    else if (destStr.includes('RIO')) { destCoord = locationCoords['Rio de Janeiro']; }
+                    else if (destStr.includes('GENOVA')) { destCoord = locationCoords['Genova']; }
+                    else if (destStr.includes('BARCELONA')) { destCoord = locationCoords['Barcelona']; }
+                    
+                    if (destCoord) {
+                        addStop(destCoord, "Destino Final", p.fecha_retorno, 'post');
+                    }
+                }
+
+                if (stops.length < 2) return;
+
+                // Group by unique trajectory (using coords and phase to distinguish precise paths)
+                const trajKey = JSON.stringify(stops.map(s => s.coord.join(',') + s.phase)) + "|" + (isSurvivor ? "S" : "D");
+                if (!routes[trajKey]) {
+                    routes[trajKey] = {
+                        stops: stops,
+                        count: 0,
+                        isSurvivor: isSurvivor,
+                        passengers: [],
+                        isReturn: (p.situacion_post_naufragio || "").toUpperCase().includes("RETORNO") || (p.puerto_retorno)
+                    };
+                }
+                routes[trajKey].count++;
+                routes[trajKey].passengers.push({ id: p.id, name: `${p.nombre || ""} ${p.apellidos || ""}`.trim() });
+            });
+
+            const routeEntries = Object.values(routes);
+            console.log("Unique chronological trajectories (Hidelity Mode):", routeEntries.length);
+
+            routeEntries.forEach(route => {
+                const weight = Math.min(Math.max(route.count / 3, 2), 7);
+                const opacity = 0.65;
+                
+                // Colors definition
+                const colorDead = '#ef4444'; // Red for dead
+                const colorPre = '#f59e0b'; // Amber for pre-wreck survivor arc
+                const colorPost = '#10b981'; // Emerald for post-wreck survivor arc
+
+                // Prepare tooltip content for the whole route:
+                const lastStop = route.stops[route.stops.length-1];
+                let finalColor = route.isSurvivor ? ((lastStop.phase === 'post') ? colorPost : colorPre) : colorDead;
+                
+                const passengerListHtml = route.passengers
+                    .sort((a,b) => a.name.localeCompare(b.name))
+                    .map(p => `<a href="/pasajeros/ficha/${p.id}" class="text-decoration-none" style="color:rgba(255,255,255,0.7);">${p.name}</a>`)
+                    .join(' <span class="opacity-25">|</span> ');
+
+                const tooltipHtml = `
+                    <div style="font-family: var(--ds-font-headers); padding: 4px; min-width: 250px;">
+                        <strong class="sirio-trajectory-title" style="color:${finalColor}; font-size: 0.9rem; cursor: help;">
+                            Trayectoria de Pasajeros (${route.count})
+                            <i class="fa-solid fa-users ms-1 opacity-50" style="font-size: 0.7rem;"></i>
+                        </strong>
+                        <div class="sirio-passenger-reveal">
+                            <div class="mb-1 opacity-50 text-uppercase" style="font-size: 0.55rem; letter-spacing: 1px;">Pasajeros en esta ruta:</div>
+                            ${passengerListHtml}
+                        </div>
+                        <hr class="my-1 opacity-25">
+                        <ul class="list-unstyled mb-0" style="font-size: 0.75rem; color: #eee; line-height: 1.6;">
+                            ${route.stops
+                                .map(s => ({ ...s, cleanName: (s.name || "").toString().replace(/^None$/gi, "").trim() }))
+                                .filter(s => s.cleanName && s.cleanName !== "")
+                                .map((s, idx) => `
+                                    <li>
+                                        <span class="opacity-50">${idx+1}.</span> 
+                                        <b>${s.cleanName}</b> ${s.date ? `<span class="badge bg-dark bg-opacity-50 ms-1">${s.date}</span>` : ''}
+                                    </li>
+                                `).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                for (let i = 1; i < route.stops.length; i++) {
+                    const p1 = route.stops[i-1].coord;
+                    const p2 = route.stops[i].coord;
+                    const phase = route.stops[i].phase;
+                    
+                    let color = colorDead;
+                    if (route.isSurvivor) {
+                        color = (phase === 'post') ? colorPost : colorPre;
+                    }
+                    
+                    const dLat = p2[0] - p1[0];
+                    const dLon = p2[1] - p1[1];
+                    const dist = Math.sqrt(dLat*dLat + dLon*dLon);
+                    
+                    let pathData = ['M', p1];
+                    let midLat = p2[0];
+                    let midLon = p2[1];
+
+                    let curveMidLat, curveMidLon;
+                    
+                    if (dist > 1) {
+                        const offset = dist * 0.15; 
+                        midLat = (p1[0] + p2[0]) / 2 + (dLon > 0 ? offset/2 : -offset/2);
+                        midLon = (p1[1] + p2[1]) / 2 + (dLat > 0 ? -offset/2 : offset/2);
+                        pathData.push('Q', [midLat, midLon], p2);
+                        
+                        curveMidLat = 0.25 * p1[0] + 0.5 * midLat + 0.25 * p2[0];
+                        curveMidLon = 0.25 * p1[1] + 0.5 * midLon + 0.25 * p2[1];
+                    } else {
+                        pathData.push('L', p2);
+                        
+                        curveMidLat = (p1[0] + p2[0]) / 2;
+                        curveMidLon = (p1[1] + p2[1]) / 2;
+                    }
+
+                    if (arcType === 'ida') {
+                        // All pre segments are ida. Post segments are ida ONLY if not returning.
+                        if (phase === 'post' && route.isReturn) continue;
+                    } else if (arcType === 'regreso') {
+                        // Only post segments that are returns.
+                        if (phase !== 'post' || !route.isReturn) continue;
+                    }
+
+                    let arcLayer;
+                    if (typeof L.curve === 'function') {
+                        arcLayer = L.curve(pathData, {
+                            color, weight, opacity, fill: false, pane: 'analyticPane',
+                            className: 'sirio-journey-arc'
+                        });
+                    } else {
+                        arcLayer = L.polyline([p1, p2], {
+                            color, weight, opacity, pane: 'analyticPane',
+                            className: 'sirio-journey-arc'
+                        });
+                    }
+                    arcLayer.bindTooltip(tooltipHtml, { className: 'sirio-popup-custom', sticky: true, interactive: true, opacity: 1 });
+                    arcLayer.bindPopup(tooltipHtml, { className: 'sirio-popup-custom', maxWidth: 400 });
+                    arcLayer.addTo(trajectoriesLayer);
+
+                    // Directional Arrow SVG Marker at midpoint
+                    const tangLat = p2[0] - p1[0];
+                    const tangLon = p2[1] - p1[1];
+                    
+                    // Leaflet y axis is lat (positive is up), x is lon (positive is right)
+                    // Atan2 math angles to CSS rotate (clockwise, 0 at top right):
+                    let angle = Math.atan2(tangLat, tangLon) * (180 / Math.PI);
+                    // CSS Rotate is Clockwise. Up in CSS implies top, which is negative Y in DOM.
+                    // So we invert the angle to match DOM coordinates.
+                    let cssAngle = -angle;
+                    
+                    const arrowHtml = `<div style="transform: translate(-50%, -50%) rotate(${cssAngle}deg); font-size: ${weight * 3 + 8}px; color: ${color}; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">➤</div>`;
+                    let arrowMarker = L.marker([curveMidLat, curveMidLon], {
+                        icon: L.divIcon({ className: 'trajectory-arrow', html: arrowHtml, iconSize: [0,0] }),
+                        pane: 'analyticPane', interactive: true
+                    });
+                    arrowMarker.bindTooltip(tooltipHtml, { className: 'sirio-popup-custom', sticky: true, interactive: true, opacity: 1 });
+                    arrowMarker.bindPopup(tooltipHtml, { className: 'sirio-popup-custom', maxWidth: 400 });
+                    arrowMarker.addTo(trajectoriesLayer);
+                }
+
+                // Destination Marker
+                L.circleMarker(lastStop.coord, {
+                    radius: Math.min(Math.max(route.count / 2, 4), 18), 
+                    color: finalColor, fillColor: finalColor, fillOpacity: 0.8, pane: 'analyticPane'
+                }).addTo(trajectoriesLayer)
+                .bindTooltip(tooltipHtml, { className: 'sirio-popup-custom', sticky: true, interactive: true, opacity: 1 })
+                .bindPopup(tooltipHtml, { className: 'sirio-popup-custom', maxWidth: 400 });
+
+            });
+
+            trajectoriesLayer.addTo(map);
+            document.getElementById('btn-trajectories').classList.add('active');
+        }
+
+        document.getElementById('btn-trajectories').onclick = () => renderTrajectories();
+
+        document.getElementById('btn-mortality').onclick = () => {
+            clearAnalyticLayers();
+            document.getElementById('btn-mortality').classList.add('active');
+            renderChoropleth(true);
+        };
+
+        function refreshActiveAnalytic() {
+            const active = document.querySelector('.btn-analitica.active');
+            if (active) {
+                if (active.id === 'btn-mortality') {
+                    renderChoropleth(true);
+                } else if (active.id === 'btn-families') {
+                    renderFamilies(true);
+                } else if (active.id === 'btn-trajectories') {
+                    renderTrajectories(true);
+                } else if (active.id === 'btn-heatmap') {
+                    renderHeatmap(true);
+                }
+            }
+        }
+
+        ['btn-filter-children', 'btn-filter-women'].forEach(id => {
+            document.getElementById(id).onclick = () => {
+                document.getElementById(id).classList.toggle('active');
+                populatePassengerFilter();
+                updateStats();
+                renderBase();
+                refreshActiveAnalytic();
+            };
+        });
+
+        document.getElementById('btn-reset-analitica').onclick = () => {
+            clearAnalyticLayers();
+            document.getElementById('btn-filter-children').classList.remove('active');
+            document.getElementById('btn-filter-women').classList.remove('active');
+            populatePassengerFilter();
+            updateStats();
+            renderBase();
+        };
+
+        document.getElementById('btn-refresh-map-data').onclick = async () => {
+            const btn = document.getElementById('btn-refresh-map-data');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i> CARGANDO...';
+            btn.disabled = true;
+            
+            await init();
+            
+            btn.innerHTML = originalIcon;
+            btn.disabled = false;
+        };
+
+        document.querySelectorAll('input[name="viewMode"]').forEach(r => r.onchange = () => renderBase());
+        document.getElementById('geoLevel').onchange = () => renderBase();
+        document.getElementById('classFilter').onchange = () => { populatePassengerFilter(); updateStats(); renderBase(); refreshActiveAnalytic(); };
+        document.getElementById('survivorsOnly').onchange = () => { populatePassengerFilter(); updateStats(); renderBase(); refreshActiveAnalytic(); };
+        document.getElementById('passengerFilter').onchange = () => { updateStats(); renderBase(); refreshActiveAnalytic(); };
+        document.getElementById('nationalityFilter').onchange = () => { populatePassengerFilter(); updateStats(); renderBase(); refreshActiveAnalytic(); };
+        document.querySelectorAll('input[name="arcType"]').forEach(r => r.onchange = () => renderTrajectories(true));
+
+        document.getElementById('familySizeFilter').onchange = () => {
+            updateStats();
+            renderBase();
+            refreshActiveAnalytic();
+        };
+
+        // Initialize Draggable Panels (Header as handle)
+        if (typeof makeDraggable === 'function') {
+            const filterPanel = document.getElementById('filterPanel');
+            const analyticPanel = document.getElementById('analyticPanel');
+            
+            if (filterPanel) {
+                console.log("Initializing draggability for filterPanel");
+                makeDraggable(filterPanel);
+            }
+            
+            if (analyticPanel) {
+                console.log("Initializing draggability for analyticPanel");
+                // Ensure it starts at the right position as per CSS
+                analyticPanel.style.right = "20px";
+                analyticPanel.style.left = "auto";
+                
+                // We use a custom handle initialization to avoid the "shifting left" bug
+                if (typeof makeDraggable === 'function') {
+                    makeDraggable(analyticPanel);
+                }
+            }
+        } else {
+            console.error("makeDraggable is not defined! Check gis_manager.js loading.");
+        }
+
+        // --- LOGICA DE ANALISIS IA ---
+        document.getElementById('btn-ai-insight').onclick = async () => {
+            await getAIPopulationInsight();
+        };
+
+        window.closeAIModal = () => {
+            document.getElementById('aiInsightModal').style.display = 'none';
+        };
+
+        async function getAIPopulationInsight() {
+            const filtered = filterLocal(geoData);
+            if (!filtered || filtered.length === 0) {
+                alert("No hay pasajeros en la vista actual para analizar.");
+                return;
+            }
+
+            const modal = document.getElementById('aiInsightModal');
+            const loading = document.getElementById('aiLoading');
+            const body = document.getElementById('aiInsightBody');
+
+            modal.style.display = 'flex';
+            loading.style.display = 'flex';
+            body.innerHTML = '';
+
+            // Calcular estadísticas para la IA
+            const stats = {
+                total: filtered.length,
+                survived: filtered.filter(p => (p.estado || "").includes('SOBREVIVIENTE')).length,
+                deceased: filtered.filter(p => !(p.estado || "").includes('SOBREVIVIENTE')).length,
+                classes: {},
+                gender: {},
+                topOrigins: [],
+                topDestinations: [],
+                avgAge: 0
+            };
+
+            stats.survivalRate = stats.total > 0 ? ((stats.survived / stats.total) * 100).toFixed(1) : 0;
+
+            let totalAge = 0;
+            let ageCount = 0;
+            const origins = {};
+            const dests = {};
+
+            filtered.forEach(p => {
+                // Clases
+                const c = p.clase || "Desconocida";
+                stats.classes[c] = (stats.classes[c] || 0) + 1;
+                
+                // Sexo
+                const s = p.sexo || "Desconocido";
+                stats.gender[s] = (stats.gender[s] || 0) + 1;
+
+                // Edad
+                if (p.edad && !isNaN(p.edad)) {
+                    totalAge += parseInt(p.edad);
+                    ageCount++;
+                }
+
+                // Orígenes
+                const ori = p.provincia || p.pais || "Desconocido";
+                origins[ori] = (origins[ori] || 0) + 1;
+
+                // Destinos
+                const dst = p.puerto_destino || "Desconocido";
+                dests[dst] = (dests[dst] || 0) + 1;
+            });
+
+            stats.avgAge = ageCount > 0 ? (totalAge / ageCount).toFixed(1) : 'N/A';
+            stats.topOrigins = Object.entries(origins).sort((a,b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+            stats.topDestinations = Object.entries(dests).sort((a,b) => b[1] - a[1]).slice(0, 5).map(x => x[0]);
+
+            try {
+                const response = await fetch("{{ url_for('pasajeros.ai_population_insight') }}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({ stats })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (data.success) {
+                    // Formatear markdown básico a HTML
+                    let html = data.insight
+                        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n\n/g, '</p><p>')
+                        .replace(/\n/g, '<br>');
+                    
+                    body.innerHTML = `<div class="ai-report-content"><p>${html}</p></div>`;
+                } else {
+                    body.innerHTML = `<div class="alert alert-warning border-warning border-opacity-25 bg-warning bg-opacity-10 text-warning p-4 rounded-4">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> ${data.error || 'Error desconocido'}
+                    </div>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                body.innerHTML = `<div class="alert alert-danger border-danger border-opacity-25 bg-danger bg-opacity-10 text-danger p-4 rounded-4">
+                    <i class="fa-solid fa-circle-xmark me-2"></i> Error de conexión: ${error.message}
+                </div>`;
+            }
+        }
+
+        init();
+    });
+</script>
+{% endblock %}

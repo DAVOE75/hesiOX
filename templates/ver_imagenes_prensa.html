@@ -1,0 +1,66 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Recortes de Prensa{% endblock %}
+{% block page_title %}Recortes de Prensa{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Imágenes</li>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('noticias.listar') }}" class="btn btn-outline-warning btn-sm">
+    <i class="fa-solid fa-arrow-left me-1"></i> Volver a Biblioteca
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h5 class="text-secondary">{{ ref.titulo or '[Sin título]' }}</h5>
+    </div>
+
+    {% if imagenes and imagenes|length > 0 %}
+    <div class="col-12">
+        <div class="row">
+            {% for img in imagenes %}
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark border-secondary shadow-sm h-100">
+                    <img src="{{ url_for('static', filename='uploads/' ~ img.filename) }}"
+                        class="card-img-top zoomable-img" alt="Recorte de prensa {{ loop.index }}"
+                        style="object-fit: cover; height: 300px;">
+                    <div class="card-body">
+                        <p class="card-text small text-muted">
+                            <i class="fa-regular fa-calendar me-1"></i> {{ img.fecha_subida.strftime('%d/%m/%Y %H:%M')
+                            }}
+                        </p>
+                        <div class="d-flex gap-2 mt-2">
+                            <a href="{{ url_for('static', filename='uploads/' ~ img.filename) }}" target="_blank"
+                                class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm flex-fill"
+                                style="font-size:13px;">
+                                <i class="fa-solid fa-expand"></i> <span>Ver</span>
+                            </a>
+                            <form method="POST" action="{{ url_for('noticias.eliminar_imagen_prensa', imagen_id=img.id) }}"
+                                style="display:inline;" onsubmit="return confirm('¿Eliminar imagen?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <button type="submit"
+                                    class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 shadow-sm flex-fill"
+                                    style="font-size:13px;">
+                                    <i class="fa-solid fa-trash"></i> <span>Eliminar</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> No hay recortes de prensa asociados a esta noticia.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

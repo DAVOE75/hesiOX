@@ -1,0 +1,580 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}{{ 'Editar' if articulo else 'Nuevo' }} Artículo Científico - {{ proyecto.nombre }}{% endblock %}
+{% block page_title %}{{ 'EDITAR' if articulo else 'NUEVO' }} ARTÍCULO CIENTÍFICOS{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Editor Avanzado</span>
+{% endblock %}
+
+{% block top_actions %}
+<button type="button" onclick="guardarBorrador()" class="btn-sirio active fw-bold" title="Guardar">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">Guardar</span>
+</button>
+
+<button type="button" onclick="previsualizarPDF()" class="btn-sirio" title="Vista PDF">
+    <i class="fa-solid fa-file-pdf"></i>
+    <span class="btn-text">Vista Previa</span>
+</button>
+
+<button type="button" onclick="guardarYPublicar()" class="btn-sirio" title="Publicar">
+    <i class="fa-solid fa-upload"></i>
+    <span class="btn-text">Publicar</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id) }}" class="btn-sirio" title="Volver al listado">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">Volver</span>
+</a>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<div id="header-progress-slot" class="header-progress-container d-none d-xl-block"></div>
+
+<div class="vr mx-1 opacity-25 d-none d-xl-block"></div>
+
+<button type="button" class="btn-sirio" title="Eliminar Artículo Científico" id="btn-eliminar-articulo">
+    <i class="fa-solid fa-trash text-danger"></i>
+    <span class="btn-text">Eliminar</span>
+</button>
+{% endblock %}
+
+{% block body_class %}proyecto-style theme-aware-editor{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/modules/13-articulo.css') }}" rel="stylesheet">
+<style>
+    /* ========================================
+       QUILL EDITOR - Tema Adaptable Proyecto Sirio
+       ======================================== */
+    :root {
+        /* Default Dark values */
+        --editor-bg: #0f0f0f;
+        --editor-nav-bg: #181818;
+        --editor-toolbar-bg: #1a1a1a;
+        --editor-panel-bg: #151515;
+        --editor-border: rgba(255, 255, 255, 0.05);
+        --editor-text: #bbb;
+        --editor-title-text: #fff;
+        --editor-accent: var(--ds-accent-primary, #ff9800);
+        --editor-quill-bg: #141414;
+    }
+
+    [data-theme="light"] {
+        --editor-bg: #ffffff;
+        --editor-nav-bg: #f5f5f5;
+        --editor-toolbar-bg: #f8f9fa;
+        --editor-panel-bg: #ffffff;
+        --editor-border: rgba(0, 0, 0, 0.1);
+        --editor-text: #444;
+        --editor-title-text: #212121;
+        --editor-accent: var(--ds-accent-primary, #294a60);
+        --editor-quill-bg: #ffffff;
+    }
+
+    .theme-aware-editor {
+        background-color: var(--editor-bg) !important;
+        color: var(--editor-text) !important;
+    }
+
+    /* Contenedor principal del editor */
+    .quill-editor {
+        margin-bottom: 0;
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--editor-quill-bg) !important;
+    }
+
+    /* Toolbar del editor */
+    .ql-toolbar.ql-snow {
+        background: var(--editor-toolbar-bg) !important;
+        border: 1px solid var(--editor-border) !important;
+        border-bottom: none !important;
+        border-radius: 4px 4px 0 0 !important;
+        padding: 8px !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* Contenedor del área de edición */
+    .ql-container.ql-snow {
+        background: var(--editor-quill-bg) !important;
+        border: 1px solid var(--editor-border) !important;
+        border-radius: 0 0 4px 4px !important;
+        font-family: 'Inter', Arial, sans-serif !important;
+        font-size: 15px !important;
+        color: var(--editor-text) !important;
+    }
+
+    /* Área de escritura */
+    .ql-editor {
+        min-height: 200px !important;
+        max-height: 600px !important;
+        overflow-y: auto !important;
+        background: var(--editor-quill-bg) !important;
+        color: var(--editor-text) !important;
+        padding: 15px 20px !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Editores en sección resumen (más pequeños) */
+    .resumen-bloque .ql-editor {
+        min-height: 150px !important;
+        max-height: 300px !important;
+    }
+
+    /* Editores en sección cuerpo (más grandes) */
+    .seccion-cuerpo .ql-editor {
+        min-height: 280px !important;
+        max-height: 700px !important;
+    }
+
+    /* Paneles laterales - simplificar para evitar bloqueos de scroll */
+    .panel-editor {
+        min-height: 100vh;
+        overflow: visible !important;
+        /* Permitir que la ventana maneje el scroll */
+        background: var(--editor-bg) !important;
+        border: none !important;
+        padding: 0 !important;
+        scroll-padding-top: 160px;
+    }
+
+    .editor-content-container {
+        background: var(--editor-panel-bg);
+        border: 1px solid var(--editor-border);
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        margin-bottom: 100px;
+    }
+
+    /* --- PORTADA Y CABECERA --- */
+    .articulo-portada {
+        max-width: 100%;
+        margin: 0 auto 40px;
+        text-align: left;
+        /* Alineación más académica */
+        padding: 20px 0;
+        border-bottom: 2px solid var(--editor-border);
+    }
+
+    .portada-titulo {
+        display: block;
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--editor-title-text, #fff);
+        font-size: 2.2rem;
+        font-weight: 800;
+        text-align: left;
+        margin-bottom: 10px;
+        outline: none;
+        font-family: 'JetBrains Mono', monospace !important;
+        padding: 10px 0;
+    }
+
+    .portada-subtitulo {
+        display: block;
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--editor-text, #bbb);
+        opacity: 0.7;
+        font-size: 1.1rem;
+        text-align: left;
+        margin-bottom: 20px;
+        font-family: 'JetBrains Mono', monospace !important;
+        outline: none;
+    }
+
+    /* Placeholder */
+    .ql-editor.ql-blank::before {
+        color: #888 !important;
+        opacity: 0.6;
+        font-style: italic !important;
+        left: 20px !important;
+    }
+
+    /* Iconos de la toolbar */
+    .ql-snow .ql-stroke {
+        stroke: var(--editor-text) !important;
+        opacity: 0.7;
+    }
+
+    .ql-snow .ql-fill {
+        fill: var(--editor-text) !important;
+        opacity: 0.7;
+    }
+
+    .ql-snow .ql-picker {
+        color: var(--editor-text) !important;
+        opacity: 0.8;
+    }
+
+    .ql-snow .ql-picker-label {
+        color: var(--editor-text) !important;
+    }
+
+    /* Dropdown de opciones */
+    .ql-snow .ql-picker-options {
+        background: var(--editor-toolbar-bg) !important;
+        border: 1px solid var(--editor-border) !important;
+        border-radius: 4px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .ql-snow .ql-picker-item {
+        color: var(--editor-text) !important;
+    }
+
+    /* Hover y estados activos */
+    .ql-snow.ql-toolbar button:hover,
+    .ql-snow.ql-toolbar button:focus,
+    .ql-snow.ql-toolbar button.ql-active,
+    .ql-snow.ql-toolbar .ql-picker-label:hover,
+    .ql-snow.ql-toolbar .ql-picker-label.ql-active,
+    .ql-snow.ql-toolbar .ql-picker-item:hover,
+    .ql-snow.ql-toolbar .ql-picker-item.ql-selected {
+        color: var(--editor-accent) !important;
+        background: var(--ds-accent-alpha, rgba(255, 152, 0, 0.1)) !important;
+        border-radius: 3px !important;
+    }
+
+    .ql-snow.ql-toolbar button:hover .ql-stroke,
+    .ql-snow.ql-toolbar button:focus .ql-stroke,
+    .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+    .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+    .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke {
+        stroke: var(--editor-accent) !important;
+        opacity: 1;
+    }
+
+    .ql-snow.ql-toolbar button:hover .ql-fill,
+    .ql-snow.ql-toolbar button:focus .ql-fill,
+    .ql-snow.ql-toolbar button.ql-active .ql-fill,
+    .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill,
+    .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-fill {
+        fill: var(--editor-accent) !important;
+        opacity: 1;
+    }
+
+    /* Estilos del contenido editado */
+    .ql-editor h1 {
+        color: var(--editor-accent) !important;
+        font-size: 1.8em !important;
+        border-bottom: 1px solid var(--editor-border) !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .ql-editor blockquote {
+        border-left: 4px solid var(--editor-accent) !important;
+        background: var(--editor-nav-bg) !important;
+        padding: 12px 18px !important;
+        margin: 15px 0 !important;
+        color: var(--editor-text) !important;
+        font-style: italic !important;
+    }
+
+    .ql-editor pre.ql-syntax,
+    .ql-editor code {
+        background: var(--ds-bg-app, #0d0d0d) !important;
+        color: var(--editor-accent) !important;
+        padding: 3px 6px !important;
+        border-radius: 3px !important;
+        font-family: var(--ds-font-mono) !important;
+    }
+
+    .ql-editor pre.ql-syntax {
+        padding: 15px !important;
+        overflow-x: auto !important;
+    }
+
+    .ql-editor a {
+        color: var(--editor-accent) !important;
+        text-decoration: none !important;
+    }
+
+    .ql-editor a:hover {
+        text-decoration: underline !important;
+    }
+
+    /* Tooltip de imagen/video */
+    .ql-snow .ql-tooltip {
+        background: var(--editor-toolbar-bg) !important;
+        border: 1px solid var(--editor-border) !important;
+        color: var(--editor-text) !important;
+        border-radius: 4px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .ql-snow .ql-tooltip input[type="text"] {
+        background: var(--editor-quill-bg) !important;
+        border: 1px solid var(--editor-border) !important;
+        color: var(--editor-text) !important;
+        border-radius: 3px !important;
+    }
+
+    .ql-snow .ql-tooltip a.ql-action,
+    .ql-snow .ql-tooltip a.ql-remove {
+        color: var(--editor-accent) !important;
+    }
+
+    /* Scrollbar */
+    /* Botones de la barra de herramientas (estandarizados) */
+    .btn-editor-toolbar {
+        background: var(--editor-toolbar-bg) !important;
+        color: var(--editor-text) !important;
+        border: 1px solid var(--editor-border) !important;
+        text-transform: uppercase !important;
+        font-weight: 700 !important;
+        font-size: 0.75rem !important;
+        padding: 6px 12px !important;
+        border-radius: 4px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .btn-editor-toolbar:hover,
+    .btn-editor-toolbar:focus,
+    .btn-editor-toolbar.show {
+        background: var(--editor-nav-bg) !important;
+        color: var(--editor-accent) !important;
+        border-color: var(--editor-accent) !important;
+    }
+
+    .btn-editor-toolbar i {
+        font-size: 1.1em !important;
+        opacity: 0.8 !important;
+    }
+
+    .btn-editor-toolbar:hover i {
+        opacity: 1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-layout">
+    <nav class="editor-navbar-combined d-flex align-items-center gap-2 px-3 py-2 border-bottom sticky-top"
+        style="z-index:110; background: var(--editor-nav-bg); border-color: var(--editor-border) !important;">
+        
+        <div class="d-flex align-items-center gap-2 overflow-auto flex-grow-1" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <span class="text-uppercase small fw-bold text-accent me-2" style="white-space: nowrap;">
+                <i class="fa-solid fa-folder-tree me-1"></i>Estructura
+            </span>
+            <button class="estructura-item btn btn-sm" data-seccion="portada">Portada</button>
+            <button class="estructura-item btn btn-sm" data-seccion="resumen">Resumen</button>
+            <button class="estructura-item btn btn-sm" data-seccion="introduccion">1. Intro</button>
+            <button class="estructura-item btn btn-sm" data-seccion="metodologia">2. Metod.</button>
+            <button class="estructura-item btn btn-sm" data-seccion="resultados">3. Result.</button>
+            <button class="estructura-item btn btn-sm" data-seccion="discusion">4. Disc.</button>
+            <button class="estructura-item btn btn-sm" data-seccion="conclusiones">5. Concl.</button>
+            <button class="estructura-item btn btn-sm" data-seccion="referencias">Referencias</button>
+            <button class="btn btn-sm btn-outline-warning" onclick="agregarSeccion()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 border-start ps-2">
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle btn-editor-toolbar" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-chart-simple"></i> MÉTRICAS
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li class="dropdown-item">Palabras: <span id="total-palabras">0</span></li>
+                    <li class="dropdown-item">Páginas: <span id="total-paginas">0</span></li>
+                    <li class="dropdown-item">Referencias: <span id="total-referencias">0</span></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle btn-editor-toolbar" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-quote-right"></i> CITAS
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" onclick="abrirModalCitas()"><i class="fa-solid fa-plus me-1"></i> Vincular Fuente</button></li>
+                    <li class="dropdown-item">Total vinculadas: <span id="total-citas">0</span></li>
+                </ul>
+            </div>
+
+            <button class="btn btn-sm btn-editor-toolbar" onclick="window.location.href='{{ url_for('articulo_figuras', articulo_id=articulo.id if articulo else 0) }}';" title="Multimedia">
+                <i class="fa-solid fa-images"></i>
+            </button>
+
+            <button class="btn btn-sm btn-editor-toolbar" onclick="window.location.href='{{ url_for('articulo_colaboradores', articulo_id=articulo.id if articulo else 0) }}';" title="Equipo">
+                <i class="fa-solid fa-users"></i>
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle btn-editor-toolbar" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-paintbrush"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="background: var(--editor-toolbar-bg); border-color: var(--editor-border);">
+                    <li class="px-2 py-1">
+                        <select id="estilo-citas" class="form-select form-select-sm" style="background: var(--editor-quill-bg); color: var(--editor-text); border-color: var(--editor-border);">
+                            <option value="apa">APA 7th Ed.</option>
+                            <option value="chicago">Chicago</option>
+                            <option value="vancouver">Vancouver</option>
+                            <option value="mla">MLA 9th</option>
+                        </select>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="panel-editor flex-grow-1">
+        <div class="editor-content-container mx-auto">
+            <section class="articulo-portada" id="seccion-portada">
+                <input type="text" class="portada-titulo" id="titulo-articulo" placeholder="TÍTULO DEL ARTÍCULO"
+                    value="{{ articulo.titulo if articulo else '' }}"
+                    style="width: 100%; box-sizing: border-box; margin: 0; padding-left: 0; padding-right: 0; text-align: center;">
+
+                <input type="text" class="portada-subtitulo" id="subtitulo-articulo"
+                    placeholder="Subtítulo o descripción corta" value="{{ articulo.subtitulo if articulo else '' }}"
+                    style="width: 100%; box-sizing: border-box; margin: 0; padding-left: 0; padding-right: 0; text-align: center;">
+
+                <div class="portada-autores" id="autores-lista">
+                    <div class="autor-item d-flex align-items-center gap-3">
+                        <div class="icon-autor text-accent p-2 rounded" style="background: var(--editor-border);">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <div class="autor-nombre" contenteditable="true" id="autor-nombre"
+                                data-placeholder="Nombre del Investigador">{{ articulo.nombre_investigador if articulo
+                                and
+                                articulo.nombre_investigador else 'Nombre del Investigador' }}</div>
+                            <div class="autor-afiliacion" contenteditable="true" id="autor-afiliacion"
+                                data-placeholder="Universidad / Institución">{{ articulo.universidad_investigador if
+                                articulo and articulo.universidad_investigador else 'Universidad / Institución' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-sm btn-outline-secondary mt-3" onclick="agregarAutor()">
+                    <i class="fa-solid fa-plus me-1"></i> Autor
+                </button>
+            </section>
+
+            <section class="seccion-resumen" id="seccion-resumen">
+                <div class="resumen-bloque">
+                    <div class="resumen-titulo">Resumen (ES)</div>
+                    <div class="quill-editor" id="resumen-es" data-placeholder="Redacte el resumen en español..."
+                        style="width: 100%;">{{ articulo.resumen_es|safe if articulo else '' }}</div>
+                    <input type="hidden" name="resumen_es" id="resumen-es-hidden">
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2"
+                        style="border-color: var(--editor-border) !important;">
+                        <span class="text-muted smaller"><span id="contador-resumen">0</span> palabras</span>
+                        <i class="fa-solid fa-language text-secondary"></i>
+                    </div>
+                </div>
+
+                <div class="resumen-bloque">
+                    <div class="resumen-titulo">Abstract (EN)</div>
+                    <div class="quill-editor" id="abstract-en" data-placeholder="Write the abstract in English..."
+                        style="width: 100%;">{{ articulo.abstract_en|safe if articulo else '' }}
+                    </div>
+                    <input type="hidden" name="abstract_en" id="abstract-en-hidden">
+                    <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2"
+                        style="border-color: var(--editor-border) !important;">
+                        <span class="text-muted smaller"><span id="contador-abstract">0</span> words</span>
+                        <i class="fa-solid fa-globe text-secondary"></i>
+                    </div>
+                </div>
+            </section>
+
+            <section class="seccion-cuerpo" id="seccion-introduccion" style="margin-top: 60px;">
+                <h4 class="seccion-titulo">1. Introducción</h4>
+                <div class="quill-editor" id="introduccion" data-placeholder="Redacte la introducción..."
+                    style="min-height: 300px;">{{ articulo.introduccion|safe if articulo else '' }}</div>
+                <input type="hidden" name="introduccion" id="introduccion-hidden">
+            </section>
+            <section class="seccion-cuerpo" id="seccion-metodologia" style="margin-top: 60px;">
+                <h4 class="seccion-titulo">2. Metodología</h4>
+                <div class="quill-editor" id="metodologia" data-placeholder="Describa la metodología..."
+                    style="min-height: 300px;">{{ articulo.metodologia|safe if articulo else '' }}</div>
+                <input type="hidden" name="metodologia" id="metodologia-hidden">
+            </section>
+            <section class="seccion-cuerpo" id="seccion-resultados" style="margin-top: 60px;">
+                <h4 class="seccion-titulo">3. Resultados</h4>
+                <div class="quill-editor" id="resultados" data-placeholder="Describa los resultados..."
+                    style="min-height: 300px;">{{ articulo.resultados|safe if articulo else '' }}</div>
+                <input type="hidden" name="resultados" id="resultados-hidden">
+            </section>
+            <section class="seccion-cuerpo" id="seccion-discusion" style="margin-top: 60px;">
+                <h4 class="seccion-titulo">4. Discusión</h4>
+                <div class="quill-editor" id="discusion" data-placeholder="Discuta los resultados..."
+                    style="min-height: 300px;">{{ articulo.discusion|safe if articulo else '' }}</div>
+                <input type="hidden" name="discusion" id="discusion-hidden">
+            </section>
+            <section class="seccion-cuerpo" id="seccion-conclusiones" style="margin-top: 60px;">
+                <h4 class="seccion-titulo">5. Conclusiones</h4>
+                <div class="quill-editor" id="conclusiones" data-placeholder="Redacte las conclusiones..."
+                    style="min-height: 300px;">{{ articulo.conclusiones|safe if articulo else '' }}</div>
+                <input type="hidden" name="conclusiones" id="conclusiones-hidden">
+            </section>
+            <section class="seccion-cuerpo" id="seccion-referencias" style="margin-top: 60px; padding-bottom: 200px;">
+                <h4 class="seccion-titulo">Referencias</h4>
+                <div class="quill-editor" id="referencias" data-placeholder="Incluya las referencias bibliográficas..."
+                    style="min-height: 300px;">{{ articulo.referencias|safe if articulo else '' }}</div>
+                <input type="hidden" name="referencias" id="referencias-hidden">
+            </section>
+        </div>
+    </main>
+
+</div>
+<div class="modal-citas" id="modal-citas">
+    <div class="modal-citas-contenido shadow-lg border"
+        style="background: var(--editor-nav-bg); border-color: var(--editor-border) !important;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="m-0 h5 text-accent fw-bold text-uppercase">Buscador Bibliográfico</h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary"
+                    onclick="insertarBibliografiaCompleta()">Bibliografía</button>
+                <button class="btn btn-sm btn-danger" onclick="cerrarModalCitas()"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <div class="buscador-referencias mb-3">
+            <input type="text" id="buscar-referencia" class="form-control"
+                style="background: var(--editor-quill-bg); color: var(--editor-text); border-color: var(--editor-border) !important;"
+                placeholder="Filtre por autor, título o fecha...">
+        </div>
+
+        <div class="lista-referencias" id="lista-referencias" style="max-height: 400px; overflow-y: auto;">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="{{ url_for('static', filename='js/articulo-editor.js') }}"></script>
+<script>
+    // 1. Definimos variables globales desde Jinja2
+    const ARTICULO_ID = {{ (articulo.id if articulo else None) | tojson }};
+    const PROYECTO_ID = "{{ proyecto.id }}";
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+
+    // 2. Inicialización delegada a la clase ArticuloEditor
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof ArticuloEditor !== 'undefined') {
+            window.articuloEditor = new ArticuloEditor(ARTICULO_ID, PROYECTO_ID);
+        } else {
+            console.error('Error: articulo-editor.js no se ha cargado correctamente.');
+        }
+    });
+
+    // 3. Funciones de conveniencia para botones legacy o simples
+    function agregarAutor() { if (window.articuloEditor) window.articuloEditor.agregarAutor(); }
+    function guardarBorrador() { if (window.articuloEditor) window.articuloEditor.guardarBorrador(); }
+</script>
+{% endblock %}

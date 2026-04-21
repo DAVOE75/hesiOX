@@ -1,0 +1,166 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}{{ proyecto.nombre if proyecto else 'Proyecto' }} — Biblioteca{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" style="height: 100%;">
+
+    <!-- Toolbar Header -->
+    <header class="toolbar-header"
+        style="padding: 12px 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,152,0,0.2);">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <h5 class="m-0 text-light fw-bold">BIBLIOTECA</h5>
+                <span class="badge bg-secondary text-light">{{ total }} Registros</span>
+            </div>
+            <button id="toggleFiltros" class="btn btn-sm btn-outline-warning"
+                style="padding: 4px 12px; font-size: 0.75rem;">
+                <i class="fa-solid fa-filter me-1"></i> Filtros
+                <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7em;"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Filtros Collapsible -->
+    <div id="filtrosPanel" class="filters-dropdown"
+        style="display: none; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,152,0,0.2); padding: 15px 20px;">
+        <form id="filtros" class="row g-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {% set filter_style = "form-select form-select-sm bg-dark text-light border-secondary filter-select-item" %}
+
+            <!-- Búsqueda Principal -->
+            <div class="col-md-3">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">BÚSQUEDA</label>
+                <div class="position-relative">
+                    <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+                        style="left: 6px; top: 50%; transform: translateY(-50%); font-size: 0.6rem;"></i>
+                    <input type="text" name="busqueda"
+                        class="form-control form-control-sm bg-dark text-light border-secondary filter-input-search"
+                        style="padding-left: 22px; height: 24px; font-size: 0.65rem; border-radius: 0;"
+                        placeholder="Buscar..." value="{{ request.args.get('busqueda', '') }}">
+                </div>
+            </div>
+
+            <!-- Autor -->
+            <div class="col-md-2">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">AUTOR</label>
+                <select name="autor" id="selectAutor" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="">(Todos)</option>
+                    {% for a in autores %}
+                    <option value="{{ a }}" {% if autor==a %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Publicación -->
+            <div class="col-md-2">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">PUBLICACIÓN</label>
+                <select name="publicacion" id="selectPublicacion" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="">(Todas)</option>
+                    {% for p in publicaciones %}
+                    <option value="{{ p }}" {% if publicacion==p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Ciudad -->
+            <div class="col-md-2">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">CIUDAD</label>
+                <select name="ciudad" id="selectCiudad" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="">(Todas)</option>
+                    {% for c in ciudades %}
+                    <option value="{{ c }}" {% if ciudad==c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Fecha -->
+            <div class="col-md-1">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">FECHA</label>
+                <select name="fecha_original" id="selectFecha" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="">(Todas)</option>
+                    {% for f in fechas %}
+                    <option value="{{ f }}" {% if request.args.get('fecha_original')==f|string %}selected{% endif %}>{{
+                        f }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Temas -->
+            <div class="col-md-1">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">TEMAS</label>
+                <select name="temas" id="selectTemas" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="">(Todos)</option>
+                    {% for t in temas_list %}
+                    <option value="{{ t }}" {% if temas_filtro==t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="col-md-1">
+                <label class="d-block text-muted fw-bold filter-label"
+                    style="font-size: 0.5rem; margin-bottom: 1px;">ESTADO</label>
+                <select name="incluido" id="selectIncluido" class="{{ filter_style }}"
+                    style="height: 24px; font-size: 0.65rem; border-radius: 0; padding: 3px 6px;">
+                    <option value="todos" {% if incluido=='todos' %}selected{% endif %}>Todos</option>
+                    <option value="si" {% if incluido=='si' %}selected{% endif %}>Incluidos</option>
+                    <option value="no" {% if incluido=='no' %}selected{% endif %}>No Incluidos</option>
+                </select>
+            </div>
+
+            <!-- Reset Button -->
+            <div class="col-12 d-flex justify-content-end mt-2">
+                <button id="borrarFiltros" class="btn btn-sm btn-outline-warning"
+                    style="padding: 2px 8px; font-size: 0.6rem;">
+                    <i class="fa-solid fa-rotate-left" style="font-size: 0.55rem;"></i> Reset
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div id="tabla-container" style="padding: 20px;">
+        {% include '_tabla.html' %}
+    </div>
+
+</div>
+
+<script>
+    // Toggle filtros dropdown
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggleFiltros');
+        const filtrosPanel = document.getElementById('filtrosPanel');
+        const chevron = toggleBtn.querySelector('.fa-chevron-down');
+
+        toggleBtn.addEventListener('click', function () {
+            if (filtrosPanel.style.display === 'none') {
+                filtrosPanel.style.display = 'block';
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-up');
+            } else {
+                filtrosPanel.style.display = 'none';
+                chevron.classList.remove('fa-chevron-up');
+                chevron.classList.add('fa-chevron-down');
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/tabla.js') }}"></script>
+<script src="{{ url_for('static', filename='js/choices_init.js') }}"></script>
+{% endblock %}

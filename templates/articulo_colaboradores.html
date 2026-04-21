@@ -1,0 +1,269 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Colaboradores - {{ articulo.titulo }}{% endblock %}
+{% block page_title %}Colaboradores y Revisión{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id) }}">Artículos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Colaboradores</li>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('articulo_editar', articulo_id=articulo.id) }}" class="btn-sirio">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">Volver al Editor</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/modules/13-articulo.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <!-- Izquierda: Coautores -->
+        <div class="col-lg-4">
+            <div class="card card-sirio mb-4">
+                <div
+                    class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-warning fw-bold small text-uppercase"><i
+                            class="fa-solid fa-users me-2"></i>Coautores</h5>
+                    <span class="badge bg-dark border border-secondary text-secondary rounded-pill smaller">{{
+                        coautores|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if coautores %}
+                    <div class="coautores-lista d-flex flex-column gap-2 mb-4">
+                        {% for coautor in coautores %}
+                        <div
+                            class="d-flex align-items-center p-2 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10">
+                            <div class="avatar-sirio me-3" style="width: 34px; height: 34px; font-size: 0.8rem;">
+                                {{ coautor.username[0].upper() }}
+                            </div>
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <div class="fw-bold text-light smaller text-truncate">{{ coautor.username }}</div>
+                                <div class="text-muted smaller text-truncate" style="font-size: 0.7rem;">{{
+                                    coautor.email }}</div>
+                            </div>
+                            {% if coautor.id != articulo.user_id %}
+                            <button class="btn btn-icon-sirio text-danger ms-2 btn-xs"
+                                onclick="removerColaborador('{{ coautor.id }}')" title="Remover"
+                                style="font-size:0.85em; padding:1px 5px; min-width:unset; height:28px; line-height:1;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            {% else %}
+                            <span class="badge bg-warning text-dark ms-2 smaller"
+                                style="font-size: 0.55rem; padding: 2px 5px;">PROPIETARIO</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div
+                        class="text-center py-4 text-muted opacity-50 border border-dashed border-secondary rounded mb-4">
+                        <i class="fa-regular fa-user fa-2x mb-2"></i>
+                        <p class="smaller mb-0">Sin coautores adicionales.</p>
+                    </div>
+                    {% endif %}
+
+                    <label class="form-label text-muted smaller fw-bold mb-2">INVITAR COLABORADOR</label>
+                    <div class="input-group input-group-sm">
+                        <input type="email" id="email-colaborador"
+                            class="form-control form-control-sm bg-dark text-light border-secondary"
+                            placeholder="Email..." style="font-size:0.95rem; padding:6px 10px;">
+                        <button class="btn btn-warning btn-sm fw-bold text-dark px-2"
+                            style="font-size:0.92rem; padding:6px 16px;" onclick="agregarColaborador()">Invitar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Info -->
+            <div class="card card-sirio">
+                <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
+                    <h5 class="mb-0 text-info fw-bold small text-uppercase"><i
+                            class="fa-solid fa-circle-info me-2"></i>Métricas de Red</h5>
+                </div>
+                <div class="card-body smaller">
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                        <li
+                            class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-10">
+                            <span class="text-muted">Propietario</span>
+                            <span class="text-light fw-bold">{{ articulo.user.username if articulo.user else 'Sist.'
+                                }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Interacciones</span>
+                            <span class="text-light fw-bold">{{ comentarios|length }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Derecha: Comentarios -->
+        <div class="col-lg-8">
+            <div class="card card-sirio h-100 border-0">
+                <div
+                    class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-light fw-bold small text-uppercase"><i
+                            class="fa-solid fa-comments me-2 text-warning"></i>Bitácora de Revisión</h5>
+                    <select id="filtro-seccion"
+                        class="form-select form-select-sm bg-dark text-light border-secondary w-auto smaller"
+                        onchange="filtrarComentarios(this.value)">
+                        <option value="todos">Todo</option>
+                        <option value="general">Gral.</option>
+                        <option value="portada">Portada</option>
+                        <option value="metodologia">Metod.</option>
+                    </select>
+                </div>
+
+                <div class="card-body d-flex flex-column p-0">
+                    <div class="flex-grow-1 p-3 overflow-auto" style="max-height: 500px;">
+                        {% if comentarios %}
+                        {% for comentario in comentarios %}
+                        <div class="comentario-item d-flex gap-3 {{ 'opacity-50' if comentario.resuelto else '' }}">
+                            <div class="avatar-sirio smaller" style="width: 36px; height: 36px;">
+                                {{ comentario.username[0].upper() }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-warning fw-bold smaller">{{ comentario.username }}</span>
+                                        <span
+                                            class="badge bg-black border border-secondary border-opacity-25 smaller text-muted"
+                                            style="font-size: 0.6rem;">{{ comentario.seccion|upper }}</span>
+                                    </div>
+                                    <small class="text-muted smaller">{{ comentario.fecha[:16] }}</small>
+                                </div>
+                                <div class="text-light smaller py-1">{{ comentario.texto }}</div>
+                                {% if not comentario.resuelto %}
+                                <button class="btn btn-link link-success p-0 smaller text-decoration-none mt-1"
+                                    onclick="resolverComentario('{{ comentario.id }}')" style="font-size:0.85em;">
+                                    <i class="fa-solid fa-check me-1"></i> Resolver
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div
+                            class="h-100 d-flex flex-column align-items-center justify-content-center text-muted opacity-25">
+                            <i class="fa-solid fa-message-slash fa-3x mb-3"></i>
+                            <p class="smaller">Lista de comentarios vacía.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-3 bg-black bg-opacity-25 border-top border-secondary border-opacity-10">
+                        <div>
+                            <textarea id="texto-comentario"
+                                class="form-control form-control-sm bg-dark text-light border-secondary mb-2" rows="2"
+                                placeholder="Nota de revisión..."
+                                style="resize: none; font-size:0.92rem; padding:7px 12px;"></textarea>
+                            <div class="d-flex justify-content-center">
+                                <button
+                                    class="btn btn-warning btn-sm fw-bold text-dark d-flex align-items-center justify-content-center"
+                                    style="font-size:0.92rem; padding:4px 18px; min-width:32px; height:32px; border-radius:6px;"
+                                    onclick="agregarComentario()" title="Agregar comentario">
+                                    <i class="fa-solid fa-paper-plane"></i> <span
+                                        class="ms-2 d-none d-md-inline">Agregar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function agregarColaborador() {
+        const email = document.getElementById('email-colaborador').value;
+        if (!email) {
+            alert('Ingresa un email');
+            return;
+        }
+
+        const btn = document.querySelector('.btn-agregar');
+        const originalText = btn.innerText;
+        btn.innerText = '...';
+        btn.disabled = true;
+
+        fetch(`/api/articulos/{{ articulo.id }}/agregar-colaborador`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error al agregar colaborador');
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+    }
+
+    function removerColaborador(userId) {
+        if (confirm('¿Remover este colaborador?')) {
+            fetch(`/api/articulos/{{ articulo.id }}/remover-colaborador`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+        }
+    }
+
+    function agregarComentario() {
+        const texto = document.getElementById('texto-comentario').value;
+        const seccion = document.getElementById('seccion-comentario').value;
+
+        if (!texto) {
+            alert('Escribe un comentario');
+            return;
+        }
+
+        fetch(`/api/articulos/{{ articulo.id }}/comentario`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto: texto, seccion: seccion })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+    }
+
+    function resolverComentario(comentarioId) {
+        fetch(`/api/articulos/{{ articulo.id }}/comentario/${comentarioId}/resolver`, {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+    }
+</script>
+{% endblock %}

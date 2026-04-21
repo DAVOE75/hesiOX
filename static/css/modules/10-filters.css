@@ -1,0 +1,331 @@
+/* Dropdown de filtros: siempre por encima y estilo oscuro */
+.sirio-filtro-dropdown,
+.select2-container .select2-dropdown {
+    z-index: 9999 !important;
+    background: #181818 !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+}
+
+.select2-container--open .select2-dropdown {
+    z-index: 9999 !important;
+    background: #181818 !important;
+    color: #fff !important;
+    border: 1px solid #ff9800 !important;
+    box-shadow: 0 8px 32px rgba(255, 152, 0, 0.15) !important;
+}
+
+.sirio-select-wrapper select.sirio-select {
+    z-index: 9999 !important;
+    background: #181818 !important;
+    color: #fff !important;
+    border: 1px solid #ff9800 !important;
+    box-shadow: 0 8px 32px rgba(255, 152, 0, 0.15) !important;
+}
+
+.select2-container .select2-results__option {
+    background: #181818 !important;
+    color: #fff !important;
+    border-bottom: 1px solid #222 !important;
+    z-index: 9999 !important;
+}
+
+.select2-container .select2-results__option--highlighted {
+    background: #ff9800 !important;
+    color: #181818 !important;
+    z-index: 9999 !important;
+}
+
+.select2-container .select2-search--dropdown .select2-search__field {
+    background: #222 !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+}
+
+/* ============================================================
+   10-FILTERS.CSS - Filter Panel & Search
+   ============================================================ */
+
+/* ====== PANEL DE FILTROS (GRID) ====== */
+#filtros {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 0px solid var(--app-warning);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: grid;
+    grid-template-columns: 1fr 1.8fr 0.8fr 0.8fr;
+    grid-template-rows: auto auto;
+    gap: 16px 12px;
+    align-items: start;
+    position: relative;
+    z-index: 500;
+    overflow: visible;
+}
+
+#filtros .filtro-item:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+#filtros .filtro-item:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+#filtros .filtro-item:nth-child(3) {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+#filtros .filtro-item:nth-child(4) {
+    grid-column: 4;
+    grid-row: 1;
+}
+
+#filtros .filtro-item:nth-child(5) {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+#filtros .filtro-item:nth-child(6) {
+    grid-column: 2;
+    grid-row: 2;
+    max-width: 120px;
+}
+
+#filtros .filtro-buscar {
+    grid-column: 2 / 4;
+    grid-row: 2;
+}
+
+#filtros .filtro-botones {
+    grid-column: 4;
+    grid-row: 2;
+}
+
+#filtros .filtro-botones {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding-top: 26px;
+}
+
+.filtro-item,
+.filtro-buscar {
+    display: flex;
+    flex-direction: column;
+}
+
+.filtro-item label,
+.filtro-buscar label {
+    color: var(--app-warning);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.filtro-item .form-select,
+.filtro-buscar .form-control {
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--app-warning);
+    color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    backdrop-filter: blur(5px);
+    height: 42px;
+}
+
+.filtro-item .form-select:focus,
+.filtro-buscar .form-control:focus {
+    background-color: rgba(0, 0, 0, 0.7);
+    border-color: var(--app-accent);
+    color: #e0e0e0;
+    box-shadow: 0 0 0 0.2rem rgba(255, 152, 0, 0.25);
+    outline: none;
+}
+
+.filtro-item .form-select option {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+#filtros .filtro-botones .btn {
+    background: transparent;
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    color: var(--app-warning);
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#filtros .filtro-botones .btn:hover {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: var(--app-accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+#filtros .filtro-botones .btn:active {
+    box-shadow: 0 1px 4px rgba(255, 152, 0, 0.3);
+}
+
+/* === PROFESSIONAL FILTERS === */
+.professional-filters {
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.professional-filters::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--app-accent), transparent);
+    opacity: 0.7;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.filter-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--app-accent);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-left: 2px;
+}
+
+.filter-input {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.filter-input:focus {
+    background: #141414;
+    border-color: var(--app-accent);
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
+    outline: none;
+}
+
+.filter-input:hover {
+    border-color: #555;
+}
+
+/* Elevate parent containers when a dropdown is open to avoid stacking context capping */
+.professional-filters:has(.choices.is-open),
+.filter-grid:has(.choices.is-open),
+.filter-group:has(.choices.is-open),
+#filtros:has(.choices.is-open),
+.filtro-item:has(.choices.is-open) {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* --- Choices.js Sirio Dark Theme Override (Fuerza máxima) --- */
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    z-index: 9999 !important;
+    background: #181818 !important;
+    color: #fff !important;
+    border: 2px solid #ff9800 !important;
+    box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.18), 0 2px 24px 0 rgba(0, 0, 0, 0.7) !important;
+    font-family: 'Fira Mono', 'JetBrains Mono', 'Consolas', 'Menlo', monospace !important;
+    font-size: 1.05em !important;
+    padding: 0 !important;
+}
+
+.choices__item {
+    background: #181818 !important;
+    color: #fff !important;
+    border-bottom: 1px solid #222 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    padding: 6px 10px !important;
+    transition: background 0.15s;
+}
+
+.choices__item--selectable.is-highlighted {
+    background: #ff9800 !important;
+    color: #181818 !important;
+}
+
+.choices__inner {
+    background: #181818 !important;
+    color: #fff !important;
+    border: 2px solid #ff9800 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    z-index: 9999 !important;
+}
+
+.choices[data-type*=select-one] .choices__input {
+    background: #222 !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
+}
+
+.choices__list--dropdown .choices__item--selectable:hover {
+    background: #ff9800 !important;
+    color: #181818 !important;
+}
+
+.choices__list--dropdown .choices__item--selectable {
+    cursor: pointer;
+}
+
+.choices__list--dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: #ff9800 #181818;
+}
+
+.choices__list--dropdown::-webkit-scrollbar {
+    width: 8px;
+    background: #181818;
+}
+
+.choices__list--dropdown::-webkit-scrollbar-thumb {
+    background: #ff9800;
+    border-radius: 4px;
+}

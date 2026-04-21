@@ -1,0 +1,759 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}{{ 'Editar' if action == 'editar' else 'Nuevo' }} Pasajero - S.S. Sirio{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .rel-drag-handle {
+        cursor: grab;
+        color: #666;
+        transition: color 0.3s;
+        padding: 0 10px;
+    }
+
+    .rel-drag-handle:hover {
+        color: var(--ds-accent-primary);
+    }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background: var(--ds-accent-alpha) !important;
+    }
+
+    .sirio-name-link {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .sirio-name-link:hover {
+        color: var(--ds-accent-primary, #ff9800) !important;
+    }
+    .status-desaparecido {
+        color: #fff;
+    }
+    /* En modo claro para desaparecidos */
+    [data-bs-theme="light"] .status-desaparecido {
+        color: #6c757d !important;
+    }
+    [data-bs-theme="light"] .legend-dot-desaparecido {
+        background-color: #fff !important;
+        border: 1px solid #adb5bd !important;
+    }
+
+    .swal2-container {
+        z-index: 10000 !important;
+    }
+
+    /* Estilos SIRIO para SweetAlert2 (Adaptables) */
+    .swal2-sirio-custom {
+        border-radius: 12px !important;
+        background: #1a1a1a !important;
+        color: #fff !important;
+        border: 1px solid #333 !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    body[data-theme="light"] .swal2-sirio-custom {
+        background: #ffffff !important;
+        color: #222 !important;
+        border: 1px solid #ddd !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .swal2-sirio-custom .swal2-title {
+        color: var(--sirio-accent, #ff9800) !important;
+        font-weight: 800 !important;
+        letter-spacing: 1px !important;
+        font-size: 1.1rem !important;
+        margin-top: 15px !important;
+    }
+
+    body[data-theme="light"] .swal2-sirio-custom .swal2-title {
+        color: #294a60 !important;
+        /* Estilo light de SIRIO */
+    }
+
+    .swal2-sirio-custom .swal2-html-container {
+        color: inherit !important;
+    }
+
+    .swal-sirio-label {
+        font-size: 0.65rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 5px !important;
+        display: block !important;
+        color: #888 !important;
+    }
+
+    body[data-theme="light"] .swal-sirio-label {
+        color: #666 !important;
+    }
+
+    .swal-sirio-input {
+        background: #000 !important;
+        color: #fff !important;
+        border: 1px solid #444 !important;
+        border-radius: 6px !important;
+    }
+
+    body[data-theme="light"] .swal-sirio-input {
+        background: #f8f9fa !important;
+        color: #222 !important;
+        border: 1px solid #ccc !important;
+    }
+
+    .swal-sirio-input:focus {
+        border-color: #ff9800 !important;
+        box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2) !important;
+    }
+
+    .form-control-sirio {
+        background-color: #1a1a1a !important;
+        border-color: #333 !important;
+        color: #eee !important;
+    }
+
+    .form-control-sirio:focus {
+        border-color: var(--ds-accent-primary) !important;
+        box-shadow: 0 0 0 0.25rem var(--ds-accent-alpha) !important;
+    }
+
+    /* Fix for SweetAlert2 Dropdown Visibility */
+    .swal2-container.swal2-shown {
+        overflow-y: hidden !important;
+    }
+    .swal2-popup.swal2-sirio-custom {
+        overflow: visible !important;
+    }
+    .swal2-html-container {
+        overflow: visible !important;
+    }
+
+    /* Sirio Buttons for SweetAlert2 */
+    .btn-sirio-swal, .btn-cancel-swal {
+        padding: 8px 24px !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-radius: 4px !important;
+        transition: all 0.3s ease !important;
+        margin: 0 5px !important;
+    }
+
+    .btn-sirio-swal {
+        background: var(--sirio-accent, #ff9800) !important;
+        color: #000 !important;
+        border: 1px solid var(--sirio-accent, #ff9800) !important;
+    }
+
+    .btn-sirio-swal:hover {
+        background: #e68a00 !important;
+        box-shadow: 0 0 15px rgba(255, 152, 0, 0.4) !important;
+    }
+
+    .btn-cancel-swal {
+        background: transparent !important;
+        color: #888 !important;
+        border: 1px solid #444 !important;
+    }
+
+    .btn-cancel-swal:hover {
+        background: rgba(255,255,255,0.05) !important;
+        color: #fff !important;
+    }
+
+    /* Z-Index Fix for Choices.js and Overflows in SweetAlert2 */
+    .swal2-popup.swal2-sirio-custom {
+        overflow: visible !important;
+    }
+    .swal2-html-container {
+        position: relative !important;
+        z-index: 99 !important;
+        overflow: visible !important;
+    }
+    .swal2-actions {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    .choices__list--dropdown {
+        z-index: 99999 !important;
+    }
+
+    .section-title {
+        color: var(--ds-accent-primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+    <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-sirio btn-sm">
+        <i class="fa-solid fa-list me-1"></i> Listado
+    </a>
+    {% if action == 'editar' and pasajero %}
+    <a href="{{ url_for('pasajeros.ficha', id=pasajero.id) }}" class="btn btn-sirio btn-sm">
+        <i class="fa-solid fa-id-badge me-1"></i> Ver Ficha
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('pasajeros.listado') }}" class="text-accent">Pasajeros</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">{{ 'Editar Pasajero' if action == 'editar' else 'Añadir Nuevo Pasajero' }}</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="card hesi-floating-card shadow-lg">
+                <div class="card-header bg-dark border-bottom border-secondary p-4">
+                    <h2 class="h4 mb-0 text-accent fw-bold text-uppercase" style="letter-spacing: 1px;">
+                        <i class="fa-solid fa-user-pen me-2"></i> {{ 'Editar Pasajero' if action == 'editar' else 'Ficha de Nuevo Pasajero' }}
+                    </h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data"
+                        action="{{ url_for('pasajeros.editar', id=pasajero.id if pasajero else 0) if action == 'editar' else url_for('pasajeros.nuevo') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="section-title mb-3 pb-2 border-bottom border-secondary">
+                            <i class="fa-solid fa-id-card me-2 text-primary"></i> Datos Personales
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Nombre</label>
+                                <input type="text" name="nombre" class="form-control form-control-sirio"
+                                    value="{{ pasajero.nombre if pasajero else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Apellidos</label>
+                                <input type="text" name="apellidos" class="form-control form-control-sirio"
+                                    value="{{ pasajero.apellidos if pasajero else '' }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Edad</label>
+                                <input type="number" step="0.01" name="edad" class="form-control form-control-sirio"
+                                    value="{{ pasajero.edad if pasajero and pasajero.edad else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small">Sexo</label>
+                                <select name="sexo" class="form-select form-control-sirio">
+                                    <option value="Hombre" {% if pasajero and pasajero.sexo=='Hombre' %}selected{% endif
+                                        %}>Hombre</option>
+                                    <option value="Mujer" {% if pasajero and pasajero.sexo=='Mujer' %}selected{% endif
+                                        %}>Mujer</option>
+                                    <option value="-" {% if not pasajero or not pasajero.sexo %}selected{% endif %}>No
+                                        especificado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label text-muted small">Retrato / Foto</label>
+                                <input type="file" name="foto" class="form-control form-control-sirio" accept="image/*">
+                                {% if pasajero and pasajero.foto %}
+                                <div class="mt-2 text-start">
+                                    <a href="{{ url_for('static', filename='uploads/pasajeros/' + pasajero.foto) }}" target="_blank" class="text-accent small text-decoration-none">
+                                        <i class="fa-solid fa-image me-1"></i>Ver Foto Actual
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="section-title mb-3 pb-2 border-bottom border-secondary mt-5">
+                            <i class="fa-solid fa-map-location-dot me-2 text-primary"></i> Datos de Origen y Residencia
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Municipio</label>
+                                <input type="text" name="municipio" class="form-control form-control-sirio"
+                                    value="{{ pasajero.municipio if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Provincia</label>
+                                <input type="text" name="provincia" class="form-control form-control-sirio"
+                                    value="{{ pasajero.provincia if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Comunidad / Región</label>
+                                <input type="text" name="region" class="form-control form-control-sirio"
+                                    value="{{ pasajero.region if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">País</label>
+                                <input type="text" name="pais" class="form-control form-control-sirio"
+                                    value="{{ pasajero.pais if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <label class="form-label text-muted small">Punto de Residencia / Arraigo Histórico</label>
+                                <input type="text" name="punto_residencia" class="form-control form-control-sirio"
+                                    value="{{ pasajero.punto_residencia if pasajero else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="section-title mb-3 pb-2 border-bottom border-secondary mt-5">
+                            <i class="fa-solid fa-ship me-2 text-primary"></i> Datos del Viaje
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Puerto Embarque</label>
+                                <input type="text" name="puerto_embarque" class="form-control form-control-sirio"
+                                    value="{{ pasajero.puerto_embarque if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Emb. Nápoles</label>
+                                <input type="text" name="fecha_emb_napoles" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_emb_napoles if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Emb. Génova</label>
+                                <input type="text" name="fecha_emb_genova" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_emb_genova if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Emb. Barcelona</label>
+                                <input type="text" name="fecha_emb_barcelona" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_emb_barcelona if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Situación Post-Sirio</label>
+                                <select name="situacion_post_naufragio" class="form-select form-control-sirio">
+                                    <option value="">-</option>
+                                    <option value="Continúa viaje" {% if pasajero and pasajero.situacion_post_naufragio == 'Continúa viaje' %}selected{% endif %}>Continúa viaje al destino</option>
+                                    <option value="Retorno a origen" {% if pasajero and pasajero.situacion_post_naufragio == 'Retorno a origen' %}selected{% endif %}>Retorno a origen</option>
+                                    <option value="Fallecido/a en el naufragio" {% if pasajero and pasajero.situacion_post_naufragio == 'Fallecido/a en el naufragio' or pasajero.situacion_post_naufragio == 'Fallecido en naufragio' %}selected{% endif %}>Fallecido/a en el naufragio</option>
+                                    <option value="Desaparecido/a en el naufragio" {% if pasajero and pasajero.situacion_post_naufragio == 'Desaparecido/a en el naufragio' %}selected{% endif %}>Desaparecido/a en el naufragio</option>
+                                    <option value="Otro" {% if pasajero and pasajero.situacion_post_naufragio == 'Otro' %}selected{% endif %}>Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Puerto Retorno</label>
+                                <input type="text" name="puerto_retorno" class="form-control form-control-sirio"
+                                    value="{{ pasajero.puerto_retorno if pasajero else '' }}" placeholder="Ej. Génova">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Fecha Destino/Retorno</label>
+                                <input type="text" name="fecha_retorno" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_retorno if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Fecha Hundimiento</label>
+                                <input type="text" name="fecha_hundimiento" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_hundimiento if pasajero else '04/08/1906' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Llegada Cartagena</label>
+                                <input type="text" name="fecha_llegada_cartagena" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_llegada_cartagena if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Salida Cartagena</label>
+                                <input type="text" name="fecha_salida_cartagena" class="form-control form-control-sirio"
+                                    value="{{ pasajero.fecha_salida_cartagena if pasajero else '' }}" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Destino en Billete</label>
+                                <input type="text" name="ciudad_destino" class="form-control form-control-sirio"
+                                    value="{{ pasajero.ciudad_destino if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Destino Final</label>
+                                <input type="text" name="ciudad_destino_final" class="form-control form-control-sirio"
+                                    value="{{ pasajero.ciudad_destino_final if pasajero else '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Clase de Pasaje</label>
+                                <select name="pasaje" class="form-select form-control-sirio">
+                                    <option value="">-</option>
+                                    <option value="1ª Clase" {% if pasajero and pasajero.pasaje == '1ª Clase' %}selected{% endif %}>1ª Clase</option>
+                                    <option value="2ª Clase" {% if pasajero and pasajero.pasaje == '2ª Clase' %}selected{% endif %}>2ª Clase</option>
+                                    <option value="3ª Clase" {% if pasajero and pasajero.pasaje == '3ª Clase' %}selected{% endif %}>3ª Clase</option>
+                                    <option value="TRIPULACIÓN" {% if pasajero and pasajero.pasaje == 'TRIPULACIÓN' %}selected{% endif %}>Tripulación</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small">Estado Viaje</label>
+                                <select name="estado" class="form-select form-control-sirio">
+                                    <option value="">-</option>
+                                    <option value="SOBREVIVIENTE" {% if pasajero and pasajero.estado == 'SOBREVIVIENTE' %}selected{% endif %}>Superviviente</option>
+                                    <option value="DESAPARECIDO/A" {% if pasajero and pasajero.estado == 'DESAPARECIDO/A' %}selected{% endif %}>Desaparecido</option>
+                                    <option value="FALLECIDO/A" {% if pasajero and pasajero.estado == 'FALLECIDO/A' %}selected{% endif %}>Fallecido</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="section-title mb-3 pb-2 border-bottom border-secondary mt-5">
+                            <i class="fa-solid fa-list-check me-2 text-primary"></i> Documentación y Anotaciones
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-dark border-secondary p-3 h-100">
+                                    <label class="form-label text-accent small fw-bold mb-3">Aparece en Listados Originales (Fuentes):</label>
+                                    <div style="max-height: 180px; overflow-y: auto;" class="pe-2 form-control-sirio border-0 bg-transparent">
+                                        {% for pub in publicaciones %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input bg-dark border-secondary" type="checkbox" name="publicaciones" id="pub_{{ pub.id_publicacion }}" value="{{ pub.id_publicacion }}" {% if pasajero and pub in pasajero.publicaciones %}checked{% endif %}>
+                                            <label class="form-check-label text-light small" for="pub_{{ pub.id_publicacion }}">{{ pub.nombre }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-dark border-secondary p-3 h-100">
+                                    <label class="form-label text-accent small fw-bold mb-3"><i class="fa-solid fa-ship me-1"></i> Embarque Retorno / Continuación Viaje:</label>
+                                    <div class="pe-2 form-control-sirio border-0 bg-transparent">
+                                        {% set retornos = [
+                                            ('en_lista_italia_mvd', 'Vapor Italia — Destino Montevideo'),
+                                            ('en_lista_italia_ba',  'Vapor Italia — Destino Buenos Aires'),
+                                            ('en_lista_ravena_sp',  'Vapor Ravenna — Destino São Paulo'),
+                                            ('en_lista_diana_bcn',  'Vapor Diana — Destino Barcelona'),
+                                            ('en_lista_orione_ge',  'Vapor Orione — Destino Génova')
+                                        ] %}
+                                        {% for field, label in retornos %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input bg-dark border-secondary" type="checkbox"
+                                                   name="{{ field }}" id="ret_{{ field }}"
+                                                   {% if pasajero and (pasajero|attr(field)) %}checked{% endif %}>
+                                            <label class="form-check-label text-light small" for="ret_{{ field }}">{{ label }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small mt-2">Hospedaje Cartagena / Referencias</label>
+                                <input type="text" name="hospedaje_cartagena" class="form-control form-control-sirio mb-3"
+                                    value="{{ pasajero.hospedaje_cartagena if pasajero else '' }}" placeholder="Ej. Hospedaje San Antonio">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Comentarios Internos</label>
+                                <textarea name="comentarios" class="form-control form-control-sirio" rows="3">{{ pasajero.comentarios if pasajero else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        {% if action == 'editar' %}
+                        <div class="section-title mb-4 pb-2 border-bottom border-secondary mt-5">
+                            <i class="fa-solid fa-people-group me-2 text-primary"></i> Gestión de Vínculos Familiares
+                        </div>
+                        <div class="card-body p-0">
+                        <!-- Legend for Status -->
+                        <div class="px-4 py-2 border-bottom border-light border-opacity-10 d-flex gap-3 small">
+                            <span class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 1px;">Estado:</span>
+                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle bg-success" style="width: 10px; height: 10px;"></span> Superviviente</span>
+                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></span> Fallecido</span>
+                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle bg-white border border-secondary legend-dot-desaparecido" style="width: 10px; height: 10px;"></span> Desaparecido</span>
+                        </div>
+                        <div class="table-responsive mb-5">
+                            <table
+                                class="table table-dark table-hover align-middle border border-light border-opacity-10 mb-0">
+                                <thead class="bg-black">
+                                    <tr>
+                                        <th style="width: 40px;"></th>
+                                        <th class="small text-muted text-uppercase py-3">Familiar</th>
+                                        <th class="small text-muted text-uppercase py-3">Edad</th>
+                                        <th class="small text-muted text-uppercase py-3">Relación</th>
+                                        <th class="small text-muted text-uppercase py-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relaciones-tbody">
+                                    {% set direct_ids = [] %}
+                                    {% for rel in relaciones_directas %}
+                                    {# Guardar ID para evitar duplicados visuales #}
+                                    {% if rel.relacionado %}{% set _ = direct_ids.append(rel.relacionado_id) %}{% endif %}
+                                    <tr data-rel-id="{{ rel.id }}" class="rel-row">
+                                        <td class="text-center"><i
+                                                class="fa-solid fa-grip-vertical rel-drag-handle"></i></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if rel.relacionado.sexo == 'Mujer' %}
+                                                <i class="fa-solid fa-venus me-3" style="color: #ff69b4;"></i>
+                                                {% else %}
+                                                <i class="fa-solid fa-mars text-info me-3"></i>
+                                                {% endif %}
+                                                <div>
+                                                    {% set status_class = 'text-success' if rel.relacionado.estado == 'SOBREVIVIENTE' else 'text-danger' if rel.relacionado.estado == 'FALLECIDO/A' else 'status-desaparecido' if rel.relacionado.estado == 'DESAPARECIDO/A' else '' %}
+                                                    <a href="{{ url_for('pasajeros.editar', id=rel.relacionado_id) }}" class="fw-bold sirio-name-link {{ status_class }}">{{ rel.relacionado.nombre }} {{
+                                                        rel.relacionado.apellidos }}</a>
+                                                    {% if rel.relacionado.vinculo_sirio %}
+                                                        <small class="text-muted fw-normal">({{ rel.relacionado.vinculo_sirio }})</small>
+                                                    {% endif %}
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">ID: #{{
+                                                        rel.relacionado_id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                         <td class="small text-white opacity-75 text-center">
+                                             {% if rel.relacionado.edad %}
+                                                 {% if rel.relacionado.edad < 1 %}
+                                                     {% set meses = (rel.relacionado.edad * 12)|round|int if rel.relacionado.edad > 0 else 0 %}
+                                                     {% if meses == 0 %}< 1 mes{% elif meses == 1 %}1 mes{% else %}{{ meses }} meses{% endif %}
+                                                 {% else %}
+                                                     {{ rel.relacionado.edad|int }} {{ 'año' if rel.relacionado.edad|int == 1 else 'años' }}
+                                                 {% endif %}
+                                             {% else %}
+                                                 -
+                                             {% endif %}
+                                         </td>
+                                        <td><span class="badge bg-dark border border-secondary text-accent px-3 py-2"
+                                                style="font-size: 0.7rem;">{{ rel.tipo_relacion.upper() }}</span></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-info border-0 me-1"
+                                                onclick="actualizarRelacion({{ rel.id }}, '{{ rel.tipo_relacion }}', '{{ rel.comentarios or '' }}')"><i
+                                                    class="fa-solid fa-edit"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger border-0"
+                                                onclick="desvincularFamiliar({{ rel.id }})"><i
+                                                    class="fa-solid fa-trash-can"></i></button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% for rel in relaciones_inversas %}
+                                    {# Ocultar si ya existe el vínculo en directas #}
+                                    {% if rel.pasajero_id not in direct_ids %}
+                                    <tr class="opacity-75">
+                                        <td class="text-center text-muted"><i class="fa-solid fa-lock small"></i></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if rel.pasajero.sexo == 'Mujer' %}
+                                                <i class="fa-solid fa-venus me-3" style="color: #ff69b4;"></i>
+                                                {% else %}
+                                                <i class="fa-solid fa-mars text-info me-3"></i>
+                                                {% endif %}
+                                                <div>
+                                                    {% set status_class_inv = 'text-success' if rel.pasajero.estado == 'SOBREVIVIENTE' else 'text-danger' if rel.pasajero.estado == 'FALLECIDO/A' else 'status-desaparecido' if rel.pasajero.estado == 'DESAPARECIDO/A' else '' %}
+                                                    <a href="{{ url_for('pasajeros.editar', id=rel.pasajero_id) }}" class="fw-bold sirio-name-link {{ status_class_inv }}">{{ rel.pasajero.nombre }} {{
+                                                        rel.pasajero.apellidos }}</a>
+                                                    {% if rel.pasajero.vinculo_sirio %}
+                                                        <small class="text-muted fw-normal">({{ rel.pasajero.vinculo_sirio }})</small>
+                                                    {% endif %}
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">ID: #{{
+                                                        rel.pasajero_id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                         <td class="small text-white opacity-75 text-center">
+                                             {% if rel.pasajero.edad %}
+                                                 {% if rel.pasajero.edad < 1 %}
+                                                     {% set meses = (rel.pasajero.edad * 12)|round|int if rel.pasajero.edad > 0 else 0 %}
+                                                     {% if meses == 0 %}< 1 mes{% elif meses == 1 %}1 mes{% else %}{{ meses }} meses{% endif %}
+                                                 {% else %}
+                                                     {{ rel.pasajero.edad|int }} {{ 'año' if rel.pasajero.edad|int == 1 else 'años' }}
+                                                 {% endif %}
+                                             {% else %}
+                                                 -
+                                             {% endif %}
+                                         </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-dark border border-info border-opacity-25 text-info px-3 py-2"
+                                                style="font-size: 0.7rem;">VÍNCULO INVERSO</span>
+                                            <small class="text-muted ms-2">(Es <strong>{{ rel.tipo_relacion.upper()
+                                                    }}</strong> de este pasajero)</small>
+                                        </td>
+                                        <td class="text-center text-muted small italic">Sólo editable desde origen</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-4 bg-dark bg-opacity-50 rounded-3 border border-secondary border-opacity-25 mb-4">
+                            <h6 class="text-accent small text-uppercase fw-bold mb-4">Añadir Nuevo Vínculo</h6>
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <select id="familiar_id" class="form-select bg-dark text-white border-secondary">
+                                        <option value="">-- Buscar Pasajero --</option>
+                                        {% for p in todos_pasajeros %}
+                                        {% if p.id != pasajero.id %}
+                                        <option value="{{ p.id }}">{{ p.apellidos }}, {{ p.nombre }} (#{{ p.id }})
+                                        </option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="tipo_relacion" class="form-select bg-dark text-white border-secondary">
+                                        <option value="" disabled selected>-- El pasajero es... --</option>
+                                        <option value="Padre">PADRE DE...</option>
+                                        <option value="Madre">MADRE DE...</option>
+                                        <option value="Hijo">HIJO DE...</option>
+                                        <option value="Hija">HIJA DE...</option>
+                                        <option value="Hermano">HERMANO DE...</option>
+                                        <option value="Hermana">HERMANA DE...</option>
+                                        <option value="Esposo">ESPOSO DE...</option>
+                                        <option value="Esposa">ESPOSA DE...</option>
+                                        <option value="Abuelo">ABUELO DE...</option>
+                                        <option value="Abuela">ABUELA DE...</option>
+                                        <option value="Nieto">NIETO DE...</option>
+                                        <option value="Nieta">NIETA DE...</option>
+                                        <option value="Suegro">SUEGRO DE...</option>
+                                        <option value="Suegra">SUEGRA DE...</option>
+                                        <option value="Yerno">YERNO DE...</option>
+                                        <option value="Nuera">NUERA DE...</option>
+                                        <option value="Hijastro">HIJASTRO DE...</option>
+                                        <option value="Hijastra">HIJASTRA DE...</option>
+                                        <option value="Padrastro">PADRASTRO DE...</option>
+                                        <option value="Madrastra">MADRASTRA DE...</option>
+                                        <option value="Sobrino">SOBRINO DE...</option>
+                                        <option value="Sobrina">SOBRINA DE...</option>
+                                        <option value="Tío">TÍO DE...</option>
+                                        <option value="Tía">TÍA DE...</option>
+                                        <option value="Familiar">FAMILIAR DE...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" id="comentarios_relacion"
+                                        class="form-control bg-dark text-white border-secondary" placeholder="Notas...">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-sirio w-100" onclick="vincularFamiliar()"><i
+                                            class="fa-solid fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mt-5 pt-3 border-top border-secondary">
+                            <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-sirio">Cancelar</a>
+                            <button type="submit" class="btn btn-sirio px-5">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    const CURRENT_PASAJERO_ID = {{ pasajero.id if pasajero else 'null' }};
+
+    function desvincularFamiliar(relId) {
+        Swal.fire({
+            title: '¿ELIMINAR VÍNCULO?',
+            text: "Esta acción desvinculará a los pasajeros estructuralmente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            customClass: {
+                popup: 'swal2-sirio-custom',
+                confirmButton: 'btn-sirio-swal',
+                cancelButton: 'btn-cancel-swal'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("{{ url_for('pasajeros.desvincular_familiar') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ relacion_id: relId })
+                }).then(() => location.reload());
+            }
+        });
+    }
+
+    function actualizarRelacion(relId, currentTipo, currentComentarios) {
+        const tipos = ['Padre', 'Madre', 'Hijo', 'Hija', 'Hermano', 'Hermana', 'Esposo', 'Esposa', 'Abuelo', 'Abuela', 'Nieto', 'Nieta', 'Suegro', 'Suegra', 'Yerno', 'Nuera', 'Hijastro', 'Hijastra', 'Padrastro', 'Madrastra', 'Sobrino', 'Sobrina', 'Tío', 'Tía', 'Familiar'];
+        let optionsHtml = '';
+        tipos.forEach(t => {
+            optionsHtml += `<option value="${t}" ${t.toUpperCase() === currentTipo.toUpperCase() ? 'selected' : ''}>EL PASAJERO ES ${t.toUpperCase()} DE...</option>`;
+        });
+
+        Swal.fire({
+            title: 'EDITAR VÍNCULO',
+            html: `
+                <div class="text-start mb-3">
+                    <label class="swal-sirio-label">Tipo de Relación</label>
+                    <select id="swal-tipo" class="form-select swal-sirio-input">${optionsHtml}</select>
+                </div>
+                <div class="text-start">
+                    <label class="swal-sirio-label">Observaciones</label>
+                    <input id="swal-comentarios" class="form-control swal-sirio-input" value="${currentComentarios}">
+                </div>
+            `,
+            customClass: {
+                popup: 'swal2-sirio-custom',
+                confirmButton: 'btn-sirio-swal',
+                cancelButton: 'btn-cancel-swal'
+            },
+            buttonsStyling: false,
+            showCancelButton: true,
+            confirmButtonText: 'ACTUALIZAR',
+            cancelButtonText: 'CANCELAR',
+            preConfirm: () => ({
+                tipo_relacion: document.getElementById('swal-tipo').value,
+                comentarios: document.getElementById('swal-comentarios').value
+            })
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("{{ url_for('pasajeros.actualizar_familiar') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ relacion_id: relId, ...result.value })
+                }).then(() => location.reload());
+            }
+        });
+    }
+
+    function vincularFamiliar() {
+        const relId = document.getElementById('familiar_id').value;
+        const tipo = document.getElementById('tipo_relacion').value;
+        if (!relId) return;
+        fetch("{{ url_for('pasajeros.vincular_familiar') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+            body: JSON.stringify({
+                pasajero_id: CURRENT_PASAJERO_ID,
+                relacionado_id: relId,
+                tipo_relacion: tipo,
+                comentarios: document.getElementById('comentarios_relacion').value
+            })
+        }).then(() => location.reload());
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById('relaciones-tbody');
+        if (el) {
+            new Sortable(el, {
+                animation: 150, handle: '.rel-drag-handle', ghostClass: 'sortable-ghost',
+                onEnd: () => {
+                    const orden = Array.from(document.querySelectorAll('#relaciones-tbody .rel-row')).map((row, index) => ({ id: row.dataset.relId, position: index }));
+                    fetch("{{ url_for('pasajeros.reordenar_familiares') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ orden: orden })
+                    });
+                }
+            });
+        }
+        if (document.getElementById('familiar_id')) new Choices('#familiar_id', { searchEnabled: true, shouldSort: false });
+        
+        // Inicialización de datepickers
+        flatpickr(".form-control-sirio[placeholder='DD/MM/YYYY']", {
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            theme: "dark",
+            locale: "es"
+        });
+    });
+</script>
+{% endblock %}

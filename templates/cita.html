@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Citar Referencia — Proyecto Sirio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Roboto+Condensed:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Roboto Condensed', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .cita-container {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            border-radius: 8px;
+            padding: 35px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .cita-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff9800;
+            border-radius: 8px 8px 0 0;
+        }
+
+        h2 {
+            color: #ff9800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .ref-info {
+            text-align: left;
+            color: #bbb;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+            padding: 18px 22px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border-left: 3px solid #ff9800;
+            line-height: 1.6;
+        }
+
+        .ref-info strong {
+            color: #fff;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .format-selector-wrapper {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .format-selector-wrapper label {
+            color: #ff9800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            display: block;
+        }
+
+        .format-selector-wrapper .form-select {
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 152, 0, 0.4);
+            color: #fff;
+            height: 45px !important;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            width: 100%;
+            padding: 0 16px;
+            transition: border-color 0.2s ease;
+            cursor: pointer;
+            /* Remove orange arrow */
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23aaaaaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat !important;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+
+        .format-selector-wrapper .form-select:hover {
+            border-color: rgba(255, 152, 0, 0.7);
+        }
+
+        .format-selector-wrapper .form-select:focus {
+            border-color: #ff9800;
+            outline: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+        }
+
+        .cita-box {
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            border-left: 3px solid #ff9800;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 6px;
+            font-family: 'Georgia', serif;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #f5f5f5;
+            min-height: 120px;
+            text-align: left;
+        }
+
+        .btn-copy {
+            background: #ff9800;
+            color: #000;
+            font-weight: 600;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-copy:hover {
+            background: #fb8c00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-copy:active {
+            transform: translateY(0);
+        }
+
+        .btn-close-custom {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #bbb;
+            background: transparent;
+            border-radius: 6px;
+            padding: 12px 30px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-close-custom:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .cita-container {
+                padding: 25px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-copy,
+            .btn-close-custom {
+                width: 100%;
+            }
+        }
+
+        /* === LIGHT MODE OVERRIDES === */
+        [data-theme="light"] body {
+            background: #f5f5f5;
+            color: #212121;
+        }
+
+        [data-theme="light"] .cita-container {
+            background: #ffffff;
+            border-color: rgba(41, 74, 96, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .cita-container::before {
+            background: #294a60;
+        }
+
+        [data-theme="light"] h2 {
+            color: #294a60;
+        }
+
+        [data-theme="light"] .ref-info {
+            color: #666;
+            background: rgba(41, 74, 96, 0.05);
+            border-left-color: #294a60;
+        }
+
+        [data-theme="light"] .ref-info strong {
+            color: #212121;
+        }
+
+        [data-theme="light"] .format-selector-wrapper label {
+            color: #294a60;
+        }
+
+        [data-theme="light"] .format-selector-wrapper .form-select {
+            background: #ffffff;
+            border-color: rgba(41, 74, 96, 0.4);
+            color: #212121;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+        }
+
+        [data-theme="light"] .format-selector-wrapper .form-select:hover {
+            border-color: rgba(41, 74, 96, 0.7);
+        }
+
+        [data-theme="light"] .format-selector-wrapper .form-select:focus {
+            border-color: #294a60;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23294a60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+        }
+
+        [data-theme="light"] .format-selector-wrapper .form-select option {
+            background: #ffffff;
+            color: #212121;
+        }
+
+        [data-theme="light"] .cita-box {
+            background: #fafafa;
+            border-color: rgba(41, 74, 96, 0.3);
+            border-left-color: #294a60;
+            color: #212121;
+        }
+
+        [data-theme="light"] .btn-copy {
+            background: #294a60;
+            color: #ffffff;
+        }
+
+        [data-theme="light"] .btn-copy:hover {
+            background: #1e3a4d;
+            box-shadow: 0 4px 12px rgba(41, 74, 96, 0.3);
+        }
+
+        [data-theme="light"] .btn-close-custom {
+            border-color: rgba(0, 0, 0, 0.3);
+            color: #666;
+        }
+
+        [data-theme="light"] .btn-close-custom:hover {
+            border-color: rgba(0, 0, 0, 0.6);
+            color: #212121;
+            background: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body class="proyecto-style">
+
+    <div class="cita-container">
+        <h2>Generador de Citas</h2>
+
+        <div class="ref-info">
+            <strong>{{ ref.titulo or 'Sin título' }}</strong>
+            {% if ref.autor %}<div class="text-secondary mt-1">{{ ref.autor }}</div>{% endif %}
+            {% if ref.publicacion %}<div class="text-muted mt-1"><em>{{ ref.publicacion }}</em>{% if ref.fecha_original
+                %} ({% if ref.fecha_original and ref.fecha_original|length == 10 and '-' in ref.fecha_original %}{{
+                ref.fecha_original[8:10] }}/{{ ref.fecha_original[5:7] }}/{{ ref.fecha_original[0:4] }}{% else %}{{
+                ref.fecha_original }}{% endif %}){% endif %}</div>{% endif %}
+            {% if ref.numero_referencia %}<div class="mt-2"><span class="badge bg-warning text-dark">Ref. [{{
+                    ref.numero_referencia }}]</span></div>{% endif %}
+        </div>
+
+        <div class="format-selector-wrapper">
+            <label for="format-selector">Seleccionar formato:</label>
+            <select id="format-selector" class="form-select">
+                <option value="">-- Seleccione un formato --</option>
+                <option value="iso690">ISO 690 (Internacional)</option>
+                <option value="apa7">APA 7ª Ed. (Psicología)</option>
+                <option value="harvard">Harvard (Autor-Fecha)</option>
+                <option value="mla9">MLA 9ª Ed. (Humanidades)</option>
+                <option value="chicago">Chicago 17ª Ed. (Notas)</option>
+                <option value="vancouver">Vancouver (Medicina)</option>
+                <option value="hemerografico">Hemerográfico (Prensa)</option>
+            </select>
+        </div>
+
+        <div class="cita-box" id="texto-cita">
+            <em style="color: #666;">Seleccione un formato para generar la cita...</em>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-copy" onclick="copiarCita()">
+                <i class="fa-solid fa-copy me-2"></i>Copiar Cita
+            </button>
+            <button class="btn btn-close-custom" onclick="window.parent.postMessage('closeCitaModal', '*')">
+                <i class="fa-solid fa-times me-2"></i>Cerrar
+            </button>
+        </div>
+    </div>
+
+    <!-- Datos de la referencia desde Python -->
+    <script>
+        const refData = {
+            tipo_recurso: {{ (ref.tipo_recurso or '') | tojson | safe }},
+            autor: {{ (ref.autor or '') | tojson | safe }},
+            titulo: {{ (ref.titulo or '') | tojson | safe }},
+            publicacion: {{ (ref.publicacion or '') | tojson | safe }},
+            ciudad: {{ (ref.ciudad or '') | tojson | safe }},
+            fecha_original: {{ (ref.fecha_original or '') | tojson | safe }},
+            anio: {{ (ref.anio or '') | tojson | safe }},
+            numero: {{ (ref.numero or '') | tojson | safe }},
+            paginas: {% if ref.pagina_inicio %} {{ (ref.pagina_inicio ~ '-' ~ ref.pagina_fin if ref.pagina_fin and ref.pagina_inicio != ref.pagina_fin else ref.pagina_inicio) | tojson | safe }} {% else %} null {% endif %},
+            volumen: {{ (ref.volumen or '') | tojson | safe }},
+            editorial: {{ (ref.editorial or '') | tojson | safe }},
+            isbn: {{ (ref.isbn or '') | tojson | safe }},
+            doi: {{ (ref.doi or '') | tojson | safe }},
+            url: {{ (ref.url or '') | tojson | safe }}
+        };
+    </script>
+
+    <!-- CitationGenerator -->
+    <script src="{{ url_for('static', filename='js/citation-generator.js') }}"></script>
+
+    <script>
+        let generator;
+
+        // Inicializar cuando cargue la página
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('[Cita.html] Inicializando...');
+            console.log('[Cita.html] Datos recibidos:', refData);
+
+            const formatSelect = document.getElementById('format-selector');
+
+            // NO inicializar Choices.js aquí (ya se inicializa desde _choices_includes.html)
+            // Solo escuchar cambios en el select
+            formatSelect.addEventListener('change', function (event) {
+                console.log('[Cita.html] Formato cambiado a:', event.target.value);
+                updateCitation();
+            });
+
+            // Crear generador sin extraer datos del formulario
+            generator = new CitationGenerator();
+
+            // Inyectar datos directamente (NO llamar a extractFormData)
+            generator.data = refData;
+
+            console.log('[Cita.html] Generador inicializado con datos:', generator.data);
+
+            // Generar cita inicial
+            updateCitation();
+        });
+
+        function updateCitation() {
+            if (!generator) {
+                console.error('[Cita.html] Generador no inicializado');
+                return;
+            }
+
+            const format = document.getElementById('format-selector').value;
+            const citaDiv = document.getElementById('texto-cita');
+
+            console.log('[Cita.html] Generando cita en formato:', format);
+
+            // Si no hay formato seleccionado, no generar cita
+            if (!format || format === '') {
+                citaDiv.innerHTML = '<em style="color: #999;">Selecciona un formato para generar la cita</em>';
+                return;
+            }
+
+            // NO actualizar datos (ya están en generator.data)
+            // NO llamar a extractFormData() porque no hay formulario
+
+            // Generar cita pasando datos directamente
+            let citation;
+
+            // Detectar tipo de recurso
+            const tipo = generator.data.tipo_recurso || 'prensa';
+
+            // Generar según formato
+            switch (format) {
+                case 'iso690':
+                    citation = generator.generateISO690(tipo);
+                    break;
+                case 'apa7':
+                    citation = generator.generateAPA7(tipo);
+                    break;
+                case 'harvard':
+                    citation = generator.generateHarvard(tipo);
+                    break;
+                case 'mla9':
+                    citation = generator.generateMLA9(tipo);
+                    break;
+                case 'chicago':
+                    citation = generator.generateChicago(tipo);
+                    break;
+                case 'vancouver':
+                    citation = generator.generateVancouver(tipo);
+                    break;
+                case 'hemerografico':
+                    citation = generator.generateISO690(tipo); // Hemerográfico usa ISO690
+                    break;
+                default:
+                    citation = generator.generateISO690(tipo);
+            }
+
+            console.log('[Cita.html] Cita generada:', citation);
+
+            citaDiv.innerHTML = citation || '<em style="color: #999;">No se pudo generar la cita. Verifica que los campos estén completos.</em>';
+        }
+
+        function copiarCita() {
+            const citaDiv = document.getElementById('texto-cita');
+
+            // Crear elemento temporal para extraer texto plano
+            const temp = document.createElement('div');
+            temp.innerHTML = citaDiv.innerHTML;
+            const plainText = temp.textContent || temp.innerText || '';
+
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(plainText).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalHTML = btn.innerHTML;
+
+                btn.innerHTML = '<svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>¡Copiado!';
+                btn.style.backgroundColor = "#4a7c2f";
+
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.backgroundColor = "#ff9800";
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                alert('No se pudo copiar. Tu navegador no soporta esta función.');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

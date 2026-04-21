@@ -1,0 +1,2138 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Ficha de Pasajero: {{ pasajero.nombre }} {{ pasajero.apellidos }} - S.S. Sirio{% endblock %}
+{% block page_title %}FICHA DE PASAJERO{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center gap-3">
+    <!-- Buscador de Pasajeros Premium -->
+    <div class="passenger-search-container" id="passenger-search-container">
+        <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="passenger-search-input" placeholder="Buscar pasajero..." autocomplete="off">
+            <div id="search-suggestions" class="search-suggestions-dropdown"></div>
+        </div>
+    </div>
+
+    <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-sirio btn-sm">
+        <i class="fa-solid fa-list me-1"></i> Volver al Listado
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    #ficha-map {
+        border-radius: 0 0 16px 16px;
+    }
+
+    .bg-dark-alpha {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        border-radius: 4px 0 0 0;
+    }
+
+    /* Buscador de pasajeros premium */
+    .passenger-search-container {
+        position: relative;
+        min-width: 240px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .search-input-wrapper .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--ds-accent-primary, #ff9800);
+        font-size: 0.8rem;
+        z-index: 5;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    .search-input-wrapper input {
+        width: 100%;
+        height: 100%;
+        padding-left: 32px !important;
+        padding-right: 12px !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        border-radius: 6px !important;
+        font-size: 0.8rem !important;
+        transition: all 0.2s ease;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-input-wrapper input:focus {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border-color: var(--ds-accent-primary, #ff9800) !important;
+        box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.15) !important;
+        outline: none;
+    }
+
+    .search-input-wrapper input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+        font-style: italic;
+    }
+
+    .search-suggestions-dropdown {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        right: 0;
+        background: rgba(15, 15, 15, 0.98);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        border-radius: 6px;
+        z-index: 1100;
+        max-height: 350px;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        display: none;
+    }
+
+    .suggestion-item {
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background: rgba(255, 152, 0, 0.1);
+    }
+
+    .suggestion-item .name {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .suggestion-item .class {
+        color: var(--ds-accent-primary);
+        font-size: 0.65rem;
+        font-weight: bold;
+    }
+
+    /* Info Grid & Pills */
+    .extra-small {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .text-accent-light {
+        color: #ffb74d;
+    }
+
+    .list-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .list-pill.active {
+        background: rgba(25, 135, 84, 0.1);
+        border-color: rgba(25, 135, 84, 0.4);
+        color: #fff;
+    }
+
+    .list-pill i {
+        font-size: 11px;
+    }
+
+    .list-pill.active i {
+        color: #2ecc71;
+    }
+
+    .paper-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: #111;
+        border-right: 3px solid var(--ds-accent-primary);
+        border-radius: 2px;
+        font-size: 11px;
+        color: #bbb;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .obs-box {
+        background: rgba(0, 0, 0, 0.4) !important;
+        line-height: 1.6;
+        min-height: 80px;
+    }
+
+    .border-secondary-subtle {
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    .border-secondary {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Console Badges (Ficha Header) */
+    .passenger-info-console {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        width: fit-content;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        overflow: hidden;
+    }
+
+    .console-item {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        font-family: var(--ds-font-mono, monospace);
+        font-weight: 600;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .console-item:last-child {
+        border-right: none;
+    }
+
+    .console-item.age { 
+        color: var(--ds-accent-primary); 
+        background: rgba(255, 152, 0, 0.05);
+    }
+    .console-item.class { 
+        color: #00bcd4; 
+        background: rgba(0, 188, 212, 0.05);
+    }
+    .console-item.survivor { 
+        color: #2ecc71; 
+        background: rgba(46, 204, 113, 0.05);
+    }
+    .console-item.deceased { 
+        color: #e74c3c; 
+        background: rgba(231, 76, 60, 0.05);
+    }
+
+    /* SweetAlert Sirio Custom Styles */
+    .swal2-sirio-custom {
+        background: #1a1a1a !important;
+        border: 1px solid #333 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .swal2-sirio-custom .swal2-title {
+        color: var(--ds-accent-primary) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 1.1rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding-bottom: 15px !important;
+    }
+
+    .swal-sirio-label {
+        font-size: 0.65rem !important;
+        text-transform: uppercase !important;
+        color: #888 !important;
+        margin-bottom: 4px !important;
+        display: block !important;
+        font-weight: 600 !important;
+    }
+
+    .swal-sirio-input {
+        background: #000 !important;
+        border: 1px solid #333 !important;
+        color: #fff !important;
+        font-size: 0.85rem !important;
+        border-radius: 4px !important;
+        padding: 8px 12px !important;
+    }
+
+    .swal-sirio-input:focus {
+        border-color: var(--ds-accent-primary) !important;
+        box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1) !important;
+    }
+
+    .btn-sirio-swal {
+        background: var(--ds-accent-primary) !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        padding: 8px 20px !important;
+        border-radius: 4px !important;
+        border: none !important;
+        margin: 10px !important;
+    }
+
+    .btn-cancel-swal {
+        background: transparent !important;
+        color: #888 !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        padding: 8px 20px !important;
+        border-radius: 4px !important;
+        border: 1px solid #333 !important;
+        margin: 10px !important;
+    }
+
+    .btn-sirio-swal:hover {
+        background: #ffb74d !important;
+    }
+
+    .btn-cancel-swal:hover {
+        background: #222 !important;
+        color: #fff !important;
+    }
+
+    /* Navbar Menciones (Sirio Style) */
+    .btn-group-sirio {
+        background: #000 !important;
+        padding: 4px !important;
+        border-radius: 4px !important;
+        border: 1px solid #333 !important;
+        display: flex !important;
+        gap: 4px !important;
+    }
+
+    .btn-group-sirio .nav-item {
+        flex: 1;
+    }
+
+    .btn-group-sirio .nav-link {
+        color: #888 !important;
+        font-family: var(--ds-font-mono, 'JetBrains Mono', monospace) !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        font-size: 0.7rem !important;
+        letter-spacing: 1px !important;
+        border-radius: 2px !important;
+        padding: 8px 10px !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+        width: 100%;
+        text-align: center;
+        background: transparent !important;
+    }
+
+    .btn-group-sirio .nav-link.active {
+        background-color: #007bff !important;
+        color: #fff !important;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.3) !important;
+    }
+
+    .btn-group-sirio .nav-link:not(.active):hover {
+        background-color: #1a1a1a !important;
+        color: #fff !important;
+    }
+
+    /* Botones Estilo Sirio (Matching Header Analysis Style) */
+    .btn-sirio {
+        background: #1a1a1a !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #bbb !important;
+        border-radius: 4px !important;
+        padding: 4px 10px !important;
+        font-size: 10px !important;
+        height: 28px !important;
+        width: auto !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        font-family: var(--ds-font-mono, 'JetBrains Mono', monospace) !important;
+        white-space: nowrap !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+    }
+
+    .btn-sirio:hover, .btn-sirio.active {
+        background: rgba(255, 152, 0, 0.15) !important;
+        border-color: #ff9800 !important;
+        color: #fff !important;
+        box-shadow: 0 0 15px rgba(255, 152, 0, 0.15) !important;
+    }
+
+    .btn-sirio i {
+        font-size: 12px !important;
+    }
+
+    /* Tabs Sirio (Strict Style Parity) */
+    .btn-group-sirio {
+        background: transparent !important;
+        padding: 0 !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: row !important;
+        width: auto !important;
+        gap: 15px !important;
+        margin-bottom: 2rem !important;
+        list-style: none !important;
+    }
+
+    .btn-group-sirio .nav-item {
+        width: auto !important;
+        flex: none !important;
+        display: block !important;
+    }
+
+    .btn-group-sirio .nav-link {
+        background: #1a1a1a !important;
+        color: #fff !important;
+        border: 1px solid #333 !important;
+        height: 28px !important;
+        padding: 0 15px !important;
+        font-family: inherit !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        border-radius: 4px !important;
+        transition: all 0.2s ease !important;
+        width: auto !important;
+        text-transform: uppercase !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        text-decoration: none !important;
+    }
+
+    .btn-group-sirio .nav-link.active {
+        background: #222 !important;
+        border-color: var(--ds-accent-primary, #ff9800) !important;
+        color: var(--ds-accent-primary, #ff9800) !important;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.2) !important;
+    }
+
+    .btn-group-sirio .nav-link:hover:not(.active) {
+        border-color: #555 !important;
+        color: #ff9800 !important;
+    }
+
+    /* Modal Floating Sirio (Enhanced & Draggable) */
+    .modal-sirio-floating .modal-dialog {
+        max-width: 1000px !important;
+        margin: 50px auto !important; /* Fixed margin for dragging start */
+        transform: none !important; /* No centering transform */
+    }
+
+    .modal-sirio-floating .modal-header {
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding: 1.5rem 2rem;
+        cursor: move; /* Indicate draggability */
+    }
+
+    .modal-sirio-floating .modal-content {
+        background: rgba(15, 15, 20, 0.85) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 152, 0, 0.1) !important;
+    }
+
+    .modal-sirio-floating .modal-body {
+        padding: 1.5rem !important;
+    }
+
+    .modal-sirio-floating .modal-title {
+        letter-spacing: 1px;
+    }
+
+    .modal-sirio-floating .border-end {
+        border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Listas en Modal */
+    .modal-item-sirio {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 6px !important;
+        padding: 10px 12px !important;
+        margin-bottom: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .modal-item-sirio:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 152, 0, 0.3) !important;
+    }
+
+    /* === LIGHT THEME OVERRIDES FOR PASSENGER FICHA === */
+    [data-theme="light"] .page-title { color: #294a60 !important; }
+    
+    [data-theme="light"] .card-header.bg-dark { 
+        background-color: #f8f9fa !important; 
+        border-bottom-color: #e2e8f0 !important;
+    }
+    [data-theme="light"] .card-header.bg-dark h2 { color: #294a60 !important; }
+    
+    [data-theme="light"] .hesi-floating-card {
+        background-color: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    [data-theme="light"] .avatar-sirio {
+        background: #f8f9fa !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 8px 20px rgba(41, 74, 96, 0.15) !important;
+    }
+    
+    [data-theme="light"] .text-white { color: #1e293b !important; }
+    [data-theme="light"] .text-accent { color: #294a60 !important; }
+    [data-theme="light"] .text-accent-light { color: #334155 !important; }
+    [data-theme="light"] .text-muted { color: #64748b !important; }
+    
+    [data-theme="light"] .bg-dark { background-color: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+    [data-theme="light"] .bg-dark-alpha { background: rgba(255, 255, 255, 0.8) !important; color: #1e293b !important; }
+    [data-theme="light"] .bg-dark-subtle { background-color: #f8f9fa !important; }
+    
+    [data-theme="light"] .paper-badge {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border-right-color: #294a60 !important;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    [data-theme="light"] .list-pill {
+        background: #f8f9fa !important;
+        border-color: #e2e8f0 !important;
+        color: #475569 !important;
+    }
+    
+    [data-theme="light"] .list-pill.active {
+        background: rgba(25, 135, 84, 0.1) !important;
+    }
+
+    /* Console Overrides */
+    [data-theme="light"] .passenger-info-console {
+        background: #f1f5f9 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    [data-theme="light"] .console-item {
+        border-right-color: #e2e8f0 !important;
+    }
+    
+    [data-theme="light"] .console-item.age { color: #294a60 !important; background: rgba(41, 74, 96, 0.05) !important; }
+    [data-theme="light"] .console-item.class { color: #007bb5 !important; background: rgba(0, 123, 181, 0.05) !important; }
+    [data-theme="light"] .console-item.survivor { color: #157347 !important; background: rgba(21, 115, 71, 0.05) !important; }
+    [data-theme="light"] .console-item.deceased { color: #b91c1c !important; background: rgba(185, 28, 28, 0.05) !important; }
+    
+    [data-theme="light"] .obs-box {
+        background: #f8f9fa !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #334155 !important;
+    }
+    
+    [data-theme="light"] .info-icon.bg-dark {
+        background-color: #f1f5f9 !important;
+        border-color: #e2e8f0 !important;
+        color: #294a60 !important;
+    }
+    
+    [data-theme="light"] .border-secondary-subtle { border-color: #e2e8f0 !important; }
+    [data-theme="light"] .border-secondary { border-color: #e2e8f0 !important; }
+
+    [data-theme="light"] .search-input-wrapper input {
+        background: #f8f9fa !important;
+        border-color: #cbd5e1 !important;
+        color: #1e293b !important;
+    }
+    [data-theme="light"] .search-input-wrapper input::placeholder { color: #94a3b8 !important; }
+    [data-theme="light"] .search-input-wrapper input:focus { border-color: #294a60 !important; }
+
+    [data-theme="light"] .btn-sirio {
+        background: #f8f9fa !important;
+        border-color: #cbd5e1 !important;
+        color: #475569 !important;
+    }
+    [data-theme="light"] .btn-sirio:hover {
+        background: #e2e8f0 !important;
+        border-color: #294a60 !important;
+        color: #294a60 !important;
+    }
+
+    [data-theme="light"] .timeline-sirio-mini::before { background: #e2e8f0 !important; }
+    [data-theme="light"] .timeline-item-mini::after { border-color: #e2e8f0 !important; }
+
+    /* --- ESTILOS ÁRBOL FAMILIAR --- */
+    .family-tree-container {
+        position: relative;
+        padding: 20px 0;
+        margin-bottom: 25px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tree-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        position: relative;
+    }
+
+    .tree-node-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .tree-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 12px;
+        background: #2a2a2a;
+        border-radius: 8px;
+        border: 1px solid #444;
+        min-width: 120px;
+        max-width: 160px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none !important;
+        position: relative;
+        z-index: 2;
+    }
+
+    .tree-node:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        border-color: var(--ds-accent-primary);
+    }
+
+    .tree-node.main {
+        background: var(--ds-accent-alpha);
+        border: 1px solid var(--ds-accent-primary);
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.2);
+    }
+
+    .node-name {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #eee;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+    }
+
+    .node-role {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #888;
+        margin-bottom: 4px;
+    }
+
+    .node-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 5px;
+    }
+
+    .status-survivor { background-color: #4caf50; box-shadow: 0 0 5px #4caf50; }
+    .status-deceased { background-color: #f44336; box-shadow: 0 0 5px #f44336; }
+    .status-unknown { background-color: #757575; }
+
+    .tree-connector {
+        width: 1px;
+        height: 15px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .tree-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        color: #666;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+
+    .tree-nucleus {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nucleus-line {
+        height: 1px;
+        width: 30px;
+        background: rgba(255, 255, 255, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-4">
+    <div class="row g-4 mt-2 flex-nowrap" style="display: flex !important;">
+        <!-- Columna Izquierda: Información Principal -->
+        <div class="col-izq" style="flex: 0 0 70%; min-width: 70%; max-width: 70%;">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pasajeros.listado') }}"
+                            class="text-accent">Pasajeros</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Ficha de {{ pasajero.nombre }}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="card hesi-floating-card shadow-lg mb-4">
+                <div class="card-header bg-dark border-bottom border-secondary d-flex flex-column flex-md-row justify-content-between align-items-md-center p-4 gap-3">
+                    <h2 class="h4 mb-0 fw-bold text-uppercase" style="letter-spacing: 1px; color: #ff9800;">
+                        <i class="fa-solid fa-id-badge me-2"></i> Perfil Histórico
+                    </h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-sirio">
+                            <i class="fa-solid fa-arrow-left"></i> VOLVER AL LISTADO
+                        </a>
+                        <a href="{{ url_for('pasajeros.editar', id=pasajero.id) }}" class="btn btn-sirio">
+                            <i class="fa-solid fa-edit"></i> EDITAR PASAJERO
+                        </a>
+                        <button class="btn btn-sirio" onclick="confirmarEliminar('{{ pasajero.id }}')" style="border-color: rgba(220, 53, 69, 0.4) !important;">
+                            <i class="fa-solid fa-trash-can text-danger"></i> <span class="text-danger">ELIMINAR</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row align-items-center mb-5 mt-2">
+                        <div class="col">
+                            <h1 class="h2 mb-1 fw-bold text-white">
+                                <span class="text-accent">{{ pasajero.apellidos }}</span>, {{ pasajero.nombre }}
+                            </h1>
+                            <div class="passenger-info-console">
+                                <div class="console-item age">
+                                    <i class="fa-solid fa-calendar-day opacity-50"></i>
+                                    {% if pasajero.edad %}
+                                        {% if pasajero.edad < 1 %}
+                                            {% set meses=(pasajero.edad * 12)|round|int %}
+                                            {{ meses }} {{ 'MES' if meses==1 else 'MESES' }}
+                                        {% else %}
+                                            {{ pasajero.edad|int }} {{ 'AÑO' if pasajero.edad|int == 1 else 'AÑOS' }}
+                                        {% endif %}
+                                    {% else %}
+                                        EDAD DESCONOCIDA
+                                    {% endif %}
+                                </div>
+                                <div class="console-item class">
+                                    <i class="fa-solid fa-ticket opacity-50"></i>
+                                    {{ (pasajero.pasaje or 'CLASE DESCONOCIDA') | upper }}
+                                </div>
+                                <div class="console-item {% if pasajero.estado == 'SOBREVIVIENTE' %}survivor{% else %}deceased{% endif %}">
+                                    <i class="fa-solid {% if pasajero.estado == 'SOBREVIVIENTE' %}fa-heart-circle-check{% else %}fa-heart-circle-xmark{% endif %} opacity-50"></i>
+                                    {{ (pasajero.estado or '-') | upper }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="avatar-sirio big-avatar shadow-lg">
+                                {% if pasajero.foto %}
+                                <img src="{{ url_for('static', filename='uploads/pasajeros/' + pasajero.foto) }}"
+                                    alt="{{ pasajero.nombre }}" class="img-fluid rounded-circle"
+                                    style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--ds-accent-primary);">
+                                {% else %}
+                                <i
+                                    class="fa-solid {% if pasajero.sexo == 'Mujer' %}fa-venus text-danger{% else %}fa-mars text-primary{% endif %} fa-3x"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <!-- Left Sub-column: Location -->
+                        <div class="col-md-6 border-end" style="border-right-color: rgba(255, 255, 255, 0.05) !important;">
+                            <h5 class="text-accent small text-uppercase fw-bold mb-4 d-flex align-items-center">
+                                <i class="fa-solid fa-earth-europe me-2"></i> Origen y Residencia
+                            </h5>
+                            <div class="info-grid">
+                                <div class="info-item d-flex align-items-center mb-3">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-map-pin" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Municipio</div>
+                                        <div class="text-white fw-medium">{{ pasajero.municipio or 'Desconocido' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-item d-flex align-items-center mb-3">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-location-dot" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Provincia / Región</div>
+                                        <div class="text-white fw-medium">{{ pasajero.provincia or '-' }} {% if
+                                            pasajero.region %}<span class="text-accent-light mx-1">/</span> {{
+                                            pasajero.region }}{% endif %}</div>
+                                    </div>
+                                </div>
+                                <div class="info-item d-flex align-items-center mb-3">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-flag" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">País de Origen</div>
+                                        <div class="text-white fw-medium">{{ pasajero.pais or 'Italia' }}</div>
+                                    </div>
+                                </div>
+                                <div class="info-item d-flex align-items-center">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-house-chimney" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Residencia Declarada</div>
+                                        <div class="text-white fw-medium">{{ pasajero.punto_residencia or
+                                            pasajero.municipio or '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Sub-column: Journey & Status -->
+                        <div class="col-md-6">
+                            <a href="{{ url_for('pasajeros.mapas', pasajero_id=pasajero.id) }}" class="text-decoration-none">
+                                <h5 class="text-accent small text-uppercase fw-bold mb-4 d-flex align-items-center clickable-hover" style="transition: all 0.2s;" title="Ver arco migratorio en el mapa">
+                                    <i class="fa-solid fa-ship me-2"></i> Itinerario y Estado <i class="fa-solid fa-arrow-up-right-from-square ms-2 small opacity-75" style="font-size: 0.7em;"></i>
+                                </h5>
+                            </a>
+                            <div class="info-grid mb-4">
+                                <div class="info-item d-flex align-items-center mb-3">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-anchor" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Puerto de Embarque</div>
+                                        <div class="text-white fw-medium">{{ pasajero.puerto_embarque or '-' }}</div>
+                                    </div>
+                                </div>
+                                <div class="info-item d-flex align-items-center mb-3">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-ticket" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Destino en Billete</div>
+                                        <div class="text-white fw-medium">{{ pasajero.ciudad_destino or 'BARCELONA' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-item d-flex align-items-center">
+                                    <div class="info-icon bg-dark text-accent-light rounded-circle d-flex align-items-center justify-content-center me-3"
+                                        style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <i class="fa-solid fa-route" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted extra-small text-uppercase">Destino Final Planeado</div>
+                                        <div class="text-white fw-medium">{{ pasajero.ciudad_destino_final or
+                                            pasajero.ciudad_destino or '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Listas de Presencia / Retorno -->
+                            <h6 class="text-muted extra-small text-uppercase fw-bold mb-3 d-flex align-items-center"
+                                style="letter-spacing: 1px;">
+                                <i class="fa-solid fa-list-check me-2"></i> Listas y Retorno
+                            </h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="list-pill {% if pasajero.en_lista_italia_mvd %}active{% endif %}"
+                                    title="En lista Italia (Montevideo)">
+                                    <i
+                                        class="fa-solid {% if pasajero.en_lista_italia_mvd %}fa-circle-check{% else %}fa-circle-dot opacity-50{% endif %}"></i>
+                                    <span>ITA (MVD)</span>
+                                </div>
+                                <div class="list-pill {% if pasajero.en_lista_italia_ba %}active{% endif %}"
+                                    title="En lista Italia (Buenos Aires)">
+                                    <i
+                                        class="fa-solid {% if pasajero.en_lista_italia_ba %}fa-circle-check{% else %}fa-circle-dot opacity-50{% endif %}"></i>
+                                    <span>ITA (BA)</span>
+                                </div>
+                                <div class="list-pill {% if pasajero.en_lista_ravena_sp %}active{% endif %}"
+                                    title="En lista Ravena (Sao Paulo)">
+                                    <i
+                                        class="fa-solid {% if pasajero.en_lista_ravena_sp %}fa-circle-check{% else %}fa-circle-dot opacity-50{% endif %}"></i>
+                                    <span>RAV (SP)</span>
+                                </div>
+                                <div class="list-pill {% if pasajero.en_lista_orione_ge %}active{% endif %}"
+                                    title="En lista Orione (Génova)">
+                                    <i
+                                        class="fa-solid {% if pasajero.en_lista_orione_ge %}fa-circle-check{% else %}fa-circle-dot opacity-50{% endif %}"></i>
+                                    <span>ORI (GE)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Context: Sources & Comments -->
+                        <div class="col-12 mt-2 pt-4 border-top border-secondary-subtle">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="text-accent small text-uppercase fw-bold mb-3 d-flex align-items-center">
+                                        <i class="fa-solid fa-newspaper me-2"></i> Fuentes de Presencia
+                                    </h5>
+                                    <div class="d-flex flex-column gap-2 pb-3">
+                                        {% for pub in pasajero.publicaciones %}
+                                        <div class="paper-badge" title="{{ pub.nombre }}">
+                                            <i class="fa-solid fa-book-open small opacity-50"></i>
+                                            <span>{{ pub.nombre }}</span>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted italic small opacity-50">No hay fuentes
+                                            vinculadas.</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="text-accent small text-uppercase fw-bold mb-3 d-flex align-items-center">
+                                        <i class="fa-solid fa-comment-dots me-2"></i> Observaciones Históricas
+                                    </h5>
+                                    <div
+                                        class="obs-box p-3 rounded bg-dark border border-secondary italic text-muted small">
+                                        {{ pasajero.comentarios or 'Sin observaciones registradas.' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </div> <!-- Fin card-body -->
+                    </div> <!-- Fin row sub-seccion -->
+            </div> <!-- Fin card principal -->
+
+            <!-- Menciones en Prensa (Noticias) - MOVÍDO AQUÍ -->
+            <div class="card hesi-floating-card shadow-lg mb-4">
+                <div class="card-header bg-dark border-bottom border-secondary px-4 py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0 fw-bold text-uppercase" style="letter-spacing: 1px; color: #ff9800;">
+                        <i class="fa-solid fa-newspaper me-2"></i> Menciones en Noticias
+                    </h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sirio" onclick="abrirModalGestionPrensa()">
+                            <i class="fa-solid fa-cog"></i> GESTIONAR
+                        </button>
+                        <button class="btn btn-sirio" onclick="buscarEnPrensa()">
+                            <i class="fa-solid fa-search"></i> BUSCAR
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div id="menciones-venculadas">
+                        {% if pasajero.menciones_prensa %}
+                        <div class="row g-3">
+                            {% for art in pasajero.menciones_prensa %}
+                            <div class="col-md-6 mb-3">
+                                <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 h-100 clickable-hover" 
+                                     onclick="verMencionEnFicha({{ art.id }})" style="cursor: pointer;">
+                                    <h6 class="text-accent fw-bold mb-1" style="font-size: 0.9rem;">
+                                        {{ art.titulo }}
+                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <small class="text-muted" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-newspaper me-1 opacity-50"></i> {{ art.publicacion }}
+                                        </small>
+                                        <small class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">
+                                            {{ art.fecha_original or 's/f' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small italic mb-0" id="no-menciones-msg">No se han vinculado noticias manualmente.</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="prensa-results" class="mt-4" style="display:none;">
+                        <div class="alert alert-info border-accent bg-accent-alpha p-3 mb-0">
+                            <h6 class="alert-heading fw-bold small text-uppercase mb-3 d-flex justify-content-between align-items-center">
+                                Resultados de Búsqueda:
+                                <button class="btn-close btn-close-white" style="font-size: 0.6rem;" onclick="document.getElementById('prensa-results').style.display='none'"></button>
+                            </h6>
+                            <div id="prensa-list" class="small"></div>
+                        </div>
+                    </div>
+                </div> <!-- Fin card-body -->
+            </div> <!-- Fin card prensa -->
+
+        </div> <!-- Fin col-izq -->
+        
+        <!-- Columna Derecha: Metadatos y Timeline -->
+        <div class="col-der" style="flex: 0 0 calc(30% - 1.5rem); min-width: calc(30% - 1.5rem);">
+            <div class="card hesi-floating-card shadow-lg mb-4">
+                <div class="card-header bg-dark border-bottom border-secondary p-3">
+                    <h2 class="h6 mb-0 text-accent fw-bold text-uppercase">Cronología del Viaje</h2>
+                </div> <!-- Fin card-header -->
+                <div class="card-body p-3">
+                <div class="timeline-sirio-mini">
+                    {% if pasajero.fecha_emb_napoles %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Nápoles (Embarque):</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_emb_napoles }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.fecha_emb_genova %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Génova (Escala/Emb):</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_emb_genova }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.fecha_emb_barcelona %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Barcelona (Escala/Emb):</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_emb_barcelona }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.fecha_hundimiento and pasajero.fecha_hundimiento != '-' %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Naufragio (Cabo de Palos):</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_hundimiento }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.fecha_llegada_cartagena %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Llegada Cartagena:</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_llegada_cartagena }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.fecha_salida_cartagena %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Salida Cartagena:</small>
+                        <p class="mb-2 text-white">{{ pasajero.fecha_salida_cartagena }}</p>
+                    </div>
+                    {% endif %}
+                    {% if pasajero.situacion_post_naufragio or pasajero.puerto_retorno or pasajero.fecha_retorno or pasajero.ciudad_destino_final %}
+                    <div class="time-item">
+                        <small class="text-accent fw-bold">Situación y Destino:</small>
+                        <p class="mb-2 text-white">
+                            {% if pasajero.situacion_post_naufragio and pasajero.situacion_post_naufragio != '-' %}
+                                <span class="text-warning fw-bold">{{ pasajero.situacion_post_naufragio }}</span>
+                            {% endif %}
+                            
+                            {% if pasajero.puerto_retorno or pasajero.fecha_retorno %}
+                                <div class="small mt-1">
+                                    <i class="fa-solid fa-plane-arrival me-1 text-muted"></i>
+                                    {% if pasajero.puerto_retorno %}{{ pasajero.puerto_retorno }}{% endif %}
+                                    {% if pasajero.fecha_retorno %} (el {{ pasajero.fecha_retorno }}){% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if pasajero.ciudad_destino_final %}
+                                <div class="small mt-1">
+                                    <i class="fa-solid fa-flag-checkered me-1 text-muted"></i>
+                                    Destino Final: <span class="text-accent">{{ pasajero.ciudad_destino_final }}</span>
+                                </div>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card hesi-floating-card shadow-lg mb-4">
+            <div
+                class="card-header bg-dark border-bottom border-secondary px-3 py-2 d-flex justify-content-between align-items-center" style="min-height: 50px;">
+                <h2 class="h6 mb-0 fw-bold text-uppercase" style="color: #ff9800; font-size: 0.75rem; letter-spacing: 1px;">UBICACIÓN RESIDENCIAL</h2>
+                <button id="btn-edit-map" class="btn btn-sirio" onclick="toggleMapEdit()">
+                    <i class="fa-solid fa-pencil"></i> EDICIÓN MANUAL
+                </button>
+            </div>
+            <div class="card-body p-0" style="height: 250px; position: relative;">
+                <div id="ficha-map" style="width: 100%; height: 100%; background: #1a1a1a;"></div>
+                <div id="map-coords-overlay" class="position-absolute bottom-0 end-0 bg-dark-alpha p-1 small text-muted"
+                    style="z-index: 1000; font-size: 0.7rem;">
+                    {{ pasajero.lat or '-' }}, {{ pasajero.lon or '-' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Árbol Familiar Visual -->
+        {% if relaciones_directas or relaciones_inversas %}
+        <div class="card hesi-floating-card shadow-lg mb-4">
+            <div class="card-header bg-dark border-bottom border-secondary px-3 py-2 d-flex justify-content-between align-items-center" style="min-height: 50px;">
+                <h2 class="h6 mb-0 fw-bold text-uppercase" style="color: #ff9800; font-size: 0.75rem; letter-spacing: 1px;">
+                    <i class="fa-solid fa-tree me-2"></i> Árbol Familiar Visual
+                </h2>
+            </div>
+            <div class="card-body p-3">
+                <div class="family-tree-container">
+                    <div class="tree-section">
+                        {# Grupos de roles para determinar la versión M/F según el sexo del pariente #}
+                        {% set role_map = {
+                            'PADRE': {'M': 'HIJO', 'F': 'HIJA'}, 'MADRE': {'M': 'HIJO', 'F': 'HIJA'},
+                            'HIJO': {'M': 'PADRE', 'F': 'MADRE'}, 'HIJA': {'M': 'PADRE', 'F': 'MADRE'},
+                            'ABUELO': {'M': 'NIETO', 'F': 'NIETA'}, 'ABUELA': {'M': 'NIETO', 'F': 'NIETA'},
+                            'NIETO': {'M': 'ABUELO', 'F': 'ABUELA'}, 'NIETA': {'M': 'ABUELO', 'F': 'ABUELA'},
+                            'TÍO': {'M': 'SOBRINO', 'F': 'SOBRINA'}, 'TÍA': {'M': 'SOBRINO', 'F': 'SOBRINA'},
+                            'SOBRINO': {'M': 'TÍO', 'F': 'TÍA'}, 'SOBRINA': {'M': 'TÍO', 'F': 'TÍA'},
+                            'ESPOSO': {'M': 'ESPOSO', 'F': 'ESPOSA'}, 'ESPOSA': {'M': 'ESPOSO', 'F': 'ESPOSA'},
+                            'HERMANO': {'M': 'HERMANO', 'F': 'HERMANA'}, 'HERMANA': {'M': 'HERMANO', 'F': 'HERMANA'},
+                            'SUEGRO': {'M': 'YERNO', 'F': 'NUERA'}, 'SUEGRA': {'M': 'YERNO', 'F': 'NUERA'},
+                            'YERNO': {'M': 'SUEGRO', 'F': 'SUEGRA'}, 'NUERA': {'M': 'SUEGRO', 'F': 'SUEGRA'},
+                            'HIJASTRO': {'M': 'PADRASTRO', 'F': 'MADRASTRA'}, 'HIJASTRA': {'M': 'PADRASTRO', 'F': 'MADRASTRA'},
+                            'PADRASTRO': {'M': 'HIJASTRO', 'F': 'HIJASTRA'}, 'MADRASTRA': {'M': 'HIJASTRO', 'F': 'HIJASTRA'}
+                        } %}
+
+                        {# Mapeo para normalizar géneros en vínculos ya inversos #}
+                        {% set gender_norm = {
+                            'HIJO': {'M': 'HIJO', 'F': 'HIJA'}, 'HIJA': {'M': 'HIJO', 'F': 'HIJA'},
+                            'PADRE': {'M': 'PADRE', 'F': 'MADRE'}, 'MADRE': {'M': 'PADRE', 'F': 'MADRE'},
+                            'ABUELO': {'M': 'ABUELO', 'F': 'ABUELA'}, 'ABUELA': {'M': 'ABUELO', 'F': 'ABUELA'},
+                            'NIETO': {'M': 'NIETO', 'F': 'NIETA'}, 'NIETA': {'M': 'NIETO', 'F': 'NIETA'},
+                            'TÍO': {'M': 'TÍO', 'F': 'TÍA'}, 'TÍA': {'M': 'TÍO', 'F': 'TÍA'},
+                            'SOBRINO': {'M': 'SOBRINO', 'F': 'SOBRINA'}, 'SOBRINA': {'M': 'SOBRINO', 'F': 'SOBRINA'},
+                            'ESPOSO': {'M': 'ESPOSO', 'F': 'ESPOSA'}, 'ESPOSA': {'M': 'ESPOSO', 'F': 'ESPOSA'},
+                            'HERMANO': {'M': 'HERMANO', 'F': 'HERMANA'}, 'HERMANA': {'M': 'HERMANO', 'F': 'HERMANA'},
+                            'HIJASTRO': {'M': 'HIJASTRO', 'F': 'HIJASTRA'}, 'HIJASTRA': {'M': 'HIJASTRO', 'F': 'HIJASTRA'}
+                        } %}
+
+                        {% set ancestros = [] %}
+                        {% set nucleo = [] %}
+                        {% set descendencia = [] %}
+                        {% set procesados = [] %}
+
+                        {# 1. Directos (P1 -> R -> P2): P2 es el pariente. P1 es el R de P2. #}
+                        {% for r in relaciones_directas if r.relacionado %}
+                            {% set role = r.tipo_relacion.upper() %}
+                            {% set role_clean = role.replace(' DE', '') %}
+                            {% set g = 'F' if r.relacionado.sexo == 'Mujer' else 'M' %}
+                            
+                            {# El label es lo que P2 es para P1 (rol inverso ajustado por sexo de P2) #}
+                            {% set label = role_map.get(role_clean, {}).get(g, role) %}
+                            {% set rel_data = {'p': r.relacionado, 'label': label} %}
+                            
+                            {% if role_clean in ['HIJO', 'HIJA', 'NIETO', 'NIETA', 'SOBRINO', 'SOBRINA', 'YERNO', 'NUERA', 'HIJASTRO', 'HIJASTRA'] %}
+                                {% set _ = ancestros.append(rel_data) %}{% set _ = procesados.append(r.relacionado_id) %}
+                            {% elif role_clean in ['ESPOSO', 'ESPOSA', 'HERMANO', 'HERMANA'] %}
+                                {% set _ = nucleo.append(rel_data) %}{% set _ = procesados.append(r.relacionado_id) %}
+                            {% elif role_clean in ['PADRE', 'MADRE', 'ABUELO', 'ABUELA', 'TÍO', 'TÍA', 'SUEGRO', 'SUEGRA', 'PADRASTRO', 'MADRASTRA'] %}
+                                {% set _ = descendencia.append(rel_data) %}{% set _ = procesados.append(r.relacionado_id) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {# 2. Inversos (P2 -> R -> P1): P2 es el pariente. P2 es el R de P1. #}
+                        {% for r in relaciones_inversas if r.pasajero and r.pasajero_id not in procesados %}
+                            {% set role = r.tipo_relacion.upper() %}
+                            {% set role_clean = role.replace(' DE', '') %}
+                            {% set g = 'F' if r.pasajero.sexo == 'Mujer' else 'M' %}
+
+                            {# El label ya es lo que P2 es para P1, solo normalizamos el género #}
+                            {% set label = gender_norm.get(role_clean, {}).get(g, role) %}
+                            {% set rel_data = {'p': r.pasajero, 'label': label} %}
+                            {% set _ = procesados.append(r.pasajero_id) %}
+
+                            {% if role_clean in ['PADRE', 'MADRE', 'ABUELO', 'ABUELA', 'TÍO', 'TÍA', 'SUEGRO', 'SUEGRA', 'PADRASTRO', 'MADRASTRA'] %}
+                                {% set _ = ancestros.append(rel_data) %}
+                            {% elif role_clean in ['ESPOSO', 'ESPOSA', 'HERMANO', 'HERMANA'] %}
+                                {% set _ = nucleo.append(rel_data) %}
+                            {% elif role_clean in ['HIJO', 'HIJA', 'NIETO', 'NIETA', 'SOBRINO', 'SOBRINA', 'YERNO', 'NUERA', 'HIJASTRO', 'HIJASTRA'] %}
+                                {% set _ = descendencia.append(rel_data) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {# 3. Extendidos (Nivel 2: Parientes de mis parientes) #}
+                        {# Primero creamos un mapa rápido de roles de nivel 1 para los prefijos #}
+                        {% set l1_roles = {} %}
+                        {% for r in relaciones_directas if r.relacionado %}
+                             {% set role = r.tipo_relacion.upper().replace(' DE', '') %}
+                             {% set g = 'F' if r.relacionado.sexo == 'Mujer' else 'M' %}
+                             {% set _ = l1_roles.update({r.relacionado_id: role_map.get(role, {}).get(g, role)}) %}
+                        {% endfor %}
+                        {% for r in relaciones_inversas if r.pasajero %}
+                             {% set role = r.tipo_relacion.upper().replace(' DE', '') %}
+                             {% set g = 'F' if r.pasajero.sexo == 'Mujer' else 'M' %}
+                             {% set _ = l1_roles.update({r.pasajero_id: gender_norm.get(role, {}).get(g, role)}) %}
+                        {% endfor %}
+
+                        {% for r in relaciones_extendidas %}
+                            {% set is_sub = r.pasajero_id in l1_roles %}
+                            {% set p_rel_id = r.pasajero_id if is_sub else r.relacionado_id %}
+                            {% set p_ext = r.relacionado if is_sub else r.pasajero %}
+                            
+                            {% if p_ext.id != pasajero.id and p_ext.id not in procesados %}
+                                {% set role = r.tipo_relacion.upper().replace(' DE', '') %}
+                                {% set g = 'F' if p_ext.sexo == 'Mujer' else 'M' %}
+                                
+                                {# Si el pariente L1 es el objeto, necesitamos el rol recíproco de p_ext hacia p_rel #}
+                                {% set role_to_l1 = role if not is_sub else role_map.get(role, {}).get(g, role) %}
+                                {% if is_sub %}
+                                    {# Si L1 es el sujeto (L1 es Padre de P_ext), P_ext es el Hijo #}
+                                    {% set role_to_l1 = role_map.get(role, {}).get(g, role) %}
+                                {% else %}
+                                    {# Si L1 es el objeto (P_ext es Padre de L1), P_ext es el Padre #}
+                                    {% set role_to_l1 = gender_norm.get(role, {}).get(g, role) %}
+                                {% endif %}
+
+                                {% set l1_label = l1_roles.get(p_rel_id, 'Pariente') %}
+                                {% set final_label = role_to_l1 + " (de " + l1_label + ")" %}
+                                {% set rel_data = {'p': p_ext, 'label': final_label} %}
+                                {% set _ = procesados.append(p_ext.id) %}
+
+                                {% if role_to_l1 in ['PADRE', 'MADRE', 'ABUELO', 'ABUELA', 'TÍO', 'TÍA', 'SUEGRO', 'SUEGRA', 'PADRASTRO', 'MADRASTRA'] %}
+                                    {% set _ = ancestros.append(rel_data) %}
+                                {% elif role_to_l1 in ['HIJO', 'HIJA', 'NIETO', 'NIETA', 'SOBRINO', 'SOBRINA', 'YERNO', 'NUERA', 'HIJASTRO', 'HIJASTRA'] %}
+                                    {% set _ = descendencia.append(rel_data) %}
+                                {% else %}
+                                    {# Por defecto al núcleo si es algo como hermano/esposo del pariente #}
+                                    {% set _ = nucleo.append(rel_data) %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- ASCENDENCIA (Arriba) -->
+                        {% if ancestros %}
+                        <div class="tree-label">Ascendencia / Elders</div>
+                        <div class="tree-node-wrapper">
+                            {% for a in ancestros %}
+                            <a href="{{ url_for('pasajeros.ficha', id=a.p.id) }}" class="tree-node">
+                                <span class="node-role">{{ a.label }}</span>
+                                <span class="node-name">{{ a.p.nombre }}</span>
+                                <div class="node-status-dot {% if a.p.estado == 'SOBREVIVIENTE' %}status-survivor{% elif a.p.estado in ['FALLECIDO/A', 'DESAPARECIDO/A'] %}status-deceased{% else %}status-unknown{% endif %}"></div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <div class="tree-connector"></div>
+                        {% endif %}
+
+                        <!-- NÚCLEO (Padre/Madre/Individuo en la misma línea) -->
+                        <div class="tree-nucleus">
+                            {% for n in nucleo if n.label in ['ESPOSO', 'ESPOSA', 'CÓNYUGE', 'EX-CÓNYUGE'] %}
+                            <a href="{{ url_for('pasajeros.ficha', id=n.p.id) }}" class="tree-node">
+                                <span class="node-role">{{ n.label }}</span>
+                                <span class="node-name">{{ n.p.nombre }}</span>
+                                <div class="node-status-dot {% if n.p.estado == 'SOBREVIVIENTE' %}status-survivor{% elif n.p.estado in ['FALLECIDO/A', 'DESAPARECIDO/A'] %}status-deceased{% else %}status-unknown{% endif %}"></div>
+                            </a>
+                            <div class="nucleus-line"></div>
+                            {% endfor %}
+
+                            <!-- Pasajero Principal -->
+                            <div class="tree-node main">
+                                <span class="node-role">Individuo</span>
+                                <span class="node-name">{{ pasajero.nombre }}</span>
+                                <div class="node-status-dot {% if pasajero.estado == 'SOBREVIVIENTE' %}status-survivor{% elif pasajero.estado in ['FALLECIDO/A', 'DESAPARECIDO/A'] %}status-deceased{% else %}status-unknown{% endif %}"></div>
+                            </div>
+                            
+                            {% for n in nucleo if n.label in ['HERMANO', 'HERMANA'] %}
+                            <div class="nucleus-line"></div>
+                            <a href="{{ url_for('pasajeros.ficha', id=n.p.id) }}" class="tree-node">
+                                <span class="node-role">{{ n.label }}</span>
+                                <span class="node-name">{{ n.p.nombre }}</span>
+                                <div class="node-status-dot {% if n.p.estado == 'SOBREVIVIENTE' %}status-survivor{% elif n.p.estado in ['FALLECIDO/A', 'DESAPARECIDO/A'] %}status-deceased{% else %}status-unknown{% endif %}"></div>
+                            </a>
+                            {% endfor %}
+                        </div>
+
+                        <!-- DESCENDIENCIA (Abajo) -->
+                        {% if descendencia %}
+                        <div class="tree-connector"></div>
+                        <div class="tree-label">Descendencia / Youngers</div>
+                        <div class="tree-node-wrapper">
+                            {% for d in descendencia %}
+                            <a href="{{ url_for('pasajeros.ficha', id=d.p.id) }}" class="tree-node">
+                                <span class="node-role">{{ d.label }}</span>
+                                <span class="node-name">{{ d.p.nombre }}</span>
+                                <div class="node-status-dot {% if d.p.estado == 'SOBREVIVIENTE' %}status-survivor{% elif d.p.estado in ['FALLECIDO/A', 'DESAPARECIDO/A'] %}status-deceased{% else %}status-unknown{% endif %}"></div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-4 extra-small text-muted text-uppercase fw-bold">
+                    <span class="d-flex align-items-center gap-1"><span class="node-status-dot status-survivor" style="margin-top:0"></span> Superviviente</span>
+                    <span class="d-flex align-items-center gap-1"><span class="node-status-dot status-deceased" style="margin-top:0"></span> Fallecido/Desap.</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Vínculos Familiares (Solo Información) -->
+        <div class="card hesi-floating-card shadow-lg mb-4">
+            <div
+                class="card-header bg-dark border-bottom border-secondary d-flex justify-content-between align-items-center px-3 py-2" style="min-height: 50px;">
+                <h2 class="h6 mb-0 fw-bold text-uppercase" style="letter-spacing: 1px; color: #ff9800; font-size: 0.75rem;">
+                    <i class="fa-solid fa-people-group me-2"></i> Vínculos Familiares
+                </h2>
+                <a href="{{ url_for('pasajeros.editar', id=pasajero.id) }}" class="btn btn-sirio">
+                    <i class="fa-solid fa-edit"></i> GESTIONAR
+                </a>
+            </div>
+            <div class="card-body p-3">
+                <div id="relaciones-list">
+                    {% set processed_rel_ids = [] %}
+                    <!-- RELACIONES DIRECTAS -->
+                    {% if relaciones_directas %}
+                    {% for rel in relaciones_directas %}
+                    {% if rel.relacionado %}{% set _ = processed_rel_ids.append(rel.relacionado_id) %}{% endif %}
+                    <div class="mb-2 d-flex align-items-center">
+                        <span class="small">
+                            <i class="fa-solid fa-link text-accent me-2"></i>
+                            Es <strong>{{ rel.tipo_relacion|upper }}</strong> de
+                            {% if rel.relacionado %}
+                            <a href="{{ url_for('pasajeros.ficha', id=rel.relacionado_id) }}"
+                                class="text-accent fw-bold">
+                                {{ rel.relacionado.nombre or '?' }} {{ rel.relacionado.apellidos.split('(')[0] if
+                                rel.relacionado.apellidos else '' }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Desconocido</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <!-- RELACIONES INVERSAS -->
+                    {% if relaciones_inversas %}
+                    {% for rel in relaciones_inversas %}
+                    {% if rel.pasajero_id not in processed_rel_ids %}
+                    <div class="mb-2 small text-muted">
+                        <i class="fa-solid fa-link-slash me-2 opacity-50"></i>
+                        {% if rel.pasajero %}
+                        <a href="{{ url_for('pasajeros.ficha', id=rel.pasajero_id) }}" class="text-accent fw-bold">
+                            {{ rel.pasajero.nombre or '?' }} {{ rel.pasajero.apellidos.split('(')[0] if
+                            rel.pasajero.apellidos else '' }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted">Desconocido</span>
+                        {% endif %}
+                        es <strong>{{ rel.tipo_relacion|upper }}</strong> de este pasajero
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if not relaciones_directas and not relaciones_inversas %}
+                    <p class="text-muted small italic mb-0">No hay vínculos familiares estructurados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lector de Noticias en Ficha (Debajo de Vínculos) -->
+        <div id="ficha-mention-reader" class="card hesi-floating-card shadow-lg mb-4" style="display: none; border: 1px solid var(--ds-accent-primary);">
+            <div class="card-header bg-dark border-bottom border-secondary d-flex justify-content-between align-items-center px-3 py-2">
+                <h6 class="mb-0 fw-bold text-uppercase small" style="color: #ff9800;">
+                    <i class="fa-solid fa-book-open me-2"></i> Lector de Mención
+                </h6>
+                <button class="btn btn-close btn-close-white" style="font-size: 0.5rem;" onclick="cerrarMencionEnFicha()"></button>
+            </div>
+            <div class="card-body p-3">
+                <div id="ficha-reader-header" class="mb-3">
+                    <h6 id="ficha-reader-title" class="text-white fw-bold mb-1" style="font-size: 0.85rem;"></h6>
+                    <div id="ficha-reader-meta" class="extra-small text-muted italic" style="font-size: 0.65rem;"></div>
+                </div>
+                <div id="ficha-reader-content" class="custom-scrollbar overflow-auto" style="max-height: 500px;">
+                    <!-- Se rellena vía JS -->
+                </div>
+            </div>
+            <div class="card-footer bg-dark border-top border-secondary p-2 text-center">
+                <button class="btn btn-sirio btn-xs w-100" onclick="cerrarMencionEnFicha()">
+                    CERRAR LECTURA
+                </button>
+            </div>
+        </div>
+
+
+    </div> <!-- Fin col-der -->
+</div> <!-- Fin row -->
+</div> <!-- Fin container -->
+
+<!-- MODAL GESTIÓN DE PRENSA -->
+<div class="modal fade modal-sirio-floating" id="modalGestionPrensa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-accent uppercase small fw-bold">Gestionar Menciones en Noticias</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Lista de vinculadas -->
+                    <div class="col-md-4 border-end">
+                        <h6 class="text-white extra-small text-uppercase mb-3 opacity-50" style="letter-spacing: 1px;">Menciones Vinculadas</h6>
+                        <div id="modal-linked-list" class="custom-scrollbar pr-2" style="max-height: 500px; overflow-y: auto;">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                    
+                    <!-- Buscador y Manual -->
+                    <div class="col-md-8">
+                        <ul class="btn-group-sirio" id="pills-tab" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="pills-search-tab" data-bs-toggle="pill" data-bs-target="#pills-search" type="button">BUSCAR EXISTENTES</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="pills-manual-tab" data-bs-toggle="pill" data-bs-target="#pills-manual" type="button">AÑADIR REFERENCIA</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="pills-tabContent">
+                            <!-- Pestaña de Búsqueda Jerárquica -->
+                            <div class="tab-pane fade show active" id="pills-search">
+                                <div id="publication-search-container">
+                                    <div class="input-group input-group-sm mb-3">
+                                        <input type="text" id="publicacion-search-modal" class="form-control bg-black border-secondary text-white" placeholder="Filtrar publicaciones...">
+                                        <button class="btn btn-sirio" type="button" onclick="searchPublicacionesModal()">
+                                            <i class="fa-solid fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div id="modal-publication-results" class="overflow-auto" style="max-height: 300px;">
+                                        <!-- JS populated -->
+                                        <p class="text-muted small italic">Cargando publicaciones...</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="news-search-container" style="display: none;">
+                                    <button class="btn btn-link btn-xs text-accent p-0 mb-3" onclick="backToPublications()">
+                                        <i class="fa-solid fa-arrow-left me-1"></i> Volver a publicaciones
+                                    </button>
+                                    <h6 id="selected-publication-name" class="text-white small fw-bold mb-3"></h6>
+                                    <div id="modal-news-results" class="overflow-auto" style="max-height: 250px;">
+                                        <!-- JS populated -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Pestaña Manual -->
+                            <div class="tab-pane fade" id="pills-manual">
+                                <p class="text-muted extra-small mb-3">Crea una referencia nueva si el periódico no está en el sistema.</p>
+                                <div class="mb-3">
+                                    <label class="swal-sirio-label">Títuio / Titular</label>
+                                    <input type="text" id="manual-titulo" class="form-control form-control-sm bg-black border-secondary text-white" placeholder="Ej: Pasajeros salvados del Sirio...">
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="swal-sirio-label">Medio / Periódico</label>
+                                        <input type="text" id="manual-medio" class="form-control form-control-sm bg-black border-secondary text-white" placeholder="Ej: El Deber">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="swal-sirio-label">Fecha</label>
+                                        <input type="text" id="manual-fecha" class="form-control form-control-sm bg-black border-secondary text-white" placeholder="DD/MM/YYYY">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="swal-sirio-label">Notas Adicionales</label>
+                                    <textarea id="manual-notas" class="form-control form-control-sm bg-black border-secondary text-white" rows="2" placeholder="Ej: Página 16, columna 2..."></textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button class="btn btn-sm btn-sirio" onclick="crearMencionManual()">CREAR Y VINCULAR</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalle de Mención -->
+                        <div id="mention-detail-container" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+                                <button class="btn btn-link btn-xs text-accent p-0" onclick="cerrarTextoMencion()">
+                                    <i class="fa-solid fa-arrow-left me-1"></i> Volver a búsqueda
+                                </button>
+                                <span class="text-muted extra-small uppercase fw-bold" style="letter-spacing: 1px;">Detalle de Mención</span>
+                            </div>
+                            
+                            <div id="mention-header" class="mb-3">
+                                <h6 id="mention-detail-title" class="text-white fw-bold mb-1"></h6>
+                                <div id="mention-detail-meta" class="extra-small text-muted"></div>
+                            </div>
+                            
+                            <div id="mention-paragraphs" class="custom-scrollbar overflow-auto pr-2" style="max-height: 400px;">
+                                <!-- JS populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="delete-form" action="{{ url_for('pasajeros.eliminar', id=pasajero.id) }}" method="POST"
+    style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    const FICHA_PASAJERO_ID = {{ pasajero.id | tojson }};
+    let FICHA_LAT = {{ pasajero.lat | tojson or 'null' }};
+    let FICHA_LON = {{ pasajero.lon | tojson or 'null' }};
+    let FICHA_MAP = null;
+    let FICHA_MARKER = null;
+    let IS_MAP_EDITABLE = false;
+
+    function initFichaMap() {
+        const defaultLat = 37.6, defaultLon = -0.98; // Cartagena/Mediterranean
+        let startLat = FICHA_LAT || defaultLat;
+        let startLon = FICHA_LON || defaultLon;
+
+        FICHA_MAP = L.map('ficha-map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([startLat, startLon], FICHA_LAT ? 11 : 2);
+
+        // Detect current theme for appropriate tiles
+        const isLight = document.documentElement.dataset.theme === 'light';
+        const tileUrl = isLight 
+            ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+        L.tileLayer(tileUrl, {
+            maxZoom: 19
+        }).addTo(FICHA_MAP);
+
+        FICHA_MARKER = L.marker([startLat, startLon], {
+            draggable: false
+        }).addTo(FICHA_MAP);
+
+        FICHA_MARKER.on('dragend', async function (e) {
+            const newPos = e.target.getLatLng();
+            await saveNewCoords(newPos.lat, newPos.lng);
+        });
+    }
+
+    function toggleMapEdit() {
+        IS_MAP_EDITABLE = !IS_MAP_EDITABLE;
+        const btn = document.getElementById('btn-edit-map');
+        if (IS_MAP_EDITABLE) {
+            btn.classList.remove('btn-outline-sirio');
+            btn.classList.add('btn-sirio');
+            btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> FINALIZAR';
+            FICHA_MARKER.dragging.enable();
+            FICHA_MAP.getContainer().style.cursor = 'crosshair';
+        } else {
+            btn.classList.remove('btn-sirio');
+            btn.classList.add('btn-outline-sirio');
+            btn.innerHTML = '<i class="fa-solid fa-pencil me-1"></i> EDICIÓN MANUAL';
+            FICHA_MARKER.dragging.disable();
+            FICHA_MAP.getContainer().style.cursor = '';
+        }
+    }
+
+    async function saveNewCoords(lat, lon) {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        try {
+            const response = await fetch('/pasajeros/api/update-coordinates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    pasajero_id: FICHA_PASAJERO_ID,
+                    lat: lat.toFixed(7),
+                    lon: lon.toFixed(7)
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('map-coords-overlay').innerText = `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
+            } else {
+                alert('Error al guardar: ' + data.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initFichaMap();
+        setTimeout(() => {
+            if (FICHA_MAP) FICHA_MAP.invalidateSize();
+        }, 300);
+    });
+
+    function confirmDelete() {
+        if (confirm('¿Estás seguro de eliminar permanentemente este pasajero?')) {
+            document.getElementById('delete-form').submit();
+        }
+    }
+
+    function vincularFuente(pubId) {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        fetch("{{ url_for('pasajeros.vincular_publicacion') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ pasajero_id: FICHA_PASAJERO_ID, publicacion_id: pubId })
+        }).then(r => r.json()).then(data => {
+            if (data.success) location.reload();
+            else alert('Error: ' + data.message);
+        });
+    }
+
+    function desvincularFuente(pubId) {
+        if (!confirm('¿Desvincular esta fuente?')) return;
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        fetch("{{ url_for('pasajeros.desvincular_publicacion') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ pasajero_id: FICHA_PASAJERO_ID, publicacion_id: pubId })
+        }).then(r => r.json()).then(data => {
+            if (data.success) location.reload();
+            else alert('Error: ' + data.message);
+        });
+    }
+
+    async function verMencionEnFicha(prensaId) {
+        const reader = document.getElementById('ficha-mention-reader');
+        const content = document.getElementById('ficha-reader-content');
+        const title = document.getElementById('ficha-reader-title');
+        const meta = document.getElementById('ficha-reader-meta');
+        
+        reader.style.display = 'block';
+        content.innerHTML = '<div class="text-center py-5"><i class="fa-solid fa-spinner fa-spin text-accent"></i></div>';
+        
+        // Scroll suave hasta el lector
+        reader.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        try {
+            const r = await fetch(`/pasajeros/api/mencion_texto/${FICHA_PASAJERO_ID}/${prensaId}`);
+            const data = await r.json();
+            
+            if (data.success) {
+                title.innerText = data.titulo;
+                meta.innerText = `${data.publicacion} - ${data.fecha || 's/f'}`;
+                
+                if (data.parrafos && data.parrafos.length > 0) {
+                    let html = '';
+                    data.parrafos.forEach(p => {
+                        html += `<p class="text-white-50 mb-3 p-2 bg-dark-alpha rounded border-start border-accent" style="font-size: 0.8rem; line-height: 1.5;">${p}</p>`;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="alert alert-warning small py-2">No se han extraído párrafos con el nombre del pasajero.</div>';
+                }
+            }
+        } catch (e) {
+            content.innerHTML = '<p class="text-danger small">Error al cargar.</p>';
+        }
+    }
+
+    function cerrarMencionEnFicha() {
+        document.getElementById('ficha-mention-reader').style.display = 'none';
+    }
+
+    async function buscarEnPrensa() {
+        const resultsDiv = document.getElementById('prensa-results');
+        const listDiv = document.getElementById('prensa-list');
+        resultsDiv.style.display = 'block';
+        listDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Buscando...';
+
+        try {
+            const response = await fetch(`/pasajeros/api/buscar_en_prensa/${FICHA_PASAJERO_ID}`, {
+                method: 'GET'
+            });
+            const data = await response.json();
+            if (data.success) {
+                if (data.count > 0) {
+                    let html = '<ul class="mb-0 list-unstyled">';
+                    data.results.forEach(art => {
+                        html += `
+                            <li class="mb-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="/noticias/detalle/${art.id}" target="_blank" class="text-accent fw-bold">${art.titulo}</a><br>
+                                    <small class="text-muted">${art.publicacion} - ${art.fecha || 's/f'}</small>
+                                </div>
+                                ${art.vinculada ? 
+                                    '<span class="badge bg-success small" style="font-size:0.6rem;">YA VINCULADA</span>' : 
+                                    `<button class="btn btn-xs btn-outline-warning py-0" style="font-size:0.6rem;" onclick="vincularMencion(${art.id})">VINCULAR</button>`
+                                }
+                            </li>
+                        `;
+                    });
+                    html += '</ul>';
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = 'No se han encontrado menciones automáticas.';
+                }
+            } else {
+                listDiv.innerHTML = 'Error en la búsqueda.';
+            }
+        } catch (err) {
+            listDiv.innerHTML = 'Error de conexión.';
+        }
+    }
+
+    // GESTIÓN MANUAL DE PRENSA
+    let modalGestionPrensa = null;
+
+    function abrirModalGestionPrensa() {
+        if (!modalGestionPrensa) {
+            modalGestionPrensa = new bootstrap.Modal(document.getElementById('modalGestionPrensa'));
+        }
+        cargarMencionesVinculadas();
+        modalGestionPrensa.show();
+    }
+
+    async function cargarMencionesVinculadas() {
+        const list = document.getElementById('modal-linked-list');
+        list.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        
+        try {
+            const r = await fetch(`/pasajeros/api/menciones/${FICHA_PASAJERO_ID}`);
+            const data = await r.json();
+            if (data.success) {
+                if (data.menciones.length > 0) {
+                    let html = '';
+                    data.menciones.forEach(m => {
+                        html += `
+                            <div class="modal-item-sirio d-flex justify-content-between align-items-center clickable-hover" onclick="verTextoMencion(${m.id})">
+                                <div style="max-width: 85%;">
+                                    <div class="text-white fw-bold truncate small" style="font-size:0.75rem; letter-spacing: 0.2px;">${m.titulo}</div>
+                                    <div class="text-muted extra-small" style="font-size: 0.65rem; opacity: 0.6;">${m.publicacion} (${m.fecha || 's/f'})</div>
+                                </div>
+                                <button class="btn btn-link text-danger p-0 ms-2 opacity-50 hover-opacity-1" onclick="event.stopPropagation(); desvincularMencion(${m.id})">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    list.innerHTML = html;
+                } else {
+                    list.innerHTML = '<p class="text-muted small italic">No hay noticias vinculadas.</p>';
+                }
+            }
+        } catch (e) {
+            list.innerHTML = '<p class="text-danger small">Error al cargar.</p>';
+        }
+    }
+
+    async function verTextoMencion(prensaId) {
+        document.getElementById('pills-tab').style.display = 'none';
+        document.getElementById('pills-tabContent').style.display = 'none';
+        const detail = document.getElementById('mention-detail-container');
+        const paragraphs = document.getElementById('mention-paragraphs');
+        const title = document.getElementById('mention-detail-title');
+        const meta = document.getElementById('mention-detail-meta');
+        
+        detail.style.display = 'block';
+        paragraphs.innerHTML = '<div class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-2x text-accent opacity-50"></i><p class="text-muted small mt-2">Buscando menciones...</p></div>';
+        title.innerText = '';
+        meta.innerText = '';
+
+        try {
+            const r = await fetch(`/pasajeros/api/mencion_texto/${FICHA_PASAJERO_ID}/${prensaId}`);
+            const data = await r.json();
+            
+            if (data.success) {
+                // Título con enlace al lector de noticias
+                title.innerHTML = `<a href="/noticias/lector?id=${prensaId}" target="_blank" class="text-white hover-accent" style="text-decoration: none;">
+                                    ${data.titulo} <i class="fa-solid fa-up-right-from-square ms-1 small opacity-50"></i>
+                                  </a>`;
+                meta.innerText = `${data.publicacion} - ${data.fecha || 's/f'}`;
+                
+                if (data.parrafos && data.parrafos.length > 0) {
+                    let html = '';
+                    data.parrafos.forEach(p => {
+                        // Resaltado básico de términos (opcional pero recomendado)
+                        html += `<p class="text-white-50 mb-3 p-2 bg-dark-alpha rounded border-start border-accent" style="font-size: 0.85rem; line-height: 1.6;">${p}</p>`;
+                    });
+                    paragraphs.innerHTML = html;
+                } else {
+                    paragraphs.innerHTML = '<div class="alert alert-warning small py-2">No se han podido extraer párrafos con el nombre exacto del pasajero, pero la noticia está vinculada.</div>';
+                }
+            }
+        } catch (e) {
+            paragraphs.innerHTML = '<p class="text-danger small">Error al cargar el texto de la mención.</p>';
+        }
+    }
+
+    function cerrarTextoMencion() {
+        document.getElementById('pills-tab').style.display = 'flex';
+        document.getElementById('pills-tabContent').style.display = 'block';
+        document.getElementById('mention-detail-container').style.display = 'none';
+    }
+
+    async function searchPublicacionesModal() {
+        const query = document.getElementById('publicacion-search-modal').value.trim();
+        const results = document.getElementById('modal-publication-results');
+        results.innerHTML = '<div class="text-center py-3"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        
+        try {
+            const r = await fetch(`/api/publicaciones?q=${encodeURIComponent(query)}`);
+            const data = await r.json();
+            
+            if (data.success && data.results.length > 0) {
+                let html = '';
+                data.results.forEach(p => {
+                    html += `
+                        <div class="p-2 mb-2 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center clickable-hover" 
+                             onclick="selectPublicacion(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                            <div class="small">
+                                <div class="text-white fw-medium">${p.nombre}</div>
+                                <div class="text-muted extra-small">${p.ciudad || ''} ${p.pais || ''}</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-muted small"></i>
+                        </div>
+                    `;
+                });
+                results.innerHTML = html;
+            } else {
+                results.innerHTML = '<p class="text-muted small p-4 text-center">Sin publicaciones.</p>';
+            }
+        } catch (e) {
+            results.innerHTML = '<p class="text-danger small">Error en la búsqueda.</p>';
+        }
+    }
+
+    async function selectPublicacion(pubId, pubNombre) {
+        const pubContainer = document.getElementById('publication-search-container');
+        const newsContainer = document.getElementById('news-search-container');
+        const newsResults = document.getElementById('modal-news-results');
+        const pubTitle = document.getElementById('selected-publication-name');
+        
+        pubContainer.style.display = 'none';
+        newsContainer.style.display = 'block';
+        pubTitle.innerText = pubNombre;
+        newsResults.innerHTML = '<div class="text-center py-3"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        
+        try {
+            const r = await fetch(`/api/publicacion_noticias/${pubId}`);
+            const data = await r.json();
+            
+            if (data.success && data.results.length > 0) {
+                let html = '';
+                data.results.forEach(art => {
+                    html += `
+                        <div class="p-2 mb-2 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                            <div class="small">
+                                <div class="text-white fw-medium">${art.titulo}</div>
+                                <div class="text-muted extra-small">${art.fecha || 's/f'}</div>
+                            </div>
+                            <button class="btn btn-xs btn-sirio" onclick="vincularMencion(${art.id})">VINCULAR</button>
+                        </div>
+                    `;
+                });
+                newsResults.innerHTML = html;
+            } else {
+                newsResults.innerHTML = '<p class="text-muted small p-4 text-center">No hay noticias registradas para este medio.</p>';
+            }
+        } catch (e) {
+            newsResults.innerHTML = '<p class="text-danger small">Error al cargar noticias.</p>';
+        }
+    }
+
+    function backToPublications() {
+        document.getElementById('publication-search-container').style.display = 'block';
+        document.getElementById('news-search-container').style.display = 'none';
+    }
+
+    // Inicializar búsqueda al abrir el modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('modalGestionPrensa');
+        if (modal) {
+            modal.addEventListener('shown.bs.modal', function () {
+                searchPublicacionesModal();
+            });
+        }
+    });
+
+    async function searchPrensaModal() {
+        // Redirigir a la nueva búsqueda si se llama por error
+        searchPublicacionesModal();
+    }
+
+    async function vincularMencion(prensaId) {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        try {
+            const r = await fetch('/pasajeros/api/vincular_mencion', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+                body: JSON.stringify({pasajero_id: FICHA_PASAJERO_ID, prensa_id: prensaId})
+            });
+            const data = await r.json();
+            if (data.success) {
+                if (modalGestionPrensa && modalGestionPrensa._isShown) cargarMencionesVinculadas();
+                else location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function desvincularMencion(prensaId) {
+        if (!confirm('¿Desvincular esta noticia?')) return;
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        try {
+            const r = await fetch('/pasajeros/api/desvincular_mencion', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+                body: JSON.stringify({pasajero_id: FICHA_PASAJERO_ID, prensa_id: prensaId})
+            });
+            const data = await r.json();
+            if (data.success) {
+                if (modalGestionPrensa && modalGestionPrensa._isShown) cargarMencionesVinculadas();
+                else location.reload();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function crearMencionManual() {
+        const titulo = document.getElementById('manual-titulo').value.trim();
+        const medio = document.getElementById('manual-medio').value.trim();
+        const fecha = document.getElementById('manual-fecha').value.trim();
+        const notas = document.getElementById('manual-notas').value.trim();
+        
+        if (!titulo || !medio) {
+            alert('Título y Medio son obligatorios.');
+            return;
+        }
+        
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        try {
+            const r = await fetch('/pasajeros/api/crear_mencion_manual', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+                body: JSON.stringify({
+                    pasajero_id: FICHA_PASAJERO_ID,
+                    titulo: titulo,
+                    publicacion: medio,
+                    fecha: fecha,
+                    notas: notas
+                })
+            });
+            const data = await r.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function desvincularFamiliar(relId) {
+        // Redirigir al editor si se intenta desvincular desde aquí?
+        // El usuario pidió pasar la lógica al editor.
+        window.location.href = "{{ url_for('pasajeros.editar', id=pasajero.id) }}";
+    }
+
+
+
+    // Lógica del Buscador de la Cabecera
+    const searchInput = document.getElementById('passenger-search-input');
+    const suggestionsDiv = document.getElementById('search-suggestions');
+
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/pasajeros/api/search_autocomplete?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        suggestionsDiv.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(item_data => {
+                                const item = document.createElement('a');
+                                item.className = 'dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-25';
+                                item.href = `/pasajeros/ficha/${item_data.id}`;
+                                item.innerHTML = `
+                                    <div style="overflow: hidden; max-width: 80%;">
+                                        <div class="fw-bold text-accent small text-truncate" style="font-size: 0.75rem;">${item_data.apellidos}</div>
+                                        <div class="text-white small text-truncate" style="font-size: 0.7rem; opacity: 0.8;">${item_data.nombre}</div>
+                                    </div>
+                                    <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.55rem;">${item_data.clase || '-'}</span>
+                                `;
+                                suggestionsDiv.appendChild(item);
+                            });
+                            suggestionsDiv.style.display = 'block';
+                        } else {
+                            suggestionsDiv.innerHTML = '<div class="dropdown-item disabled small text-muted">Sin resultados</div>';
+                            suggestionsDiv.style.display = 'block';
+                        }
+                    });
+            }, 300);
+        });
+
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!document.getElementById('passenger-search-container').contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        // Abrir si tiene contenido al ganar foco
+        searchInput.addEventListener('focus', function () {
+            if (this.value.trim().length >= 2 && suggestionsDiv.hasChildNodes()) {
+                suggestionsDiv.style.display = 'block';
+            }
+        });
+    }
+
+    // Hacer el modal arrastrable (Versión Final Robusta)
+    (function() {
+        const modal = document.getElementById('modalGestionPrensa');
+        const dialog = modal ? modal.querySelector('.modal-dialog') : null;
+        const header = modal ? modal.querySelector('.modal-header') : null;
+
+        if (!modal || !dialog || !header) return;
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        header.style.cursor = 'grab';
+
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button')) return;
+            isDragging = true;
+            header.style.cursor = 'grabbing';
+            
+            // Cambiar a fixed para control absoluto
+            const rect = dialog.getBoundingClientRect();
+            dialog.style.position = 'fixed';
+            dialog.style.margin = '0';
+            dialog.style.left = rect.left + 'px';
+            dialog.style.top = rect.top + 'px';
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            dialog.style.left = (initialLeft + dx) + 'px';
+            dialog.style.top = (initialTop + dy) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                header.style.cursor = 'grab';
+            }
+        });
+
+        // Reset positions on show
+        modal.addEventListener('shown.bs.modal', () => {
+            dialog.style.position = '';
+            dialog.style.left = '';
+            dialog.style.top = '';
+            dialog.style.margin = '50px auto';
+        });
+    })();
+</script>
+
+<style>
+    .avatar-sirio {
+        width: 80px;
+        height: 80px;
+        background: #1a1a1a;
+        border: 2px solid var(--ds-accent-primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 15px var(--ds-accent-alpha);
+        transition: all 0.3s ease;
+    }
+
+    .avatar-sirio:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px var(--ds-accent-alpha);
+    }
+
+    .big-avatar {
+        width: 110px;
+        height: 110px;
+        border-width: 3px;
+    }
+
+    .form-control-sirio {
+        background-color: #1a1a1a !important;
+        border-color: #333 !important;
+        color: #eee !important;
+    }
+
+    .timeline-sirio-mini {
+        border-left: 2px solid #333;
+        padding-left: 15px;
+        margin-left: 10px;
+    }
+
+    .time-item {
+        position: relative;
+    }
+
+    .time-item::before {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--ds-accent-primary);
+        border-radius: 50%;
+        left: -21px;
+        top: 5px;
+    }
+</style>
+{% endblock %}

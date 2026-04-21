@@ -1,0 +1,273 @@
+{% extends 'base_desktop.html' %}
+{% block title %}Nuevo Proyecto — hesiOX{% endblock %}
+{% block page_title %}Creación de Espacios{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Nuevo Proyecto</span>
+{% endblock %}
+
+{% block body_class %}hesiox-style bg-dark{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Desktop specific adjustments for the creation form */
+    .creation-studio-desktop {
+        max-width: 800px;
+        /* Slightly wider for desktop feel */
+        margin: 2rem auto;
+    }
+
+    .form-card {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 8px;
+        /* Sharper corners for desktop */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        padding: 2.5rem;
+    }
+
+    .form-label {
+        color: var(--bs-warning);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: #121212;
+        border: 1px solid #333;
+        color: #e0e0e0;
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #000;
+        border-color: var(--bs-warning);
+        color: #fff;
+        box-shadow: none;
+        /* Desktop default behavior often avoids glow */
+        outline: 1px solid var(--bs-warning);
+    }
+
+    .btn-create {
+        background: var(--bs-warning);
+        color: #000;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.8rem 2rem;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-create:hover {
+        background: #fb8c00;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .project-type-option {
+        background-color: #252526;
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .project-type-option:hover {
+        background-color: #2d2d30;
+        border-color: #555;
+    }
+
+    .project-type-input:checked+.project-type-option {
+        border-color: var(--bs-warning);
+        background-color: rgba(255, 152, 0, 0.1);
+    }
+
+    .project-type-option i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-indicator {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        line-height: 22px;
+        border: 1px solid var(--bs-warning);
+        border-radius: 50%;
+        text-align: center;
+        margin-right: 8px;
+        color: var(--bs-warning);
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 creation-studio-desktop">
+
+        <!-- Header Info -->
+        <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+            <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width: 48px; height: 48px;">
+                <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+            </div>
+            <div>
+                <h4 class="text-white mb-0 fw-light">Asistente de Creación</h4>
+                <small class="text-muted">Configura un nuevo entorno de investigación independiente en hesiOX.</small>
+            </div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('crear_proyecto') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+                <!-- Paso 1: Nombre -->
+                <div class="mb-5">
+                    <label class="form-label">
+                        <span class="step-indicator">1</span>
+                        Identificación del Proyecto
+                    </label>
+                    <input type="text" name="nombre" class="form-control" placeholder="Ej. Análisis Hemeroteca 2025"
+                        required autofocus autocomplete="off">
+                    <div class="form-text text-secondary ps-2 small"><i class="fa-solid fa-circle-info me-1"></i>Debe
+                        ser un nombre único en el sistema.</div>
+                </div>
+
+                <!-- Paso 2: Tipo -->
+                <div class="mb-5">
+                    <label class="form-label mb-3">
+                        <span class="step-indicator">2</span>
+                        Tipo de Fuente Principal
+                    </label>
+
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <label class="d-block h-100">
+                                <input type="radio" name="tipo" value="hemerografia" class="d-none project-type-input"
+                                    checked>
+                                <div class="project-type-option">
+                                    <i class="fa-regular fa-newspaper text-warning"></i>
+                                    <div class="small text-light fw-bold">Hemerografía</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="d-block h-100">
+                                <input type="radio" name="tipo" value="libros" class="d-none project-type-input">
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-book text-info"></i>
+                                    <div class="small text-light fw-bold">Bibliografía</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="d-block h-100">
+                                <input type="radio" name="tipo" value="archivos" class="d-none project-type-input">
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-box-archive text-success"></i>
+                                    <div class="small text-light fw-bold">Archivos</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="d-block h-100">
+                                <input type="radio" name="tipo" value="mixto" class="d-none project-type-input">
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-layer-group text-secondary"></i>
+                                    <div class="small text-light fw-bold">Mixto</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Perfil de Análisis -->
+                <div class="mb-5">
+                    <label class="form-label mb-3">
+                        <span class="step-indicator">3</span>
+                        Perfil de Análisis Textual
+                    </label>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="d-block h-100">
+                                <input type="radio" name="perfil_analisis" value="contenido" class="d-none project-type-input" checked>
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-magnifying-glass-chart text-warning"></i>
+                                    <div class="small text-light fw-bold mt-2">Contenido</div>
+                                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">Noticias, artículos</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="d-block h-100">
+                                <input type="radio" name="perfil_analisis" value="estilometrico" class="d-none project-type-input">
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-feather text-info"></i>
+                                    <div class="small text-light fw-bold mt-2">Estilométrico</div>
+                                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">Literatura, poesía</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="d-block h-100">
+                                <input type="radio" name="perfil_analisis" value="mixto" class="d-none project-type-input">
+                                <div class="project-type-option">
+                                    <i class="fa-solid fa-sliders text-secondary"></i>
+                                    <div class="small text-light fw-bold mt-2">Mixto</div>
+                                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">Balance intermedio</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-text text-secondary ps-2 small mt-2">
+                        <i class="fa-solid fa-info-circle me-1"></i>
+                        <strong>Contenido:</strong> Filtra palabras comunes para destacar temas. 
+                        <strong>Estilométrico:</strong> Mantiene palabras funcionales para análisis de estilo de autor. 
+                        <strong>Mixto:</strong> Filtrado intermedio.
+                    </div>
+                </div>
+
+                <!-- Paso 4: Descripción -->
+                <div class="mb-5">
+                    <label class="form-label">
+                        <span class="step-indicator">4</span>
+                        Descripción y Objetivos (Opcional)
+                    </label>
+                    <textarea name="descripcion" class="form-control" rows="3"
+                        placeholder="Detalla brevemente el propósito de este nuevo espacio de trabajo..."></textarea>
+                </div>
+
+                <div
+                    class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <a href="{{ url_for('listar_proyectos') }}" class="btn btn-outline-secondary btn-sm px-3">
+                        <i class="fa-solid fa-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-create">
+                        <i class="fa-solid fa-rocket me-2"></i>INICIALIZAR
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

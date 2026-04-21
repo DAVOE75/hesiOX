@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Leaflet JS (CDNJS, igual que mapa.html) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <!-- Forzar Standards Mode para evitar Quirks Mode -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}hesiOX Desktop{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/hesiox_logo2.png') }}">
+
+    <!-- Bootstrap Local -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- FontAwesome (siempre útil para iconos de escritorio) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Flag Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" />
+
+    <!-- Main App CSS (Desktop Styles) -->
+    {% block main_css %}
+    <!-- Legacy modules (loading first to be overridden) -->
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+    <!-- NEW DESIGN SYSTEM (The Authority) -->
+    <link href="{{ url_for('static', filename='css/design_system.css') }}?v=2.1" rel="stylesheet">
+    <!-- Light Theme Overrides -->
+    <link href="{{ url_for('static', filename='css/light-theme-overrides.css') }}" rel="stylesheet">
+    <!-- Sirio Components Overrides -->
+    <link href="{{ url_for('static', filename='css/modules/12-tinymce-sirio.css') }}" rel="stylesheet">
+    <!-- Centralized Sirio Styles -->
+    <link href="{{ url_for('static', filename='css/sirio_style.css') }}" rel="stylesheet">
+    <!-- Custom global style for date input spin buttons -->
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <!-- Fondo decorativo exclusivo para el select de palabras clave -->
+    <link href="{{ url_for('static', filename='sirio-select-bg.css') }}" rel="stylesheet">
+    {% endblock %}
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Choices.js Local -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/choices.min.css') }}" />
+
+    {% block extra_css %}
+    {% include 'flatpickr_head.html' %}
+    {% endblock %}
+
+    <!-- SweetAlert2 (Sirio standard) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bloque de inicialización de tema para evitar parpadeo (FOUC) y forzar modo oscuro tras login -->
+    <script>
+        (function () {
+            const THEME_KEY = 'hesiox-theme';
+            const THEME_DARK = 'dark';
+            
+            // Si venimos de un login exitoso (cookie detectada), forzamos modo oscuro
+            if (document.cookie.match(/force_dark_mode=1/)) {
+                localStorage.setItem(THEME_KEY, THEME_DARK);
+                localStorage.setItem('theme', 'modern');
+                // Borrar cookie
+                document.cookie = "force_dark_mode=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            }
+
+            const theme = localStorage.getItem(THEME_KEY) || THEME_DARK;
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        })();
+    </script>
+</head>
+
+<body class="desktop-body">
+
+    <div class="desktop-wrapper sidebar-collapsed" id="app-root">
+
+        <!-- WORKSPACE: Sidebar + Main Content (Flex Row) -->
+        <div class="desktop-body-row d-flex flex-grow-1 overflow-hidden w-100 position-relative">
+
+            <!-- SIDEBAR JOYA: Barra lateral de herramientas -->
+            <aside class="desktop-sidebar">
+                <div id="theme-toggle"
+                    class="sidebar-logo d-flex flex-column justify-content-center align-items-center py-3 gap-2"
+                    data-bs-toggle="tooltip" data-bs-placement="right" title="Alternar Modo Claro/Oscuro"
+                    style="z-index: 99999;">
+                    <img src="{{ url_for('static', filename='img/logo_hesioxpanel.png') }}" alt="Logo"
+                        class="img-sidebar-logo">
+                    <span class="nav-label text-accent fw-bold"
+                        style="font-size: 9px; letter-spacing: 1.5px; opacity: 0.8;">HUMANIDADES DIGITALES</span>
+                </div>
+
+
+                <div class="sidebar-top-toggle">
+                    <button id="sidebarToggle" title="Alternar barra lateral">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="{{ url_for('dashboard') }}"
+                        class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" title="Dashboard">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="nav-label">Panel de Control</span>
+                    </a>
+
+                    <div class="nav-separator"></div>
+
+                    <!-- GRUPO: PROYECTOS -->
+                    <a class="nav-item {% if request.endpoint not in ['listar_proyectos', 'crear_proyecto', 'editar_proyecto'] %}collapsed{% endif %}"
+                        data-bs-toggle="collapse" href="#menuProyectos" role="button"
+                        aria-expanded="{% if request.endpoint in ['listar_proyectos', 'crear_proyecto', 'editar_proyecto'] %}true{% else %}false{% endif %}"
+                        aria-controls="menuProyectos">
+                        <i class="fa-solid fa-briefcase"></i>
+                        <span class="nav-label">Proyectos</span>
+                        <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                    </a>
+                    <div class="collapse {% if request.endpoint in ['listar_proyectos', 'crear_proyecto', 'editar_proyecto'] %}show{% endif %}"
+                        id="menuProyectos">
+                        <div class="ms-3 ps-2 border-start border-secondary">
+                            <a href="{{ url_for('proyectos.listar') }}"
+                                class="nav-item py-1 {% if request.endpoint == 'listar_proyectos' %}active-sub{% endif %}">
+                                <span class="nav-label">Listado</span>
+                            </a>
+                            <a href="{{ url_for('proyectos.crear') }}"
+                                class="nav-item py-1 {% if request.endpoint == 'crear_proyecto' %}active-sub{% endif %}">
+                                <span class="nav-label">Nuevo Proyecto</span>
+                            </a>
+                        </div>
+                    </div>
+
+
+                    <!-- GRUPO: HEMEROTECA -->
+                    <a class="nav-item {% if request.endpoint not in ['hemerotecas', 'nueva_hemeroteca', 'editar_hemeroteca'] %}collapsed{% endif %}"
+                        data-bs-toggle="collapse" href="#menuHemerotecas" role="button"
+                        aria-expanded="{% if request.endpoint in ['hemerotecas', 'nueva_hemeroteca', 'editar_hemeroteca'] %}true{% else %}false{% endif %}"
+                        aria-controls="menuHemerotecas">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <span class="nav-label">Hemerotecas</span>
+                        <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                    </a>
+                    <div class="collapse {% if request.endpoint in ['hemerotecas', 'nueva_hemeroteca', 'editar_hemeroteca'] %}show{% endif %}"
+                        id="menuHemerotecas">
+                        <div class="ms-3 ps-2 border-start border-secondary">
+                            <a href="{{ url_for('hemerotecas.hemerotecas') }}"
+                                class="nav-item py-1 {% if request.endpoint == 'hemerotecas' %}active-sub{% endif %}">
+                                <span class="nav-label">Listado</span>
+                            </a>
+                            <a href="{{ url_for('hemerotecas.nueva_hemeroteca') }}"
+                                class="nav-item py-1 {% if request.endpoint == 'nueva_hemeroteca' %}active-sub{% endif %}">
+                                <span class="nav-label">Nueva Hemeroteca</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO: PUBLICACIONES -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['lista_publicaciones', 'nueva_publicacion', 'editar_publicacion'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuPublicaciones" role="button"
+                            aria-expanded="{% if request.endpoint in ['lista_publicaciones', 'nueva_publicacion', 'editar_publicacion'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuPublicaciones">
+                            <i class="fa-solid fa-newspaper"></i>
+                            <span class="nav-label">Publicaciones</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['lista_publicaciones', 'nueva_publicacion', 'editar_publicacion'] %}show{% endif %}"
+                            id="menuPublicaciones">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('hemerotecas.lista_publicaciones') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'lista_publicaciones' %}active-sub{% endif %}">
+                                    <span class="nav-label">Listado</span>
+                                </a>
+                                <a href="{{ url_for('hemerotecas.nueva_publicacion') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'nueva_publicacion' %}active-sub{% endif %}">
+                                    <span class="nav-label">Nueva Publicación</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO: NOTICIAS (BIBLIOTECA) -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['list', 'nueva', 'editar', 'bibliografia'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuNoticias" role="button"
+                            aria-expanded="{% if request.endpoint in ['list', 'nueva', 'editar', 'bibliografia'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuNoticias">
+                            <i class="fa-solid fa-box-archive"></i>
+                            <span class="nav-label">Noticias / Textos</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['list', 'nueva', 'editar', 'bibliografia'] %}show{% endif %}"
+                            id="menuNoticias">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('noticias.listar', proyecto_id=proyecto_activo.id if proyecto_activo else 0) }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.listar' %}active-sub{% endif %}">
+                                    <span class="nav-label">Listado</span>
+                                </a>
+                                <a href="{{ url_for('noticias.crear') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.crear' %}active-sub{% endif %}">
+                                    <span class="nav-label">Nueva Noticia / Texto</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-separator"></div>
+
+                    <!-- GRUPO: PASAJEROS (Solo para Sirio ID=1) -->
+                    {% if proyecto_activo and proyecto_activo.id == 1 %}
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.blueprint == 'pasajeros' %}active{% else %}collapsed{% endif %}" data-bs-toggle="collapse" href="#menuPasajeros" role="button" aria-expanded="{% if request.blueprint == 'pasajeros' %}true{% else %}false{% endif %}" aria-controls="menuPasajeros">
+                            <i class="fa-solid fa-person-walking-luggage"></i>
+                            <span class="nav-label fw-bold font-accent">PASAJEROS</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.blueprint == 'pasajeros' %}show{% endif %}" id="menuPasajeros">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('pasajeros.listado') }}" class="nav-item py-1 {% if request.endpoint == 'pasajeros.listado' %}active-sub{% endif %}" title="Listado de Pasajeros">
+                                    <span class="nav-label">Listado de Pasajeros</span>
+                                </a>
+                                <a href="{{ url_for('pasajeros.graficos') }}" class="nav-item py-1 {% if request.endpoint == 'pasajeros.graficos' %}active-sub{% endif %}" title="Análisis Estadístico">
+                                    <span class="nav-label">Gráficos Descriptivos</span>
+                                </a>
+                                <a href="{{ url_for('pasajeros.mapas') }}" class="nav-item py-1 {% if request.endpoint == 'pasajeros.mapas' %}active-sub{% endif %}" title="Distribución Geográfica">
+                                    <span class="nav-label">Mapas de Distribución</span>
+                                </a>
+                                <a href="{{ url_for('pasajeros.redes') }}" class="nav-item py-1 {% if request.endpoint == 'pasajeros.redes' %}active-sub{% endif %}" title="Grafo de Relaciones">
+                                    <span class="nav-label">Grafo de Relaciones</span>
+                                </a>
+                                <a href="{{ url_for('pasajeros.timeline') }}" class="nav-item py-1 {% if request.endpoint == 'pasajeros.timeline' %}active-sub{% endif %}" title="Línea de Tiempo">
+                                    <span class="nav-label">Línea de Tiempo</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-separator"></div>
+                    {% endif %}
+
+                    <!-- GRUPO: EL BARCO (Exhaustivo Lloyd's SIG - Solo Sirio ID=1) -->
+                    {% if proyecto_activo and proyecto_activo.id == 1 %}
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.blueprint == 'barco' %}active{% else %}collapsed{% endif %}" data-bs-toggle="collapse" href="#menuBarco" role="button" aria-expanded="{% if request.blueprint == 'barco' %}true{% else %}false{% endif %}" aria-controls="menuBarco">
+                            <i class="fa-solid fa-anchor"></i>
+                            <span class="nav-label fw-bold font-accent">EL BARCO</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.blueprint == 'barco' %}show{% endif %}" id="menuBarco">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('barco.plano') }}" class="nav-item py-1 {% if request.endpoint == 'barco.plano' %}active-sub{% endif %}" title="Plano SIG Interactivo">
+                                    <span class="nav-label">Plano Interactivo</span>
+                                </a>
+                                <a href="{{ url_for('barco.ficha') }}" class="nav-item py-1 {% if request.endpoint == 'barco.ficha' %}active-sub{% endif %}" title="Ficha Técnica Exhaustiva (Lloyd's 1883)">
+                                    <span class="nav-label">Ficha Técnica</span>
+                                </a>
+                                <a href="{{ url_for('barco.ficha_motores') }}" class="nav-item py-1 {% if request.endpoint == 'barco.ficha_motores' %}active-sub{% endif %}" title="Informe de Maquinaria (Lloyd's 1883)">
+                                    <span class="nav-label">Ficha Motores</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-separator"></div>
+                    {% endif %}
+
+                    <!-- GRUPO: CORPUS (NUEVO) -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['noticias.lector'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuCorpus" role="button"
+                            aria-expanded="{% if request.endpoint in ['noticias.lector'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuCorpus">
+                            <i class="fa-solid fa-book"></i>
+                            <span class="nav-label">Corpus</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['noticias.lector'] %}show{% endif %}"
+                            id="menuCorpus">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('noticias.lector') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.lector' %}active-sub{% endif %}">
+                                    <span class="nav-label">Explorador de Textos</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-separator"></div>
+
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['noticias.mapa_corpus', 'mapa'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuCartografia" role="button"
+                            aria-expanded="{% if request.endpoint in ['noticias.mapa_corpus', 'mapa'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuCartografia">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span class="nav-label">Cartografía</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['noticias.mapa_corpus', 'mapa'] %}show{% endif %}"
+                            id="menuCartografia">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('noticias.mapa_corpus') }}" id="nav-mapa-corpus"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.mapa_corpus' %}active-sub{% endif %}">
+                                    <span class="nav-label">Mapas del Corpus</span>
+                                </a>
+                                <a href="{{ url_for('noticias.gestor_ubicaciones_view') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.gestor_ubicaciones_view' %}active-sub{% endif %}">
+                                    <span class="nav-label">Gestor de Ubicaciones</span>
+                                </a>
+                                <a href="{{ url_for('mapa') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'mapa' %}active-sub{% endif %}">
+                                    <span class="nav-label">Mapa de Publicaciones</span>
+                                </a>
+                                <div class="nav-separator opacity-25 my-1"></div>
+                                <a href="{{ url_for('mapas_historicos.gestor_mapas') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'mapas_historicos.gestor_mapas' %}active-sub{% endif %}">
+                                    <span class="nav-label">Gestor de Mapas Históricos</span>
+                                </a>
+                                <div class="nav-separator opacity-25 my-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-separator"></div>
+
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['buscador_semantico', 'regex_lab', 'noticias.topografia_semantica_view'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuTextos" role="button"
+                            aria-expanded="{% if request.endpoint in ['buscador_semantico', 'regex_lab', 'noticias.topografia_semantica_view'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuTextos">
+                            <i class="fa-solid fa-brain"></i>
+                            <span class="nav-label">CONCEPTOS</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['buscador_semantico', 'regex_lab', 'noticias.topografia_semantica_view'] %}show{% endif %}"
+                            id="menuTextos">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('buscador_semantico') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'buscador_semantico' %}active-sub{% endif %}"
+                                    title="Buscador Semántico IA">
+                                    <span class="nav-label">Buscador Semántico</span>
+                                </a>
+                                <a href="{{ url_for('regex_lab') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'regex_lab' %}active-sub{% endif %}"
+                                    title="Laboratorio REGEX">
+                                    <span class="nav-label">Laboratorio REGEX</span>
+                                </a>
+                                <a href="{{ url_for('noticias.topografia_semantica_view') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'noticias.topografia_semantica_view' %}active-sub{% endif %} special-star-item"
+                                    title="Topografía Semántica (IA)">
+                                    <i class="fa-solid fa-mountain-sun me-2" style="font-size: 0.6rem;"></i>
+                                    <span class="nav-label fw-bold">Topografía (IA)</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    <div class="nav-separator"></div>
+
+                    <!-- GRUPO: ANALÍTICO -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint in ['analisis', 'analisis_avanzado', 'analisis_innovador', 'analisis_avanzado.analisis_hd', 'distribucion.distribucion'] %}active{% else %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuAnalitico" role="button"
+                            aria-expanded="{% if request.endpoint in ['analisis', 'analisis_avanzado', 'analisis_innovador', 'analisis_avanzado.analisis_hd', 'distribucion.distribucion'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuAnalitico">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            <span class="nav-label">Analítico</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['analisis', 'analisis_avanzado', 'analisis_innovador', 'analisis_avanzado.analisis_hd', 'distribucion.distribucion'] %}show{% endif %}"
+                            id="menuAnalitico">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('distribucion.distribucion') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'distribucion.distribucion' %}active-sub{% endif %}"
+                                    title="Distribución Temporal">
+                                    <span class="nav-label">Distribución Temporal</span>
+                                </a>
+                                <a href="{{ url_for('analisis') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'analisis' %}active-sub{% endif %}"
+                                    title="Exploración de Corpus">
+                                    <span class="nav-label">Exploración de Corpus</span>
+                                </a>
+                                <a href="{{ url_for('analisis_avanzado') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'analisis_avanzado' %}active-sub{% endif %}"
+                                    title="Procesamiento del Discurso">
+                                    <span class="nav-label">Procesamiento del Discurso</span>
+                                </a>
+                                <a href="{{ url_for('analisis_avanzado.analisis_hd') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'analisis_avanzado.analisis_hd' %}active-sub{% endif %}"
+                                    title="Humanidades Digitales (HD)">
+                                    <span class="nav-label">Humanidades Digitales (HD)</span>
+                                </a>
+                                <a href="{{ url_for('analisis_innovador') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'analisis_innovador' %}active-sub{% endif %}"
+                                    title="Laboratorio de IA">
+                                    <span class="nav-label">Laboratorio de IA</span>
+                                    <span class="badge rounded-pill ms-auto"
+                                        style="font-size: 8px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6;">DEV</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-separator"></div>
+
+                    <!-- GRUPO: MAPAS Y REDES -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint in ['mapa', 'redes', 'timeline', 'consistencia_datos'] %}active{% else %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuMapas" role="button"
+                            aria-expanded="{% if request.endpoint in ['mapa', 'redes', 'timeline', 'consistencia_datos'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuMapas">
+                            <i class="fa-solid fa-diagram-project"></i>
+                            <span class="nav-label">Estructura y Redes</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['mapa', 'redes', 'timeline', 'consistencia_datos'] %}show{% endif %}"
+                            id="menuMapas">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('bibliografia') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'bibliografia' %}active-sub{% endif %}">
+                                    <span class="nav-label">Bibliografía</span>
+                                </a>
+                                <a href="{{ url_for('redes') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'redes' %}active-sub{% endif %}"
+                                    title="Grafos">
+                                    <span class="nav-label">Redes / Grafos</span>
+                                </a>
+                                <a href="{{ url_for('visualizaciones.timeline') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'visualizaciones.timeline' %}active-sub{% endif %}"
+                                    title="Línea de Tiempo">
+                                    <span class="nav-label">Línea de Tiempo</span>
+                                </a>
+                                <a href="{{ url_for('consistencia_datos') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'consistencia_datos' %}active-sub{% endif %}"
+                                    title="Calidad de Datos">
+                                    <span class="nav-label">Calidad</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-separator"></div>
+
+                    <!-- ARTÍCULOS -->
+                    <a href="{{ url_for('articulos_lista', proyecto_id=proyecto_activo.id if proyecto_activo else 0) }}"
+                        class="nav-item {% if request.endpoint in ['articulos_lista', 'articulo_editor', 'articulo_figuras'] %}active{% endif %}"
+                        title="Artículos">
+                        <i class="fa-solid fa-file-pen"></i>
+                        <span class="nav-label">Artículos</span>
+                    </a>
+
+
+                    {# <a href="{{ url_for('buscador_semantico') }}"
+                        class="nav-item {% if request.endpoint == 'buscador_semantico' %}active{% endif %}"
+                        title="Buscador IA">
+                        <i class="fa-solid fa-brain"></i>
+                        <span class="nav-label">AI Search</span>
+                    </a> #}
+
+                    <div class="nav-separator"></div>
+
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint in ['manual', 'guia_contenido'] %}active{% else %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuAyuda" role="button"
+                            aria-expanded="{% if request.endpoint in ['manual', 'guia_contenido'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuAyuda">
+                            <i class="fa-solid fa-circle-question"></i>
+                            <span class="nav-label">Ayuda y Guías</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['manual', 'guia_contenido'] %}show{% endif %}"
+                            id="menuAyuda">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('manual') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'manual' %}active-sub{% endif %}">
+                                    <span class="nav-label">La Biblia (Técnica)</span>
+                                </a>
+                                <a href="{{ url_for('guia_contenido') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'guia_contenido' %}active-sub{% endif %}">
+                                    <span class="nav-label">Guía de Contenido</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extra Sidebar Content (Filters, etc.) -->
+                    <div class="mt-auto">
+                        {% block sidebar_extra %}{% endblock %}
+                    </div>
+
+                    {% if current_user.rol == 'admin' %}
+                    <div class="nav-separator"></div>
+                    <a href="{{ url_for('admin_panel') }}"
+                        class="nav-item {% if request.endpoint == 'admin_panel' %}active{% endif %}"
+                        title="Panel de Administración">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span class="nav-label">Administración</span>
+                    </a>
+                    {% endif %}
+                </nav>
+
+                <div class="sidebar-logo-links">
+
+                    <!-- New Manual Button -->
+                    <a href="{{ url_for('manual') }}" class="nav-item text-warning"
+                        title="Manual de Usuario (HesiOX Bible)">
+                        <i class="fa-solid fa-book-open"></i>
+                    </a>
+
+                    <!-- Guía de Contenido -->
+                    <a href="{{ url_for('guia_contenido') }}" class="nav-item text-info"
+                        title="Guía de Uso de Contenido">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </a>
+
+                    <a href="{{ url_for('informacion') }}" class="nav-item" title="Ayuda / Info">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </a>
+                    <a href="{{ url_for('auth.perfil') }}" class="nav-item text-accent" title="Mi Perfil / API Keys">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="nav-item" title="Salir">
+                        <i class="fa-solid fa-power-off"></i>
+                    </a>
+                </div>
+
+            </aside>
+
+            <!-- MAIN CONTENT: Area principal derecha -->
+            <main class="d-flex flex-column flex-grow-1 overflow-hidden h-100 position-relative">
+                <!-- TOP BAR: Barra de herramientas superior y contexto -->
+                <header class="desktop-header">
+                    <div class="header-left d-flex align-items-center">
+                        <h1 class="page-title">{% block page_title %}Escritorio{% endblock %}</h1>
+                        {% block breadcrumb %}{% endblock %}
+                    </div>
+
+                    <div class="header-center flex-grow-1 d-flex justify-content-end px-3">
+                        <!-- Barra de búsqueda global o acciones contextuales (ahora alineadas a la derecha) -->
+                        <div class="header-actions-wrapper d-flex align-items-center gap-2">
+                            {% block top_actions %}{% endblock %}
+                        </div>
+                    </div>
+
+                    <div class="header-right d-flex align-items-center">
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.perfil') }}" class="user-profile ms-2 text-decoration-none"
+                            title="Ver mi Perfil / Configurar APIs">
+                            <div class="user-avatar">
+                                {% if current_user.foto_perfil %}
+                                <img src="{{ url_for('static', filename=current_user.foto_perfil) }}" alt="Avatar"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                {% else %}
+                                {{ current_user.nombre[0].upper() }}
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-accent ms-2">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Login
+                        </a>
+                        {% endif %}
+                    </div>
+                </header>
+
+                <!-- CONTENT PANE: Área desplazable de contenido -->
+                <div class="desktop-content d-flex flex-column flex-grow-1">
+                    <!-- Flash Messages -->
+                    <div class="flash-messages-container">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show desktop-alert" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"
+                                aria-label="Close" style="width: auto !important;"></button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <!-- Embedding Progress Bar Placeholder (Sirio Premium Style) -->
+                        <div id="embedding-progress-container" class="mt-2" style="display: none;">
+                            <div class="alert alert-info alert-dismissible fade show desktop-alert border-start border-4 border-success" role="alert" style="background: rgba(10, 15, 20, 0.95); backdrop-filter: blur(10px); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border: 1px solid rgba(255,255,255,0.1);">
+                                            <i class="fa-solid fa-brain fa-spin-pulse text-success" style="font-size: 1.2rem;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <strong class="text-white" style="letter-spacing: 0.5px; font-size: 0.9rem;">GENERANDO EMBEDDINGS</strong>
+                                            <span id="emb-progress-percent" class="badge rounded-pill bg-success" style="font-size: 0.75rem;">0%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                                            <div id="emb-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2" style="font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: 'JetBrains Mono', monospace;">
+                                            <span id="emb-progress-count">0 / 0 DOCS</span>
+                                            <span id="emb-progress-status">INICIALIZANDO...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" onclick="this.parentElement.parentElement.style.display='none'" style="font-size: 0.6rem; top: 1rem; right: 1rem;"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% block content %}{% endblock %}
+                </div>
+
+                <!-- STATUS BAR: Footer fijo de estado -->
+                <footer class="desktop-footer">
+                    <div class="status-left">
+                        <span class="status-item"><i class="fa-solid fa-check-circle text-success"></i> Sistema:
+                            <strong>Online</strong></span>
+                        <span class="status-separator"></span>
+                        <span class="status-item">v5.0.0 (Versión Estable)</span>
+                    </div>
+                    <div class="status-right">
+                        {% set p = proyecto or proyecto_activo %}
+                        {% if p %}
+                        <span class="status-item"><i class="fa-solid fa-folder-open text-warning me-1"></i>
+                            Proyecto:
+                            <strong title="{{ p.nombre }}">{{ p.nombre }}</strong></span>
+                        <span class="status-separator"></span>
+                        {% endif %}
+                        <span class="status-item"><i class="fa-solid fa-user text-info me-1"></i> Usuario:
+                            <strong title="{{ current_user.nombre }}">{{ current_user.nombre }}</strong> ({{
+                            current_user.rol
+                            }})</span>
+                    </div>
+                </footer>
+            </main>
+
+            {% block modals %}{% endblock %}
+        </div>
+
+        <!-- Scripts -->
+        <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/choices.min.js') }}"></script>
+
+        <script>
+            // Inicialización Sidebar Collapse (VS Code Style) - FINAL ROBUST VERSION
+            document.addEventListener('DOMContentLoaded', function () {
+                const appRoot = document.getElementById('app-root');
+                const toggle = document.getElementById('sidebarToggle');
+                const stateKey = 'hesiox_sidebar_collapsed';
+
+                // Helpers
+                const isCollapsed = () => appRoot.classList.contains('sidebar-collapsed');
+                const setCollapsed = (state) => {
+                    const icon = toggle ? toggle.querySelector('i') : null;
+
+                    if (state) {
+                        appRoot.classList.add('sidebar-collapsed');
+                        if (icon) {
+                            icon.classList.remove('fa-chevron-left');
+                            icon.classList.add('fa-chevron-right');
+                        }
+                    } else {
+                        appRoot.classList.remove('sidebar-collapsed');
+                        if (icon) {
+                            icon.classList.remove('fa-chevron-right');
+                            icon.classList.add('fa-chevron-left');
+                        }
+                    }
+
+                    try { localStorage.setItem(stateKey, state); } catch (e) { }
+
+                    // Force resize event specifically for maps
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event('resize'));
+                        if (window._mapaCorpus) window._mapaCorpus.invalidateSize();
+                        if (window.mapaCartografia) window.mapaCartografia.invalidateSize();
+                    }, 300);
+                };
+
+                // 1. Restore state from LocalStorage OR Default to Collapsed
+                const storedState = localStorage.getItem(stateKey);
+
+                // Check for server-side signal to force collapse (on login)
+                let initialCollapsed;
+                {% if request.endpoint in ['noticias.mapa_corpus', 'analisis_avanzado.analisis_hd', 'noticias.topografia_semantica_view'] %}
+                // ALWAYS start collapsed on Map, Discourse, and Topography views for maximum space
+                initialCollapsed = true;
+                {% elif session.pop('force_sidebar_collapse', None) %}
+                initialCollapsed = true;
+                localStorage.setItem(stateKey, 'true');
+                {% else %}
+                // Default to collapsed if null (first visit) or 'true'
+                initialCollapsed = (storedState === 'true' || storedState === null);
+                {% endif %}
+
+                setCollapsed(initialCollapsed);
+
+                // Listen for clicks on the Map nav item to auto-collapse immediately
+                const navMapa = document.getElementById('nav-mapa-corpus');
+                if (navMapa) {
+                    navMapa.addEventListener('click', () => {
+                        setCollapsed(true);
+                    });
+                }
+
+                // 2. Logic for Sidebar Toggle Button (Footer Arrow) - PRIORITY
+                if (toggle) {
+                    toggle.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCollapsed(!isCollapsed());
+                    });
+                } else {
+                    console.error('Sidebar toggle button #sidebarToggle not found!');
+                }
+
+                // 3. Logic for Icon Clicks (VS Code Style)
+                try {
+                    const navToggles = document.querySelectorAll('.desktop-sidebar .nav-item[data-bs-toggle="collapse"]');
+                    navToggles.forEach(navItem => {
+                        navItem.addEventListener('click', function (e) {
+                            const isExpandedAttr = this.getAttribute('aria-expanded') === 'true';
+
+                            if (isCollapsed()) {
+                                // CASE A: Sidebar is Collapsed.
+                                // We want to Expand Sidebar AND Show the menu.
+                                setCollapsed(false);
+
+                                // Logic:
+                                // If menu is already "Active/Expanded" (but hidden by sidebar collapse), 
+                                // Bootstrap will try to CLOSE it (Toggle). We must stop that.
+                                // If menu is "Closed", Bootstrap will OPEN it. We allow that.
+                                if (isExpandedAttr) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }
+                            } else {
+                                // CASE B: Sidebar is Open.
+                                // Only collapse if clicking specifically the ICON and menu is already open
+                                const clickedIcon = e.target.closest('i.fa-solid:not(.fa-chevron-down)');
+
+                                if (isExpandedAttr && clickedIcon) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setCollapsed(true);
+                                }
+                                // If clicking chevron or label, let Bootstrap handle the toggle (Case C)
+                            }
+                        });
+                    });
+                } catch (err) {
+                    console.error('Error in VS Code Sidebar logic:', err);
+                }
+            });
+        </script>
+
+    <!-- Choices.js Shared Initialization -->
+    {% include '_choices_includes.html' %}
+
+        <script>
+            // Inicialización de Tooltips de Bootstrap
+            document.addEventListener('DOMContentLoaded', function () {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                });
+            });
+        </script>
+
+        <!-- Theme Switcher (Global) -->
+        <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
+
+        {% block scripts %}{% endblock %}
+        {% block extra_js %}{% endblock %}
+
+
+        <!-- Script de Seguimiento de Embeddings (IA Progress Bar) -->
+        <script>
+            (function () {
+                const updateUI = (data) => {
+                    const container = document.getElementById('embedding-progress-container');
+                    if (!container) return;
+                    if (data.status === 'running' || data.status === 'completed') {
+                        container.style.display = 'block';
+                        container.style.opacity = '1';
+                        const bar = document.getElementById('emb-progress-bar');
+                        const percent = document.getElementById('emb-progress-percent');
+                        const count = document.getElementById('emb-progress-count');
+                        const statusLabel = document.getElementById('emb-progress-status');
+                        const icon = container.querySelector('.fa-brain');
+                        bar.style.width = data.porcentaje + '%';
+                        percent.innerText = data.porcentaje + '%';
+                        count.innerText = `${data.procesados} / ${data.total} DOCS`;
+                        if (data.status === 'completed') {
+                            statusLabel.innerText = 'PROCESO FINALIZADO';
+                            icon.classList.remove('fa-spin-pulse');
+                            bar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                            if (window._embPollTimer) clearInterval(window._embPollTimer);
+                            setTimeout(() => { 
+                                container.style.transition = 'opacity 1s ease';
+                                container.style.opacity = '0'; 
+                                setTimeout(() => container.style.display = 'none', 1000); 
+                            }, 8000);
+                        } else {
+                            statusLabel.innerText = 'GENERANDO VECTORES SEMÁNTICOS...';
+                            if (!icon.classList.contains('fa-spin-pulse')) icon.classList.add('fa-spin-pulse');
+                        }
+                    }
+                };
+                function pollEmbeddingProgress() {
+                    const urlParts = window.location.pathname.split('/');
+                    const proyectoIndex = urlParts.indexOf('proyecto');
+                    let currentProjectId = null;
+                    if (proyectoIndex !== -1 && urlParts[proyectoIndex + 1]) {
+                        currentProjectId = urlParts[proyectoIndex + 1].replace(/\D/g, '');
+                    }
+                    const idsToQuery = ['global'];
+                    if (currentProjectId && currentProjectId.length > 0) idsToQuery.push(currentProjectId);
+                    
+                    idsToQuery.forEach(id => {
+                        fetch(`/api/embeddings/progress/${id}`)
+                            .then(response => {
+                                if (!response.ok) return { status: 'not_found' };
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data && (data.status === 'running' || data.status === 'completed')) {
+                                    updateUI(data);
+                                }
+                            })
+                            .catch(err => { });
+                    });
+                }
+                // Polling inicial y luego cada 5 segundos (un poco más relajado)
+                window._embPollTimer = setInterval(pollEmbeddingProgress, 5000);
+                setTimeout(pollEmbeddingProgress, 1500);
+            })();
+        </script>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-04-21T07:17:53.353243",
+  "tipo_analisis": "sentimiento",
+  "filtros": {
+    "proyecto_id": 34,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "documentos_ids": [],
+    "eje_x": "secuencia",
+    "limite": 300
+  },
+  "params": {
+    "limite": 300,
+    "eje_x": "secuencia"
+  },
+  "resultado": {
+    "exito": true,
+    "datos_temporales": [
+      {
+        "fecha": "1. El Gato Negro...",
+        "sentimiento": -0.355,
+        "subjetividad": 0.7885714285714286,
+        "titulo": "El Gato Negro",
+        "id": 1230,
+        "indice": 1
+      },
+      {
+        "fecha": "2. El Demonio de la Per...",
+        "sentimiento": -0.1285714285714286,
+        "subjetividad": 0.5316326530612245,
+        "titulo": "El Demonio de la Perversidad",
+        "id": 1231,
+        "indice": 2
+      }
+    ],
+    "datos_individuales": [
+      {
+        "fecha": "1894-01-01",
+        "sentimiento": -0.355,
+        "subjetividad": 0.7885714285714286,
+        "titulo": "El Gato Negro",
+        "id": 1230
+      },
+      {
+        "fecha": "1894-01-01",
+        "sentimiento": -0.1285714285714286,
+        "subjetividad": 0.5316326530612245,
+        "titulo": "El Demonio de la Perversidad",
+        "id": 1231
+      }
+    ],
+    "estadisticas": {
+      "promedio_sentimiento": -0.24178571428571427,
+      "promedio_subjetividad": 0.6601020408163265,
+      "mediana_sentimiento": -0.24178571428571427,
+      "mediana_subjetividad": 0.6601020408163265,
+      "total_documentos": 2
+    },
+    "tipo_eje": "secuencia"
+  }
+}

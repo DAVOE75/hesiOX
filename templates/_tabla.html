@@ -1,0 +1,440 @@
+<div class="table-responsive" style="overflow: visible !important;">
+  <table class="table table-sirio table-hover align-middle tabla-prensa" id="tablaRegistros"
+    style="width: 100% !important; table-layout: fixed; border-collapse: separate; border-spacing: 0;">
+    <thead class="text-white">
+      <tr class="table-header-center">
+        <th data-col="check" class="col-check text-center" style="width: 2%; min-width: 32px; position: relative;">
+          <input type="checkbox" id="selectAll" class="doc-check form-check-input" title="Seleccionar todos">
+          <div class="resizer"></div>
+        </th>
+
+        <th data-col="ref" class="text-center col-ref" title="Referencia"
+          style="width: 45px; white-space: nowrap; position: relative;">Ref.
+          <div class="resizer"></div>
+        </th>
+        <th data-col="titulo" class="col-title"
+          style="width: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          Título
+          <div class="resizer"></div>
+        </th>
+        <th data-col="publicacion" class="text-center col-pub"
+          style="width: 15%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          Publicación
+          <div class="resizer"></div>
+        </th>
+        <th data-col="url_publi" class="text-center col-url"
+          style="width: 8%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          URL
+          <div class="resizer"></div>
+        </th>
+        <th data-col="autor" class="text-center col-auth"
+          style="width: 10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          Autor
+          <div class="resizer"></div>
+        </th>
+        <th data-col="fecha" class="text-center col-date" style="width: 90px; white-space: nowrap; position: relative;">
+          Fecha
+          <div class="resizer"></div>
+        </th>
+        <th data-col="num" class="text-center col-num"
+          style="width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">Núm.
+          <div class="resizer"></div>
+        </th>
+
+        <!-- NUEVAS -->
+        <th data-col="pag" class="text-center col-page" style="width: 60px; position: relative;">Pág.
+          <div class="resizer"></div>
+        </th>
+        <th data-col="ciudad" class="text-center col-city"
+          style="width: 10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          Ciudad
+          <div class="resizer"></div>
+        </th>
+        <th data-col="pais" class="text-center col-country"
+          style="width: 10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          País
+          <div class="resizer"></div>
+        </th>
+        <th data-col="tipo" class="text-center col-type"
+          style="width: 10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">Tipo
+          <div class="resizer"></div>
+        </th>
+        <th data-col="licencia" class="text-center col-lic"
+          style="width: 10%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative;">
+          Licencia
+          <div class="resizer"></div>
+        </th>
+
+        <th data-col="temas" class="text-center col-topics"
+          style="width: 15%; overflow: hidden; text-overflow: ellipsis; position: relative;">Temas
+          <div class="resizer"></div>
+        </th>
+        <th data-col="incl" class="text-center col-incl" style="width: 50px; position: relative;">Incl.
+          <div class="resizer"></div>
+        </th>
+        <th data-col="acciones" class="text-center col-actions"
+          style="width: 210px; white-space: nowrap; position: relative;">Acciones
+          <div class="resizer"></div>
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for r in registros %}
+      <tr data-id="{{ r.id }}" data-titulo="{{ (r.titulo or '[Sin título]')|e }}"
+        data-publicacion="{{ (r.publicacion or '')|e }}"
+        data-fecha="{% if r.fecha_original and r.fecha_original|length == 10 and '-' in r.fecha_original %}{{ r.fecha_original[8:10] }}/{{ r.fecha_original[5:7] }}/{{ r.fecha_original[0:4] }}{% else %}{{ (r.fecha_original or '')|e }}{% endif %}"
+        data-autor="{{ (r.autor or '')|e }}" data-ciudad="{{ (r.ciudad or '')|e }}" data-temas="{{ (r.temas or '')|e }}"
+        data-incluido="{{ 'si' if r.incluido else 'no' }}" data-licencia="{{ (r.licencia or 'CC BY-SA 4.0')|e }}"
+        data-contenido="{{ (r.contenido or '')|e }}" data-texto-original="{{ (r.texto_original or '')|e }}">
+        <!-- CHECK -->
+        <td data-col="check" class="text-center">
+          <input type="checkbox" class="doc-check registro-checkbox form-check-input" data-id="{{ r.id }}">
+        </td>
+
+        <!-- REF -->
+        <td data-col="ref" class="text-center table-v-middle">
+          {% if r.numero_referencia %}
+          <a href="javascript:void(0);" onclick="abrirCita('{{ r.id }}')"
+            class="badge bg-warning bg-opacity-10 text-warning border border-warning link-ref"
+            style="cursor: pointer; padding: 6px 10px; font-size: 0.85rem; text-decoration: none; transition: all 0.3s ease; display: inline-block;"
+            title="Ver cita bibliográfica" data-bs-toggle="tooltip" data-bs-placement="top"
+            onmouseover="this.style.backgroundColor='rgba(255, 193, 7, 0.25)'; this.style.transform='scale(1.05)';"
+            onmouseout="this.style.backgroundColor='rgba(255, 193, 7, 0.1)'; this.style.transform='scale(1)';">
+            [{{ r.numero_referencia }}]
+          </a>
+          {% else %}
+          <span class="text-muted small">—</span>
+          {% endif %}
+        </td>
+
+        <!-- TITULO -->
+        <td data-col="titulo" class="table-v-middle text-truncate" style="max-width: 0;">
+          <strong class="text-white" title="{{ r.titulo or '[Sin título]' }}">{{ r.titulo or '[Sin título]' }}</strong>
+        </td>
+
+        <!-- PUBLICACION -->
+        <td data-col="publicacion" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          {% set pub_name = (r.publicacion or '').strip() %}
+
+          {% if r.id_publicacion %}
+          <a href="{{ url_for('hemerotecas.editar_publicacion', id=r.id_publicacion) }}"
+            class="text-accent text-decoration-none font-monospace small" title="{{ pub_name }}">
+            {{ pub_name if pub_name else '—' }}
+          </a>
+          {% else %}
+          {% set pub_id = pub_links.get(pub_name) if pub_links else None %}
+          {% if pub_id %}
+          <a href="{{ url_for('hemerotecas.editar_publicacion', id=pub_id) }}"
+            class="text-accent text-decoration-none link-dotted" title="{{ pub_name }}">
+            {{ pub_name }}
+          </a>
+          {% else %}
+          <span title="{{ pub_name }}">{{ pub_name if pub_name else '—' }}</span>
+          {% endif %}
+          {% endif %}
+        </td>
+
+        <!-- URL PUBLICACION -->
+        <td data-col="url_publi" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          {% if r.url_publi %}
+          <a href="{{ r.url_publi }}" target="_blank" rel="noopener" class="text-info small"
+            title="{{ r.url_publi }}">{{ r.url_publi }}</a>
+          {% else %}
+          <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+
+        <!-- AUTOR -->
+        <td data-col="autor" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          {% if r.apellido_autor and r.nombre_autor %}
+          <span title="{{ r.apellido_autor }}, {{ r.nombre_autor }}">{{ r.apellido_autor }}, {{ r.nombre_autor }}</span>
+          {% elif r.apellido_autor %}
+          <span title="{{ r.apellido_autor }}">{{ r.apellido_autor }}</span>
+          {% elif r.nombre_autor %}
+          <span title="{{ r.nombre_autor }}">{{ r.nombre_autor }}</span>
+          {% else %}
+          —
+          {% endif %}
+        </td>
+
+        <!-- FECHA -->
+        <td data-col="fecha" class="text-center table-v-middle">
+          {% if r.fecha_original and r.fecha_original|length == 10 and '-' in r.fecha_original %}
+          {{ r.fecha_original[8:10] }}/{{ r.fecha_original[5:7] }}/{{ r.fecha_original[0:4] }}
+          {% else %}
+          {{ r.fecha_original or '—' }}
+          {% endif %}
+        </td>
+
+        <!-- NUMERO -->
+        <td data-col="num" class="text-center table-v-middle">
+          {{ r.numero or '—' }}
+        </td>
+
+        <!-- PÁG. (antes Núm/Vol) -->
+        <td data-col="pag" class="text-center table-v-middle">
+          {{ r.pagina_inicio if r.pagina_inicio else '—' }}
+        </td>
+
+        <!-- CIUDAD -->
+        <td data-col="ciudad" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          <span title="{{ r.ciudad or '—' }}">{{ r.ciudad or '—' }}</span>
+        </td>
+
+        <!-- PAÍS -->
+        <td data-col="pais" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          {% set c_val = (r.pais or r.pais_publicacion) %}
+          {% if c_val %}
+          {% set c_code = c_val|country_flag %}
+          {% if c_code and c_code != 'xx' %}
+          <span class="fi fi-{{ c_code }}" title="{{ c_val }}" style="margin-right: 5px;"></span>
+          {% endif %}
+          <span title="{{ c_val }}">{{ c_val }}</span>
+          {% else %}
+          —
+          {% endif %}
+        </td>
+
+        <!-- TIPO -->
+        <td data-col="tipo" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          <span title="{{ (r.tipo_recurso or r.tipo) if (r.tipo_recurso or r.tipo) else '—' }}">{{ (r.tipo_recurso or
+            r.tipo) if (r.tipo_recurso or r.tipo) else '—' }}</span>
+        </td>
+
+        <!-- LICENCIA -->
+        <td data-col="licencia" class="text-center table-v-middle text-truncate" style="max-width: 0;">
+          <span title="{{ r.licencia or '—' }}">{{ r.licencia or '—' }}</span>
+        </td>
+
+        <!-- TEMAS (nota editable + temas + recortes) -->
+        <td data-col="temas" class="text-center table-col-temas text-truncate" style="max-width: 0;">
+          <div class="d-flex flex-column justify-content-start align-items-center w-100">
+
+            {% if r.notas %}
+            <div class="nota-editable text-warning small mb-1 w-100 text-truncate" contenteditable="true"
+              data-id="{{ r.id }}" title="{{ r.notas }}">
+              {{ r.notas }}
+            </div>
+            {% else %}
+            <div class="nota-editable text-warning small w-100 mb-1" contenteditable="true" data-id="{{ r.id }}"
+              style="min-height: 10px; opacity: 0.5;"></div>
+            {% endif %}
+
+            <div class="text-light lh-sm text-truncate w-100" title="{{ r.temas or '' }}">{{ r.temas or '' }}</div>
+
+            {% if r.imagenes.count() > 0 %}
+            <a href="{{ url_for('ver_imagenes_prensa', id=r.id) }}" target="_blank" title="Ver Recortes de Prensa"
+              class="text-accent text-decoration-none small">
+              <i class="fa-solid fa-note-sticky me-1"></i>
+              Ver Recorte
+            </a>
+            {% endif %}
+          </div>
+        </td>
+
+        <!-- INCL -->
+        <td data-col="incl" class="text-center table-v-middle">
+          {% if r.incluido %}
+          <i class="fa-solid fa-circle-check text-success" title="Incluido" style="font-size: 1.1rem;"></i>
+          {% else %}
+          <i class="fa-solid fa-circle-xmark text-danger" title="No incluido" style="font-size: 1.1rem;"></i>
+          {% endif %}
+        </td>
+
+        <!-- ACCIONES -->
+        <td data-col="acciones" class="table-actions-cell text-center table-v-middle text-nowrap">
+          <div class="d-flex justify-content-center gap-1">
+            <a href="{{ url_for('noticias.editar', id=r.id, next=request.full_path) }}"
+              class="btn-admin-action btn-admin-action-success" title="Editar" style="width: 28px;">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            <a href="{{ url_for('noticias.noticia_duplicar', noticia_id=r.id) }}" class="btn-admin-action"
+              title="Duplicar" style="width: 28px;">
+              <i class="fa-solid fa-copy"></i>
+            </a>
+            <a href="javascript:void(0)" class="btn-admin-action btn-admin-action-success ver-noticia-btn"
+              title="Ver Resumen" style="width: 28px;">
+              <i class="fa-regular fa-file-lines"></i>
+            </a>
+            <button type="button" class="btn-admin-action btn-admin-action-warning btn-toggle-incluir"
+              onclick="toggleStatusNoticia('{{ r.id }}', this)"
+              title="{{ 'Pausar (Excluir del estudio)' if r.incluido else 'Activar (Incluir en estudio)' }}"
+              style="width: 28px;">
+              <i class="fa-solid {{ 'fa-pause' if r.incluido else 'fa-play' }}"></i>
+            </button>
+            <a href="{{ url_for('noticias.detalle_noticia', id=r.id) }}"
+              class="btn-admin-action btn-admin-action-warning" title="Ver completo" style="width: 28px;">
+              <i class="fa-solid fa-map-location-dot"></i>
+            </a>
+            <a href="{{ url_for('noticia_exportar_pdf', noticia_id=r.id) }}"
+              class="btn-admin-action btn-admin-action-danger" title="PDF" style="width: 28px;">
+              <i class="fa-solid fa-file-pdf"></i>
+            </a>
+            <form method="POST" action="{{ url_for('noticias.noticia_eliminar', noticia_id=r.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn-admin-action btn-admin-action-danger" title="Eliminar noticia"
+                onclick="return confirm('¿Eliminar esta noticia?');" style="width: 28px;">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+
+      {% else %}
+      <tr>
+        <td colspan="15" class="text-center text-muted p-3">Sin resultados que mostrar</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>
+</div>
+
+<p class="text-end text-warning mt-2">
+  Resultados: <strong>{{ total }}</strong>
+</p>
+
+{% if total_paginas > 1 %}
+<nav aria-label="Paginación" class="mt-3">
+  <ul class="pagination justify-content-center">
+    {% if page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="#" onclick="cambiarPagina('{{ page - 1 }}')">« Anterior</a>
+    </li>
+    {% endif %}
+
+    {% for p in range(inicio, fin + 1) %}
+    {% if p == page %}
+    <li class="page-item active"><a class="page-link fw-bold" href="#">{{ p }}</a></li>
+    {% else %}
+    <li class="page-item"><a class="page-link" href="#" onclick="cambiarPagina('{{ p }}')">{{ p }}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if page < total_paginas %} <li class="page-item">
+      <a class="page-link" href="#" onclick="cambiarPagina('{{ page + 1 }}')">Siguiente »</a>
+      </li>
+      {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+<!-- Filtro de noticias por página -->
+<div class="d-flex justify-content-center align-items-center mt-3 mb-4 gap-3">
+  <label for="noticiasPorPagina" class="text-secondary small fw-bold text-uppercase letter-spacing-1"
+    style="margin-bottom: 0; white-space: nowrap;">Noticias por página:</label>
+  <div class="noticias-paginator-wrapper" style="width: 80px;">
+    <select id="noticiasPorPagina" name="noticias_por_pagina" class="form-select form-select-sm form-control-sirio"
+      style="height: 32px; font-size: 13px; width: 100% !important;">
+      <option value="50" {% if noticias_por_pagina==50 %}selected{% endif %}>50</option>
+      <option value="100" {% if noticias_por_pagina==100 %}selected{% endif %}>100</option>
+      <option value="150" {% if noticias_por_pagina==150 %}selected{% endif %}>150</option>
+      <option value="300" {% if noticias_por_pagina==300 %}selected{% endif %}>300</option>
+    </select>
+  </div>
+</div>
+
+<style>
+  /* Forzar que el contenedor de Choices.js (si se inicializa) respete el ancho del padre */
+  .noticias-paginator-wrapper .choices {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    z-index: 1 !important;
+  }
+
+  .noticias-paginator-wrapper .choices__inner {
+    min-height: 32px !important;
+    padding: 2px 4px !important;
+    background: transparent !important;
+    border-radius: 4px !important;
+  }
+
+  /* RESIZABLE COLUMNS */
+  table th {
+    position: relative;
+    user-select: none;
+  }
+
+  .resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 10;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .resizer::after {
+    content: "⋮";
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 10px;
+    transition: color 0.2s;
+  }
+
+  .resizer:hover::after,
+  .resizing .resizer::after {
+    color: #ff9800;
+  }
+
+  .resizer:hover,
+  .resizing .resizer {
+    background: rgba(255, 152, 0, 0.2);
+    width: 8px;
+  }
+
+  .resizing {
+    cursor: col-resize;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('tablaRegistros');
+    if (!table) return;
+
+    const cols = table.querySelectorAll('th');
+
+    cols.forEach(th => {
+      const resizer = th.querySelector('.resizer');
+      if (!resizer) return;
+
+      let x = 0;
+      let w = 0;
+
+      const mouseDownHandler = function (e) {
+        x = e.clientX;
+        const styles = window.getComputedStyle(th);
+        w = parseInt(styles.width, 10);
+
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', mouseUpHandler);
+        th.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+      };
+
+      const mouseMoveHandler = function (e) {
+        const dx = e.clientX - x;
+        const newWidth = Math.max(30, w + dx); // Set minimum width constraint
+        th.style.width = `${newWidth}px`;
+        th.style.minWidth = `${newWidth}px`;
+        th.style.maxWidth = `${newWidth}px`;
+      };
+
+      const mouseUpHandler = function () {
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+        th.classList.remove('resizing');
+        document.body.style.cursor = '';
+      };
+
+      resizer.addEventListener('mousedown', mouseDownHandler);
+    });
+  });
+</script>

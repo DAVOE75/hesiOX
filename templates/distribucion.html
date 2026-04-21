@@ -1,0 +1,251 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Distribución Temporal — Proyecto Sirio{% endblock %}
+{% block page_title %}Distribución Temporal{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Distribución Temporal</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="header-actions-wrapper">
+    <a href="{{ url_for('dashboard') }}" class="btn-sirio" title="Ir al Dashboard">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="btn-text">Dashboard</span>
+    </a>
+
+    <div class="vr mx-1 opacity-25"></div>
+
+    <button type="button" id="btn-recalcular-temporal" class="btn-sirio">
+        <i class="fa-solid fa-sync"></i>
+        <span class="btn-text">Recalcular</span>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Header Alignment and Normalization */
+    .header-actions-wrapper {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        gap: 8px;
+        padding: 0 16px;
+    }
+
+    .header-actions-wrapper .btn-sirio {
+        height: 32px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        font-size: 11px !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #ddd;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .header-actions-wrapper .btn-sirio:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border-color: #fff;
+    }
+
+    .header-actions-wrapper .btn-sirio i {
+        font-size: 14px;
+        margin-right: 6px;
+    }
+
+    .header-actions-wrapper .vr {
+        height: 30px;
+        align-self: center;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid py-3 px-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center mb-2">
+            <h2 class="fw-bold text-warning mb-0">Distribución Temporal del Corpus</h2>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-warning border-warning" style="font-size:1.1em;">
+                <strong>¿Qué muestra esta gráfica?</strong><br>
+                La <b>Distribución Temporal</b> te permite visualizar cómo evolucionan las referencias y palabras
+                clave a lo largo del tiempo en tu corpus.<br>
+                <b>La escala Y de la gráfica representa el número de referencias o la frecuencia de cada palabra
+                    clave en cada fecha.</b><br>
+                Puedes analizar tendencias, identificar picos de actividad, comparar la aparición de términos
+                relevantes y descubrir periodos clave en la historia de tus fuentes. Esta herramienta es valiosa
+                para:<br>
+                <ul class="mb-0">
+                    <li>Detectar años o fechas con mayor número de publicaciones.</li>
+                    <li>Observar la frecuencia de palabras clave y su evolución temporal.</li>
+                    <li>Comparar el impacto de diferentes temas o eventos en tu corpus.</li>
+                    <li>Filtrar por rangos de fechas para análisis más precisos.</li>
+                </ul>
+                <span class="text-muted">Utiliza los filtros para personalizar la visualización según tus
+                    necesidades.</span>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary p-4">
+                <form id="form-filtro-temporal" class="row g-3 align-items-end mb-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div class="col-12 col-md-3" style="flex: 0 0 20%; max-width: 20%;">
+                        <label class="form-label text-light mb-1">Tipo de distribución</label>
+                        <select class="form-select" id="tipo-distribucion">
+                            <option value="referencias">Distribución de referencias</option>
+                            <option value="palabras">Distribución de palabras clave</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2" style="flex: 0 0 20%; max-width: 20%;">
+                        <label class="form-label text-light mb-1">Límite de documentos</label>
+                        <select id="select-limite-docs" class="form-select bg-dark text-warning border-secondary"
+                            style="height: 38px;">
+                            <option value="100">100</option>
+                            <option value="300" selected>300</option>
+                            <option value="500">500</option>
+                            <option value="1000">1000</option>
+                            <option value="0">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2" style="flex: 0 0 20%; max-width: 20%;">
+                        <label class="form-label text-light mb-1">Fecha inicio</label>
+                        <input type="text" class="form-control form-control-sirio validate-date" id="fecha-inicio"
+                            placeholder="DD/MM/AAAA">
+                    </div>
+                    <div class="col-12 col-md-2" style="flex: 0 0 20%; max-width: 20%;">
+                        <label class="form-label text-light mb-1">Fecha fin</label>
+                        <input type="text" class="form-control form-control-sirio validate-date" id="fecha-fin"
+                            placeholder="DD/MM/AAAA">
+                    </div>
+                    <div class="col-12 mt-2" id="bloque-palabras-clave" style="display:none;">
+                        <label class="form-label text-light mb-1">Palabras clave</label>
+                        <div class="sirio-select-bg">
+                            <select id="input-palabras-clave"
+                                class="form-select form-select-sm form-control-sirio sirio-select fw-bold text-warning"
+                                style="background: #181818; color: #ff9800; border: none; border-radius: 7px; min-height: 120px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; box-shadow: none; outline: none;"
+                                multiple size="6"
+                                placeholder="Escribe y pulsa Enter para añadir una palabra personalizada">
+                            </select>
+                        </div>
+                        <small class="text-warning" style="font-size:0.97em;">
+                            Busca o selecciona del <b>top 100</b> palabras más frecuentes.<br>
+                            <b>Puedes escribir cualquier palabra y pulsar <u>Enter</u> para añadirla al
+                                selector.</b>
+                            Puedes seleccionar varias palabras.
+                        </small>
+                    </div>
+                </form>
+                <style>
+                    /* Ocultar flechas de los inputs de tipo date en navegadores Webkit y Firefox */
+                    input[type=date].no-spin::-webkit-inner-spin-button,
+                    input[type=date].no-spin::-webkit-outer-spin-button {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        margin: 0;
+                    }
+
+                    input[type=date].no-spin {
+                        -moz-appearance: textfield;
+                        appearance: textfield;
+                    }
+                </style>
+                <div id="grafico-distribucion-temporal" class="mt-3" style="min-height: 110px; width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Permitir añadir palabras personalizadas al select y a Choices.js
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputPalabrasClave = document.getElementById("input-palabras-clave");
+        if (inputPalabrasClave && window.choicesInstance) {
+            inputPalabrasClave.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && this.value) {
+                    const val = this.value.trim();
+                    if (val && ![...this.options].some(opt => opt.value === val)) {
+                        // Añadir al select
+                        const opt = document.createElement('option');
+                        opt.value = val;
+                        opt.textContent = val;
+                        opt.selected = true;
+                        this.appendChild(opt);
+                        // Añadir a Choices.js
+                        window.choicesInstance.setValue([{ value: val, label: val, selected: true }]);
+                    }
+                    this.value = '';
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+    flatpickr("#fecha-inicio", {
+        dateFormat: "d/m/Y",
+        allowInput: true,
+        theme: "dark"
+    });
+    flatpickr("#fecha-fin", {
+        dateFormat: "d/m/Y",
+        allowInput: true,
+        theme: "dark"
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="/static/js/analisis.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const inputPalabrasClave = document.getElementById("input-palabras-clave");
+        if (inputPalabrasClave) {
+            window.choicesInstance = new Choices(inputPalabrasClave, {
+                removeItemButton: true,
+                duplicateItemsAllowed: false,
+                addItems: true,
+                addItemFilter: () => true, // Permitir cualquier palabra
+                addItemText: (value) => `Pulsa Enter para añadir "${value}"`,
+                placeholder: true,
+                placeholderValue: "Escribe y pulsa Enter para añadir una palabra personalizada",
+                searchPlaceholderValue: "Buscar palabra...",
+                noResultsText: "Pulsa Enter para añadir la palabra personalizada",
+                noChoicesText: "No hay palabras disponibles",
+                itemSelectText: "Seleccionar",
+                allowHTML: false,
+                shouldSort: false,
+                maxItemCount: 100,
+                paste: true,
+                renderChoiceLimit: -1,
+                // Deshabilitar búsqueda fuzzy para evitar autocompletado incorrecto
+                searchEnabled: true,
+                searchChoices: true,
+                searchResultLimit: 4,
+                // Configurar búsqueda exacta en lugar de fuzzy
+                fuseOptions: {
+                    threshold: 0.0,  // 0 = solo coincidencias exactas
+                    distance: 0,      // No permitir distancia entre caracteres
+                    minMatchCharLength: 999,  // Requerir coincidencia completa
+                    shouldSort: false
+                },
+                // Permitir añadir items personalizados directamente
+                addChoices: true
+            });
+        }
+    });
+</script>
+{% endblock %}

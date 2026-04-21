@@ -1,0 +1,922 @@
+{
+  "timestamp": "2026-04-21T10:00:38.839211",
+  "tipo_analisis": "reuso",
+  "filtros": {
+    "proyecto_id": 1,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "fecha",
+    "documentos_ids": []
+  },
+  "params": {
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "reusos": [
+      {
+        "doc1": {
+          "id": 698,
+          "titulo": "EL NAUFRAGIO DEL SIRIO. ENTREVISTA AL PADRE ANCHARD",
+          "publicacion": "Totnes Weekly Times"
+        },
+        "doc2": {
+          "id": 700,
+          "titulo": "THE LOSS OF THE SIRIO. FATHER ANSCHAR'S STORY.",
+          "publicacion": "The Tablet"
+        },
+        "coincidencias": 456,
+        "ejemplos": [
+          "a la bahía de palos,",
+          "tenía cuando chocó. en ese",
+          "compañeros a llegar a los"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 517,
+          "titulo": "La mañana de hoy",
+          "publicacion": "El Imparcial"
+        },
+        "doc2": {
+          "id": 527,
+          "titulo": "El Patrón del Joven Miguel El Rey ha recibido en la Granja á un interesante",
+          "publicacion": "La Tarde. Diario independiente de noticias y avisos. Palma de Mallorca"
+        },
+        "coincidencias": 254,
+        "ejemplos": [
+          "vida y profesión, y luego",
+          "en segovia y el viaje",
+          "la mano y le dedicó"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 1181,
+          "titulo": "Después de la Catástrofe (copia)",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "doc2": {
+          "id": 1180,
+          "titulo": "Después de la Catástrofe",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "coincidencias": 238,
+        "ejemplos": [
+          "ocasión se le presenta, se",
+          "agosto de 1906. querido amigo:",
+          "carta abierta sr. dr. de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 427,
+          "titulo": "Restableciendo la verdad",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "doc2": {
+          "id": 410,
+          "titulo": "El Naufragio del Sirio y el capitán del vapor Marie Louise",
+          "publicacion": "La Publicidad"
+        },
+        "coincidencias": 165,
+        "ejemplos": [
+          "largo y muchos de aquellos",
+          "salvamento de náufragos por el",
+          "la esperanza de ser los"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 478,
+          "titulo": "Del naufragio El capitán del Maria Luisa Dijimos que el Fomento de la Marina Española",
+          "publicacion": "La Almudaina"
+        },
+        "doc2": {
+          "id": 703,
+          "titulo": "Naufragio del Sirio. En honor de la verdad.",
+          "publicacion": "Fomento de la Marina Española"
+        },
+        "coincidencias": 139,
+        "ejemplos": [
+          "con todo y estarse montando",
+          "largarse del lugar del siniestro,",
+          "después de haber dado una"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 651,
+          "titulo": "Naufragio del Poitou En 1907 frente a la playa de las Garzas cercana a La",
+          "publicacion": "Facebook - El Tunel del Tiempo"
+        },
+        "doc2": {
+          "id": 652,
+          "titulo": "LA TUMBA DEL VAPOR POITOU",
+          "publicacion": "Historia y Arqueología Marítima"
+        },
+        "coincidencias": 89,
+        "ejemplos": [
+          "de la isla de lobos",
+          "roja fueron, entre otros, los",
+          "otros, los hermanos silva, doña"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 411,
+          "titulo": "En el café Sicilia establecido en la calle del mismo nombre se reunieron antes de",
+          "publicacion": "La Veu de Catalunya"
+        },
+        "doc2": {
+          "id": 404,
+          "titulo": "En el Café de Sicilia establecido en la calle del mismo nombre se reunieron ayer",
+          "publicacion": "La Vanguardia"
+        },
+        "coincidencias": 77,
+        "ejemplos": [
+          "los náufragos del sirio que",
+          "del sirio. como punto final",
+          "el teatro del bosque; de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 375,
+          "titulo": "La llegada a Génova del comandante del Sirio Génova 17 de agosto",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "doc2": {
+          "id": 376,
+          "titulo": "El desastre del Sirio Entrevista con un náufrago napolitano Nápoles 17 de agosto",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "coincidencias": 75,
+        "ejemplos": [
+          "fue inmediatamente a la capitanía,",
+          "la navigazione. será interrogado mañana",
+          "del sirio, de amezaga, y"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 508,
+          "titulo": "El naufragio del Sirio",
+          "publicacion": "Correio Paulistano"
+        },
+        "doc2": {
+          "id": 477,
+          "titulo": "Narrativa del Sr",
+          "publicacion": "Journal do Brasil"
+        },
+        "coincidencias": 70,
+        "ejemplos": [
+          "esto es un naufragio. al",
+          "ansia de salvar la vida.",
+          "y al llegar a la"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 408,
+          "titulo": "EL NAUFRAGIO DEL 'SYRIO\"",
+          "publicacion": "Diario de la Marina"
+        },
+        "doc2": {
+          "id": 400,
+          "titulo": "EL NAUFRAGIO DEL SIRIO PREMIO A LOS HÉROES ",
+          "publicacion": "El Heraldo de Madrid"
+        },
+        "coincidencias": 51,
+        "ejemplos": [
+          "un modo práctico su admiración",
+          "su distribución se haga con",
+          "mellado acordará la forma en"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 631,
+          "titulo": "El epílogo del naufragio del Sirio",
+          "publicacion": "Il Lavoro"
+        },
+        "doc2": {
+          "id": 630,
+          "titulo": "El epílogo del naufragio del Sirio",
+          "publicacion": "Il Lavoro"
+        },
+        "coincidencias": 45,
+        "ejemplos": [
+          "de parentesco con los mismos.",
+          "sociedad de navegación general italiana",
+          "sostuvo que, habiendo la sociedad"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 691,
+          "titulo": "MINISTERIO DE MARINA - REAL DECRETO",
+          "publicacion": "La Gaceta de Madrid"
+        },
+        "doc2": {
+          "id": 551,
+          "titulo": "La Gazeta Publica",
+          "publicacion": "Diario de la Marina"
+        },
+        "coincidencias": 38,
+        "ejemplos": [
+          "ratifica la concesión de las",
+          "de primera clase del mérito",
+          "los patrones de pesca vicente"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 610,
+          "titulo": "Ya anunciamos que el general Ferrándiz presentaría a las Cortes un proyecto de ley para",
+          "publicacion": "Diario de Barcelona"
+        },
+        "doc2": {
+          "id": 551,
+          "titulo": "La Gazeta Publica",
+          "publicacion": "Diario de la Marina"
+        },
+        "coincidencias": 37,
+        "ejemplos": [
+          "patrón del laud evaristo, josé",
+          "mérito naval con distintivo rojo,",
+          "ratifica la concesión de las"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 484,
+          "titulo": "En Santa Pola se va a erigir un mausoleo en el sitio en que fueron",
+          "publicacion": "La Voz de Alicante"
+        },
+        "doc2": {
+          "id": 469,
+          "titulo": "En recuerdo de los náufragos del Sirio",
+          "publicacion": "El Correo"
+        },
+        "coincidencias": 36,
+        "ejemplos": [
+          "la cabecera se erigirá un",
+          "erigirá un zócalo sobre el",
+          "material que ha de emplearse"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 399,
+          "titulo": "Por los derechos de los náufragos Génova 19 de agosto noche",
+          "publicacion": "Corriere della Sera"
+        },
+        "doc2": {
+          "id": 401,
+          "titulo": "Para los náufragos del Sirio Génova 19 El Comité Central de la Confederación Nacional del",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "coincidencias": 32,
+        "ejemplos": [
+          "colegios de defensa: génova: abogado",
+          "de defensa: génova: abogado p.",
+          "fallecidos los siguientes colegios de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 450,
+          "titulo": "A bordo del Sirio",
+          "publicacion": "Italia Navale"
+        },
+        "doc2": {
+          "id": 419,
+          "titulo": "Polémica por el Sirio Santa Cristina Toscana 20 de agosto",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "coincidencias": 31,
+        "ejemplos": [
+          "través del océano, ha dado",
+          "a través del océano, ha",
+          "con esta profundidad de conocimientos"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 610,
+          "titulo": "Ya anunciamos que el general Ferrándiz presentaría a las Cortes un proyecto de ley para",
+          "publicacion": "Diario de Barcelona"
+        },
+        "doc2": {
+          "id": 691,
+          "titulo": "MINISTERIO DE MARINA - REAL DECRETO",
+          "publicacion": "La Gaceta de Madrid"
+        },
+        "coincidencias": 29,
+        "ejemplos": [
+          "ratifica la concesión de las",
+          "de primera clase del mérito",
+          "naval, con distintivo rojo, con"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 593,
+          "titulo": "Sociedad de Salvamento de Naúfragos La junta general otorgó el premio anual de S",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "doc2": {
+          "id": 590,
+          "titulo": "Sociedad de salvamento de náufragos",
+          "publicacion": "El Imparcial"
+        },
+        "coincidencias": 29,
+        "ejemplos": [
+          "la junta general otorgó el",
+          "de s. m. el rey,",
+          "premio anual de s. m."
+        ]
+      },
+      {
+        "doc1": {
+          "id": 490,
+          "titulo": "COMUNICADO Reclamaciones de los náufragos del Sirio Desde varias partes se ha solicitado al Comisariado",
+          "publicacion": "L´Ancora"
+        },
+        "doc2": {
+          "id": 435,
+          "titulo": "Para los daños de los náufragos del Sirio Roma 30 El comisariado de emigración ha",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "coincidencias": 21,
+        "ejemplos": [
+          "motivos por los cuales se",
+          "las provincias donde el emigrante",
+          "de los daños sufridos por"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 430,
+          "titulo": "La investigación sobre el desastre del Sirio Roma 23 El Giornale d'Italia publica que la",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "doc2": {
+          "id": 431,
+          "titulo": "La investigación del Sirio La Comisión de Investigación para determinar las responsabilidades del naufragio del",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "coincidencias": 19,
+        "ejemplos": [
+          "determinar las responsabilidades del naufragio",
+          "la dirección de la marina",
+          "la comisión de investigación para"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 567,
+          "titulo": "Premios por un salvamento",
+          "publicacion": "Diario de la Marina"
+        },
+        "doc2": {
+          "id": 568,
+          "titulo": "Recompensas También dicen de Roma que el diario oficial Arma publica las recompensas al valor",
+          "publicacion": "El Cantábrico"
+        },
+        "coincidencias": 18,
+        "ejemplos": [
+          "de las barcas comba y",
+          "comba y cristo, y á",
+          "y rafael fuentes, patrones de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 504,
+          "titulo": "Después de la función habitual en el citado establecimiento una agraciada artista del mismo llamada",
+          "publicacion": "Las Noticias. Diario ilustrado de avisos, noticias, anuncios y telegramas"
+        },
+        "doc2": {
+          "id": 497,
+          "titulo": "EL CRIMEN DE HOY",
+          "publicacion": "El Noticiero Universal"
+        },
+        "coincidencias": 15,
+        "ejemplos": [
+          "san juan, cama número 3.",
+          "la sala de san juan,",
+          "hacer creer que se había"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 488,
+          "titulo": "Naufragio del vapor Sirio",
+          "publicacion": "Corriere Pinerolese"
+        },
+        "doc2": {
+          "id": 490,
+          "titulo": "COMUNICADO Reclamaciones de los náufragos del Sirio Desde varias partes se ha solicitado al Comisariado",
+          "publicacion": "L´Ancora"
+        },
+        "coincidencias": 15,
+        "ejemplos": [
+          "la ley del 31 de",
+          "en las prefecturas de las",
+          "provincias donde el emigrante contrató"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 396,
+          "titulo": "El Sirio desaparece para siempre",
+          "publicacion": "L´Italia Centrale"
+        },
+        "doc2": {
+          "id": 364,
+          "titulo": "Los Muertos son 175 Cartagena 16 de Agosto Se asegura que el reporte oficial sobre",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "coincidencias": 15,
+        "ejemplos": [
+          "volcándose a 40 metros de",
+          "oficiales, habría un total de",
+          "hoy partió el ravenna con"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 620,
+          "titulo": "EL TRABAJO DE LOS JUECES",
+          "publicacion": "Il Lavoro"
+        },
+        "doc2": {
+          "id": 611,
+          "titulo": "Los responsables del desastre del Sirio ante la Corte de Asís",
+          "publicacion": "Il Lavoro"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "y 329 del código penal,",
+          "en los artículos 311 y",
+          "negligencia e incumplimiento de los"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 489,
+          "titulo": "UNA GRAVE CONSTANCIA SOBRE EL NAUFRAGIO DEL SIRIO",
+          "publicacion": "Gazzeta d´Alba"
+        },
+        "doc2": {
+          "id": 468,
+          "titulo": "DESDE GÉNOVA",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "en todas las cartas de",
+          "la investigación ordenada por el",
+          "constatación, la situación de los"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 487,
+          "titulo": "La investigación sobre el naufragio del Sirio La Comisión de investigación sobre el naufragio del",
+          "publicacion": "L´Azione"
+        },
+        "doc2": {
+          "id": 481,
+          "titulo": "LA INVESTIGACIÓN SOBRE EL NAUFRAGIO DEL SIRIO",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "vapor sirio es imputable a",
+          "a la negligencia de su",
+          "estaba en perfecto estado de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 487,
+          "titulo": "La investigación sobre el naufragio del Sirio La Comisión de investigación sobre el naufragio del",
+          "publicacion": "L´Azione"
+        },
+        "doc2": {
+          "id": 479,
+          "titulo": "Las conclusiones de la Comisión de Investigación sobre el hundimiento del Sirio Hemos recibido una",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "vapor sirio es imputable a",
+          "a la negligencia de su",
+          "el número de personas a"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 415,
+          "titulo": "El cadáver de la Millanes",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "doc2": {
+          "id": 420,
+          "titulo": "Escriben de Torrevieja que ayer apareció en el Cequión el cadaver de una mujer",
+          "publicacion": "La Voz de Alicante"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "y encajes, cubrecorsé de punto",
+          "encajes, cubrecorsé de punto blanco",
+          "y camisa blanca con encajes"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 395,
+          "titulo": "Lo que dice el Comandante del SIRIO 190 viajes en la misma línea El momento",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "doc2": {
+          "id": 374,
+          "titulo": "Una interesante entrevista con el comandante del Sirio",
+          "publicacion": "Giornale di Udine"
+        },
+        "coincidencias": 14,
+        "ejemplos": [
+          "grabada en mi mente que",
+          "una distancia de tres millas",
+          "de tres millas de la"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 506,
+          "titulo": "DESDE BARCELONA Asesinato de una bailarina En la prensa de Barcelona encontramos la noticia de",
+          "publicacion": "La Última hora : periódico de información, literario y artístico"
+        },
+        "doc2": {
+          "id": 497,
+          "titulo": "EL CRIMEN DE HOY",
+          "publicacion": "El Noticiero Universal"
+        },
+        "coincidencias": 12,
+        "ejemplos": [
+          "la sala de san juan,",
+          "inferior de la región mamaria",
+          "sala de san juan, cama"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 481,
+          "titulo": "LA INVESTIGACIÓN SOBRE EL NAUFRAGIO DEL SIRIO",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "doc2": {
+          "id": 479,
+          "titulo": "Las conclusiones de la Comisión de Investigación sobre el hundimiento del Sirio Hemos recibido una",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 12,
+        "ejemplos": [
+          "vapor sirio es imputable a",
+          "a la negligencia de su",
+          "del vapor sirio es imputable"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 395,
+          "titulo": "Lo que dice el Comandante del SIRIO 190 viajes en la misma línea El momento",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "doc2": {
+          "id": 371,
+          "titulo": "Después de la catástrofe del Sirio Declaraciones del comandante Piccone",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 12,
+        "ejemplos": [
+          "me arrastraron a una barca",
+          "este me llevó a cartagena,",
+          "llevarme a bordo, pero le"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 692,
+          "titulo": "CARTAGENA",
+          "publicacion": "La Gaceta de Madrid"
+        },
+        "doc2": {
+          "id": 688,
+          "titulo": "VERA",
+          "publicacion": "La Gaceta de Madrid"
+        },
+        "coincidencias": 11,
+        "ejemplos": [
+          "de esta ciudad y su",
+          "instrucción de esta ciudad y",
+          "de instrucción de esta ciudad"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 586,
+          "titulo": "El naufragio del Poitou",
+          "publicacion": "Las Provincias: Diario de Valencia"
+        },
+        "doc2": {
+          "id": 583,
+          "titulo": "Montevideo El vapor Poitou de la compañía de transportes marítimos",
+          "publicacion": "La Correspondencia de Alicante"
+        },
+        "coincidencias": 11,
+        "ejemplos": [
+          "peligroso del sitio en que",
+          "por lo peligroso del sitio",
+          "muy difícil por lo peligroso"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 625,
+          "titulo": "El Arzobispo de Pará y su llegada A bordo del Thames llegó ayer Su Excelencia",
+          "publicacion": "Gazeta de noticias"
+        },
+        "doc2": {
+          "id": 509,
+          "titulo": "Llegando ayer a bordo del Thames Su Excelencia Reverendísima el Sr",
+          "publicacion": "Journal do Brasil"
+        },
+        "coincidencias": 10,
+        "ejemplos": [
+          "marcondes homem de mello, arzobispo",
+          "d. josé de camargo barros,",
+          "josé marcondes homem de mello,"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 392,
+          "titulo": "En torno al desastre de Sirio' Sálvese quien pueda Cuál fue la conducta de la",
+          "publicacion": "Corriere della Sera"
+        },
+        "doc2": {
+          "id": 371,
+          "titulo": "Después de la catástrofe del Sirio Declaraciones del comandante Piccone",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 10,
+        "ejemplos": [
+          "fogoneros habían abandonado el vapor",
+          "desgraciadamente, era cierto que varios",
+          "marineros y fogoneros habían abandonado"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 395,
+          "titulo": "Lo que dice el Comandante del SIRIO 190 viajes en la misma línea El momento",
+          "publicacion": "Il Giornale d´Italia"
+        },
+        "doc2": {
+          "id": 382,
+          "titulo": "La entrevista con el Comandante Sus disculpas y sus desmentidos GÉNOVA 17 21 10 horas",
+          "publicacion": "La Nazione"
+        },
+        "coincidencias": 10,
+        "ejemplos": [
+          "el momento de la catástrofe",
+          "cuando el sirio chocó contra",
+          "muchas veces el ojo se"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 506,
+          "titulo": "DESDE BARCELONA Asesinato de una bailarina En la prensa de Barcelona encontramos la noticia de",
+          "publicacion": "La Última hora : periódico de información, literario y artístico"
+        },
+        "doc2": {
+          "id": 504,
+          "titulo": "Después de la función habitual en el citado establecimiento una agraciada artista del mismo llamada",
+          "publicacion": "Las Noticias. Diario ilustrado de avisos, noticias, anuncios y telegramas"
+        },
+        "coincidencias": 8,
+        "ejemplos": [
+          "a la casa de socorro",
+          "la sala de san juan,",
+          "inferior de la región mamaria"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 439,
+          "titulo": "El ayudante de marina capitán del puerto de Torrevieja publica en el Boletín Oficial de",
+          "publicacion": "El Diario"
+        },
+        "doc2": {
+          "id": 433,
+          "titulo": "Sección cuarta",
+          "publicacion": "Boletín Oficial de la Provincia de Alicante"
+        },
+        "coincidencias": 8,
+        "ejemplos": [
+          "en el término de un",
+          "partir de la publicación de",
+          "un mes a partir de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 625,
+          "titulo": "El Arzobispo de Pará y su llegada A bordo del Thames llegó ayer Su Excelencia",
+          "publicacion": "Gazeta de noticias"
+        },
+        "doc2": {
+          "id": 513,
+          "titulo": "EL OBISPO DE S",
+          "publicacion": "Journal do Brasil"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "marcondes homem de mello, arzobispo",
+          "d. josé de camargo barros,",
+          "josé marcondes homem de mello,"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 610,
+          "titulo": "Ya anunciamos que el general Ferrándiz presentaría a las Cortes un proyecto de ley para",
+          "publicacion": "Diario de Barcelona"
+        },
+        "doc2": {
+          "id": 609,
+          "titulo": "El ministro de Marina presentará á las Cortes un proyecto de ley",
+          "publicacion": "Diario de Barcelona"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "ley para premiar los servicios",
+          "para premiar los servicios de",
+          "proyecto de ley para premiar"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 513,
+          "titulo": "EL OBISPO DE S",
+          "publicacion": "Journal do Brasil"
+        },
+        "doc2": {
+          "id": 509,
+          "titulo": "Llegando ayer a bordo del Thames Su Excelencia Reverendísima el Sr",
+          "publicacion": "Journal do Brasil"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "marcondes homem de mello, arzobispo",
+          "d. josé de camargo barros,",
+          "josé marcondes homem de mello,"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 509,
+          "titulo": "Llegando ayer a bordo del Thames Su Excelencia Reverendísima el Sr",
+          "publicacion": "Journal do Brasil"
+        },
+        "doc2": {
+          "id": 477,
+          "titulo": "Narrativa del Sr",
+          "publicacion": "Journal do Brasil"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "paulo, d. josé de camargo",
+          "obispo de s. paulo, d.",
+          "d. josé de camargo barros,"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 488,
+          "titulo": "Naufragio del vapor Sirio",
+          "publicacion": "Corriere Pinerolese"
+        },
+        "doc2": {
+          "id": 435,
+          "titulo": "Para los daños de los náufragos del Sirio Roma 30 El comisariado de emigración ha",
+          "publicacion": "Gazzeta di Venezia"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "en las prefecturas de las",
+          "provincias donde el emigrante contrató",
+          "de las provincias donde el"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 392,
+          "titulo": "En torno al desastre de Sirio' Sálvese quien pueda Cuál fue la conducta de la",
+          "publicacion": "Corriere della Sera"
+        },
+        "doc2": {
+          "id": 357,
+          "titulo": "La Tragedia de una Barco",
+          "publicacion": "Corriere della Sera"
+        },
+        "coincidencias": 7,
+        "ejemplos": [
+          "el oficial bagli fue uno",
+          "fue uno de los primeros",
+          "oficial bagli fue uno de"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 516,
+          "titulo": "EL OBISPO DE S. PAULO",
+          "publicacion": "Gazeta de noticias"
+        },
+        "doc2": {
+          "id": 625,
+          "titulo": "El Arzobispo de Pará y su llegada A bordo del Thames llegó ayer Su Excelencia",
+          "publicacion": "Gazeta de noticias"
+        },
+        "coincidencias": 6,
+        "ejemplos": [
+          "d. josé de camargo barros,",
+          "barros, obispo de s. paulo,",
+          "josé de camargo barros, obispo"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 633,
+          "titulo": "El epílogo del naufragio del Sirio",
+          "publicacion": "Il Lavoro"
+        },
+        "doc2": {
+          "id": 632,
+          "titulo": "El epílogo del naufragio del Sirio",
+          "publicacion": "Il Lavoro"
+        },
+        "coincidencias": 6,
+        "ejemplos": [
+          "de la comisión de investigación",
+          "naufragio del \"sirio\" audiencia matutina",
+          "epílogo del naufragio del \"sirio\""
+        ]
+      },
+      {
+        "doc1": {
+          "id": 624,
+          "titulo": "Recompensas Estando probado por el oportuno expediente que Hermenegildo Buhigues no se encontraba a bordo",
+          "publicacion": "El Eco de Cartagena"
+        },
+        "doc2": {
+          "id": 551,
+          "titulo": "La Gazeta Publica",
+          "publicacion": "Diario de la Marina"
+        },
+        "coincidencias": 6,
+        "ejemplos": [
+          "mérito naval con distintivo rojo,",
+          "plata del mérito naval con",
+          "cruz de plata del mérito"
+        ]
+      },
+      {
+        "doc1": {
+          "id": 537,
+          "titulo": "En el Vapor SIRIO",
+          "publicacion": "La Tarde. Diario independiente de noticias y avisos. Palma de Mallorca"
+        },
+        "doc2": {
+          "id": 529,
+          "titulo": "La Caja de Valores del Vapor SIRIO Cartagena 7 La noticia que sobre la caja",
+          "publicacion": "El Liberal (Murcia)"
+        },
+        "coincidencias": 6,
+        "ejemplos": [
+          "que hace el salvamento de",
+          "hace el salvamento de los",
+          "colocada sobre la cubierta del"
+        ]
+      }
+    ]
+  }
+}

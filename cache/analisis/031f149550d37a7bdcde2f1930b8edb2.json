@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-04-21T07:23:25.690524",
+  "tipo_analisis": "dramatico",
+  "filtros": {
+    "proyecto_id": 34,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "secuencia",
+    "documentos_ids": []
+  },
+  "params": {
+    "manual_aliases": {
+      "DIEGO": "DON DIEGO"
+    },
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "nodos": [],
+    "enlaces": [],
+    "sentimiento_temporal": [
+      {
+        "label": "Esc.L",
+        "sentimiento": -0.355,
+        "subjetividad": 0.7885714285714286,
+        "titulo_obra": "El Gato Negro",
+        "acto": "",
+        "escena": "L"
+      },
+      {
+        "label": "A.D E.L",
+        "sentimiento": -0.1285714285714286,
+        "subjetividad": 0.5316326530612245,
+        "titulo_obra": "El Demonio de la Perversidad",
+        "acto": "D",
+        "escena": "L"
+      }
+    ],
+    "reparto_detalle": [],
+    "interacciones_heatmap": [],
+    "personajes": [],
+    "total_personajes": 0,
+    "analisis_ia": null,
+    "filtro_nombre": null
+  }
+}

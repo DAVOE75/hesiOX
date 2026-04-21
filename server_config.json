@@ -1,0 +1,4 @@
+{
+    "spacy_model": "es_core_news_md",
+    "max_char_limit": 100000
+}

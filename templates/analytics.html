@@ -1,0 +1,434 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Analytics NLP - Sistema Bibliográfico{% endblock %}
+{% block page_title %}Análisis NLP del Corpus{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Estadísticas del Corpus</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('dashboard') }}" class="btn-sirio">
+    <i class="fa-solid fa-chart-pie me-2"></i>
+    <span class="btn-text">Dashboard</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header removed, using desktop structure -->
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-warning text-light">
+                <div class="card-body text-center">
+                    <svg width="48" height="48" fill="var(--color-accent)" class="mb-2">
+                        <rect x="8" y="12" width="32" height="28" rx="2" stroke="var(--color-accent)" stroke-width="2"
+                            fill="none" />
+                        <line x1="14" y1="20" x2="30" y2="20" stroke="var(--color-accent)" stroke-width="2" />
+                        <line x1="14" y1="26" x2="26" y2="26" stroke="var(--color-accent)" stroke-width="2" />
+                    </svg>
+                    <h3 class="text-warning mb-1" style="font-family: 'JetBrains Mono', monospace; font-size: 2.5rem;">
+                        {{ total_refs }}</h3>
+                    <p class="text-muted mb-0"
+                        style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Referencias Totales
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-warning text-light">
+                <div class="card-body text-center">
+                    <svg width="48" height="48" fill="var(--color-accent)" class="mb-2">
+                        <circle cx="24" cy="24" r="18" stroke="var(--color-accent)" stroke-width="2" fill="none" />
+                        <text x="24" y="30" text-anchor="middle" font-size="20" font-weight="bold"
+                            fill="var(--color-accent)">A</text>
+                    </svg>
+                    <h3 class="text-warning mb-1" style="font-family: 'JetBrains Mono', monospace; font-size: 2.5rem;">
+                        {{ with_content }}</h3>
+                    <p class="text-muted mb-0"
+                        style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Con Contenido
+                        Analizable</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-warning text-light">
+                <div class="card-body text-center">
+                    <svg width="48" height="48" fill="var(--color-accent)" class="mb-2">
+                        <circle cx="24" cy="24" r="18" stroke="var(--color-accent)" stroke-width="2" fill="none" />
+                        <path d="M24,8 L24,24 L32,18" stroke="var(--color-accent)" stroke-width="2" fill="none" />
+                    </svg>
+                    <h3 class="text-warning mb-1" style="font-family: 'JetBrains Mono', monospace; font-size: 2.5rem;">
+                        {{ content_percentage }}%</h3>
+                    <p class="text-muted mb-0"
+                        style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Cobertura de
+                        Contenido</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nube de Palabras -->
+    <div class="card bg-dark border-warning mb-4">
+        <div class="card-header bg-transparent border-warning">
+            <h5 class="text-warning mb-0">
+                <svg width="20" height="20" fill="currentColor" class="me-2">
+                    <circle cx="10" cy="10" r="2" fill="var(--color-accent)" />
+                    <circle cx="16" cy="8" r="1.5" fill="var(--color-accent)" />
+                    <circle cx="6" cy="14" r="1.5" fill="var(--color-accent)" />
+                    <circle cx="14" cy="14" r="1" fill="var(--color-accent)" />
+                </svg>
+                Nube de Palabras Clave
+            </h5>
+            <small class="text-muted">Términos más frecuentes en el corpus (TF-IDF)</small>
+        </div>
+        <div class="card-body">
+            <div id="loading-wordcloud" class="text-center py-5">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="text-muted mt-3">Analizando corpus...</p>
+            </div>
+            <div id="wordcloud-container" style="min-height: 400px; display: none; text-align: center;">
+                <!-- La nube se genera con JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos lado a lado -->
+    <div class="row mb-4">
+        <!-- Red de Entidades -->
+        <div class="col-lg-7">
+            <div class="card bg-dark border-warning" style="height: 600px;">
+                <div class="card-header bg-transparent border-warning">
+                    <h5 class="text-warning mb-0">
+                        <svg width="20" height="20" fill="currentColor" class="me-2">
+                            <circle cx="5" cy="5" r="3" fill="var(--color-accent)" />
+                            <circle cx="15" cy="5" r="3" fill="var(--color-accent)" />
+                            <circle cx="10" cy="15" r="3" fill="var(--color-accent)" />
+                            <line x1="5" y1="5" x2="15" y2="5" stroke="var(--color-accent)" stroke-width="1" />
+                            <line x1="5" y1="5" x2="10" y2="15" stroke="var(--color-accent)" stroke-width="1" />
+                        </svg>
+                        Red de Entidades (NER)
+                    </h5>
+                    <small class="text-muted">Personas, lugares y organizaciones relacionadas</small>
+                </div>
+                <div class="card-body p-0" style="position: relative; height: calc(100% - 70px);">
+                    <div id="loading-network" class="text-center py-5"
+                        style="position: absolute; width: 100%; top: 40%;">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-3">Extrayendo entidades...</p>
+                    </div>
+                    <div id="network-container" style="width: 100%; height: 100%; display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Keywords -->
+        <div class="col-lg-5">
+            <div class="card bg-dark border-warning" style="height: 600px;">
+                <div class="card-header bg-transparent border-warning">
+                    <h5 class="text-warning mb-0">
+                        <svg width="20" height="20" fill="currentColor" class="me-2">
+                            <rect x="2" y="14" width="4" height="4" fill="var(--color-accent)" />
+                            <rect x="8" y="10" width="4" height="8" fill="var(--color-accent)" />
+                            <rect x="14" y="6" width="4" height="12" fill="var(--color-accent)" />
+                        </svg>
+                        Distribución de Términos
+                    </h5>
+                    <small class="text-muted">Top 20 palabras por frecuencia</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="keywords-chart" style="max-height: 500px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info de tecnologías -->
+    <div class="alert alert-dark border-warning" style="background: rgba(255, 152, 0, 0.05);">
+        <h6 class="text-warning mb-2">
+            <svg width="16" height="16" fill="currentColor" class="me-1">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none" />
+                <text x="8" y="11" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">i</text>
+            </svg>
+            Tecnologías de Análisis
+        </h6>
+        <small class="text-light">
+            <strong>spaCy v3 (es_core_news_md):</strong> Named Entity Recognition para español<br>
+            <strong>scikit-learn:</strong> TF-IDF vectorization y extracción de keywords<br>
+            <strong>TextBlob:</strong> Análisis de sentimientos (polarity/subjectivity)<br>
+            <strong>Chart.js v4:</strong> Visualizaciones interactivas
+        </small>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- WordCloud2.js -->
+<script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+
+<!-- D3.js para red de entidades -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script>
+    // =========================================================
+    // CARGAR DATOS DEL CORPUS
+    // =========================================================
+    let corpusData = null;
+
+    async function loadCorpusData() {
+        try {
+            const response = await fetch('/api/corpus-analysis');
+            const data = await response.json();
+
+            if (data.success) {
+                corpusData = data;
+                renderWordCloud(data.word_cloud);
+                renderEntityNetwork(data.entity_network);
+                renderKeywordsChart(data.word_cloud);
+            } else {
+                showError('word_cloud');
+                showError('network');
+            }
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+            showError('wordcloud');
+            showError('network');
+        }
+    }
+
+    function showError(type) {
+        if (type === 'wordcloud') {
+            document.getElementById('loading-wordcloud').innerHTML =
+                '<p class="text-danger">Error al cargar datos. Verifica que hay contenidos en la base de datos.</p>';
+        } else if (type === 'network') {
+            document.getElementById('loading-network').innerHTML =
+                '<p class="text-danger">Error al cargar red de entidades.</p>';
+        }
+    }
+
+    // =========================================================
+    // NUBE DE PALABRAS
+    // =========================================================
+    function renderWordCloud(wordFreq) {
+        const container = document.getElementById('wordcloud-container');
+        document.getElementById('loading-wordcloud').style.display = 'none';
+        container.style.display = 'block';
+
+        if (!wordFreq || Object.keys(wordFreq).length === 0) {
+            container.innerHTML = '<p class="text-muted">No hay datos suficientes para generar la nube de palabras</p>';
+            return;
+        }
+
+        // Convertir a formato WordCloud2
+        const wordList = Object.entries(wordFreq).map(([word, freq]) => [word, freq * 10]);
+
+        // Crear canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = container.offsetWidth;
+        canvas.height = 400;
+        container.appendChild(canvas);
+
+        // Generar nube
+        WordCloud(canvas, {
+            list: wordList,
+            gridSize: 8,
+            weightFactor: 3,
+            fontFamily: 'Roboto Condensed, sans-serif',
+            color: function () {
+                // Colores naranja-amarillo
+                const colors = ['#ff9800', '#ffb74d', '#ffa726', '#fb8c00', '#f57c00'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            },
+            rotateRatio: 0.3,
+            backgroundColor: 'transparent'
+        });
+    }
+
+    // =========================================================
+    // RED DE ENTIDADES (D3.js Force Graph)
+    // =========================================================
+    function renderEntityNetwork(entityNetwork) {
+        document.getElementById('loading-network').style.display = 'none';
+        const container = document.getElementById('network-container');
+        container.style.display = 'block';
+
+        if (!entityNetwork || !entityNetwork.nodes || entityNetwork.nodes.length === 0) {
+            container.innerHTML = '<div class="text-center pt-5"><p class="text-muted">No hay entidades suficientes para generar la red</p></div>';
+            return;
+        }
+
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+
+        // Crear SVG
+        const svg = d3.select('#network-container')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Crear simulación de fuerzas
+        const simulation = d3.forceSimulation(entityNetwork.nodes)
+            .force('link', d3.forceLink(entityNetwork.links).id(d => d.id).distance(80))
+            .force('charge', d3.forceManyBody().strength(-200))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(30));
+
+        // Enlaces
+        const link = svg.append('g')
+            .selectAll('line')
+            .data(entityNetwork.links)
+            .enter().append('line')
+            .attr('stroke', '#555')
+            .attr('stroke-opacity', 0.3)
+            .attr('stroke-width', 1);
+
+        // Nodos
+        const node = svg.append('g')
+            .selectAll('g')
+            .data(entityNetwork.nodes)
+            .enter().append('g')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+
+        // Círculos de nodos
+        node.append('circle')
+            .attr('r', d => Math.min(Math.sqrt(d.count) * 5 + 5, 20))
+            .attr('fill', d => {
+                if (d.type === 'PER') return '#ff9800';  // Personas: naranja
+                if (d.type === 'LOC') return '#4a7c2f';  // Lugares: verde
+                if (d.type === 'ORG') return '#2196f3';  // Organizaciones: azul
+                return '#999';
+            })
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 2);
+
+        // Etiquetas
+        node.append('text')
+            .text(d => d.name)
+            .attr('x', 0)
+            .attr('y', 25)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#e0e0e0')
+            .attr('font-size', '10px')
+            .attr('font-family', 'Roboto Condensed, sans-serif');
+
+        // Tooltip
+        node.append('title')
+            .text(d => `${d.name}\nTipo: ${d.type}\nApariciones: ${d.count}`);
+
+        // Actualizar posiciones
+        simulation.on('tick', () => {
+            link
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+
+        // Funciones de drag
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    }
+
+    // =========================================================
+    // GRÁFICO DE KEYWORDS (Chart.js)
+    // =========================================================
+    function renderKeywordsChart(wordFreq) {
+        if (!wordFreq || Object.keys(wordFreq).length === 0) {
+            return;
+        }
+
+        // Ordenar y tomar top 20
+        const sorted = Object.entries(wordFreq)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 20);
+
+        const labels = sorted.map(([word]) => word);
+        const data = sorted.map(([, freq]) => freq);
+
+        const ctx = document.getElementById('keywords-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Frecuencia',
+                    data: data,
+                    backgroundColor: 'rgba(255, 152, 0, 0.8)',
+                    borderColor: '#ff9800',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#ff9800',
+                        bodyColor: '#e0e0e0',
+                        borderColor: '#ff9800',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#333'
+                        },
+                        ticks: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#e0e0e0',
+                            font: {
+                                family: 'JetBrains Mono, monospace',
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // =========================================================
+    // INICIALIZAR AL CARGAR LA PÁGINA
+    // =========================================================
+    document.addEventListener('DOMContentLoaded', loadCorpusData);
+</script>
+{% endblock %}

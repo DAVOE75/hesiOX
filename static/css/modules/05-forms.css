@@ -1,0 +1,259 @@
+/* ============================================================
+   05-FORMS.CSS - Form Controls & Inputs
+   ============================================================ */
+
+/* ====== INPUTS Y FORMS ====== */
+.form-control {
+    background-color: var(--app-bg-input);
+    border: 1px solid var(--app-border);
+    color: var(--app-text-main);
+}
+
+.form-control:focus {
+    background-color: var(--app-bg-input);
+    border-color: var(--app-accent);
+    color: var(--app-text-main);
+    box-shadow: 0 0 0 0.2rem rgba(255, 152, 0, 0.25);
+}
+
+.form-select {
+    background-color: var(--app-bg-input);
+    border: 1px solid var(--app-border);
+    color: var(--app-text-main);
+}
+
+.form-select:focus {
+    background-color: var(--app-bg-input);
+    border-color: var(--app-accent);
+    color: var(--app-text-main);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="search"],
+textarea,
+input[type="url"] {
+    background-color: var(--app-bg-input);
+    /*    border: 1px solid var(--app-border); */
+    color: var(--app-text-main);
+    padding: 7px 12px 7px 12px;
+    /* Extra padding for arrow */
+    border-radius: 0px;
+    width: 100% !important;
+
+    /* Native override overrides */
+    background-color: var(--ds-bg-element, #2b2b2b);
+    /*    border: 1px solid var(--ds-border-color, #444); */
+
+    /* Custom Arrow (Only for selects, removed from here) */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    accent-color: var(--app-accent);
+    /* Scrollbars/Checks */
+    color-scheme: dark;
+    /* Forces dark system UI on native controls */
+}
+
+/* Specific styling for selects to have the custom arrow */
+.form-select,
+select.form-control-sirio {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23aaaaaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+    background-repeat: no-repeat !important;
+    background-position: right 10px center;
+    background-size: 16px;
+}
+
+/* Fix for multiselect: remove the custom arrow background */
+select.form-control-sirio[multiple] {
+    background-image: none !important;
+}
+
+/* Fix for number inputs: remove the custom arrow background to avoid overlap with native spinners */
+input[type="number"] {
+    background-image: none !important;
+    padding-right: 2px !important;
+}
+
+/* Fix Focus Ring (Blue -> Orange) */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--app-accent) !important;
+    box-shadow: 0 0 0 1px var(--app-accent) !important;
+    outline: none;
+}
+
+/* Re-add arrow only for selects on focus */
+.form-select:not([multiple]):focus,
+select.form-control-sirio:not([multiple]):focus {
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ff9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e') !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Custom Checkboxes/Radios */
+.form-check-input:checked {
+    background-color: var(--app-accent) !important;
+    border-color: var(--app-accent) !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.25) !important;
+    border-color: var(--app-accent) !important;
+}
+
+/* Option elements (prevent white on Windows) */
+.form-select option {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+/* ====== CHOICES.JS OVERRIDES ====== */
+.choices {
+    z-index: 9999 !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.choices.is-open,
+.choices.is-focused {
+    z-index: 9999 !important;
+}
+
+/* Elevate parent containers when a dropdown is open to avoid stacking context capping */
+:has(> .choices.is-open),
+.card-panel:has(.choices.is-open),
+.row:has(.choices.is-open),
+.col-md-6:has(.choices.is-open),
+.col-12:has(.choices.is-open),
+.col-md-4:has(.choices.is-open),
+.col-md-8:has(.choices.is-open) {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+.choices__inner {
+    background-color: var(--app-bg-input) !important;
+    border: 1px solid var(--app-border) !important;
+    color: var(--app-text-main) !important;
+    z-index: 9999 !important;
+}
+
+/* Fix for white background in search input */
+.choices[data-type*="select-one"] .choices__input {
+    background-color: var(--app-bg-input) !important;
+    border-bottom: 1px solid var(--app-border) !important;
+    color: var(--app-text-main) !important;
+}
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    z-index: 10000 !important;
+    background-color: #1e1e1e !important;
+    border: 1px solid #ff9800 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 8px !important;
+    /* Removed custom poisoning/layout to let library handle it */
+}
+
+/* ====== FORM VALIDATION ====== */
+input.error,
+textarea.error,
+select.error {
+    border-color: #ff4444 !important;
+    background-color: rgba(255, 68, 68, 0.05);
+    animation: shake 0.5s;
+}
+
+input.valido,
+textarea.valido,
+select.valido {
+    border-color: #00C851 !important;
+    background-color: rgba(0, 200, 81, 0.05);
+}
+
+input.error:focus,
+textarea.error:focus,
+select.error:focus {
+    box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+}
+
+input.valido:focus,
+textarea.valido:focus,
+select.valido:focus {
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.error-validacion {
+    color: #ff4444;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.error-validacion::before {
+    content: "⚠️";
+}
+
+.success-validacion {
+    color: #4caf50;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.success-validacion::before {
+    content: "✓";
+    font-weight: bold;
+}
+
+label.required::after {
+    content: " *";
+    color: #ff4444;
+    font-weight: bold;
+}
+
+/* ====== ANIMATIONS ====== */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

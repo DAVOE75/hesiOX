@@ -1,0 +1,207 @@
+{% extends 'base_desktop.html' %}
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/modules/13-articulo.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Filtros Superiores -->
+    <div class="filtros-articulos">
+        <a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id, estado='todos') }}"
+            class="filtro-btn {{ 'activo' if estado_filtro == 'todos' else '' }}">
+            <i class="fa-solid fa-layer-group me-2"></i>Todos <span class="badge bg-secondary bg-opacity-25 ms-1">{{
+                articulos|length }}</span>
+        </a>
+        <a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id, estado='borrador') }}"
+            class="filtro-btn {{ 'activo' if estado_filtro == 'borrador' else '' }}">
+            <i class="fa-solid fa-pen-nib me-2"></i>Borradores
+        </a>
+        <a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id, estado='revision') }}"
+            class="filtro-btn {{ 'activo' if estado_filtro == 'revision' else '' }}">
+            <i class="fa-solid fa-magnifying-glass-doc me-2"></i>En Revisión
+        </a>
+        <a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id, estado='finalizado') }}"
+            class="filtro-btn {{ 'activo' if estado_filtro == 'finalizado' else '' }}">
+            <i class="fa-solid fa-circle-check me-2"></i>Finalizados
+        </a>
+        <a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id, estado='publicado') }}"
+            class="filtro-btn {{ 'activo' if estado_filtro == 'publicado' else '' }}">
+            <i class="fa-solid fa-cloud-arrow-up me-2"></i>Publicados
+        </a>
+    </div>
+
+    <!-- Grid de artículos -->
+    {% if articulos %}
+    <div class="articulos-grid">
+        {% for articulo in articulos %}
+        {% set autores_data = articulo.autores|from_json if articulo.autores else [] %}
+        <div class="card card-sirio border-0 shadow-lg position-relative overflow-hidden">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="articulo-header">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 smaller text-uppercase fw-bold"
+                                style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                                {{ articulo.estado }}
+                            </span>
+                            <span class="text-muted smaller">v{{ articulo.version }}</span>
+                        </div>
+                        <h3 class="h5 mb-1 fw-bold">
+                            <a href="{{ url_for('articulo_editar', articulo_id=articulo.id) }}"
+                                class="text-light text-decoration-none stretched-link hover-orange">
+                                {{ articulo.titulo }}
+                            </a>
+                        </h3>
+                        {% if articulo.subtitulo %}
+                        <p class="text-muted smaller mb-0">{{ articulo.subtitulo }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if autores_data %}
+                <div class="articulo-autores mb-4 text-secondary smaller d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-user-pen"></i>
+                    {% for autor in autores_data %}
+                    <span class="text-light opacity-75">{{ autor.nombre }}</span>{% if not loop.last %}<span>•</span>{%
+                    endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div
+                    class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-secondary border-opacity-10">
+                    <div class="articulo-meta d-flex gap-3 text-muted smaller">
+                        <span title="Extensión"><i class="fa-solid fa-fingerprint me-1 text-warning"></i> {{
+                            articulo.palabras_totales or 0 }} palabras</span>
+                        <span title="Último cambio"><i class="fa-solid fa-calendar-day me-1 text-info"></i> {{
+                            articulo.updated_at.strftime('%d/%m/%Y') if articulo.updated_at else 'N/A' }}</span>
+                    </div>
+
+                    <div class="d-flex gap-1 position-relative" style="z-index: 5;">
+                        <button class="btn btn-sm btn-icon-sirio text-muted action-pdf" data-id="{{ articulo.id }}"
+                            title="Exportar PDF">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-icon-sirio text-muted" type="button"
+                                data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-caret-down"></i>
+                            </button>
+                            <ul
+                                class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg border-secondary border-opacity-25">
+                                <li><a class="dropdown-item small"
+                                        href="{{ url_for('articulo_duplicar', articulo_id=articulo.id) }}"><i
+                                            class="fa-solid fa-copy me-2 text-info"></i>Duplicar</a></li>
+                                <li><a class="dropdown-item small action-state" href="#" data-id="{{ articulo.id }}"
+                                        data-estado="{{ articulo.estado }}"><i
+                                            class="fa-solid fa-rotate me-2 text-warning"></i>Siguiente Fase</a></li>
+                                <li>
+                                    <hr class="dropdown-divider border-secondary opacity-25">
+                                </li>
+                                <li><button class="dropdown-item small text-danger action-delete"
+                                        data-id="{{ articulo.id }}"><i
+                                            class="fa-solid fa-trash-can me-2"></i>Eliminar</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Estado vacío estilo Sirio -->
+    <div class="text-center py-5 opacity-50">
+        <i class="fa-solid fa-box-open fa-3x mb-3 text-secondary"></i>
+        <h4 class="text-light">Sin borradores</h4>
+        <p class="text-muted">Inicia un nuevo proceso de redatcción científica.</p>
+        <a href="{{ url_for('articulo_nuevo', proyecto_id=proyecto.id) }}" class="btn btn-warning mt-3">
+            <i class="fa-solid fa-plus me-2"></i>Nuevo Proceso
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function cambiarEstado(articuloId, estadoActual) {
+        const estados = ['borrador', 'revision', 'finalizado', 'publicado'];
+        const estadoActualIdx = estados.indexOf(estadoActual);
+        const siguienteEstado = estados[(estadoActualIdx + 1) % estados.length];
+
+        if (confirm(`¿Cambiar estado a "${siguienteEstado}"?`)) {
+            fetch(`/api/articulos/${articuloId}/cambiar-estado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: siguienteEstado })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error al cambiar estado');
+                    }
+                });
+        }
+    }
+
+
+    function eliminarArticulo(articuloId, triggerElement) {
+        if (confirm('¿Estás seguro de eliminar este artículo? Esta acción no se puede deshacer.')) {
+            fetch(`/borrar_articulo_cientifico/${articuloId}`, {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Eliminar la tarjeta del DOM de forma robusta
+                        let cardContainer = null;
+                        if (triggerElement) {
+                            cardContainer = triggerElement.closest('.card.card-sirio');
+                        }
+                        if (!cardContainer) {
+                            // Fallback: buscar por selector global
+                            const card = document.querySelector(`.action-delete[data-id='${articuloId}']`);
+                            if (card) {
+                                cardContainer = card.closest('.card.card-sirio');
+                            }
+                        }
+                        if (cardContainer) {
+                            cardContainer.remove();
+                        }
+                    } else {
+                        alert('Error al eliminar');
+                    }
+                });
+        }
+    }
+
+    function exportarPDF(articuloId) {
+        window.open(`/articulos/${articuloId}/pdf`, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.addEventListener('click', function (e) {
+            const btnState = e.target.closest('.action-state');
+            if (btnState) {
+                e.preventDefault();
+                cambiarEstado(btnState.dataset.id, btnState.dataset.estado);
+            }
+            const btnPdf = e.target.closest('.action-pdf');
+            if (btnPdf) {
+                e.preventDefault();
+                exportarPDF(btnPdf.dataset.id);
+            }
+            const btnDelete = e.target.closest('.action-delete');
+            if (btnDelete) {
+                e.preventDefault();
+                eliminarArticulo(btnDelete.dataset.id, btnDelete);
+            }
+        });
+    });
+</script>
+{% endblock %}

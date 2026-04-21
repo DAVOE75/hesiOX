@@ -1,0 +1,154 @@
+Listado de rutas de carpetas
+El n£mero de serie del volumen es 7291-DB2F
+C:.
+³   actualizar_pptx.py
+³   estructura.txt
+³   grafo_temp.html
+³   Makefile
+³   preprocesar_sirio.py
+³   presentacion_tfm.pptx
+³   presentacion_tfm_actualizada.pptx
+³   pyproyect.toml
+³   README.md
+³   requirements.txt
+³   setup.py
+³   sirio.bat
+³   sirio_cli.py
+³   test-flujo.py
+³   viajeros.csv
+³   
+ÃÄÄÄapp
+³       app_sirio.py
+³       dashboard.py
+³       
+ÃÄÄÄlib
+³   ÃÄÄÄbindings
+³   ³       utils.js
+³   ³       
+³   ÃÄÄÄtom-select
+³   ³       tom-select.complete.min.js
+³   ³       tom-select.css
+³   ³       
+³   ÀÄÄÄvis-9.1.2
+³           vis-network.css
+³           vis-network.min.js
+³           
+ÃÄÄÄnotebooks
+³   ³   analisis_demo.ipynb
+³   ³   presentacion_tfm.ipynb
+³   ³   visualizaciones_demo.ipynb
+³   ³   
+³   ÀÄÄÄapp
+³           app_sirio.py
+³           components.py
+³           
+ÃÄÄÄoutputs
+³       edad_histograma.html
+³       edad_histograma.png
+³       sexo_pie.html
+³       sexo_pie.png
+³       top_regiones.html
+³       top_regiones.png
+³       
+ÃÄÄÄscripts
+³       enriquecer_viajeros.py
+³       
+ÃÄÄÄsirio
+³   ³   constantes.py
+³   ³   maps.py
+³   ³   preprocessing.py
+³   ³   __init__.py
+³   ³   
+³   ÃÄÄÄanalysis
+³   ³   ³   estadisticas.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           estadisticas.cpython-313.pyc
+³   ³           __init__.cpython-313.pyc
+³   ³           
+³   ÃÄÄÄdata
+³   ³       datos_sirio.csv
+³   ³       tus_datos_sirio.xlsx
+³   ³       
+³   ÃÄÄÄgraphs
+³   ³   ³   generar_graficos.py
+³   ³   ³   grafo.py
+³   ³   ³   readme.md
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÃÄÄÄoutputs
+³   ³   ÀÄÄÄ__pycache__
+³   ³           generar_graficos.cpython-313.pyc
+³   ³           grafo.cpython-313.pyc
+³   ³           __init__.cpython-313.pyc
+³   ³           
+³   ÃÄÄÄmaps
+³   ³   ³   basicos.py
+³   ³   ³   comparativos.py
+³   ³   ³   detectar_municipios_sin_coordenadas.py
+³   ³   ³   README.md
+³   ³   ³   rutas.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           basicos.cpython-313.pyc
+³   ³           comparativos.cpython-313.pyc
+³   ³           rutas.cpython-313.pyc
+³   ³           __init__.cpython-313.pyc
+³   ³           
+³   ÃÄÄÄoutputs
+³   ³       cluster.html
+³   ³       edad_histograma.html
+³   ³       edad_histograma.png
+³   ³       graduado.html
+³   ³       heatmap.html
+³   ³       sexo_pie.html
+³   ³       sexo_pie.png
+³   ³       top_regiones.html
+³   ³       top_regiones.png
+³   ³       
+³   ÃÄÄÄsirio_project
+³   ³   ÀÄÄÄoutputs
+³   ³           edad_histograma.html
+³   ³           edad_histograma.png
+³   ³           sexo_pie.html
+³   ³           sexo_pie.png
+³   ³           top_regiones.html
+³   ³           top_regiones.png
+³   ³           
+³   ÃÄÄÄtimeline
+³   ³   ³   timeline.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           timeline.cpython-313.pyc
+³   ³           __init__.cpython-313.pyc
+³   ³           
+³   ÃÄÄÄutils
+³   ³   ³   geo.py
+³   ³   ³   utils.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           constantes.cpython-313.pyc
+³   ³           geo.cpython-313.pyc
+³   ³           utils.cpython-313.pyc
+³   ³           __init__.cpython-313.pyc
+³   ³           
+³   ÀÄÄÄ__pycache__
+³           constantes.cpython-313.pyc
+³           preprocessing.cpython-313.pyc
+³           __init__.cpython-313.pyc
+³           
+ÃÄÄÄsirio.egg-info
+³       dependency_links.txt
+³       PKG-INFO
+³       requires.txt
+³       SOURCES.txt
+³       top_level.txt
+³       
+ÀÄÄÄtests
+        test_analysis.py
+        test_preprocessing.py
+        

@@ -1,0 +1,161 @@
+<div class="modal fade" id="batchEditModal" tabindex="-1" >
+  <div class="modal-dialog modal-xl" style="margin-top: 60px;">
+    <div class="modal-content bg-dark text-light border-warning">
+      <div class="modal-header border-warning">
+        <h5 class="modal-title text-warning fw-bold text-uppercase" style="letter-spacing: 1px;">
+          <i class="fa-solid fa-pencil me-2"></i> Edición Masiva de Pasajeros
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning text-warning d-flex align-items-center mb-4">
+            <i class="fa-solid fa-triangle-exclamation fs-4 me-3"></i>
+            <div>
+                <strong>Cuidado:</strong> Los campos que dejes vacíos <strong>NO</strong> se modificarán. Solo se actualizará lo que indiques expresamente aquí. Esta acción afectará a todos los pasajeros que hayas seleccionado.
+            </div>
+        </div>
+
+        <form id="form-edicion-lote">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <h6 class="text-accent text-uppercase fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fa-solid fa-ship me-2"></i> Datos del Viaje</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Puerto Embarque</label>
+                <input type="text" name="puerto_embarque" class="form-control form-control-sirio" placeholder="(No cambiar)">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Emb. Nápoles</label>
+                <input type="text" name="fecha_emb_napoles" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Emb. Génova</label>
+                <input type="text" name="fecha_emb_genova" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Emb. Barcelona</label>
+                <input type="text" name="fecha_emb_barcelona" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Situación Post-Sirio</label>
+                <select name="situacion_post_naufragio" class="form-select form-control-sirio">
+                    <option value="">(No cambiar)</option>
+                    <option value="Continúa viaje">Continúa viaje al destino</option>
+                    <option value="Retorno a origen">Retorno a origen</option>
+                    <option value="Fallecido/a en el naufragio">Fallecido/a en el naufragio</option>
+                    <option value="Desaparecido/a en el naufragio">Desaparecido/a en el naufragio</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Puerto Retorno</label>
+                <input type="text" name="puerto_retorno" class="form-control form-control-sirio" placeholder="(No cambiar)">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Fecha Destino/Retorno</label>
+                <input type="text" name="fecha_retorno" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Fecha Hundimiento</label>
+                <input type="text" name="fecha_hundimiento" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Llegada Cartagena</label>
+                <input type="text" name="fecha_llegada_cartagena" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Salida Cartagena</label>
+                <input type="text" name="fecha_salida_cartagena" class="form-control form-control-sirio" placeholder="(No cambiar) DD/MM/YYYY">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Destino en Billete</label>
+                <input type="text" name="ciudad_destino" class="form-control form-control-sirio" placeholder="(No cambiar)">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Destino Final</label>
+                <input type="text" name="ciudad_destino_final" class="form-control form-control-sirio" placeholder="(No cambiar)">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Clase de Pasaje</label>
+                <select name="pasaje" class="form-select form-control-sirio">
+                    <option value="">(No cambiar)</option>
+                    <option value="1ª Clase">1ª Clase</option>
+                    <option value="2ª Clase">2ª Clase</option>
+                    <option value="3ª Clase">3ª Clase</option>
+                    <option value="TRIPULACIÓN">Tripulación</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small">Estado Viaje</label>
+                <select name="estado" class="form-select form-control-sirio">
+                    <option value="">(No cambiar)</option>
+                    <option value="SOBREVIVIENTE">Superviviente</option>
+                    <option value="DESAPARECIDO/A">Desaparecido</option>
+                    <option value="FALLECIDO/A">Fallecido</option>
+                </select>
+            </div>
+          </div>
+
+          <h6 class="text-accent text-uppercase fw-bold mb-3 border-bottom border-secondary pb-2 mt-4"><i class="fa-solid fa-list-check me-2"></i> Documentación y Anotaciones</h6>
+          <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-ship me-1"></i> Embarque Retorno / Continuación Viaje:</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <select name="en_lista_italia_mvd" class="form-select form-control-sirio small" style="font-size:0.8rem;">
+                            <option value="">Italia MVD: (No cambiar)</option>
+                            <option value="1">Marcar Sí</option>
+                            <option value="0">Marcar No</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="en_lista_italia_ba" class="form-select form-control-sirio small" style="font-size:0.8rem;">
+                            <option value="">Italia BA: (No cambiar)</option>
+                            <option value="1">Marcar Sí</option>
+                            <option value="0">Marcar No</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="en_lista_ravena_sp" class="form-select form-control-sirio small" style="font-size:0.8rem;">
+                            <option value="">Ravenna SP: (No cambiar)</option>
+                            <option value="1">Marcar Sí</option>
+                            <option value="0">Marcar No</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="en_lista_diana_bcn" class="form-select form-control-sirio small" style="font-size:0.8rem;">
+                            <option value="">Diana BCN: (No cambiar)</option>
+                            <option value="1">Marcar Sí</option>
+                            <option value="0">Marcar No</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="en_lista_orione_ge" class="form-select form-control-sirio small" style="font-size:0.8rem;">
+                            <option value="">Orione GE: (No cambiar)</option>
+                            <option value="1">Marcar Sí</option>
+                            <option value="0">Marcar No</option>
+                        </select>
+                    </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mt-2">Hospedaje Cartagena / Referencias</label>
+                <input type="text" name="hospedaje_cartagena" class="form-control form-control-sirio mb-3" placeholder="(No cambiar)">
+                
+                <label class="form-label text-muted small">Comentarios Internos</label>
+                <textarea name="comentarios" class="form-control form-control-sirio" rows="2" placeholder="(No cambiar)"></textarea>
+              </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-warning">
+        <button type="button" class="btn btn-sirio text-muted border-secondary" data-bs-dismiss="modal" style="min-width: 100px;">Cancelar</button>
+        <button type="button" class="btn btn-sirio fw-bold px-4" id="btn-guardar-lote">
+          <i class="fa-solid fa-save me-1"></i>
+          APLICAR CAMBIOS MASIVOS
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

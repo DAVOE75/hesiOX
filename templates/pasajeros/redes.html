@@ -1,0 +1,16 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Grafo de Relaciones - S.S. Sirio{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 text-center">
+    <h1 class="text-accent fw-bold"><i class="fa-solid fa-diagram-project me-2"></i> Grafo de Relaciones</h1>
+    <p class="text-muted">Próximamente: Red de vínculos entre pasajeros (familia, origen, clase).</p>
+    <div class="card hesi-floating-card p-5 mt-4">
+        <i class="fa-solid fa-network-wired fa-5x text-muted mb-4"></i>
+        <h3>Sección en construcción</h3>
+        <p>Estamos calculando la matriz de similitud para generar el grafo de relaciones.</p>
+        <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-sirio-primary mt-3">Volver al Listado</a>
+    </div>
+</div>
+{% endblock %}

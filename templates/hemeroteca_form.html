@@ -1,0 +1,312 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}{% if accion == 'nueva' %}Nueva Hemeroteca{% else %}Editar Hemeroteca{% endif %} — Proyecto Sirio{%
+endblock %}
+{% block page_title %}{% if accion == 'nueva' %}Nueva Hemeroteca{% else %}Editar Hemeroteca{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión de Repositorios</span>
+{% endblock %}
+
+{% block top_actions %}
+<button type="submit" form="form-hemeroteca" class="btn-sirio active"
+    title="{% if accion == 'nueva' %}Crear Hemeroteca{% else %}Guardar Cambios{% endif %}">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">{% if accion == 'nueva' %}Crear{% else %}GUARDAR{% endif %}</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn-sirio" title="Volver al listado">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">VOLVER</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important; 
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .header-actions-wrapper > * {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+    
+    .header-actions-wrapper .btn-sirio {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+    <div class="container" style="max-width: 90%;">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show border-0 rounded-0" role="alert"
+            style="background: rgba(255,255,255,0.05);">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form id="form-hemeroteca" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-building-columns me-2"></i> Datos de la Hemeroteca
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <label class="form-label-sirio">Nombre de la Hemeroteca *</label>
+                        <input type="text" class="form-control form-control-sirio border-warning fw-bold" id="nombre"
+                            name="nombre" value="{{ hemeroteca.nombre if hemeroteca else '' }}" required
+                            placeholder="Ej: Biblioteca Nacional de España - Hemeroteca Digital">
+                        <small class="form-text-sirio mt-1">Nombre oficial del repositorio o hemeroteca digital</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sirio">Institución Gestora</label>
+                        <input type="text" class="form-control form-control-sirio" id="institucion" name="institucion"
+                            value="{{ hemeroteca.institucion if hemeroteca else '' }}"
+                            placeholder="Ej: Biblioteca Nacional de España, Ministerio de Cultura">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-map-location-dot me-2"></i> Ubicación Geográfica
+                </div>
+                <div class="p-4" style="overflow: visible;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">País</label>
+                            <select class="form-select form-select-sirio" id="pais" name="pais">
+                                <option value="">-- Selecciona un país --</option>
+                                <option value="España" {% if hemeroteca and hemeroteca.pais=='España' %}selected{% endif
+                                    %} data-flag="es">España</option>
+                                <option value="Argentina" {% if hemeroteca and hemeroteca.pais=='Argentina' %}selected{%
+                                    endif %} data-flag="ar">Argentina</option>
+                                <option value="Brasil" {% if hemeroteca and hemeroteca.pais=='Brasil' %}selected{% endif
+                                    %} data-flag="br">Brasil</option>
+                                <option value="Chile" {% if hemeroteca and hemeroteca.pais=='Chile' %}selected{% endif
+                                    %} data-flag="cl">Chile</option>
+                                <option value="Colombia" {% if hemeroteca and hemeroteca.pais=='Colombia' %}selected{%
+                                    endif %} data-flag="co">Colombia</option>
+                                <option value="Cuba" {% if hemeroteca and hemeroteca.pais=='Cuba' %}selected{% endif %}
+                                    data-flag="cu">Cuba</option>
+                                <option value="Estados Unidos" {% if hemeroteca and hemeroteca.pais=='Estados Unidos'
+                                    %}selected{% endif %} data-flag="us">Estados Unidos</option>
+                                <option value="Filipinas" {% if hemeroteca and hemeroteca.pais=='Filipinas' %}selected{%
+                                    endif %} data-flag="ph">Filipinas</option>
+                                <option value="Francia" {% if hemeroteca and hemeroteca.pais=='Francia' %}selected{%
+                                    endif %} data-flag="fr">Francia</option>
+                                <option value="Italia" {% if hemeroteca and hemeroteca.pais=='Italia' %}selected{% endif
+                                    %} data-flag="it">Italia</option>
+                                <option value="México" {% if hemeroteca and hemeroteca.pais=='México' %}selected{% endif
+                                    %} data-flag="mx">México</option>
+                                <option value="Perú" {% if hemeroteca and hemeroteca.pais=='Perú' %}selected{% endif %}
+                                    data-flag="pe">Perú</option>
+                                <option value="Portugal" {% if hemeroteca and hemeroteca.pais=='Portugal' %}selected{%
+                                    endif %} data-flag="pt">Portugal</option>
+                                <option value="Uruguay" {% if hemeroteca and hemeroteca.pais=='Uruguay' %}selected{%
+                                    endif %} data-flag="uy">Uruguay</option>
+                                <option value="Reino Unido" {% if hemeroteca and hemeroteca.pais=='Reino Unido'
+                                    %}selected{% endif %} data-flag="gb">Reino Unido</option>
+                                <option value="Bolivia" {% if hemeroteca and hemeroteca.pais=='Bolivia' %}selected{%
+                                    endif %} data-flag="bo">Bolivia</option>
+                                <option value="Costa Rica" {% if hemeroteca and hemeroteca.pais=='Costa Rica'
+                                    %}selected{% endif %} data-flag="cr">Costa Rica</option>
+                                <option value="Ecuador" {% if hemeroteca and hemeroteca.pais=='Ecuador' %}selected{%
+                                    endif %} data-flag="ec">Ecuador</option>
+                                <option value="El Salvador" {% if hemeroteca and hemeroteca.pais=='El Salvador'
+                                    %}selected{% endif %} data-flag="sv">El Salvador</option>
+                                <option value="Guatemala" {% if hemeroteca and hemeroteca.pais=='Guatemala' %}selected{%
+                                    endif %} data-flag="gt">Guatemala</option>
+                                <option value="Guinea Ecuatorial" {% if hemeroteca and
+                                    hemeroteca.pais=='Guinea Ecuatorial' %}selected{% endif %} data-flag="gq">Guinea
+                                    Ecuatorial</option>
+                                <option value="Honduras" {% if hemeroteca and hemeroteca.pais=='Honduras' %}selected{%
+                                    endif %} data-flag="hn">Honduras</option>
+                                <option value="Nicaragua" {% if hemeroteca and hemeroteca.pais=='Nicaragua' %}selected{%
+                                    endif %} data-flag="ni">Nicaragua</option>
+                                <option value="Panamá" {% if hemeroteca and hemeroteca.pais=='Panamá' %}selected{% endif
+                                    %} data-flag="pa">Panamá</option>
+                                <option value="Paraguay" {% if hemeroteca and hemeroteca.pais=='Paraguay' %}selected{%
+                                    endif %} data-flag="py">Paraguay</option>
+                                <option value="Puerto Rico" {% if hemeroteca and hemeroteca.pais=='Puerto Rico'
+                                    %}selected{% endif %} data-flag="pr">Puerto Rico</option>
+                                <option value="República Dominicana" {% if hemeroteca and
+                                    hemeroteca.pais=='República Dominicana' %}selected{% endif %} data-flag="do">
+                                    República Dominicana</option>
+                                <option value="Venezuela" {% if hemeroteca and hemeroteca.pais=='Venezuela' %}selected{%
+                                    endif %} data-flag="ve">Venezuela</option>
+                                <option value="Otro" {% if hemeroteca and hemeroteca.pais not in ['España', 'Argentina'
+                                    , 'Brasil' , 'Chile' , 'Colombia' , 'Cuba' , 'Estados Unidos' , 'Filipinas'
+                                    , 'Francia' , 'Italia' , 'México' , 'Perú' , 'Portugal' , 'Uruguay' , 'Reino Unido'
+                                    , 'Bolivia' , 'Costa Rica' , 'Ecuador' , 'El Salvador' , 'Guatemala'
+                                    , 'Guinea Ecuatorial' , 'Honduras' , 'Nicaragua' , 'Panamá' , 'Paraguay'
+                                    , 'Puerto Rico' , 'República Dominicana' , 'Venezuela' ] and hemeroteca.pais
+                                    %}selected{% endif %} data-flag="other">Otro país</option>
+                            </select>
+
+                            <div id="flag-preview" class="mt-2 text-warning d-flex align-items-center"
+                                style="min-height: 20px;">
+                                {% if hemeroteca and hemeroteca.pais %}
+                                {% set c_code = hemeroteca.pais|country_flag %}
+                                <span class="fi fi-{{ c_code }}"></span>
+                                <span class="small ms-2 font-monospace">{{ hemeroteca.pais }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Provincia / Región</label>
+                            <input type="text" class="form-control form-control-sirio" id="provincia" name="provincia"
+                                value="{{ hemeroteca.provincia if hemeroteca else '' }}" placeholder="Ej: Madrid">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Ciudad</label>
+                            <input type="text" class="form-control form-control-sirio" id="ciudad" name="ciudad"
+                                value="{{ hemeroteca.ciudad if hemeroteca else '' }}" placeholder="Ej: Madrid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-globe me-2"></i> Acceso y Contenido
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <label class="form-label-sirio">URL de Acceso</label>
+                        <div class="input-group flex-nowrap">
+                            <button
+                                class="btn btn-outline-secondary bg-dark text-secondary border-secondary border-end-0"
+                                type="button" id="btn-open-url" title="Abrir enlace en nueva pestaña"
+                                style="width: 35px !important;">
+                                <i class="fa-solid fa-link"></i>
+                            </button>
+
+                            <input type="url"
+                                class="form-control form-control-sirio border-secondary border-start-0 ps-2" id="url"
+                                name="url" value="{{ hemeroteca.url if hemeroteca else '' }}"
+                                placeholder="https://hemerotecadigital.bne.es"
+                                style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sirio">Descripción del Corpus</label>
+                        <textarea class="form-control form-control-sirio" id="resumen_corpus" name="resumen_corpus"
+                            rows="4"
+                            placeholder="Describe el contenido de la hemeroteca: período temporal, tipo de publicaciones, temas principales...">{{ hemeroteca.resumen_corpus if hemeroteca else '' }}</textarea>
+                        <small class="form-text-sirio mt-1">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i>
+                            Una buena descripción ayudará a identificar qué publicaciones se encuentran en este
+                            repositorio.
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="compartida" name="compartida" {% if
+                                hemeroteca and hemeroteca.compartida %}checked{% elif not hemeroteca %}checked{% endif
+                                %}>
+                            <label class="form-check-label text-light" for="compartida">
+                                <i class="fa-solid fa-globe me-1 text-accent"></i> Compartir en repositorio global
+                            </label>
+                        </div>
+                        <small class="form-text-sirio mt-1 d-block ms-4">
+                            <i class="fa-solid fa-circle-info text-info me-1"></i>
+                            Permite que otros usuarios puedan importar esta hemeroteca a sus proyectos
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            {% if hemeroteca %}
+            <div class="alert alert-info border-0 rounded-0 d-flex align-items-center" role="alert"
+                style="background: rgba(13, 202, 240, 0.1);">
+                <i class="fa-solid fa-circle-nodes fs-4 me-3 text-info"></i>
+                <div>
+                    <strong class="text-info d-block mb-1">Vinculación con Publicaciones</strong>
+                    <div class="small opacity-75">
+                        Esta hemeroteca puede ser asociada a publicaciones como repositorio de origen. Los artículos
+                        heredarán automáticamente la información de localización.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="height: 100px;"></div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+    // Preview de bandera al cambiar selector de país
+    const paisSelect = document.getElementById('pais');
+    if (paisSelect) {
+        paisSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const flagCode = selectedOption.getAttribute('data-flag');
+            const paisNombre = selectedOption.value;
+            const preview = document.getElementById('flag-preview');
+
+            if (paisNombre && flagCode) {
+                preview.innerHTML = `<span class="fi fi-${flagCode}"></span><span class="small ms-2 font-monospace">${paisNombre}</span>`;
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+    }
+
+    // Funcionalidad para abrir el enlace (Botón izquierdo)
+    const btnUrl = document.getElementById('btn-open-url');
+    const inputUrl = document.getElementById('url');
+
+    if (btnUrl && inputUrl) {
+        btnUrl.addEventListener('click', function () {
+            let url = inputUrl.value.trim();
+            if (url) {
+                // Si falta el protocolo, añadimos https por defecto para evitar errores
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
+                }
+                window.open(url, '_blank');
+            } else {
+                // Feedback visual si está vacío (borde rojo temporal)
+                inputUrl.classList.add('border-danger');
+                setTimeout(() => inputUrl.classList.remove('border-danger'), 500);
+                inputUrl.focus();
+            }
+        });
+    }
+</script>
+{% endblock %}

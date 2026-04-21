@@ -1,0 +1,997 @@
+{# ==========================
+redes.html — SNA (Gephi-like) + filtros robustos
+Backend requerido:
+GET /api/redes/filtros -> { publicaciones:[str...], fecha_min:"YYYY-MM-DD"|null, fecha_max:"YYYY-MM-DD"|null }
+GET /api/redes -> { nodes:[], edges:[], tipos:{...}, meta:{docs:int} }
+Notas:
+- Dropdown publicaciones: Choices.js (si está disponible) con setChoices() para evitar “rectángulo vacío”
+- Estilo Gephi-like: ForceAtlas2Based + sizes + edges suaves + grupos por color/forma
+========================== #}
+
+{% extends "base_desktop.html" %}
+
+{% block title %}Red de Relaciones — {{ proyecto.nombre if proyecto else 'Proyecto' }}{% endblock %}
+{% block page_title %}Red de Relaciones (SNA){% endblock %}
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Grafo de conexiones</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('noticias.listar') }}" class="btn-sirio">
+  <i class="fa-solid fa-arrow-left me-1"></i>
+  <span class="btn-text">Biblioteca</span>
+</a>
+{% endblock %}
+
+{% block body_class %}proyecto-style p-0 m-0{% endblock %}
+
+{% block extra_css %}
+{# Vis-network (una sola carga) #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vis-network/styles/vis-network.min.css">
+
+{# Visualización CSS modular #}
+<link href="{{ url_for('static', filename='css/modules/11-visualizations.css') }}" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+{% endblock %}
+
+<!-- SCOPED FIX: Enable Interactivity for Network Dropdown -->
+<style>
+  /* 
+   Ensure the dropdown container captures clicks in the network context.
+   We avoid 'display: block' overrides that hinder closing, but enforce
+   pointer-events and z-index to beat the canvas.
+*/
+  #filterPanel .choices {
+    overflow: visible !important;
+    pointer-events: auto !important;
+    z-index: 1000 !important;
+  }
+
+  #filterPanel .choices__list--dropdown {
+    z-index: 100001 !important;
+    /* Above everything */
+    background-color: #1e1e1e !important;
+    /* Ensure background isn't transparent */
+  }
+
+  /* Ensure the panel itself allows interaction */
+  #filterPanel {
+    pointer-events: auto !important;
+  }
+</style>
+
+{% block content %}
+<div class="network-container">
+
+  <div id="mynetwork">
+    <div class="d-flex justify-content-center align-items-center h-100">
+      <div class="text-center">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="mt-2 text-light small" style="font-family:var(--ds-font-mono);">Cargando red…</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastMini" class="toast-mini"></div>
+
+
+  {# =======================
+  FILTROS
+  ======================= #}
+  <div class="panel collapsible" id="filterPanel">
+    <div class="panel-title" id="toggleFilters">
+      <span>Filtros de red</span>
+      <div class="d-flex gap-2 align-items-center">
+        <a href="{{ url_for('config_red') }}" class="btn-sirio btn-sm" onclick="event.stopPropagation()"
+          style="width: 60px;">Tipos</a>
+        <a href="{{ url_for('exportar_gephi') }}" class="btn-sirio btn-sm" onclick="event.stopPropagation()"
+          style="width: 60px;">Gephi</a>
+        <i class="fa-solid fa-chevron-down panel-toggle-icon ms-1"></i>
+      </div>
+    </div>
+
+    <div class="panel-content" onclick="event.stopPropagation()">
+      <div class="mb-2 mt-2">
+        <label class="form-label">Publicación</label>
+        <select id="f-publicacion" class="form-select form-select-sm" multiple data-choice-init="manual">
+          <option value="">Todas</option>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="form-label">Desde</label>
+          <input id="f-desde" type="date" class="form-control form-control-sm">
+        </div>
+        <div>
+          <label class="form-label">Hasta</label>
+          <input id="f-hasta" type="date" class="form-control form-control-sm">
+        </div>
+      </div>
+
+      <div class="grid2 mt-2">
+        <div>
+          <label class="form-label">Min. co-ocurrencia (edge)</label>
+          <input id="f-minedge" type="number" value="1" min="1" class="form-control form-control-sm">
+        </div>
+        <div>
+          <label class="form-label">Min. menciones (node)</label>
+          <input id="f-minnode" type="number" value="2" min="1" class="form-control form-control-sm">
+        </div>
+      </div>
+
+      <div class="mt-2">
+        <label class="form-label">Máx. docs (seguridad)</label>
+        <input id="f-maxdocs" type="number" value="5000" min="100" step="100" class="form-control form-control-sm">
+      </div>
+
+      <div class="actions">
+        <button id="btn-generar" class="btn-sirio btn-sirio-primary text-white" style="width: 33% !important;">Generar red</button>
+        <button id="btn-reset" class="btn-sirio" style="width: 33% !important;">Reset</button>
+        <button id="btn-recargar-filtros" class="btn-sirio" style="width: 33% !important;">Recargar filtros</button>
+        <div class="ms-auto small text-muted" id="f-status" style="min-width:160px; text-align:right;"></div>
+      </div>
+
+      <div class="mini-note">
+        Si filtras y sale “0 docs”, revisa publicación exacta y formato de fecha en BD.
+      </div>
+    </div>
+  </div>
+
+  {# =======================
+  PANEL DERECHO (controles)
+  ======================= #}
+  <div class="right-panel" id="controlsPanel">
+    <div class="controls-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24">
+          <path
+            d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
+        </svg>
+        Controles
+      </div>
+      <i class="fa-solid fa-chevron-down controls-toggle-icon"></i>
+    </div>
+
+    <div class="controls-content" onclick="event.stopPropagation()">
+      <input type="text" id="search-node" placeholder="Buscar nodo… (min 2 letras)">
+
+      <hr style="border-color: rgba(255,255,255,.12); margin:10px 0;">
+
+      <div class="text-muted small mb-2" style="font-size:.74rem;">Mostrar/ocultar tipos</div>
+      <div id="filtros-tipos"></div>
+
+      <hr style="border-color: rgba(255,255,255,.12); margin:10px 0;">
+
+      <div class="d-flex gap-2" style="margin-bottom: 10px !important;">
+        <button id="btn-fit" class="btn-sirio" style="width: 120px; padding-right: 5px;"><i
+            class="fa-solid fa-crosshairs me-2"></i> Centrar</button>
+        <button id="btn-freeze" class="btn-sirio" style="width: 120px; padding-right: 5px;"><i
+            class="fa-solid fa-snowflake me-2"></i> Congelar</button>
+      </div>
+    </div>
+  </div>
+
+  {# =======================
+  MÉTRICAS
+  ======================= #}
+  <div class="stats" id="statsPanel">
+    <div class="stats-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24">
+          <rect x="3" y="14" width="4" height="7" />
+          <rect x="10" y="8" width="4" height="13" />
+          <rect x="17" y="4" width="4" height="17" />
+        </svg>
+        Métricas
+      </div>
+      <i class="fa-solid fa-chevron-down stats-toggle-icon"></i>
+    </div>
+
+    <div class="stats-content" onclick="event.stopPropagation()">
+      <div class="stat-row"><span class="stat-label">Nodos</span><span class="stat-value" id="stat-nodes">0</span></div>
+      <div class="stat-row"><span class="stat-label">Edges</span><span class="stat-value" id="stat-edges">0</span></div>
+      <div class="stat-row"><span class="stat-label">Densidad</span><span class="stat-value" id="stat-density">0%</span>
+      </div>
+      <div class="stat-row"><span class="stat-label">Docs</span><span class="stat-value" id="stat-docs">0</span></div>
+    </div>
+  </div>
+
+  {# =======================
+  DETALLE NODO
+  ======================= #}
+  <div id="nodeDetail" class="node-detail">
+    <div class="nd-head">
+      <div>
+        <div class="nd-title" id="nd-title">Nodo</div>
+        <div class="nd-sub" id="nd-sub">—</div>
+      </div>
+      <button class="nd-close" id="nd-close" type="button" style="width: 30px;">X</button>
+    </div>
+    <div class="nd-body">
+      <div class="nd-row">
+        <div class="nd-k">Tipo</div>
+        <div class="nd-v" id="nd-type">—</div>
+      </div>
+      <div class="nd-row">
+        <div class="nd-k">Grado</div>
+        <div class="nd-v" id="nd-degree">—</div>
+      </div>
+      <div class="nd-row">
+        <div class="nd-k">Menciones</div>
+        <div class="nd-v" id="nd-weight">—</div>
+      </div>
+      <div class="nd-row">
+        <div class="nd-k">Alias</div>
+        <div class="nd-v" id="nd-alias"><span class="text-muted">—</span></div>
+      </div>
+      <div class="mini-note mt-2" style="color: #969696 !important;">Alias desde Configurar tipos.</div>
+
+      <!-- Listado de Noticias -->
+      <div class="mt-4 border-top pt-3" style="border-color: rgba(255,255,255,0.1) !important;">
+        <button class="btn-sirio btn-sm w-100 d-flex justify-content-between align-items-center"
+          id="btn-toggle-noticias">
+          <span><i class="fa-regular fa-newspaper me-2"></i> Noticias vinculadas</span>
+          <i class="fa-solid fa-chevron-down" id="icon-toggle-noticias"
+            style="font-size: 0.8em; transition: transform 0.3s;"></i>
+        </button>
+        <div id="nd-noticias-list" class="mt-2" style="display: none;">
+          <div class="text-center text-muted small p-2">Cargando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // =========================
+  // Estado global
+  // =========================
+  let network = null;
+  let nodes = null;
+  let edges = null;
+
+  let currentTipos = {};
+  let choicesPub = null;
+  let physicsFrozen = false;
+
+  // ===== NUEVO: cache publicaciones base y lock para evitar carreras =====
+  let publicacionesBase = [];
+  let publicacionesSig = 0;
+
+  // =========================
+  // Helpers UI
+  // =========================
+  function escapeHtml(s) {
+    return (s ?? "").toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function convertDateToISO(dateStr) {
+    if (!dateStr) return "";
+    // Check if it matches DD/MM/YYYY
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        // Check if it's likely DD/MM/YYYY (year is last)
+        if (parts[2].length === 4) {
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+    }
+    return dateStr;
+  }
+
+  function toast(msg, kind = "info") {
+    const el = document.getElementById("toastMini");
+    if (!el) return;
+    const title = kind === "err" ? "Error" : kind === "warn" ? "Aviso" : "Info";
+    el.innerHTML = `<strong>${escapeHtml(title)}:</strong> ${escapeHtml(msg)}`;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 3200);
+  }
+
+  function setLoading(on, text = "Generando red…") {
+    const container = document.getElementById("mynetwork");
+    if (!container) return;
+    if (on) {
+      container.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center h-100">
+          <div class="text-center">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="mt-2 text-light small" style="font-family:'JetBrains Mono', monospace;">${escapeHtml(text)}</p>
+          </div>
+        </div>`;
+    }
+  }
+
+  function updateStats(metaDocs = 0) {
+    if (!nodes || !edges) return;
+
+    const visibleNodes = nodes.get().filter(n => !n.hidden);
+    const visibleIds = new Set(visibleNodes.map(n => n.id));
+    const visibleEdges = edges.get().filter(e => visibleIds.has(e.from) && visibleIds.has(e.to));
+
+    const n = visibleNodes.length;
+    const m = visibleEdges.length;
+    const density = n > 1 ? ((2 * m) / (n * (n - 1)) * 100).toFixed(1) : "0.0";
+
+    document.getElementById("stat-nodes").textContent = n;
+    document.getElementById("stat-edges").textContent = m;
+    document.getElementById("stat-density").textContent = density + "%";
+    document.getElementById("stat-docs").textContent = metaDocs ?? 0;
+  }
+
+  function hideNodePanel() { document.getElementById("nodeDetail")?.classList.remove("show"); }
+
+  // Estado local panel
+  let currentNodeId = null;
+  let nodeNewsLoaded = false;
+
+  function showNodePanel(payload) {
+    document.getElementById("nd-title").textContent = payload.title || "Nodo";
+    document.getElementById("nd-sub").textContent = payload.sub || "";
+    document.getElementById("nd-type").textContent = payload.typeText || "—";
+    document.getElementById("nd-degree").textContent = (payload.degree ?? "—").toString();
+    document.getElementById("nd-weight").textContent = (payload.weight ?? "—").toString();
+
+    const aliasBox = document.getElementById("nd-alias");
+    aliasBox.innerHTML = "";
+    const alias = payload.alias || [];
+    if (!alias.length) {
+      aliasBox.innerHTML = `<span class="text-muted">—</span>`;
+    } else {
+      alias.forEach(a => {
+        const span = document.createElement("span");
+        span.className = "nd-chip";
+        span.textContent = a;
+        aliasBox.appendChild(span);
+      });
+    }
+
+    // Reset Noticias UI
+    const list = document.getElementById("nd-noticias-list");
+    const icon = document.getElementById("icon-toggle-noticias");
+    if (list) {
+      list.style.display = "none";
+      list.innerHTML = `<div class="text-center text-muted small p-2">Cargando...</div>`;
+    }
+    if (icon) icon.style.transform = "rotate(0deg)";
+
+    currentNodeId = payload.realId || payload.title; // Prefer real ID for API
+    nodeNewsLoaded = false;
+
+    document.getElementById("nodeDetail")?.classList.add("show");
+  }
+
+  async function toggleNodeNews() {
+    const list = document.getElementById("nd-noticias-list");
+    const icon = document.getElementById("icon-toggle-noticias");
+    const isHidden = list.style.display === "none";
+
+    if (isHidden) {
+      list.style.display = "block";
+      icon.style.transform = "rotate(180deg)";
+      if (!nodeNewsLoaded) {
+        await loadNodeNews();
+      }
+    } else {
+      list.style.display = "none";
+      icon.style.transform = "rotate(0deg)";
+    }
+  }
+
+  async function loadNodeNews() {
+    if (!currentNodeId) return;
+    const list = document.getElementById("nd-noticias-list");
+
+    try {
+      const res = await fetch(`/api/redes/node_docs?id=${encodeURIComponent(currentNodeId)}`);
+      if (!res.ok) throw new Error("Error API");
+      const docs = await res.json();
+
+      if (docs.length === 0) {
+        list.innerHTML = `<div class="text-center text-muted small p-2">Sin noticias vinculadas.</div>`;
+      } else {
+        let html = `<div class="d-flex flex-column gap-2">`;
+        docs.forEach(d => {
+          html += `
+                  <div class="card-panel p-2 d-flex flex-column" style="background: rgba(255,255,255,0.03);">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <a href="${d.url_editar}" target="_blank" class="text-warning small fw-bold text-decoration-none" style="line-height:1.2;">${escapeHtml(d.titulo)}</a>
+                        <small class="text-muted ms-2 text-nowrap" style="font-size:0.7em;">${escapeHtml(d.fecha || "")}</small>
+                    </div>
+                    <div class="small text-muted" style="font-size:0.75em;">${escapeHtml(d.publicacion || "")}</div>
+                  </div>
+                `;
+        });
+        html += `</div>`;
+        list.innerHTML = html;
+      }
+      nodeNewsLoaded = true;
+
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = `<div class="text-danger small p-2">Error cargando noticias.</div>`;
+    }
+  }
+
+  function computeDegree(nodeId) {
+    let deg = 0;
+    edges?.forEach(e => { if (e.from === nodeId || e.to === nodeId) deg++; });
+    return deg;
+  }
+
+  function buildEntityIndexFromTipos(tipos) {
+    const out = {};
+    for (const [tipoKey, tipoData] of Object.entries(tipos || {})) {
+      const tipoNombre = tipoData?.nombre || tipoKey;
+      const ents = tipoData?.entidades || [];
+      for (const ent of ents) {
+        const canonical = (ent?.nombre || "").toString().trim();
+        if (!canonical) continue;
+        const alias = Array.isArray(ent?.alias) ? ent.alias.map(a => (a || "").toString().trim()).filter(Boolean) : [];
+        out[canonical] = { tipoKey, tipoNombre, alias };
+      }
+    }
+    return out;
+  }
+
+  // =========================
+  // Vis groups desde tipos (colores/formas)
+  // =========================
+  function buildVisGroupsFromTipos(tipos) {
+    const groups = {};
+    for (const [tipoKey, t] of Object.entries(tipos || {})) {
+      const color = t?.color || "#999";
+      const shape = t?.forma || "dot";
+
+      groups[tipoKey] = {
+        shape,
+        color: {
+          background: color,
+          border: "rgba(255,255,255,0.30)",
+          highlight: { background: color, border: "#ff9800" },
+          hover: { background: color, border: "#ff9800" }
+        }
+      };
+    }
+    return groups;
+  }
+
+  // =========================
+  // Tipos UI (checkbox show/hide)
+  // =========================
+  function renderTiposUI(tipos) {
+    const box = document.getElementById("filtros-tipos");
+    if (!box) return;
+    box.innerHTML = "";
+
+    for (const [tipoKey, t] of Object.entries(tipos || {})) {
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="checkbox" class="filter-tipo" data-tipo="${escapeHtml(tipoKey)}" checked> ${escapeHtml(t?.nombre || tipoKey)}`;
+      box.appendChild(label);
+    }
+
+    box.querySelectorAll(".filter-tipo").forEach(chk => {
+      chk.addEventListener("change", (e) => {
+        const tipoKey = e.target.getAttribute("data-tipo");
+        const show = e.target.checked;
+        nodes?.get().forEach(n => { if (n.group === tipoKey) nodes.update({ id: n.id, hidden: !show }); });
+        updateStats(parseInt(document.getElementById("stat-docs").textContent || "0", 10));
+      });
+    });
+  }
+
+  // =========================
+  // Choices: publicación
+  // =========================
+  // =========================
+  // Native Select: publicación
+  // =========================
+  // =========================
+  // Choices: publicación
+  // =========================
+  function initChoicesPublicacion() {
+    // Choices.js disabled for stability
+    choicesPub = null;
+  }
+
+  function setPublicacionesChoices(publicaciones) {
+    const sel = document.getElementById("f-publicacion");
+    if (!sel) return;
+
+    // Ensure we have a valid array
+    const available = (publicaciones || []).filter(Boolean).sort((a, b) => a.localeCompare(b));
+
+    // Fallback: populate DOM
+    sel.innerHTML = "";
+    available.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      sel.appendChild(opt);
+    });
+
+    choicesPub = null;
+  }
+
+  // ===== NUEVO: Debounce para evitar 429 Too Many Requests =====
+  let refreshTimer = null;
+
+  async function refreshPublicacionesForDateRange() {
+    // Cancelar ejecución previa pendiente
+    if (refreshTimer) clearTimeout(refreshTimer);
+
+    refreshTimer = setTimeout(async () => {
+      await doRefreshPublicaciones();
+    }, 500); // 500ms debounce
+  }
+
+  async function doRefreshPublicaciones() {
+    const desde = document.getElementById("f-desde")?.value || "";
+    const hasta = document.getElementById("f-hasta")?.value || "";
+
+    const my = ++publicacionesSig;
+
+    // 1) Intento: backend de filtros con params (si existe)
+    try {
+      const qs = new URLSearchParams();
+      if (desde) qs.set("fecha_desde", desde);
+      if (hasta) qs.set("fecha_hasta", hasta);
+
+      const url = qs.toString() ? `/api/redes/filtros?${qs.toString()}` : `/api/redes/filtros`;
+      const res = await fetch(url, { cache: "no-store" });
+
+      if (my !== publicacionesSig) return; // Carrera
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const pubs = Array.isArray(data.publicaciones) ? data.publicaciones.filter(Boolean) : [];
+
+        // si el backend devuelve algo útil, lo usamos
+        if (pubs.length || (!desde && !hasta)) {
+          setPublicacionesChoices(pubs);
+          return;
+        }
+      } else if (res.status === 429) {
+        console.warn("Rate limit hit on filters, backing off.");
+      }
+    } catch (e) {
+      // seguimos a fallback
+      console.warn("refreshPublicacionesForDateRange -> filtros con params falló, uso fallback.", e);
+    }
+
+    // 2) Fallback: si el backend no soporta filtros por fecha en /api/redes/filtros,
+    // derivamos publicaciones desde /api/redes (misma franja).
+    try {
+      const qs = new URLSearchParams();
+      if (desde) qs.set("fecha_desde", desde);
+      if (hasta) qs.set("fecha_hasta", hasta);
+      qs.set("min_edge", document.getElementById("f-minedge")?.value || "1");
+      qs.set("min_node", document.getElementById("f-minnode")?.value || "2");
+      qs.set("max_docs", document.getElementById("f-maxdocs")?.value || "5000");
+
+      const res = await fetch(`/api/redes?${qs.toString()}`, { cache: "no-store" });
+      if (my !== publicacionesSig) return;
+
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+
+      // Preferimos meta.publicaciones si el backend lo incorpora
+      let pubs = [];
+      if (Array.isArray(data?.meta?.publicaciones)) pubs = data.meta.publicaciones;
+
+      // Si no existe, intentamos extraer de nodes si viene info
+      if (!pubs.length && Array.isArray(data?.nodes)) {
+        const set = new Set();
+        data.nodes.forEach(n => {
+          const p = n?.publicacion || n?.meta?.publicacion || "";
+          if (typeof p === "string" && p.trim()) set.add(p.trim());
+        });
+        pubs = Array.from(set.values());
+      }
+
+      pubs = pubs.filter(Boolean).sort((a, b) => a.localeCompare(b, "es"));
+
+      // Si no podemos derivar nada, no rompemos: dejamos base
+      if (pubs.length) {
+        setPublicacionesChoices(pubs);
+      } else {
+        setPublicacionesChoices(publicacionesBase || []);
+      }
+    } catch (e) {
+      console.warn("refreshPublicacionesForDateRange -> fallback /api/redes falló.", e);
+      setPublicacionesChoices(publicacionesBase || []);
+    }
+  }
+
+  async function cargarOpcionesFiltros() {
+    const status = document.getElementById("f-status");
+    try {
+      if (status) status.textContent = "Cargando filtros…";
+
+      const res = await fetch("/api/redes/filtros", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      console.log("Datos de filtros:", data); // Debug log
+
+      // 1. SET DATES FIRST (Critical)
+      // We do this before dropdowns to ensure failure in dropdowns doesn't block dates
+      const desde = document.getElementById("f-desde");
+      const hasta = document.getElementById("f-hasta");
+      if (desde && data.fecha_min) desde.value = convertDateToISO(data.fecha_min);
+      if (hasta && data.fecha_max) hasta.value = convertDateToISO(data.fecha_max);
+
+      // 2. SET DROPDOWN PUBLICATION
+      publicacionesBase = Array.isArray(data.publicaciones) ? data.publicaciones.filter(Boolean) : [];
+      try {
+        setPublicacionesChoices(publicacionesBase);
+      } catch (errChoices) {
+        console.error("Error setting choices:", errChoices);
+        // Fallback: render basic options without Choices if it failed
+        const sel = document.getElementById("f-publicacion");
+        if (sel && publicacionesBase.length) {
+          const opts = [`<option value="">Todas</option>`]
+            .concat(publicacionesBase.sort().map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`));
+          sel.innerHTML = opts.join("");
+        }
+      }
+
+      // 3. REFRESH LOGIC
+      await refreshPublicacionesForDateRange();
+
+      if (status) status.textContent = "";
+    } catch (e) {
+      console.error(e);
+      if (status) status.textContent = "";
+      toast("No se pudieron cargar configuraciones de red.", "warn");
+    }
+  }
+
+  // =========================
+  // Cargar red (con límites y estilo Gephi)
+  // =========================
+  async function cargarRed() {
+    const status = document.getElementById("f-status");
+
+    // Valores filtros
+    // Valores filtros (Choices.js)
+    let pubs = [];
+    if (choicesPub) {
+      // getValue(true) returns array of values for multiple select
+      // getValue() returns objects
+      const val = choicesPub.getValue(true);
+      // If val is array, use it. If single value (string), wrap it.
+      if (Array.isArray(val)) pubs = val;
+      else if (val) pubs = [val];
+    } else {
+      // Fallback native
+      const selPub = document.getElementById("f-publicacion");
+      pubs = Array.from(selPub.selectedOptions).map(o => o.value).filter(v => v !== "");
+    }
+
+    const desde = document.getElementById("f-desde")?.value || "";
+    const hasta = document.getElementById("f-hasta")?.value || "";
+    const minedge = document.getElementById("f-minedge")?.value || "1";
+    const minnode = document.getElementById("f-minnode")?.value || "2";
+    const maxdocs = document.getElementById("f-maxdocs")?.value || "5000";
+
+    const params = new URLSearchParams();
+
+    // Add multiple publicacion params
+    if (pubs.length > 0) {
+      pubs.forEach(p => params.append("publicacion", p));
+    }
+
+    if (desde) params.set("fecha_desde", desde);
+    if (hasta) params.set("fecha_hasta", hasta);
+    params.set("min_edge", minedge);
+    params.set("min_node", minnode);
+    params.set("max_docs", maxdocs);
+
+    setLoading(true, "Generando red…");
+    if (status) status.textContent = "Consultando…";
+
+    try {
+      const res = await fetch(`/api/redes?${params.toString()}`, { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      console.log("Respuesta API /api/redes:", data);
+      if (!res.ok) throw new Error(data?.error || ("HTTP " + res.status));
+
+      // Pintar canvas
+      const container = document.getElementById("mynetwork");
+      if (!container) {
+        throw new Error("Contenedor #mynetwork no encontrado");
+      }
+      container.innerHTML = "";
+      console.log("Nodos recibidos:", data.nodes?.length || 0);
+      console.log("Aristas recibidas:", data.edges?.length || 0);
+
+      // Tipos (para colores)
+      currentTipos = data.tipos || currentTipos || {};
+      renderTiposUI(currentTipos);
+
+      const groups = buildVisGroupsFromTipos(currentTipos);
+
+      // Verificación de librería vis
+      if (typeof vis === 'undefined') {
+        throw new Error("La librería 'vis-network' no se ha cargado correctamente. Comprueba tu conexión o los encabezados de seguridad (CSP).");
+      }
+
+      // Evitar que nodes traigan color/shape y pisen groups
+      const rawNodes = (data.nodes || []).map(n => {
+        const x = Object.assign({}, n);
+        delete x.color;
+        delete x.shape;
+        return x;
+      });
+
+      if (rawNodes.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-warning mt-5">
+            <h5><i class="fa-solid fa-exclamation-triangle"></i> Sin datos para visualizar</h5>
+            <p>No se encontraron nodos con los filtros aplicados.</p>
+            <p class="small text-muted">Intenta ajustar los filtros o configura las entidades en <a href="${escapeHtml('{{ url_for("config_red") }}')}" class="text-warning">Tipos de Red</a></p>
+          </div>`;
+        setLoading(false);
+        if (status) status.textContent = "0 nodos";
+        return;
+      }
+
+      nodes = new vis.DataSet(rawNodes);
+      edges = new vis.DataSet(data.edges || []);
+
+      // “Gephi-ish”: edges con ancho por peso, sin smooth
+      edges.forEach(e => {
+        const w = e.value ?? 1;
+        edges.update({
+          id: e.id,
+          width: Math.max(0.6, Math.min(6, 0.6 + Math.log1p(w))),
+          color: { color: "rgba(200,200,200,0.18)" }
+        });
+      });
+
+      const options = {
+        groups,
+        nodes: {
+          borderWidth: 0,
+          borderWidthSelected: 2,
+          shadow: false,
+          shapeProperties: { interpolation: false }, // sharper rendering
+          font: { color: "#fff", size: 15, face: "JetBrains Mono", strokeWidth: 3, strokeColor: "#000", background: "none" },
+          scaling: {
+            min: 10,
+            max: 60,
+            label: { enabled: true, min: 15, max: 32 }
+          }
+        },
+        edges: {
+          smooth: { type: "continuous", roundness: 0.4 },
+          selectionWidth: 0.5,
+          hoverWidth: 0.5,
+          width: 0.5, // base width
+          color: { color: "rgba(255,255,255,0.15)", highlight: "#ff9800", hover: "#ff9800", opacity: 0.15 }
+        },
+        physics: {
+          solver: "forceAtlas2Based",
+          forceAtlas2Based: {
+            gravitationalConstant: -80,
+            centralGravity: 0.005,
+            springLength: 200,
+            springConstant: 0.05,
+            damping: 0.4,
+            avoidOverlap: 0.2
+          },
+          maxVelocity: 40,
+          minVelocity: 1,
+          timestep: 0.4,
+          stabilization: { enabled: true, iterations: 1200, updateInterval: 50, fit: true }
+        },
+        interaction: {
+          hover: true,
+          tooltipDelay: 100,
+          hideEdgesOnDrag: true, // performance boost
+          zoomView: true,
+          dragView: true,
+          keyboard: true
+        },
+        layout: { improvedLayout: false } // faster load
+      };
+
+      if (network) network.destroy();
+      network = new vis.Network(container, { nodes, edges }, options);
+      setLoading(false);
+
+      // Congelar tras estabilizar (se siente Gephi)
+      network.once("stabilizationIterationsDone", () => {
+        if (!physicsFrozen) {
+          network.setOptions({ physics: { enabled: true } });
+        }
+      });
+
+      // docs
+      const docs = data?.meta?.docs ?? 0;
+      document.getElementById("stat-docs").textContent = docs;
+      updateStats(docs);
+      if (status) status.textContent = `Docs: ${docs}`;
+
+      if ((!data.nodes || data.nodes.length === 0) || docs === 0) {
+        toast("La consulta no devolvió nodos/documentos. Ajusta filtros.", "warn");
+      }
+
+      // Panel nodo
+      const entityIndex = buildEntityIndexFromTipos(currentTipos);
+      document.getElementById("nd-close").onclick = hideNodePanel;
+
+      network.on("click", (params) => {
+        if (!params.nodes || params.nodes.length === 0) {
+          hideNodePanel();
+          return;
+        }
+        const nodeId = params.nodes[0];
+        const node = nodes.get(nodeId);
+        if (!node) return;
+
+        const meta = entityIndex[nodeId] || null;
+        const tipoText = meta ? `${meta.tipoNombre} (${meta.tipoKey})` : (node.group || "—");
+        const degree = computeDegree(nodeId);
+        const weight = node.value ?? "—";
+
+        showNodePanel({
+          title: node.label || nodeId,
+          sub: `id: ${nodeId}`,
+          typeText: tipoText,
+          degree,
+          weight,
+          alias: meta ? (meta.alias || []) : []
+        });
+      });
+
+      // Double click: focus
+      network.on("doubleClick", (params) => {
+        if (params.nodes && params.nodes.length) {
+          network.focus(params.nodes[0], { animation: { duration: 900, easingFunction: "easeInOutQuad" }, scale: 1.6 });
+        }
+      });
+
+      // Search highlight
+      const search = document.getElementById("search-node");
+      search.oninput = (e) => {
+        const term = (e.target.value || "").toLowerCase().trim();
+        if (term.length < 2) {
+          nodes.forEach(n => nodes.update({ id: n.id, borderWidth: 1 }));
+          return;
+        }
+        nodes.forEach(n => {
+          const label = (n.label || "").toLowerCase();
+          nodes.update({ id: n.id, borderWidth: label.includes(term) ? 4 : 1 });
+        });
+
+        const first = nodes.get().find(n => (n.label || "").toLowerCase().includes(term));
+        if (first) network.focus(first.id, { scale: 1.3, animation: true });
+      };
+
+      // ===== NUEVO: tras cargar red, refresca publicaciones en base al rango actual =====
+      // (así quedan consistentes incluso si el backend solo puede derivarlas en /api/redes)
+      refreshPublicacionesForDateRange();
+
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+      if (status) status.textContent = "";
+      toast("Error generando red: " + (e.message || e), "err");
+
+      const container = document.getElementById("mynetwork");
+      container.innerHTML = `
+        <div class="text-center text-danger mt-5">
+          <h5>Error cargando red</h5>
+          <p style="max-width:900px;margin:0 auto;white-space:pre-wrap;">${escapeHtml(e.message || e)}</p>
+          <p class="small text-muted">Revisa /api/redes y /api/redes/filtros.</p>
+        </div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // =========================
+  // Eventos
+  // =========================
+  document.addEventListener("DOMContentLoaded", async () => {
+    initChoicesPublicacion();
+    await cargarOpcionesFiltros();
+
+    document.getElementById("btn-generar").addEventListener("click", (e) => { e.preventDefault(); cargarRed(); });
+
+    // ===== NUEVO: al cambiar fechas, refresca publicaciones automáticamente =====
+    const desdeEl = document.getElementById("f-desde");
+    const hastaEl = document.getElementById("f-hasta");
+    if (desdeEl) desdeEl.addEventListener("change", () => refreshPublicacionesForDateRange());
+    if (hastaEl) hastaEl.addEventListener("change", () => refreshPublicacionesForDateRange());
+
+    document.getElementById("btn-reset").addEventListener("click", (e) => {
+      e.preventDefault();
+      if (choicesPub) choicesPub.setChoiceByValue("");
+      else document.getElementById("f-publicacion").value = "";
+
+      document.getElementById("f-desde").value = "";
+      document.getElementById("f-hasta").value = "";
+      document.getElementById("f-minedge").value = "1";
+      document.getElementById("f-minnode").value = "2";
+      document.getElementById("f-maxdocs").value = "5000";
+
+      // reset publicaciones a base
+      setPublicacionesChoices(publicacionesBase || []);
+
+      cargarRed();
+    });
+
+    document.getElementById("btn-recargar-filtros").addEventListener("click", async (e) => {
+      e.preventDefault();
+      await cargarOpcionesFiltros();
+      toast("Filtros recargados.", "info");
+    });
+
+    // Toggle Stats Panel
+    const statsPanel = document.getElementById("statsPanel");
+    if (statsPanel) {
+      statsPanel.addEventListener("click", () => {
+        statsPanel.classList.toggle("expanded");
+      });
+    }
+
+    // Toggle Controls Panel
+    const controlsPanel = document.getElementById("controlsPanel");
+    if (controlsPanel) {
+      controlsPanel.addEventListener("click", () => {
+        controlsPanel.classList.toggle("expanded");
+      });
+    }
+
+    // Toggle Filter Panel
+    const filterPanel = document.getElementById("filterPanel");
+    if (filterPanel) {
+      filterPanel.addEventListener("click", () => {
+        filterPanel.classList.toggle("expanded");
+      });
+    }
+
+    document.getElementById("btn-fit").addEventListener("click", (e) => {
+      e.preventDefault();
+      if (network) network.fit({ animation: { duration: 900, easingFunction: "easeInOutQuad" } });
+    });
+
+    document.getElementById("btn-freeze").addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!network) return;
+
+      physicsFrozen = !physicsFrozen;
+      network.setOptions({ physics: { enabled: !physicsFrozen } });
+      toast(physicsFrozen ? "Física congelada." : "Física activada.", "info");
+    });
+
+    // Primera carga
+    cargarRed();
+
+    // Evento toggle noticias
+    const btnNews = document.getElementById("btn-toggle-noticias");
+    if (btnNews) {
+      btnNews.addEventListener("click", (e) => {
+        e.preventDefault();
+        toggleNodeNews();
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,1000 @@
+{% extends "base_desktop.html" %}
+{% block title %}Dashboard — Proyecto Sirio{% endblock %}
+{% block page_title %}Panel de Control{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Vista General</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="toolbar-header d-flex align-items-center gap-1">
+
+    <!--
+    <a href="{{ url_for('noticias.crear') }}" class="btn-sirio" title="Nueva Noticia">
+        <i class="fa-solid fa-plus"></i>
+        <span class="btn-text">NUEVA</span>
+    </a>
+
+    <a href="{{ url_for('hemerotecas.nueva_publicacion') }}" class="btn-sirio" title="Importar">
+        <i class="fa-solid fa-upload"></i>
+        <span class="btn-text">IMPORTAR</span>
+    </a>
+    
+    <div class="vr mx-1 opacity-25"></div>
+
+    <div class="search-global d-flex align-items-center">
+        <form action="{{ url_for('buscador_semantico') }}" method="get" class="m-0 d-flex align-items-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <i class="fa-solid fa-magnifying-glass text-secondary small me-2 ps-1"></i>
+            <input type="search" name="q" class="form-control-sirio" placeholder="Búsqueda semántica..."
+                style="width: 140px; height: 30px; border: none !important; background: transparent !important;"
+                autocomplete="off">
+        </form>
+    </div> -->
+</div>
+{% endblock %}
+
+{% block body_class %}desktop-body overflow-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 0.3rem;
+        display: block;
+    }
+
+    .ide-catalog-grid {
+        max-height: 250px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .ide-favorite-item {
+        background: rgba(255, 255, 255, 0.04);
+        transition: all 0.2s ease;
+    }
+
+    .ide-favorite-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="light"] .ide-favorite-item {
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="light"] .ide-favorite-item:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* Light Mode Overrides for IDE elements with hardcoded dark backgrounds */
+    [data-theme="light"] .ide-favorite-item,
+    [data-theme="light"] #ide-add-form {
+        background-color: rgba(0, 0, 0, 0.04) !important;
+        color: #333 !important;
+    }
+
+    [data-theme="light"] .ide-favorite-item .text-muted,
+    [data-theme="light"] #ide-add-form .text-muted {
+        color: #666 !important;
+    }
+
+    /* Custom native selects for IDE to avoid Choices.js duplication */
+    .form-select-sirio {
+        display: block;
+        width: 100%;
+        padding: 0.25rem 1.8rem 0.25rem 0.5rem;
+        -moz-padding-start: calc(0.5rem - 3px);
+        font-size: 0.8rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #ddd;
+        background-color: #1a1a1a;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 12px 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        appearance: none;
+    }
+
+    .form-select-sirio:focus {
+        border-color: #ff9800 !important;
+        outline: 0;
+        box-shadow: 0 0 0 0.15rem rgba(255, 152, 0, 0.25);
+    }
+
+    .form-select-sirio option {
+        background-color: #222;
+        color: #fff;
+    }
+
+    /* Light Mode Overrides for Sirio Selects */
+    [data-theme="light"] .form-select-sirio {
+        background-color: #fff;
+        color: #333;
+        border-color: #294a60;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23294a60' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    }
+
+    [data-theme="light"] .form-select-sirio:focus {
+        border-color: #294a60 !important;
+        box-shadow: 0 0 0 0.15rem rgba(41, 74, 96, 0.25);
+    }
+
+    [data-theme="light"] .form-select-sirio option {
+        background-color: #fff;
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="desktop-content p-3 custom-scrollbar">
+
+    <!-- LIGHT MODE NOTICE -->
+    <div class="alert alert-info d-flex align-items-center mb-3" role="alert"
+        style="border-left: 4px solid var(--app-accent);">
+        <i class="fa-solid fa-circle-info me-3 fa-lg"></i>
+        <div>
+            <strong>¡Nuevo!</strong> Ahora puedes alternar entre <strong>Modo Día</strong> y <strong>Modo Noche</strong>
+            haciendo clic directamente en el logotipo de <strong>hesiOX</strong> en la parte superior de la barra
+            lateral.
+        </div>
+    </div>
+
+    <!-- METRICS STRIP -->
+    <div class="metric-strip">
+        <div class="metric-compact">
+            <div>
+                <span class="metric-label">PROYECTOS</span>
+                <span class="metric-value">{{ total_proyectos }}</span>
+            </div>
+            <i class="fa-solid fa-folder-open metric-icon"></i>
+        </div>
+        <div class="metric-compact">
+            <div>
+                <span class="metric-label">ARTÍCULOS</span>
+                <span class="metric-value">{{ total_articulos }}</span>
+            </div>
+            <i class="fa-regular fa-newspaper metric-icon"></i>
+        </div>
+        <div class="metric-compact">
+            <div>
+                <span class="metric-label">PUBLICACIONES</span>
+                <span class="metric-value">{{ total_publicaciones }}</span>
+            </div>
+            <i class="fa-solid fa-book metric-icon"></i>
+        </div>
+        <div class="metric-compact">
+            <div>
+                <span class="metric-label">ESTA SEMANA</span>
+                <span class="metric-value">{{ articulos_esta_semana }}</span>
+            </div>
+            <i class="fa-solid fa-chart-line metric-icon text-accent"></i>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- COLUMNA IZQUIERDA -->
+        <div class="col-lg-8">
+
+            <!-- IDE PERSONAL — INFRAESTRUCTURA DE DATOS ESPACIALES -->
+            <div class="card-panel mb-3" id="ide-card">
+                <div class="card-header-panel d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-map me-2"></i>INFRAESTRUCTURA DE DATOS ESPACIALES
+                        Personal (WMS/WMTS) - Mapa Corpus</span>
+                    <span class="badge bg-dark-panel border border-secondary text-secondary" id="ide-badge-count">0
+                        servicios</span>
+                </div>
+                <div class="p-3">
+                    <!-- Catálogo Global (Full Width Top) -->
+                    <div class="mb-3">
+                        <label class="info-label">Catálogo Global</label>
+                        <!-- Filtro País + Selector Servicio en una fila -->
+                        <div class="d-flex align-items-center mb-1" style="width: 100%; gap: 5px;">
+                            <div style="flex: 0 0 30%; max-width: 30%;">
+                                <select id="ide-country-filter" class="form-select-sirio w-100"
+                                    onchange="ideRenderCatalog()" style="font-size: 0.72rem; height: 30px;">
+                                    <option value=""> Seleccionar País</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 0 calc(70% - 5px); max-width: calc(70% - 5px);">
+                                <select id="ide-catalog-select" class="form-select-sirio w-100"
+                                    onchange="if(this.value) ideAddFromCatalogById(this.value); this.value='';"
+                                    style="font-size: 0.80rem; height: 30px;">
+                                    <option value="" selected disabled>Seleccionar un servicio para añadir...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-text xsmall text-muted mt-1">
+                            Explora y añade servicios WMS/WMTS predefinidos desde el catálogo.
+                        </div>
+                    </div>
+
+                    <div class="border-top border-secondary border-opacity-10 my-3"></div>
+
+                    <!-- Mis Favoritos (Full Width Bottom) -->
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="info-label mb-0">Mis Favoritos</label>
+                            <button class="btn btn-xs btn-outline-secondary" onclick="ideToggleAddForm()"
+                                style="font-size: 0.65rem;">
+                                <i class="fa-solid fa-plus me-1"></i>Añadir Manual
+                            </button>
+                        </div>
+                        <div id="ide-favorites-list" class="custom-scrollbar w-100"
+                            style="max-height: 300px; overflow-y: auto;">
+                            <p class="small text-muted fst-italic p-2">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Formulario manual (Oculto por defecto) -->
+                    <div id="ide-add-form"
+                        class="mt-3 p-3 border border-secondary border-opacity-10 rounded bg-black bg-opacity-25"
+                        style="display:none; color: #eee;">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-5">
+                                <input type="text" id="ide-form-name" class="form-control form-control-xs"
+                                    placeholder="Nombre">
+                            </div>
+                            <div class="col-md-2">
+                                <select id="ide-form-type" class="form-select form-select-xs"
+                                    onchange="ideFormTypeChange()">
+                                    <option value="WMS">WMS</option>
+                                    <option value="WMTS">WMTS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="ide-form-country" class="form-control form-control-xs"
+                                    placeholder="País">
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group input-group-xs">
+                                    <span class="input-group-text xsmall px-1">OP</span>
+                                    <input type="number" id="ide-form-opacity" class="form-control form-control-xs"
+                                        placeholder="0.85" step="0.05" min="0" max="1" value="0.85">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-xs mb-2">
+                            <input type="text" id="ide-form-url" class="form-control" placeholder="URL"
+                                style="width: 93% !important;">
+                            <button class="btn btn-outline-warning" type="button" id="ide-discover-btn"
+                                onclick="ideDiscoverWMS()">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                        </div>
+                        <div id="ide-discover-results" style="display:none; max-height:100px; overflow-y:auto;"
+                            class="mb-2 p-2 border border-secondary rounded xsmall"></div>
+                        <div id="ide-wms-layers-div" class="mb-2">
+                            <input type="text" id="ide-form-layers" class="form-control form-control-xs"
+                                placeholder="Capas (coma)">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button id="ide-add-btn" class="btn btn-xs btn-sirio px-3"
+                                onclick="ideAddCustom()">Añadir</button>
+                            <button class="btn btn-xs btn-sirio px-3" onclick="ideToggleAddForm()">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LISTA DE FUENTES (Tabla densa) -->
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <span><i class="fa-solid fa-table me-2"></i>Fuentes Principales</span>
+                    <span class="badge bg-dark-panel border border-secondary text-secondary">TOP 5</span>
+                </div>
+                <div class="p-0 table-responsive">
+                    {% if top_periodicos %}
+                    <table class="table-sirio mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 70%;">NOMBRE DEL MEDIO</th>
+                                <th class="text-end">ARTÍCULOS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for periodico, total in top_periodicos %}
+                            <tr>
+                                <td>
+                                    <i class="fa-solid fa-newspaper text-secondary me-2 small"></i>
+                                    {{ periodico }}
+                                </td>
+                                <td class="text-end font-monospace text-accent">{{ total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">No hay datos disponibles.</div>
+                    {% endif %}
+                </div>
+
+                <!-- BLOQUE INFORMATIVO DE FUNCIONALIDADES -->
+                <div class="mt-auto p-4 border-top border-secondary border-opacity-10 bg-black bg-opacity-25">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fa-solid fa-circle-info text-accent me-2"></i>
+                        <span class="text-light fw-bold small text-uppercase letter-spacing-1">Capacidades principales
+                            de la
+                            aplicación hesiOX</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="text-accent mt-1"><i class="fa-solid fa-brain"></i></div>
+                                <div>
+                                    <h6 class="text-light mb-1 small fw-bold">Análisis Inteligente</h6>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                        Utilice el <strong>Buscador Semántico</strong> para localizar noticias por
+                                        cercanía conceptual y el <strong>Laboratorio REGEX</strong> para patrones
+                                        técnicos complejos.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="text-accent mt-1"><i class="fa-solid fa-map-location-dot"></i></div>
+                                <div>
+                                    <h6 class="text-light mb-1 small fw-bold">Cartografía del Corpus</h6>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                        Explore la distribución geográfica de sus fuentes mediante el <strong>Mapa
+                                            Corpus (GIS)</strong>, visualizando la procedencia y alcance de cada
+                                        publicación.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3 mb-3">
+                                <div class="text-accent mt-1"><i class="fa-solid fa-diagram-project"></i></div>
+                                <div>
+                                    <h6 class="text-light mb-1 small fw-bold">Redes de Entidades</h6>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                        Descubra conexiones entre personas, lugares y organizaciones a través de
+                                        algoritmos de <strong>Análisis de Redes</strong> aplicados al texto extraído.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <div class="text-accent mt-1"><i class="fa-solid fa-chart-simple"></i></div>
+                                <div>
+                                    <h6 class="text-light mb-1 small fw-bold">Estadística Avanzada</h6>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                        Analice la evolución temporal de términos y temas recurrentes mediante gráficos
+                                        de <strong>Frecuencias Normalizadas</strong> y N-Gramas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-4">
+                        <!-- Aviso de Sección Experimental en el Dashboard -->
+                        <div class="alert alert-warning py-2 mb-3 border-0 bg-warning bg-opacity-10 text-warning-emphasis small d-flex align-items-center gap-2"
+                            style="height: 70px; border-left: 3px solid #9b59b6 !important; font-size: 0.75rem; background: rgba(155, 89, 182, 0.05) !important; color: #9b59b6 !important;">
+                            <i class="fa-solid fa-flask-vial"></i>
+                            <span>El <strong>Laboratorio de IA</strong> (Semántica, Emociones, Sesgos e
+                                Intertextualidad) se
+                                encuentra en <strong>fase de desarrollo e inactivo</strong> para procesamiento
+                                real.</span>
+                        </div>
+                        <div
+                            class="mt-3 pt-3 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                            <span class="text-muted small" style="font-size: 0.75rem;">
+                                <i class="fa-solid fa-microchip me-1 opacity-50"></i> Motor de Procesamiento DH v2.5
+                            </span>
+                            <a href="{{ url_for('analisis') }}" class="btn btn-sirio btn-xs">
+                                <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Ir a Centro de Análisis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div class="col-lg-4">
+            <!-- SYSTEM CONFIGURATION PANEL -->
+            <div class="card-panel mb-3">
+                <div class="card-header-panel d-flex justify-content-between align-items-center">
+                    <span class="text-uppercase fw-bold">Configuración del Sistema</span>
+                    <span class="badge border border-white text-white bg-transparent opacity-75"
+                        style="font-size: 0.65rem;">ADMIN</span>
+                </div>
+                <div class="p-4">
+                    <form id="system-config-form">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Modelo spaCy
+                                    (NLP)</label>
+                                <select class="form-select form-select-sm bg-darker border-secondary text-light"
+                                    name="spacy_model" id="config-spacy-model">
+                                    <option value="es_core_news_sm">Pequeño (sm) - Rápido, menos preciso</option>
+                                    <option value="es_core_news_md">Medio (md) - Equilibrado (Recomendado)</option>
+                                    <option value="es_core_news_lg" selected>Grande (lg) - Muy preciso, alto consumo RAM
+                                    </option>
+                                </select>
+                                <div class="form-text small text-muted mt-1">
+                                    <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                                    El modelo 'lg' puede causar errores 500 si la RAM es baja (&lt;4GB).
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Límite de
+                                    Caracteres</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control bg-darker text-light border-secondary"
+                                        name="max_char_limit" id="config-char-limit" min="1000" max="100000"
+                                        step="1000">
+                                    <span class="input-group-text bg-darker border-secondary"
+                                        style="color: rgb(179, 179, 179) !important;">chars</span>
+                                </div>
+                                <div class="form-text small text-muted mt-1">
+                                    Longitud máxima de texto a analizar por noticia. Reducir si hay timeouts.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-sm btn-sirio fw-bold" id="btn-save-config"
+                                style="width: 200px !important">
+                                <i class="fa-solid fa-floppy-disk me-2"></i>GUARDAR CONFIGURACIÓN
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- ACCIONES RAPIDAS (Lista lateral estilo menú) -->
+            <div class="card-panel mb-3">
+                <div class="card-header-panel">Acciones</div>
+                <div class="p-2">
+                    <a href="{{ url_for('noticias.crear') }}" class="quick-link">
+                        <i class="fa-solid fa-file-pen"></i> Nueva Noticia
+                    </a>
+                    <a href="{{ url_for('auth.perfil') }}" class="quick-link text-accent">
+                        <i class="fa-solid fa-user-gear"></i> Editar Perfil de Usuario
+                    </a>
+                    <a href="{{ url_for('hemerotecas.nueva_publicacion') }}" class="quick-link">
+                        <i class="fa-solid fa-file-import"></i> Importar PDF
+                    </a>
+                    <a href="{{ url_for('hemerotecas.nueva_hemeroteca') }}" class="quick-link">
+                        <i class="fa-solid fa-box-archive"></i> Gestión Hemeroteca
+                    </a>
+                    <div class="border-b my-1 opacity-25"></div>
+                    <a href="{{ url_for('analisis') }}" class="quick-link">
+                        <i class="fa-solid fa-chart-pie"></i> Centro de Análisis
+                    </a>
+                    <a href="{{ url_for('config_red') }}" class="quick-link">
+                        <i class="fa-solid fa-gear"></i> Configuración
+                    </a>
+                </div>
+            </div>
+
+            <!-- ACTIVIDAD RECIENTE (Log style) -->
+            <div class="card-panel">
+                <div class="card-header-panel">Log de Actividad</div>
+                <div class="list-group-dense p-0">
+                    {% if actividad_reciente %}
+                    {% for item in actividad_reciente[:8] %}
+                    <a href="{{ item.url }}" class="list-item-dense" {% if item.url=='#'
+                        %}onclick="event.preventDefault();" style="cursor: default;" {% endif %}>
+                        <div style="width: 24px; text-align: center;" class="me-2">
+                            <i class="fa-solid {{ item.icono }} text-accent small"></i>
+                        </div>
+                        <div class="flex-grow-1 text-truncate pe-2">
+                            {{ item.texto }}
+                        </div>
+                        <span class="list-item-time">
+                            {% if item.fecha %}
+                            {% if item.fecha is string and item.fecha|length >= 16 %}
+                            {{ item.fecha[11:16] }}
+                            {% elif item.fecha.strftime %}
+                            {{ item.fecha.strftime('%H:%M') }}
+                            {% else %}
+                            --:--
+                            {% endif %}
+                            {% endif %}
+                        </span>
+                    </a>
+                    {% endfor %}
+
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">Sin actividad reciente.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ─── IDE Personal JavaScript ───────────────────────────────────────────────
+    // Catálogo global: se carga dinámicamente desde la base de datos compartida.
+    let IDE_CATALOG = [];
+    let _ideFavs = [];
+
+    async function ideInit() {
+        // Carga paralela: catálogo global + favoritos del usuario
+        await Promise.all([ideLoadCatalog(), ideLoadFavorites()]);
+    }
+
+    async function ideLoadCatalog() {
+        try {
+            const r = await fetch('/api/ide/catalogo', { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status + ' - ' + r.url);
+            const res = await r.json();
+            IDE_CATALOG = res.data || res;
+            console.log('[IDE] Catálogo cargado:', IDE_CATALOG.length, 'servicios');
+        } catch (e) {
+            console.error('[IDE] Error cargando catálogo:', e);
+            IDE_CATALOG = [];
+        }
+        idePopulateCountryFilter();
+        ideRenderCatalog();
+    }
+
+    function idePopulateCountryFilter() {
+        const cf = document.getElementById('ide-country-filter');
+        if (!cf) return;
+        // Países únicos ordenados
+        const countries = [...new Set(IDE_CATALOG.map(s => s.country).filter(Boolean))].sort();
+        const saved = cf.value; // Conserva selección previa si la hay
+        cf.innerHTML = '<option value="">🌍 Todos los países</option>' +
+            countries.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        // Priorizar España por defecto si no hay selección previa
+        const espana = countries.find(c => c.includes('España'));
+        if (saved && countries.includes(saved)) {
+            cf.value = saved;
+        } else if (espana) {
+            cf.value = espana;
+        }
+    }
+
+    async function ideLoadFavorites() {
+        try {
+            const r = await fetch('/api/user/wms-favoritos', { credentials: 'include' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            _ideFavs = await r.json();
+            if (!Array.isArray(_ideFavs)) _ideFavs = [];
+            console.log('[IDE] Favoritos cargados:', _ideFavs.length);
+        } catch (e) { console.error('[IDE] Error favoritos:', e); _ideFavs = []; }
+        ideRenderFavorites();
+    }
+
+    function ideRenderFavorites() {
+        const el = document.getElementById('ide-favorites-list');
+        const badge = document.getElementById('ide-badge-count');
+        if (!el || !badge) return;
+        badge.textContent = `${_ideFavs.length} servicio${_ideFavs.length !== 1 ? 's' : ''}`;
+        if (_ideFavs.length === 0) {
+            el.innerHTML = '<p class="small text-muted fst-italic p-2">Sin favoritos. Añade desde el catálogo.</p>';
+            return;
+        }
+        el.innerHTML = _ideFavs.map(f => `
+            <div class="ide-favorite-item d-flex align-items-center gap-2 mb-1 p-2 rounded bg-black bg-opacity-25 border border-secondary border-opacity-10">
+                <div class="text-center" style="min-width:35px;">
+                    <span class="badge ${f.type === 'WMTS' ? 'bg-info text-dark' : 'bg-warning text-dark'}" style="font-size:0.55rem; width:100%;">${f.type}</span>
+                    <div class="xsmall text-muted" style="font-size:0.5rem; margin-top:2px;">${Math.round((f.opacity || 0.85) * 100)}%</div>
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="small text-truncate fw-bold" title="${f.name}" style="font-size: 0.75rem;">${f.name}</div>
+                    <div class="xsmall text-muted text-truncate" style="font-size:0.6rem;">${f.country || 'Global'} • ${f.layers || 'Layer'}</div>
+                </div>
+                <div class="form-check form-switch mb-0" title="Activo">
+                    <input class="form-check-input" type="checkbox" ${f.active !== false ? 'checked' : ''} onchange="idePatchFav('${f.id}', {active: this.checked})" style="width: 24px; height: 12px;">
+                </div>
+                <button class="btn btn-link text-info p-0 ms-1" onclick="ideEditFav('${f.id}')" title="Editar">
+                    <i class="fa-solid fa-pencil" style="font-size: 0.7rem;"></i>
+                </button>
+                <button class="btn btn-link text-danger p-0 ms-1" onclick="ideRemoveFav('${f.id}')" title="Quitar">
+                    <i class="fa-solid fa-xmark" style="font-size: 0.8rem;"></i>
+                </button>
+            </div>`).join('');
+    }
+
+    let _editingFavId = null;
+
+    function ideEditFav(id) {
+        const f = _ideFavs.find(x => x.id === id);
+        if (!f) return;
+        _editingFavId = id;
+        document.getElementById('ide-form-name').value = f.name || '';
+        document.getElementById('ide-form-url').value = f.url || '';
+        document.getElementById('ide-form-type').value = f.type || 'WMS';
+        document.getElementById('ide-form-layers').value = f.layers || '';
+        document.getElementById('ide-form-country').value = f.country || '';
+        document.getElementById('ide-form-opacity').value = f.opacity || 0.85;
+
+        document.getElementById('ide-add-btn').innerText = 'Guardar Cambios';
+        document.getElementById('ide-add-form').style.display = 'block';
+        ideFormTypeChange();
+        window.scrollTo({ top: document.getElementById('ide-card').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function ideRenderCatalog() {
+        const sel = document.getElementById('ide-catalog-select');
+        if (!sel) return;
+
+        // Aplicar filtro de país
+        const cf = document.getElementById('ide-country-filter');
+        const filterCountry = cf ? cf.value : '';
+        const filtered = filterCountry
+            ? IDE_CATALOG.filter(s => s.country === filterCountry)
+            : IDE_CATALOG;
+
+        // Agrupar por país
+        const groups = {};
+        filtered.forEach(s => {
+            (groups[s.country] = groups[s.country] || []).push(s);
+        });
+
+        let html = '<option value="" selected disabled>Seleccionar un servicio para añadir...</option>';
+
+        Object.entries(groups).sort().forEach(([country, svcs]) => {
+            html += `<optgroup label="${country}">`;
+            svcs.forEach(s => {
+                const already = _ideFavs.some(f => f.url === s.url && f.type === s.type);
+                const disabledAttr = already ? 'disabled' : '';
+                const styleAttr = already ? 'style="color: #888;"' : '';
+                const checkMark = already ? ' ✓' : '';
+                html += `<option value="${s.id}" ${disabledAttr} ${styleAttr}>${s.name} [${s.type}]${checkMark}</option>`;
+            });
+            html += `</optgroup>`;
+        });
+
+        if (filtered.length === 0) {
+            html += `<option disabled>${IDE_CATALOG.length === 0 ? 'Cargando catálogo...' : 'Sin servicios para este país'}</option>`;
+        }
+
+        sel.innerHTML = html;
+    }
+
+    let _pendingCatalogService = null;
+
+    async function ideAddFromCatalogById(catalogId) {
+        const s = IDE_CATALOG.find(x => String(x.id) === String(catalogId));
+        if (!s) return;
+
+        if (s.type === 'WMS') {
+            // Mostrar modal de descubrimiento de capas
+            _pendingCatalogService = s;
+            const modalEl = document.getElementById('modalIdeCatalogLayers');
+            const modal = new bootstrap.Modal(modalEl);
+
+            document.getElementById('ide-catalog-service-name').innerText = s.name;
+            document.getElementById('ide-catalog-service-url').innerText = s.url;
+            document.getElementById('ide-catalog-discovery-loading').style.display = 'block';
+            document.getElementById('ide-catalog-discovery-results').style.display = 'none';
+            document.getElementById('ide-catalog-checklist').innerHTML = '';
+            document.getElementById('btn-ide-confirm-add').disabled = true;
+
+            modal.show();
+
+            try {
+                let cleanUrl = s.url.split('?')[0];
+                const capUrl = `${cleanUrl}?SERVICE=WMS&REQUEST=GetCapabilities`;
+                const proxyUrl = `{{ url_for('capas.wms_proxy') }}?url=${encodeURIComponent(capUrl)}`;
+
+                const r = await fetch(proxyUrl);
+                if (!r.ok) throw new Error('Proxy error');
+                const xmlText = await r.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                const layers = xmlDoc.getElementsByTagName('Layer');
+
+                let html = '';
+                let count = 0;
+                for (let i = 0; i < layers.length; i++) {
+                    const nameNode = layers[i].getElementsByTagName('Name')[0];
+                    const titleNode = layers[i].getElementsByTagName('Title')[0];
+                    if (nameNode && nameNode.parentNode === layers[i]) {
+                        const name = nameNode.textContent;
+                        const title = titleNode ? titleNode.textContent : name;
+                        html += `
+                            <div class="form-check xsmall mb-1">
+                                <input class="form-check-input ide-catalog-layer-cb" type="checkbox" value="${name}" id="cat-layer-${count}">
+                                <label class="form-check-label text-light" for="cat-layer-${count}">${title} <span class="text-muted" style="font-size:0.6rem;">(${name})</span></label>
+                            </div>`;
+                        count++;
+                    }
+                }
+
+                if (count === 0) throw new Error('No layers found');
+
+                document.getElementById('ide-catalog-checklist').innerHTML = html;
+                document.getElementById('ide-catalog-discovery-loading').style.display = 'none';
+                document.getElementById('ide-catalog-discovery-results').style.display = 'block';
+                document.getElementById('btn-ide-confirm-add').disabled = false;
+
+            } catch (e) {
+                console.error("[IDE] Error discovering layers:", e);
+                document.getElementById('ide-catalog-discovery-loading').innerHTML = `
+                    <div class="text-danger xsmall mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i> No se pudieron leer las capas automáticamente.</div>
+                    <button class="btn btn-xs btn-outline-warning" onclick="ideAddDirectly('${s.id}')">Añadir sin capas (Manual)</button>
+                `;
+            }
+        } else {
+            ideAddDirectly(s.id);
+        }
+    }
+
+    async function ideConfirmAddCatalogWMS() {
+        if (!_pendingCatalogService) return;
+        const checked = document.querySelectorAll('.ide-catalog-layer-cb:checked');
+        const layers = Array.from(checked).map(cb => cb.value).join(',');
+
+        if (!layers) {
+            alert("Por favor, selecciona al menos una capa.");
+            return;
+        }
+
+        const s = _pendingCatalogService;
+        const r = await fetch('/api/user/wms-favoritos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+            body: JSON.stringify({ name: s.name, type: s.type, url: s.url, layers: layers, attribution: s.attribution, country: s.country, category: s.category, opacity: 0.85 })
+        });
+
+        if (r.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('modalIdeCatalogLayers')).hide();
+            await ideLoadFavorites();
+            ideRenderCatalog();
+        } else {
+            const d = await r.json();
+            alert(d.error || 'Error');
+        }
+    }
+
+    async function ideAddDirectly(catalogId) {
+        const s = IDE_CATALOG.find(x => String(x.id) === String(catalogId));
+        if (!s) return;
+        const r = await fetch('/api/user/wms-favoritos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+            body: JSON.stringify({ name: s.name, type: s.type, url: s.url, layers: s.layers || '', attribution: s.attribution, country: s.country, category: s.category, opacity: 0.85 })
+        });
+        if (r.ok) { await ideLoadFavorites(); ideRenderCatalog(); if (bootstrap.Modal.getInstance(document.getElementById('modalIdeCatalogLayers'))) bootstrap.Modal.getInstance(document.getElementById('modalIdeCatalogLayers')).hide(); }
+        else { const d = await r.json(); alert(d.error || 'Error'); }
+    }
+
+    async function idePatchFav(id, patch) {
+        await fetch(`/api/user/wms-favoritos/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+            body: JSON.stringify(patch)
+        });
+        const f = _ideFavs.find(x => x.id === id);
+        if (f) Object.assign(f, patch);
+    }
+
+    async function ideRemoveFav(id) {
+        if (!confirm('¿Quitar de favoritos?')) return;
+        await fetch(`/api/user/wms-favoritos/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': "{{ csrf_token() }}" }
+        });
+        await ideLoadFavorites();
+        ideRenderCatalog();
+    }
+
+    function ideToggleAddForm() {
+        const f = document.getElementById('ide-add-form');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function ideFormTypeChange() {
+        const t = document.getElementById('ide-form-type').value;
+        document.getElementById('ide-wms-layers-div').style.display = t === 'WMS' ? '' : 'none';
+    }
+
+    async function ideDiscoverWMS() {
+        const urlInput = document.getElementById('ide-form-url');
+        const url = urlInput.value.trim();
+        if (!url) return alert('Introduce una URL');
+        const btn = document.getElementById('ide-discover-btn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        try {
+            // Robust discovery logic matching mapa_corpus.html
+            let cleanUrl = url.split('?')[0];
+            const capUrl = `${cleanUrl}?SERVICE=WMS&REQUEST=GetCapabilities`;
+            const proxyUrl = `{{ url_for('capas.wms_proxy') }}?url=${encodeURIComponent(capUrl)}`;
+
+            const r = await fetch(proxyUrl);
+            if (!r.ok) throw new Error('Proxy error ' + r.status);
+            const xmlText = await r.text();
+
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+            if (xmlDoc.getElementsByTagName('ServiceException').length > 0) {
+                throw new Error("El servidor devolvió una excepción WMS.");
+            }
+
+            const layers = xmlDoc.getElementsByTagName('Layer');
+            const validLayers = [];
+
+            for (let i = 0; i < layers.length; i++) {
+                const nameNode = layers[i].getElementsByTagName('Name')[0];
+                const titleNode = layers[i].getElementsByTagName('Title')[0];
+                // Only take layers that are actual leaves or have names at this level
+                if (nameNode && nameNode.parentNode === layers[i]) {
+                    validLayers.push({
+                        name: nameNode.textContent,
+                        title: titleNode ? titleNode.textContent : nameNode.textContent
+                    });
+                }
+            }
+
+            const el = document.getElementById('ide-discover-results');
+            if (validLayers.length) {
+                el.style.display = '';
+                el.innerHTML = validLayers.map((l, idx) => `
+                    <div class="form-check">
+                        <input class="form-check-input ide-layer-cb" type="checkbox" value="${l.name}" id="idecb_${idx}">
+                        <label class="form-check-label xsmall text-light" for="idecb_${idx}">${l.title} <span class="text-muted" style="font-size:0.6rem;">(${l.name})</span></label>
+                    </div>`).join('');
+
+                el.onchange = () => {
+                    const sel = [...el.querySelectorAll('.ide-layer-cb:checked')].map(x => x.value).join(',');
+                    document.getElementById('ide-form-layers').value = sel;
+                };
+            } else {
+                el.style.display = '';
+                el.innerHTML = '<p class="xsmall text-muted p-2">Sin capas encontradas automáticamente.</p>';
+            }
+        } catch (e) {
+            console.error("[IDE] Discovery Error:", e);
+            alert('Error al leer capas: ' + e.message);
+        }
+        btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+    }
+
+    async function ideAddCustom() {
+        const name = document.getElementById('ide-form-name').value.trim();
+        const type = document.getElementById('ide-form-type').value;
+        const url = document.getElementById('ide-form-url').value.trim();
+        const layers = document.getElementById('ide-form-layers').value.trim();
+        const country = document.getElementById('ide-form-country').value.trim();
+        const opacity = parseFloat(document.getElementById('ide-form-opacity').value || 0.85);
+
+        if (!url) return alert('URL requerida');
+
+        if (_editingFavId) {
+            // EDIT MODE
+            const r = await fetch(`/api/user/wms-favoritos/${_editingFavId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+                body: JSON.stringify({ name: name || url, type, url, layers, country, opacity })
+            });
+            if (r.ok) {
+                _editingFavId = null;
+                document.getElementById('ide-add-btn').innerText = 'Añadir';
+                ideToggleAddForm();
+                await ideLoadFavorites();
+            } else {
+                const d = await r.json(); alert(d.error || 'Error');
+            }
+        } else {
+            // ADD MODE
+            const r = await fetch('/api/user/wms-favoritos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': "{{ csrf_token() }}" },
+                body: JSON.stringify({ name: name || url, type, url, layers, country, opacity })
+            });
+            if (r.ok) {
+                ideToggleAddForm();
+                document.getElementById('ide-form-name').value = '';
+                document.getElementById('ide-form-url').value = '';
+                document.getElementById('ide-form-layers').value = '';
+                await ideInit();
+            } else { const d = await r.json(); alert(d.error || 'Error'); }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        ideInit();
+
+        // Init form values from server config
+        const config = {{ system_config | tojson | safe }};
+
+    if (config.spacy_model) {
+        document.getElementById('config-spacy-model').value = config.spacy_model;
+    }
+    if (config.max_char_limit) {
+        document.getElementById('config-char-limit').value = config.max_char_limit;
+    }
+
+    // Handle Save
+    const configForm = document.getElementById('system-config-form');
+    if (configForm) {
+        configForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btn-save-config');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Guardando...';
+
+            const formData = new FormData(this);
+            const data = {
+                spacy_model: formData.get('spacy_model'),
+                max_char_limit: formData.get('max_char_limit')
+            };
+
+            try {
+                const res = await fetch('/api/admin/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (res.ok && result.success) {
+                    alert('✅ Configuración guardada correctamente.');
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Error guardando configuración'));
+                }
+            } catch (err) {
+                alert('❌ Error de red: ' + err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    }
+    });
+</script>
+
+<!-- Modal Selección de Capas Catálogo IDE -->
+<div class="modal fade" id="modalIdeCatalogLayers" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark-panel border-secondary border-opacity-25 shadow-lg">
+            <div class="modal-header border-secondary border-opacity-10 py-2">
+                <h6 class="modal-title text-warning small text-uppercase fw-bold"><i
+                        class="fa-solid fa-layer-group me-2"></i>Seleccionar Capas</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"
+                    style="font-size:0.7rem;"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div id="ide-catalog-discovery-info" class="mb-3">
+                    <div class="fw-bold text-light small mb-1" id="ide-catalog-service-name"></div>
+                    <div class="xsmall text-muted" id="ide-catalog-service-url" style="word-break: break-all;"></div>
+                </div>
+
+                <div id="ide-catalog-discovery-loading" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-warning mb-2"></div>
+                    <div class="xsmall text-muted">Descubriendo capas disponibles...</div>
+                </div>
+
+                <div id="ide-catalog-discovery-results" style="display:none;">
+                    <label class="xsmall text-muted text-uppercase fw-bold mb-2 d-block">Capas Disponibles</label>
+                    <div id="ide-catalog-checklist"
+                        class="p-2 border border-secondary border-opacity-20 rounded overflow-auto custom-scrollbar"
+                        style="max-height: 250px; background: rgba(0,0,0,0.2);">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-10 py-2">
+                <button type="button" class="btn btn-xs btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-xs btn-warning" id="btn-ide-confirm-add"
+                    onclick="ideConfirmAddCatalogWMS()">Añadir Seleccionadas</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

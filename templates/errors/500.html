@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Error Interno - hesiOX{% endblock %}
+
+{% block content %}
+<div class="error-page" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div class="error-container text-center" style="max-width: 600px; padding: 40px;">
+        <!-- Icono de error -->
+        <div class="error-icon" style="font-size: 120px; margin-bottom: 30px;">
+            💥
+        </div>
+
+        <!-- Código de error -->
+        <h1 class="error-code"
+            style="font-size: 72px; font-weight: 700; color: var(--app-danger, #dc3545); margin-bottom: 20px;">
+            500
+        </h1>
+
+        <!-- Mensaje principal -->
+        <h2 style="font-size: 28px; margin-bottom: 20px; color: #fff;">
+            Error Interno del Servidor
+        </h2>
+
+        <!-- Descripción -->
+        <p class="text-muted" style="font-size: 18px; margin-bottom: 30px; line-height: 1.6;">
+            Algo salió mal en nuestros servidores. El error ha sido registrado y lo resolveremos pronto.
+        </p>
+
+        <!-- Información adicional -->
+        <div class="info-box"
+            style="background: rgba(220, 53, 69, 0.1); border: 1px solid var(--app-danger, #dc3545); border-radius: 8px; padding: 20px; margin-bottom: 30px; text-align: left;">
+            <h4 style="color: var(--app-danger, #dc3545); margin-bottom: 15px;">
+                💡 ¿Qué puedes hacer?
+            </h4>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>Intenta recargar la página en unos momentos</li>
+                <li>Si el problema persiste, contacta al administrador</li>
+                <li>El error ha sido registrado automáticamente</li>
+            </ul>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="error-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-danger" style="margin-right: 10px;">
+                <i class="fa fa-home"></i> Ir al Dashboard
+            </a>
+            <button onclick="window.location.reload()" class="btn btn-secondary">
+                <i class="fa fa-refresh"></i> Recargar Página
+            </button>
+        </div>
+
+        <!-- Información técnica (solo en modo debug) -->
+        {% if config.DEBUG and error_details %}
+        <div class="debug-info"
+            style="margin-top: 30px; text-align: left; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;">
+            <h5 style="color: #ff9800; margin-bottom: 10px;">🐛 Debug Info:</h5>
+            <pre style="color: #ccc; margin: 0;">{{ error_details }}</pre>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .error-page {
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%);
+    }
+
+    .error-icon {
+        animation: explode 0.5s ease-out;
+    }
+
+    @keyframes explode {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        50% {
+            transform: scale(1.2);
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .btn {
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger {
+        background: var(--app-danger, #dc3545);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .btn-secondary {
+        background: #424242;
+        color: #fff;
+        border: 1px solid #666;
+    }
+
+    .btn-secondary:hover {
+        background: #525252;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,87 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ============================================================
+   01-VARIABLES.CSS - Design Tokens & CSS Variables
+   ============================================================ */
+
+/* Fuentes: Imports moved to top of file */
+
+/* ====== VARIABLES PROYECTO SIRIO ====== */
+:root {
+    /* Paleta Dark Tech (Proyecto Sirio) - MODO OSCURO POR DEFECTO */
+    --app-accent: #ff9800;
+    /* Naranja Principal */
+    --app-accent-hover: #fb8c00;
+    /* Naranja Intenso */
+    --app-accent-dim: rgba(255, 152, 0, 0.15);
+
+    --app-bg-body: #080808;
+    /* Gris Carbón Muy Oscuro */
+    --app-bg-panel: #1e1e1e;
+    /* Gris Panel */
+    --app-bg-input: #252525;
+    /* Gris Input */
+    --app-border: #333333;
+    /* Bordes sutiles */
+
+    --app-text-main: #e0e0e0;
+    /* Blanco hueso */
+    --app-text-muted: #a8a8a8;
+    /* Gris claro legible */
+
+    /* Colores semánticos Proyecto */
+    --app-info: #ff9800;
+    /* Azul marino */
+    --app-success: #376e19;
+    /* Verde natural */
+    --app-danger: #8b0000;
+    /* Rojo sangre */
+    --app-warning: #e9ab00;
+    /* Dorado Sirio */
+
+    /* Alias para compatibilidad */
+    --proyecto-accent: var(--app-accent);
+    --proyecto-accent-hover: var(--app-accent-hover);
+    --proyecto-bg-body: var(--app-bg-body);
+    --proyecto-bg-panel: var(--app-bg-panel);
+    --proyecto-bg-input: var(--app-bg-input);
+    --proyecto-border: var(--app-border);
+    --proyecto-text-main: var(--app-text-main);
+    --proyecto-text-muted: var(--app-text-muted);
+    --proyecto-accent-dim: var(--app-accent-dim);
+}
+
+/* ====== MODO CLARO (Light Theme) ====== */
+[data-theme="light"] {
+    /* Paleta Light Mode */
+    --app-accent: #294a60;
+    /* Azul Oscuro */
+    --app-accent-hover: #1e3a4d;
+    /* Azul Más Oscuro */
+    --app-accent-dim: rgba(41, 74, 96, 0.15);
+
+    --app-bg-body: #ffffff;
+    /* Blanco */
+    --app-bg-panel: #f5f5f5;
+    /* Gris Muy Claro */
+    --app-bg-input: #e8e8e8;
+    /* Gris Claro */
+    --app-border: #d0d0d0;
+    /* Bordes claros */
+
+    --app-text-main: #212121;
+    /* Negro Suave */
+    --app-text-muted: #666666;
+    /* Gris Medio */
+
+    /* Colores semánticos adaptados */
+    --app-info: #294a60;
+    --app-success: #2e7d32;
+    /* Verde más oscuro */
+    --app-danger: #c62828;
+    /* Rojo más oscuro */
+    --app-warning: #f57c00;
+    /* Naranja más oscuro */
+}

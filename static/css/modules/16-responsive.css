@@ -1,0 +1,124 @@
+/* ============================================================
+   16-RESPONSIVE.CSS - Media Queries & Responsive Overrides
+   ============================================================ */
+
+/* === DESKTOP LAYOUT RESPONSIVE === */
+@media (max-width: 900px) {
+
+    /* Only force narrow width if explicitly collapsed */
+    .desktop-wrapper.sidebar-collapsed {
+        grid-template-columns: var(--ds-sidebar-width-collapsed, 40px) 1fr !important;
+    }
+
+    /* When expanded on tablet, allow normal width */
+    .desktop-wrapper:not(.sidebar-collapsed) {
+        grid-template-columns: var(--ds-sidebar-width, 260px) 1fr !important;
+    }
+
+    /* Only hide labels and logo when collapsed */
+    .sidebar-collapsed .nav-label,
+    .sidebar-collapsed .sidebar-logo img {
+        display: none !important;
+    }
+
+    /* Ensure submenus are visible when expanded on tablet */
+    .desktop-wrapper:not(.sidebar-collapsed) .nav-label {
+        display: inline-block !important;
+    }
+
+    .sidebar-logo::after {
+        content: "PS";
+        color: var(--app-accent);
+        font-weight: bold;
+        display: none;
+        /* Hide if logo img is shown */
+    }
+
+    .sidebar-collapsed .sidebar-logo::after {
+        display: block;
+    }
+
+    .nav-item {
+        justify-content: flex-start;
+        padding: 10px 15px;
+    }
+
+    .sidebar-collapsed .nav-item {
+        justify-content: center;
+        padding: 15px 0;
+    }
+
+    .nav-item i {
+        font-size: 1.1rem;
+    }
+
+    .sidebar-collapsed .nav-item i {
+        font-size: 1.4rem;
+    }
+}
+
+/* === FILTROS RESPONSIVE === */
+@media (max-width: 1024px) {
+    #filtros {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    #filtros .filtro-item:nth-child(4) {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    #filtros .filtro-item:nth-child(5) {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    #filtros .filtro-item:nth-child(6) {
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    #filtros .filtro-buscar {
+        grid-column: 1 / -1;
+        grid-row: 3;
+    }
+
+    #filtros .filtro-botones {
+        grid-row: 4;
+    }
+}
+
+@media (max-width: 768px) {
+    #filtros {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    #filtros .filtro-item,
+    #filtros .filtro-buscar {
+        grid-column: 1 !important;
+        grid-row: auto !important;
+    }
+}
+
+/* === EDITOR RESPONSIVE === */
+@media (max-width: 1200px) {
+    .editor-layout {
+        grid-template-columns: 240px 1fr;
+    }
+
+    .panel-herramientas {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .editor-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .panel-estructura {
+        display: none;
+    }
+}

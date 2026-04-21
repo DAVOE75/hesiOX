@@ -1,0 +1,11 @@
+pandas
+numpy
+plotly
+pyvis
+folium
+selenium
+streamlit
+branca
+matplotlib
+kaleido
+python-pptx

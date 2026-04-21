@@ -1,0 +1,354 @@
+@import url("modules/01-variables.css");
+@import url("modules/02-base.css");
+@import url("modules/03-layout.css");
+@import url("modules/04-buttons.css");
+@import url("modules/05-forms.css");
+@import url("modules/06-tables.css");
+@import url("modules/07-cards.css");
+@import url("modules/08-modals.css");
+@import url("modules/09-compact-nav.css");
+@import url("modules/10-filters.css");
+@import url("modules/16-responsive.css");
+
+/* --- ACCIONES TABLA LUGARES --- */
+.btn-editar-lugar,
+.btn-borrar-lugar {
+  font-size: 1.05em;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  margin: 0 2px;
+  line-height: 1.1;
+  vertical-align: middle;
+  transition: color 0.15s;
+}
+
+.btn-editar-lugar:hover {
+  color: #fff176 !important;
+}
+
+.btn-borrar-lugar:hover {
+  color: #ff1744 !important;
+}
+
+/* --- TÍTULO SECCIÓN GEOGRAFÍA --- */
+.sirio-titulo-geografia {
+  font-size: 1.25em;
+  font-weight: 700;
+  color: var(--app-accent, #ff9800);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* --- ENLACE PUBLICACION EN METADATOS --- */
+.sirio-link-publicacion {
+  color: var(--app-accent, #ff9800);
+  text-decoration: underline dotted;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.sirio-link-publicacion:hover {
+  color: #fff;
+  text-decoration: underline solid;
+}
+
+/* --- SIRIO BLOQUE TEXTO NOTICIA --- */
+.sirio-texto-noticia {
+  background: rgba(30, 32, 34, 0.98);
+  border-radius: 12px;
+  padding: 1.2em 1.3em 1em 1.3em;
+  margin-bottom: 1.2em;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.10);
+}
+
+.sirio-texto-titulo {
+  font-size: 1.08em;
+  font-weight: 600;
+  color: var(--app-accent, #ff9800);
+  margin-bottom: 0.5em;
+  letter-spacing: 0.01em;
+}
+
+.sirio-texto-cuerpo {
+  color: #e0e0e0;
+  font-size: 1.08em;
+  line-height: 1.6;
+  white-space: pre-line;
+  text-align: justify;
+}
+
+/* --- SIRIO METADATOS NOTICIA --- */
+.sirio-metadatos span {
+  margin-right: 1.5em;
+  margin-bottom: 0.2em;
+  display: inline-block;
+  font-size: 1.04em;
+  color: #e0e0e0;
+}
+
+.sirio-metadatos .fa-solid {
+  color: var(--app-accent, #ff9800);
+  margin-right: 0.3em;
+}
+
+.sirio-metadatos b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.sirio-metadatos .w-100 {
+  display: block;
+  margin-top: 0.2em;
+}
+
+/* --- SIRIO ESTILO PARA DETALLE NOTICIA --- */
+.sirio-bg-panel {
+  /*  background: var(--app-bg-panel, #2325263d) !important; */
+}
+
+.sirio-accent-text {
+  color: var(--app-accent, #ff9800) !important;
+}
+
+.sirio-card {
+  border-radius: 18px !important;
+  background: var(--app-bg-panel, #232526) !important;
+  border: none !important;
+}
+
+.sirio-btn {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.sirio-table-wrapper {
+  background: rgba(30, 32, 34, 0.95);
+  border-radius: 12px;
+  padding: 12px 8px 8px 8px;
+  margin-bottom: 0.5rem;
+}
+
+.sirio-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sirio-mapa {
+  border-radius: 16px;
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.18);
+  background: #222 !important;
+  min-height: 300px;
+  z-index: 10;
+  border: 1px solid #ff9800 !important;
+}
+
+/* Fondo transparente para resumen de noticia */
+.resumen-noticia-texto {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+/* Texto blanco para detalle de noticia */
+.detalle-noticia-texto {
+  text-align: justify;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff !important;
+}
+
+.detalle-noticia-texto>div {
+  max-width: 800px;
+  width: 100%;
+  text-align: justify;
+  color: #fff !important;
+}
+
+/* Justificado y centrado para el texto de detalle de noticia */
+.detalle-noticia-texto {
+  text-align: justify;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detalle-noticia-texto>div {
+  max-width: 800px;
+  width: 100%;
+  text-align: justify;
+}
+
+/* ============================================================
+   APP.CSS - Archivo Maestro Modular
+   Proyecto: S.S. Sirio - Sistema de Gestión Bibliográfica
+   Ámbito: Dashboard, Proyectos, Edición (Aplicación Privada)
+   
+   NOTA: Este archivo orquesta la carga de todos los módulos CSS.
+   Los estilos están organizados en módulos temáticos para mejor
+   mantenibilidad. El orden de importación es crítico para 
+   mantener la cascada CSS correcta.
+   ============================================================ */
+
+/* === 01. VARIABLES & TOKENS === */
+/* Importados al inicio del archivo */
+
+/* === 02. BASE STYLES === */
+/* Importados al inicio del archivo */
+
+/* === 03. LAYOUT SYSTEM === */
+/* Importados al inicio del archivo */
+
+/* === 04. BUTTONS === */
+/* Importados al inicio del archivo */
+
+/* === 05. FORMS & INPUTS === */
+/* Importados al inicio del archivo */
+
+/* === 06. TABLES === */
+/* Importados al inicio del archivo */
+
+/* === 07. CARDS === */
+/* Importados al inicio del archivo */
+
+/* === 08. MODALS & OVERLAYS === */
+/* Importados al inicio del archivo */
+
+/* === 09. COMPACT NAVIGATION === */
+/* Importados al inicio del archivo */
+
+/* === 10. FILTERS & SEARCH === */
+
+
+/* ============================================================
+   ESTILOS LEGACY (Pendientes de Modularizar)
+   Los siguientes estilos aún no han sido movidos a módulos
+   específicos. Se mantendrán aquí temporalmente para evitar
+   regresiones visuales.
+   ============================================================ */
+
+/* === NAVBAR & FOOTER ... */
+.navbar {
+  background: rgba(44, 44, 44, .95);
+  backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--app-accent);
+}
+
+.navbar-brand {
+  color: var(--app-accent) !important;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: .5px;
+}
+
+.nav-link {
+  color: #ddd !important;
+  transition: color .2s ease, background-color .2s ease;
+}
+
+.nav-link:hover {
+  color: var(--app-accent) !important;
+}
+
+footer {
+  background: rgba(44, 44, 44, .98);
+  color: #aaa;
+  text-align: center;
+  padding: 6px 10px;
+  font-size: .9rem;
+  border-top: 2px solid var(--app-accent);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+footer a {
+  color: var(--app-accent);
+}
+
+footer a:hover {
+  color: #fff;
+}
+
+.navbar-sirio {
+  background: rgba(25, 25, 25, 0.85);
+  border-bottom: 1px solid rgba(245, 197, 66, 0.4);
+}
+
+.navbar-sirio .navbar-brand {
+  color: #f5c542 !important;
+}
+
+.navbar-sirio .nav-link:hover {
+  color: #f5c542 !important;
+}
+
+.dropdown-menu.bg-dark {
+  background-color: #1a1a1a !important;
+}
+
+.dropdown-item.text-warning:hover {
+  background-color: rgba(245, 197, 66, 0.2) !important;
+}
+
+.dropdown-item.text-success:hover {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+}
+
+.dropdown-header {
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* === DESKTOP CONTENT AREA === */
+.desktop-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll from overflowing content */
+  width: 100%;
+  /* Ensure it takes full width of flex parent */
+  position: relative;
+  padding: 0;
+}
+
+/* === RESUMEN TEXTO === */
+.resumen-texto {
+  line-height: 1.8;
+  text-align: justify;
+  color: var(--app-text-main);
+  font-size: 0.95rem;
+  width: 100% !important;
+  background-color: transparent;
+}
+
+/* === BARRA ESTADO === */
+.barra-estado {
+  position: fixed;
+  bottom: 100px;
+  left: 24px;
+  right: 24px;
+  background: rgba(30, 30, 30, 0.98);
+  backdrop-filter: blur(8px);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 2px solid var(--app-accent);
+  z-index: 2200;
+  border-radius: 8px;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   FIN DE ESTILOS LEGACY
+   TODO: Modularizar estos estilos en futuras iteraciones
+   ============================================================ */

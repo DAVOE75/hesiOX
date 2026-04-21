@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 500px;
+                 background-color: #f0f2f6;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#1f77b4", "font": {"color": "black"}, "id": "G\u00c9NOVA", "label": "G\u00c9NOVA", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "8\u00ba CUARTEL - Casa de Misericordia", "label": "8\u00ba CUARTEL - Casa de Misericordia", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Lugar hundimiento", "label": "Lugar hundimiento", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "3er Cuartel", "label": "3er Cuartel", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "3er CUARTEL - FONDA \"LA MARINA\" Calle de Vergara, 1", "label": "3er CUARTEL - FONDA \"LA MARINA\" Calle de Vergara, 1", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Aire 11 y 13", "label": "Aire 11 y 13", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Canales 28", "label": "Canales 28", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Blanco", "label": "Blanco", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Habaneros", "label": "Habaneros", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Posada de Juanillo", "label": "Posada de Juanillo", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "3er CUARTEL", "label": "3er CUARTEL", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Hu\u00e9spedes Los Espa\u00f1oles", "label": "Hu\u00e9spedes Los Espa\u00f1oles", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Plaza de Toros", "label": "Plaza de Toros", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Rosario, 49", "label": "Rosario, 49", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "2do Cuartel", "label": "2do Cuartel", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Habaneros (No)", "label": "Habaneros (No)", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "G\u00c9NOVA ", "label": "G\u00c9NOVA ", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "C\u00edrculo Cat\u00f3lico", "label": "C\u00edrculo Cat\u00f3lico", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "label": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Aire 11 y 13 , Casa Hu\u00e9spedes Los Espa\u00f1oles", "label": "Aire 11 y 13 , Casa Hu\u00e9spedes Los Espa\u00f1oles", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Mayor, 42", "label": "Mayor, 42", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "S. Cristobal Corta, 13", "label": "S. Cristobal Corta, 13", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "M.Mar, 63 - 2\u00ba", "label": "M.Mar, 63 - 2\u00ba", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "Fonda \"La Pi\u00f1a\"", "label": "Fonda \"La Pi\u00f1a\"", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "BARCELONA", "label": "BARCELONA", "shape": "dot", "size": 25}, {"color": "#1f77b4", "font": {"color": "black"}, "id": "blanco", "label": "blanco", "shape": "dot", "size": 25}]);
+                  edges = new vis.DataSet([{"color": "#888888", "from": "G\u00c9NOVA", "title": "RICCARDO ACHILLI", "to": "Blanco", "width": 2}, {"color": "#888888", "from": "Blanco", "title": "RICCARDO ACHILLI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "BENIGNO ACHILLI (HIJO de Riccardo y Gisela)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "ANTONIO ACQUISTO-PACE ORTUSI", "to": "Plaza de Toros", "width": 2}, {"color": "#888888", "from": "Plaza de Toros", "title": "ANTONIO ACQUISTO-PACE ORTUSI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "MARIANO AJEJAR GARC\u00cdA", "to": "Hu\u00e9spedes Los Espa\u00f1oles", "width": 2}, {"color": "#888888", "from": "Hu\u00e9spedes Los Espa\u00f1oles", "title": "MARIANO AJEJAR GARC\u00cdA", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "ENRICO ALLAVENA", "to": "Fonda \"La Pi\u00f1a\"", "width": 2}, {"color": "#888888", "from": "Fonda \"La Pi\u00f1a\"", "title": "ENRICO ALLAVENA", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "CARMELA ALVI", "to": "Plaza de Toros", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "LUIGI ANDREONE", "to": "Blanco", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "SEBASTIANO ANZALONE", "to": "C\u00edrculo Cat\u00f3lico", "width": 2}, {"color": "#888888", "from": "C\u00edrculo Cat\u00f3lico", "title": "SEBASTIANO ANZALONE", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "MAXIMO ARANDA", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "IRENE BALDONI POGGER (HIJA de Amato y Marcelina)", "to": "8\u00ba CUARTEL - Casa de Misericordia", "width": 2}, {"color": "#888888", "from": "8\u00ba CUARTEL - Casa de Misericordia", "title": "IRENE BALDONI POGGER (HIJA de Amato y Marcelina)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "ANTONIO BENITO MORENO", "to": "Aire 11 y 13 , Casa Hu\u00e9spedes Los Espa\u00f1oles", "width": 2}, {"color": "#888888", "from": "Aire 11 y 13 , Casa Hu\u00e9spedes Los Espa\u00f1oles", "title": "ANTONIO BENITO MORENO", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "ROSA BIANCHI", "to": "Habaneros", "width": 2}, {"color": "#888888", "from": "Habaneros", "title": "ROSA BIANCHI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "JAIME BOUZA LLOPIS (SMORIS?)", "to": "Blanco", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "SALVATORE BUONOCUORE", "to": "C\u00edrculo Cat\u00f3lico", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "ELIAS CAMARDESE", "to": "8\u00ba CUARTEL - Casa de Misericordia", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "ANNA CASTELLONE", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "NAPOLES (Vapor ITALIA 31 julio) Trasbodo G\u00c9NOVA", "title": "PASQUALE DE MARCO", "to": "Posada de Juanillo", "width": 2}, {"color": "#888888", "from": "Posada de Juanillo", "title": "PASQUALE DE MARCO", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "GIULIA DOMINICI FERREIRA FRAN\u00c7A (ESPOSA DE EDUARDO FERREIRA FRAN\u00c7A)", "to": "Mayor, 42", "width": 2}, {"color": "#888888", "from": "Mayor, 42", "title": "GIULIA DOMINICI FERREIRA FRAN\u00c7A (ESPOSA DE EDUARDO FERREIRA FRAN\u00c7A)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "CATALINA ESTEVA QUETGLAS (ESPOSA de Bernardo Salas)", "to": "Rosario, 49", "width": 2}, {"color": "#888888", "from": "Rosario, 49", "title": "CATALINA ESTEVA QUETGLAS (ESPOSA de Bernardo Salas)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "MARIA FILIBERTI", "to": "3er CUARTEL", "width": 2}, {"color": "#888888", "from": "3er CUARTEL", "title": "MARIA FILIBERTI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "VICTORINA FERNANDEZ RUIZ (ESPOSA de Juan Escalera)", "to": "8\u00ba CUARTEL - Casa de Misericordia", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "PIETRO FERLA", "to": "3er CUARTEL - FONDA \"LA MARINA\" Calle de Vergara, 1", "width": 2}, {"color": "#888888", "from": "3er CUARTEL - FONDA \"LA MARINA\" Calle de Vergara, 1", "title": "PIETRO FERLA", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "ANDREA LUND\u00d2", "to": "Aire 11 y 13", "width": 2}, {"color": "#888888", "from": "Aire 11 y 13", "title": "ANDREA LUND\u00d2", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "GIUSEPPE MALATINO", "to": "Posada de Juanillo", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "DANIELE MARIANI VICENTI", "to": "Habaneros (No)", "width": 2}, {"color": "#888888", "from": "Habaneros (No)", "title": "DANIELE MARIANI VICENTI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "VIRGINIA MARONE DI FERRARO", "to": "Canales 28", "width": 2}, {"color": "#888888", "from": "Canales 28", "title": "VIRGINIA MARONE DI FERRARO", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "OLIVEIRO MOLESINI", "to": "2do Cuartel", "width": 2}, {"color": "#888888", "from": "2do Cuartel", "title": "OLIVEIRO MOLESINI", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "CARMELO MONCAN\u00d3 ENCISO (HIJO de Pedro Moncanut y Luisa Pagola)", "to": "S. Cristobal Corta, 13", "width": 2}, {"color": "#888888", "from": "S. Cristobal Corta, 13", "title": "CARMELO MONCAN\u00d3 ENCISO (HIJO de Pedro Moncanut y Luisa Pagola)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "FATLAR MRAD (LA-HURAT GALLICH)", "to": "blanco", "width": 2}, {"color": "#888888", "from": "blanco", "title": "FATLAR MRAD (LA-HURAT GALLICH)", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA ", "title": "GASPARE NEBBIOLO", "to": "Plaza de Toros", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "LUIS MAR\u00cdA Y PELAEZ", "to": "3er CUARTEL - FONDA \"LA MARINA\" Calle de Vergara, 1", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA ", "title": "MARIETTA PERITO", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "FRANCESCO PIERINO", "to": "3er Cuartel", "width": 2}, {"color": "#888888", "from": "3er Cuartel", "title": "FRANCESCO PIERINO", "to": "Lugar hundimiento", "width": 2}, {"color": "#888888", "from": "BARCELONA", "title": "ALEJANDRO ROBLES MORA", "to": "Aire 11 y 13", "width": 2}, {"color": "#888888", "from": "G\u00c9NOVA", "title": "ANGELA VISCA (HIJA de Caterina)", "to": "M.Mar, 63 - 2\u00ba", "width": 2}, {"color": "#888888", "from": "M.Mar, 63 - 2\u00ba", "title": "ANGELA VISCA (HIJA de Caterina)", "to": "Lugar hundimiento", "width": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true}, "interaction": {"hover": true, "navigationButtons": true}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

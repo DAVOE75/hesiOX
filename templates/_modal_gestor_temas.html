@@ -1,0 +1,121 @@
+<!-- Modal Gestor de Temas (Fragmento) -->
+<div class="modal fade" id="modalGestorTemas" tabindex="-1" aria-labelledby="modalGestorTemasLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-2xl bg-panel-sirio text-light-sirio">
+            <div class="modal-header border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-bold text-accent-sirio mb-0" id="modalGestorTemasLabel">
+                    <i class="fa-solid fa-tags me-2"></i>Gestor de Temas del Proyecto
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btnNuevoTemaStandalone" class="btn btn-sirio-primary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-plus me-1"></i>Nuevo Tema
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-black bg-opacity-25 border-end-0 text-accent-sirio">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="filterTemasInput" class="form-control form-control-sirio border-start-0" placeholder="Filtrar temas existentes...">
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-dark table-hover mb-0 align-middle" style="--bs-table-bg: transparent;">
+                        <thead class="sticky-top" style="z-index: 10;">
+                            <tr class="bg-panel-sirio-alt">
+                                <th class="ps-3 py-2 text-accent-sirio text-uppercase small fw-bold">Tema</th>
+                                <th class="py-2 text-accent-sirio text-uppercase small fw-bold text-center">Usos</th>
+                                <th class="pe-3 py-2 text-accent-sirio text-uppercase small fw-bold text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="temasTableBody">
+                            <!-- Se cargará vía AJAX -->
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <div class="spinner-border text-accent-sirio" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-white border-opacity-10 bg-black bg-opacity-10 rounded-bottom-4">
+                <button type="button" class="btn btn-sirio-outline rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales (pueden ser redundantes si ya están en base) -->
+<style>
+    #modalGestorTemas .shadow-2xl {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Adaptación a variables del Design System Sirio */
+    #modalGestorTemas .bg-panel-sirio {
+        background-color: var(--ds-bg-panel, #1a1a2e) !important;
+    }
+    #modalGestorTemas .bg-panel-sirio-alt {
+        background-color: var(--ds-bg-element, rgba(255, 255, 255, 0.05)) !important;
+    }
+    #modalGestorTemas .text-light-sirio {
+        color: var(--ds-text-main, #fff) !important;
+    }
+    #modalGestorTemas .text-accent-sirio {
+        color: var(--ds-accent-primary, #0dcaf0) !important;
+    }
+
+    #modalGestorTemas .form-control-sirio {
+        background: var(--ds-bg-element, rgba(0, 0, 0, 0.3)) !important;
+        border: 1px solid var(--ds-border-color, rgba(255, 255, 255, 0.2)) !important;
+        color: var(--ds-text-main, #fff) !important;
+        border-radius: 8px;
+    }
+    
+    #modalGestorTemas .btn-sirio-glass-sm {
+        background: rgba(var(--ds-accent-rgb, 13, 202, 240), 0.1);
+        color: var(--ds-accent-primary, #0dcaf0);
+        border: 1px solid rgba(var(--ds-accent-rgb, 13, 202, 240), 0.2);
+        padding: 0.25rem 0.6rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+    }
+    #modalGestorTemas .btn-sirio-glass-sm:hover {
+        background: rgba(var(--ds-accent-rgb, 13, 202, 240), 0.3);
+        color: #fff;
+    }
+    #modalGestorTemas .btn-sirio-glass-danger-sm {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        padding: 0.25rem 0.6rem;
+        font-size: 0.875rem;
+        border-radius: 4px;
+    }
+    #modalGestorTemas .btn-sirio-glass-danger-sm:hover {
+        background: rgba(220, 53, 69, 0.3);
+        color: #fff;
+    }
+
+    /* Light Theme compatibility overrides */
+    [data-theme="light"] #modalGestorTemas .bg-panel-sirio {
+        background-color: var(--ds-bg-panel, #f8f9fa) !important;
+    }
+    [data-theme="light"] #modalGestorTemas .form-control-sirio {
+        background: #fff !important;
+        color: #333 !important;
+    }
+    [data-theme="light"] #modalGestorTemas .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+    [data-theme="light"] #modalGestorTemas .text-light-sirio {
+        color: var(--ds-text-main, #333) !important;
+    }
+</style>

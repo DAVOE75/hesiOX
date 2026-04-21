@@ -1,0 +1,1 @@
+# Paneles de visualización

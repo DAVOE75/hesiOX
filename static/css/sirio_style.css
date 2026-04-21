@@ -1,0 +1,449 @@
+/* Estilo Sirio para selects del modal de filtros avanzado */
+.sirio-select-wrapper {
+    position: relative;
+    /*    display: flex;    */
+    align-items: center;
+}
+
+.sirio-select {
+    background: #181818;
+    color: #ffd580;
+    border: 1px solid var(--ds-accent-primary, #ff9800);
+    border-radius: 6px;
+    padding: 8px 32px 8px 12px;
+    font-size: 1rem;
+    font-family: var(--ds-font-ui, monospace);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.08);
+    transition: border 0.2s, box-shadow 0.2s;
+    appearance: none;
+    width: 100%;
+}
+
+.sirio-select:focus {
+    border-color: #ffa726;
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.15);
+    outline: none;
+}
+
+.sirio-select-icon {
+    position: absolute;
+    right: 12px;
+    pointer-events: none;
+    color: var(--ds-accent-primary, #ff9800);
+    font-size: 1.1em;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.header-center {
+    flex-grow: 1 !important;
+    min-width: 0;
+    margin: 0 1.5rem;
+}
+
+/* Ajustes para la barra de botones */
+.toolbar-header {
+    width: 100%;
+    justify-content: flex-start !important;
+    /* Alinear a la izquierda para permitir scroll natural */
+    overflow-x: auto;
+    padding-bottom: 0 !important;
+    /* Evitar padding extra que oculte scroll */
+    scrollbar-width: none;
+    /* Ocultar scrollbar en Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.toolbar-header::-webkit-scrollbar {
+    display: none;
+    /* Ocultar scrollbar en Chrome/Safari */
+}
+
+/* Asegurar que los botones mantengan su ancho y texto en una línea */
+.btn-sirio {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 2px 12px !important;
+    font-size: 11px !important;
+    height: 32px !important;
+    transition: all 0.3s ease;
+    gap: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.btn-sirio-secondary {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.btn-sirio-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+/* Variantes de color para btn-sirio */
+.btn-sirio-warning {
+    background: rgba(255, 193, 7, 0.05) !important;
+    border: 1px solid rgba(255, 193, 7, 0.2) !important;
+    color: #ffc107 !important;
+}
+.btn-sirio-warning:hover {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.4) !important;
+    color: #ffca2c !important;
+    transform: translateY(-1px);
+}
+
+.btn-sirio-info {
+    background: rgba(13, 202, 240, 0.05) !important;
+    border: 1px solid rgba(13, 202, 240, 0.2) !important;
+    color: #0dcaf0 !important;
+}
+.btn-sirio-info:hover {
+    background: rgba(13, 202, 240, 0.15) !important;
+    border-color: rgba(13, 202, 240, 0.4) !important;
+    color: #31d2f2 !important;
+    transform: translateY(-1px);
+}
+
+.btn-sirio-danger {
+    background: rgba(220, 53, 69, 0.05) !important;
+    border: 1px solid rgba(220, 53, 69, 0.2) !important;
+    color: #dc3545 !important;
+}
+.btn-sirio-danger:hover {
+    background: rgba(220, 53, 69, 0.15) !important;
+    border-color: rgba(220, 53, 69, 0.4) !important;
+    color: #df4a59 !important;
+    transform: translateY(-1px);
+}
+
+/* Botones inactivos (Entidades, etc) para coincidir con estilo HD */
+.btn-sirio-inactivo {
+    border-color: rgba(255, 68, 68, 0.4) !important;
+    color: #ff6666 !important;
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+}
+
+.btn-sirio-inactivo:hover {
+    background: rgba(255, 68, 68, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
+}
+
+.btn-sirio-inactivo .btn-text,
+.btn-sirio-inactivo i {
+    color: #ff6666 !important;
+    opacity: 1 !important;
+}
+
+/* Estilo para etiquetas de ejemplo en descripciones */
+.span-ejemplo {
+    color: #ff9800;
+}
+
+/* Mostrar texto en gris por defecto */
+.btn-sirio .btn-text {
+    max-width: none !important;
+    /* Allow text to expand */
+    opacity: 0.6;
+    color: #999;
+    display: inline-block;
+    transition: all 0.3s ease;
+    vertical-align: middle;
+    margin-left: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    font-size: 11px !important;
+}
+
+/* Aumentar visibilidad al pasar el mouse o si está activo */
+.btn-sirio:hover .btn-text,
+.btn-sirio.active .btn-text {
+    opacity: 1;
+    color: #fff;
+    margin-left: 6px;
+}
+
+/* Excepción: Filtros y Exportar ancho fijo de 150px */
+#btn-filtros .btn-text,
+#btn-exportar .btn-text {
+    max-width: none !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    margin-left: 6px !important;
+}
+
+/* Reducir gap en la barra de herramientas */
+.toolbar-header {
+    display: flex !important;
+    /* Asegurar flexbox */
+    align-items: center;
+    gap: 4px !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+.toolbar-header::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+/* Ajuste para que la barra de herramientas tenga más espacio horizontal */
+/* Header alignment refinements */
+.header-center {
+    flex: 1;
+    /* Grow to fill space */
+    min-width: 0;
+    margin: 0 1rem;
+    display: flex;
+    justify-content: center;
+    /* Center buttons by default */
+    align-items: center !important;
+    gap: 8px;
+    height: 100%;
+}
+
+.header-actions-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important; /* Standard right alignment */
+    gap: 8px !important;
+    height: var(--ds-header-height, 60px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.header-actions-wrapper > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Ensure consistent height for all header UI elements */
+.header-actions-wrapper .btn-sirio,
+.header-actions-wrapper .dropdown,
+.header-actions-wrapper .btn-group,
+.header-actions-wrapper .header-search-container,
+.header-actions-wrapper #timeline-controls {
+    height: 32px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+
+/* Comprimir el título si es necesario */
+.header-left {
+    flex: 0 0 auto;
+    /* Don't squash the title */
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+}
+
+
+.page-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1.1rem !important;
+}
+
+/* Estilos hover para botones del modal */
+#filtrosModal .modal-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+#filtrosModal .modal-footer .btn:first-child:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+#filtrosModal .modal-footer .btn:last-child:hover {
+    background: #ffa726 !important;
+}
+
+/* Fix para selects largos en el modal */
+#filtrosModal .form-control-sirio {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#filtrosModal select.form-control-sirio option {
+    background: #1a1a1a;
+    color: #ddd;
+    padding: 8px;
+}
+
+#filtrosModal .modal-dialog {
+    max-width: 500px;
+}
+
+#filtrosModal .modal-body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+.btn-sirio.active {
+    background: var(--ds-bg-hover, #333);
+    border-color: var(--ds-accent-primary, #ff9800) !important;
+    color: var(--ds-accent-primary, #ff9800) !important;
+    margin-right: 5px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--ds-accent-primary, #ff9800);
+    border-radius: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #e68a00;
+}
+
+.topic-card {
+    background: rgba(255, 152, 0, 0.1);
+    border-left: 3px solid var(--ds-accent-primary, #ff9800);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+/* Sidebar items with special styling (e.g. Topografía IA) */
+.special-star-item {
+    color: #ff9800 !important;
+    text-shadow: 0 0 8px rgba(255, 152, 0, 0.4) !important;
+}
+
+.special-star-item i {
+    color: inherit !important;
+}
+
+.topic-word {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px;
+    font-size: 0.85rem;
+    font-family: var(--ds-font-mono, monospace);
+}
+
+.cluster-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+/* Sticky Header for News Table */
+#tablaRegistros thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Ensure background matches theme */
+    background-color: var(--ds-bg-sidebar, #1e1e1e);
+    /* Add a subtle shadow or border at the bottom */
+    border-bottom: 2px solid var(--ds-border-color, #444);
+    /* Prevent content from showing through */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Light theme override for sticky header */
+[data-theme="light"] #tablaRegistros thead th {
+    background-color: #294a60 !important;
+    /* Theme blue header */
+    color: #ffffff !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Filter Collapse Button Styling & Positioning --- */
+.btn-collapse-filtros {
+    position: fixed;
+    /* top is updated via JS but set default here */
+    width: 110px !important;
+    height: 30px !important;
+    background: var(--ds-bg-sidebar, #1e1e1e);
+    border: 1px solid var(--ds-border-color, #444);
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    z-index: 999;
+    color: var(--ds-accent-primary, #ff9800);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+
+    /* Dynamic Centering Logic */
+    /* Center of content = SidebarWidth + (ViewportWidth - SidebarWidth)/2 */
+    /*                 = 50vw + SidebarWidth/2 */
+    left: calc(50vw + var(--ds-sidebar-width, 260px) / 2);
+    transform: translateX(-50%);
+
+    /* Smooth transitions for sidebar toggle */
+    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+        background-color 0.2s ease;
+}
+
+/* Adjust position when sidebar is collapsed */
+.sidebar-collapsed .btn-collapse-filtros,
+#app-root.sidebar-collapsed .btn-collapse-filtros {
+    left: calc(50vw + var(--ds-sidebar-width-collapsed, 55px) / 2);
+}
+
+.btn-collapse-filtros:hover {
+    background-color: var(--ds-bg-hover, #333);
+    color: #fff;
+}
+
+[data-theme="light"] .btn-collapse-filtros {
+    background: #294a60;
+    border-color: #b9b9b9;
+    color: #ffffff;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .btn-collapse-filtros:hover {
+    background: #9b9b9b;
+}
+
+/* --- Choices.js Dropdown Z-Index Fix --- */
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    z-index: 1050 !important;
+    /* Above sticky headers (10) and most UI elements */
+    word-break: break-word;
+    /* Prevent long text from breaking layout */
+}

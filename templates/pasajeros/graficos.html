@@ -1,0 +1,1832 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}ESTADÍSTICAS DE PASAJEROS // VAPOR SIRIO{% endblock %}
+
+{% block extra_head %}
+<!-- Standard application fonts already loaded in base_desktop.html -->
+{% endblock %}
+
+{% block page_title %}Análisis Estadístico{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center gap-3">
+    <!-- Botones de Subset (Global View) -->
+    <div class="filter-pills d-flex gap-2" id="subset-filters">
+        <button class="btn btn-sm btn-sirio active" data-subset="general" onclick="changeSubset('general', this)">
+            <i class="fa-solid fa-users me-1"></i> General
+        </button>
+        <button class="btn btn-sm btn-sirio" data-subset="survivors" onclick="changeSubset('survivors', this)">
+            <i class="fa-solid fa-heart-pulse me-1 text-success"></i> Supervivientes
+        </button>
+        <button class="btn btn-sm btn-sirio" data-subset="deceased" onclick="changeSubset('deceased', this)">
+            <i class="fa-solid fa-skull me-1 text-danger"></i> Fallecidos/Desp.
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    :root {
+        --sirio-survivor: #00ff55;
+        --sirio-deceased: #ff2d75;
+        --sirio-male: #00a2ff;
+        --sirio-female: #ff5eaf;
+        --sirio-accent: #ff9d00;
+        --sirio-bg: #050505;
+        --sirio-card-bg: rgba(13, 13, 13, 0.7);
+        --sirio-card-border: rgba(255, 157, 0, 0.1);
+        --sirio-text: #e0e0e0;
+        --sirio-text-muted: #808080;
+        --sirio-header-bg: rgba(0, 0, 0, 0.9);
+        --sirio-chart-grid: rgba(255, 255, 255, 0.03);
+        --sirio-glow: 0 0 15px rgba(255, 157, 0, 0.3);
+        --font-main: 'Roboto Condensed', sans-serif;
+        --font-tech: 'Roboto Condensed', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+        --sirio-bg: #f0f2f5;
+        --sirio-card-bg: rgba(255, 255, 255, 0.85);
+        --sirio-card-border: rgba(41, 74, 96, 0.1);
+        --sirio-text: #1a2a3a;
+        --sirio-text-muted: #5a6a7a;
+        --sirio-accent: #294a60;
+        --sirio-header-bg: rgba(255, 255, 255, 0.9);
+        --sirio-chart-grid: rgba(0, 0, 0, 0.05);
+        --sirio-glow: 0 4px 12px rgba(41, 74, 96, 0.15);
+    }
+
+    body {
+        font-family: var(--font-main);
+        background: var(--sirio-bg) !important;
+        color: var(--sirio-text);
+        overflow-x: hidden;
+    }
+
+    .stats-dashboard-container {
+        min-height: 100vh;
+        background: radial-gradient(circle at 20% 20%, rgba(255, 157, 0, 0.03) 0%, transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(0, 162, 255, 0.03) 0%, transparent 40%);
+    }
+
+    .hesi-floating-card {
+        background: var(--sirio-card-bg) !important;
+        backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid var(--sirio-card-border) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        border-radius: 16px !important;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hesi-floating-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--sirio-accent), transparent);
+        opacity: 0;
+        transition: opacity 0.4s;
+    }
+
+    .hesi-floating-card:hover {
+        border-color: rgba(255, 157, 0, 0.4) !important;
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--sirio-glow);
+    }
+
+    .hesi-floating-card:hover::before {
+        opacity: 1;
+    }
+
+    .card-header {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    .card-title {
+        font-family: var(--font-tech);
+        letter-spacing: 1px;
+        font-weight: 600;
+        text-shadow: 0 0 10px rgba(255, 157, 0, 0.2);
+    }
+
+    .stat-value {
+        font-family: var(--font-mono);
+        font-weight: 800;
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .text-accent {
+        color: var(--sirio-accent) !important;
+    }
+
+    /* Neon accents */
+    .glow-text-info {
+        text-shadow: 0 0 10px rgba(0, 162, 255, 0.5);
+        color: #00a2ff !important;
+    }
+
+    .glow-text-success {
+        text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+        color: #00f2ff !important;
+    }
+
+    .glow-text-warning {
+        text-shadow: 0 0 10px rgba(255, 157, 0, 0.5);
+        color: #ff9d00 !important;
+    }
+
+    .glow-text-deceased {
+        text-shadow: 0 0 10px rgba(255, 45, 117, 0.5);
+        color: #ff2d75 !important;
+    }
+
+    /* Dropdown/Choices Fixes */
+    .choices {
+        z-index: 1020 !important;
+        margin-bottom: 0;
+    }
+
+    .choices__list--dropdown {
+        z-index: 1030 !important;
+        background: #1a1a1a !important;
+        border: 1px solid rgba(255, 157, 0, 0.3) !important;
+        color: #fff !important;
+    }
+
+    .choices__inner {
+        background: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        min-height: 31px !important;
+        padding: 2px 8px !important;
+    }
+
+    .choices__item--selectable {
+        font-family: var(--font-tech);
+        font-size: 0.75rem;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: rgba(255, 157, 0, 0.2) !important;
+    }
+
+    .chart-container {
+        position: relative;
+        padding: 1rem;
+    }
+
+    .filter-pills .btn-sirio {
+        background: #212121;
+        border: 1px solid #333;
+        color: #888;
+        font-family: var(--font-tech);
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 0.6rem 1.4rem;
+        border-radius: 2px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-pills .btn-sirio:hover {
+        background: #2a2a2a;
+        color: #ddd;
+    }
+
+    .filter-pills .btn-sirio.active {
+        background: #212121 !important;
+        color: #fff !important;
+        border: 1px solid var(--sirio-accent) !important;
+        box-shadow: none !important;
+    }
+
+    .filter-pills .btn-sirio i {
+        color: #666;
+        transition: color 0.2s ease;
+    }
+
+    .filter-pills .btn-sirio.active i {
+        color: var(--sirio-accent) !important;
+    }
+
+    .form-control-xs {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        border-radius: 6px;
+    }
+
+    .form-control-xs:focus {
+        border-color: var(--sirio-accent) !important;
+        box-shadow: 0 0 10px rgba(255, 157, 0, 0.2);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+    }
+
+    .delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    .delay-3 {
+        animation-delay: 0.3s;
+    }
+
+    @keyframes pulse-glow {
+        0% {
+            opacity: 0.4;
+        }
+
+        50% {
+            opacity: 1;
+            text-shadow: 0 0 15px var(--sirio-accent);
+        }
+
+        100% {
+            opacity: 0.4;
+        }
+    }
+
+    .status-pulse {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #00ff88;
+        border-radius: 50%;
+        margin-right: 8px;
+        box-shadow: 0 0 10px #00ff88;
+        animation: pulse-glow 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-dashboard-container min-height-0">
+    <!-- Header Summary (Compact) -->
+    <div class="flex-shrink-0 p-4 pb-0">
+        <div class="mb-4 animate-up d-flex justify-content-between align-items-end">
+            <div>
+                <h1 class="h4 mb-0 text-accent fw-bold text-uppercase"
+                    style="letter-spacing: 3px; font-family: var(--font-tech);">
+                    <i class="fa-solid fa-users-viewfinder me-2"></i> ESTADÍSTICAS DE PASAJEROS
+                </h1>
+                <p class="text-muted mb-0 small text-uppercase fw-bold opacity-75">Registro Demográfico y
+                    Forense</p>
+            </div>
+            <div class="text-end pb-1">
+                <span
+                    class="badge bg-black bg-opacity-50 border border-success border-opacity-25 text-success small py-2 px-3"
+                    style="font-family: var(--font-mono); letter-spacing: 1px;">
+                    <span class="status-pulse"></span> ESTADO DEL SISTEMA: OPERATIVO
+                </span>
+            </div>
+        </div>
+
+        <!-- Summary Row -->
+        <div class="row g-3 mb-4">
+            <!-- Total Population -->
+            <div class="col-md" style="flex: 1;">
+                <div class="card hesi-floating-card p-3 text-center animate-up delay-1">
+                    <small class="text-muted text-uppercase fw-bold mb-1"
+                        style="font-size: 0.65rem; letter-spacing: 1px;">Población Total</small>
+                    <h2 id="summary-total" data-raw-value="0" class="stat-value mb-0 glow-text-info">--</h2>
+                </div>
+            </div>
+            <!-- Survival Rate -->
+            <div class="col-md" style="flex: 1;">
+                <div class="card hesi-floating-card p-3 text-center animate-up delay-2">
+                    <small id="summary-rate-label" class="text-muted text-uppercase fw-bold mb-1"
+                        style="font-size: 0.65rem; letter-spacing: 1px;">Supervivencia</small>
+                    <h2 id="summary-rate" data-raw-value="0" class="stat-value mb-0 glow-text-success">--%</h2>
+                </div>
+            </div>
+            <!-- Average Age -->
+            <div class="col-md" style="flex: 1;">
+                <div class="card hesi-floating-card p-3 text-center animate-up delay-3">
+                    <small class="text-muted text-uppercase fw-bold mb-1"
+                        style="font-size: 0.65rem; letter-spacing: 1px;">Edad Media</small>
+                    <h2 id="summary-age" data-raw-value="0" class="stat-value text-white mb-0">--</h2>
+                </div>
+            </div>
+            <!-- Media Mentions -->
+            <div class="col-md" style="flex: 1;">
+                <div class="card hesi-floating-card p-3 text-center animate-up delay-1">
+                    <small class="text-muted text-uppercase fw-bold mb-1"
+                        style="font-size: 0.65rem; letter-spacing: 1px;">Prensa / Menciones</small>
+                    <h2 id="summary-mentions" data-raw-value="0" class="stat-value text-warning mb-0 glow-text-warning">
+                        --</h2>
+                </div>
+            </div>
+            <!-- Economic Capital -->
+            <div class="col-md" style="flex: 1;">
+                <div class="card hesi-floating-card p-3 text-center animate-up delay-2">
+                    <small class="text-muted text-uppercase fw-bold mb-1"
+                        style="font-size: 0.65rem; letter-spacing: 1px;">Capital Migratorio</small>
+                    <h2 id="summary-economy" data-raw-value="0" class="stat-value text-accent mb-0 glow-text-warning">--
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dash Content (Scrollable) -->
+    <div class="flex-grow-1 overflow-auto p-4 pt-0 min-height-0">
+        <div class="row g-4">
+            <!-- Main: Pirámide -->
+            <div class="col-lg-8">
+                <div class="card hesi-floating-card h-100">
+                    <div
+                        class="card-header bg-dark d-flex justify-content-between border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Distribución por Edad y
+                            Sexo</h5>
+                        <span id="pyramid-label" class="badge bg-dark border border-secondary text-muted">General</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 600px;">
+                            <canvas id="pyramidChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card mb-3 p-3"
+                    style="position: relative; z-index: 1010; overflow: visible !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="x-small text-accent fw-bold text-uppercase mb-0 opacity-75"
+                            style="letter-spacing: 1px;">
+                            <i class="fa-solid fa-filter me-2"></i> Filtros de Datos
+                        </h6>
+                        <button class="btn btn-xs btn-outline-secondary border-0 text-muted p-0"
+                            onclick="resetFilters()" title="Resetear Filtros">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+
+                    <!-- Row 1: País -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded bg-black bg-opacity-25 border-start border-accent border-4"
+                        style="overflow: visible !important;">
+                        <small class="text-muted text-uppercase fw-bold x-small opacity-75">País de Origen</small>
+                        <div style="width: 75%;">
+                            <select id="country-filter"
+                                class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25 w-100"
+                                data-search="true" data-options='{{ (paises or [])|tojson|safe }}'
+                                onchange="updateStats()">
+                                <option value="">(Todos)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Sexo -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded bg-black bg-opacity-25 border-start border-info border-4"
+                        style="overflow: visible !important;">
+                        <small class="text-muted text-uppercase fw-bold x-small opacity-75">Género / Sexo</small>
+                        <div style="width: 75%;">
+                            <select id="sex-filter"
+                                class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25 w-100"
+                                onchange="updateStats()">
+                                <option value="">(Ambos)</option>
+                                <option value="Hombre">Hombre</option>
+                                <option value="Mujer">Mujer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Edad -->
+                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-black bg-opacity-25 border-start border-warning border-4"
+                        style="overflow: visible !important;">
+                        <small class="text-muted text-uppercase fw-bold x-small opacity-75">Rango de Edad</small>
+                        <div style="width: 75%;">
+                            <select id="age-filter"
+                                class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25 w-100"
+                                onchange="updateStats()">
+                                <option value="">(Todas)</option>
+                                <option value="0-14">0-14 años</option>
+                                <option value="15-30">15-30 años</option>
+                                <option value="31-45">31-45 años</option>
+                                <option value="46-60">46-60 años</option>
+                                <option value="60+">61+ años</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Clase -->
+                    <div class="d-flex align-items-center justify-content-between mt-3 mb-0 p-2 rounded bg-black bg-opacity-25 border-start border-secondary border-4"
+                        style="overflow: visible !important;">
+                        <small class="text-muted text-uppercase fw-bold x-small opacity-75">Clase / Pasaje</small>
+                        <div style="width: 75%;">
+                            <select id="class-filter"
+                                class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25 w-100"
+                                onchange="updateStats()">
+                                <option value="">(Todas)</option>
+                                <option value="1ª">1ª Clase</option>
+                                <option value="2ª">2ª Clase</option>
+                                <option value="3ª">3ª Clase</option>
+                                <option value="Tripulación">Tripulación</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Radar Chart Card -->
+                <div class="card hesi-floating-card">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Probabilidad de
+                            Supervivencia</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="card hesi-floating-card h-100">
+                    <div
+                        class="card-header bg-dark border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Capital Migratorio:
+                            Inversión en Pasajes</h5>
+                        <button class="btn btn-xs btn-outline-secondary border-0 text-muted p-0" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#configRow" aria-expanded="false"
+                            style="font-size: 0.62rem; opacity: 0.8;">
+                            <i class="fa-solid fa-sliders me-1" style="font-size: 0.55rem;"></i> Configurar Precios
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="collapse" id="configRow">
+                            <div
+                                class="row g-2 mb-4 p-3 bg-black bg-opacity-25 rounded border border-light border-opacity-10 text-center">
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label class="x-small text-muted text-uppercase fw-bold d-block mb-1">1ª
+                                        Clase</label>
+                                    <input type="number" id="price-p1"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center"
+                                        value="750" oninput="updateStats()">
+                                </div>
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label class="x-small text-muted text-uppercase fw-bold d-block mb-1">2ª
+                                        Clase</label>
+                                    <input type="number" id="price-p2"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center"
+                                        value="550" oninput="updateStats()">
+                                </div>
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label class="x-small text-muted text-uppercase fw-bold d-block mb-1">3ª
+                                        Brasil</label>
+                                    <input type="number" id="price-p3b"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center"
+                                        value="200" oninput="updateStats()">
+                                </div>
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label class="x-small text-muted text-uppercase fw-bold d-block mb-1">3ª
+                                        Plata</label>
+                                    <input type="number" id="price-p3p"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center"
+                                        value="200" oninput="updateStats()">
+                                </div>
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label
+                                        class="x-small text-muted text-uppercase fw-bold d-block mb-1">Equipaje/Tasas</label>
+                                    <input type="number" id="price-luggage"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center"
+                                        value="3.10" oninput="updateStats()">
+                                </div>
+                                <div class="col-md-2" style="width: 16.6%;">
+                                    <label class="x-small text-muted text-uppercase fw-bold d-block mb-1">Conv.
+                                        (€)</label>
+                                    <input type="number" step="0.1" id="conv-factor"
+                                        class="form-control form-control-xs bg-dark text-white border-secondary text-center font-monospace"
+                                        value="5.8" oninput="updateStats()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <div class="chart-container" style="height: 320px;">
+                                    <canvas id="economyChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded bg-black bg-opacity-25 border border-light border-opacity-10"
+                                    style="font-size: 0.8rem;">
+                                    <h6 class="x-small text-accent fw-bold text-uppercase mb-3"><i
+                                            class="fa-solid fa-scroll me-1"></i> Condiciones del pasaje (1906)</h6>
+                                    <ul class="list-unstyled mb-0 text-muted lh-sm">
+                                        <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i>
+                                            <strong>Menores de 1 año:</strong> Imbarco gratuito.
+                                        </li>
+                                        <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i>
+                                            <strong>1 a 3 años:</strong> 1/4 de pasaje.
+                                        </li>
+                                        <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i>
+                                            <strong>4 a 11 años:</strong> 1/2 pasaje.
+                                        </li>
+                                        <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i>
+                                            <strong>12+ años:</strong> Pasaje entero.
+                                        </li>
+                                        <hr class="border-light border-opacity-10 my-2">
+                                        <li><i class="fa-solid fa-plus-circle text-info me-1"></i> <strong>Tasa
+                                                obligatoria:</strong> 3.10 L. por envío y embarque.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Itinerario: Puertos de
+                            Embarque</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="embarkationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Supervivencia por Puerto
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="survivalPortChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Vías de Salvación: Barcos
+                            de Rescate</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="rescueShipsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Resultado: Situación
+                            Post-Naufragio</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="postSituationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Geografía de la Emigración:
+                            Destinos Finales</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative;">
+                            <canvas id="destinationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Estructura Social: Género
+                            por Clase</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative;">
+                            <canvas id="nestedBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="col-12">
+                <div class="card hesi-floating-card">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Flujo Migratorio: Origen ->
+                            Puerto -> Destino (Sankey)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 500px;">
+                            <canvas id="sankeyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card hesi-floating-card">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Mapa de Supervivencia: Edad
+                            vs Clase (Heatmap)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="heatmapChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card hesi-floating-card">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Densidad de Origen (Top 10
+                            Municipios)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="originChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICAS ELIMINADAS POR PETICIÓN: Supervivencia por Sexo/Clase -->
+
+            <div class="col-12">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Distribución de Edad:
+                            Supervivientes vs Fallecidos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="ageHistogramChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Análisis de Dispersión:
+                            Edad vs Tarifa vs Supervivencia</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 500px;">
+                            <canvas id="survivalScatterChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAMILY ANALYTICS SECTION -->
+            <div class="col-12 mt-4">
+                <h4 class="text-accent fw-bold text-uppercase mb-3" style="letter-spacing: 2px;">
+                    <i class="fa-solid fa-people-roof me-2"></i> Dinámicas Familiares
+                </h4>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Tamaño del Grupo Familiar</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px; position: relative;">
+                            <canvas id="familyDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Supervivencia por Tamaño Familiar</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px; position: relative;">
+                            <canvas id="familySurvivalChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card hesi-floating-card h-100">
+                    <div class="card-header bg-dark border-bottom border-light border-opacity-10">
+                        <h5 class="card-title mb-0 small text-uppercase fw-bold text-accent">Composición Familiar por Clase</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 300px; position: relative;">
+                            <canvas id="familyClassChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix"></script>
+<script>
+    let charts = {};
+    let globalData = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Populate country filter manually via Choices.js API
+        setTimeout(() => {
+            const filter = document.getElementById('country-filter');
+            const optionsData = filter.getAttribute('data-options');
+            if (optionsData && window.choicesInstances && window.choicesInstances['country-filter']) {
+                const options = JSON.parse(optionsData);
+                const instance = window.choicesInstances['country-filter'];
+                console.log("DEBUG: Using Choices.js API to add", options.length, "options");
+                instance.setChoices(
+                    options.map(p => ({ value: p, label: p, selected: false, disabled: false })),
+                    'value',
+                    'label',
+                    false // true would replace existing, false appends
+                );
+            } else if (optionsData) {
+                // Fallback: Populate native select
+                const options = JSON.parse(optionsData);
+                const filter = document.getElementById('country-filter');
+                options.forEach(pais => {
+                    if (![...filter.options].some(o => o.value === pais)) {
+                        const opt = document.createElement('option');
+                        opt.value = pais;
+                        opt.textContent = pais;
+                        filter.appendChild(opt);
+                    }
+                });
+                if (window.reinitChoices) window.reinitChoices(filter.parentElement);
+            }
+        }, 200);
+
+        // Explicitly set up event listeners for filters (for Choices.js compatibility)
+        ['country-filter', 'sex-filter', 'age-filter', 'class-filter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', () => {
+                    console.log(`DEBUG: Filter changed: ${id}`);
+                    updateStats();
+                });
+            }
+        });
+
+        loadAllStats();
+
+        // Listener para re-renderizar gráficos al cambiar el tema
+        const themeToggle = document.getElementById('theme-toggle') || document.querySelector('.theme-switcher-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                // Pequeño delay para que el atributo data-theme se actualice
+                setTimeout(() => {
+                    if (globalData) renderAllCharts(globalData);
+                }, 100);
+            });
+        }
+    });
+
+    async function loadAllStats() {
+        updateStats();
+    }
+
+    let currentSubset = 'general';
+
+    function resetFilters() {
+        if (window.choicesInstances) {
+            if (window.choicesInstances['country-filter']) window.choicesInstances['country-filter'].setChoiceByValue('');
+            if (window.choicesInstances['sex-filter']) window.choicesInstances['sex-filter'].setChoiceByValue('');
+            if (window.choicesInstances['age-filter']) window.choicesInstances['age-filter'].setChoiceByValue('');
+            if (window.choicesInstances['class-filter']) window.choicesInstances['class-filter'].setChoiceByValue('');
+        }
+        document.getElementById('country-filter').value = '';
+        document.getElementById('sex-filter').value = '';
+        document.getElementById('age-filter').value = '';
+        if (document.getElementById('class-filter')) document.getElementById('class-filter').value = '';
+        updateStats();
+    }
+
+    function changeSubset(subset, btn) {
+        currentSubset = subset;
+        document.querySelectorAll('#subset-filters .btn-sirio').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('pyramid-label').innerText = btn.innerText;
+        updateStats();
+    }
+
+    let updateTimeout;
+    function updateStats() {
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(_updateStats, 100); // 100ms for sharper feel
+    }
+
+    async function _updateStats() {
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return '';
+            if (window.choicesInstances && window.choicesInstances[id]) {
+                return window.choicesInstances[id].getValue(true);
+            }
+            return el.value;
+        };
+
+        const country = getVal('country-filter');
+        const sex = getVal('sex-filter');
+        const age = getVal('age-filter');
+        const clase = getVal('class-filter');
+        const subset = currentSubset;
+
+        // Custom pricing (use raw values)
+        const p1 = getVal('price-p1') || 750;
+        const p2 = getVal('price-p2') || 550;
+        const p3b = getVal('price-p3b') || 200;
+        const p3p = getVal('price-p3p') || 200;
+        const luggage = getVal('price-luggage') || 3.10;
+        const conv = getVal('conv-factor') || 5.8;
+
+        console.log(`[HUD] Updating Stats: p1=${p1}, conv=${conv}, subset=${subset}`);
+
+        try {
+            const timestamp = new Date().getTime();
+            const url = `{{ url_for('pasajeros.get_stats') }}?subset=${subset}&nacionalidad=${encodeURIComponent(country)}&sexo=${encodeURIComponent(sex)}&franja_edad=${encodeURIComponent(age)}&clase=${encodeURIComponent(clase)}&p1=${p1}&p2=${p2}&p3b=${p3b}&p3p=${p3p}&luggage=${luggage}&conv=${conv}&t=${timestamp}`;
+
+            console.log("DEBUG: Fetching stats from URL:", url);
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.success) {
+                globalData = data;
+                renderAllCharts(data);
+                updateDashboardSummary(data);
+            }
+        } catch (err) {
+            console.error("Fetch Exception:", err);
+        }
+    }
+
+    function renderAllCharts(data) {
+        if (!data) return;
+        console.log("Rendering all charts with data:", data);
+
+        const chartFuncs = [
+            { name: 'Pyramid', fn: () => renderPyramid(data.pyramid, 'general') },
+            { name: 'Radar', fn: () => renderRadar(data.survival_class) },
+            { name: 'NestedBar', fn: () => renderNestedBar(data.class_gender) },
+            { name: 'Destinations', fn: () => renderDestinations(data.top_destinations) },
+            { name: 'Origins', fn: () => renderOrigins(data.top_origins) },
+            { name: 'Sankey', fn: () => renderSankey(data.sankey) },
+            { name: 'Heatmap', fn: () => renderHeatmap(data.heatmap) },
+            { name: 'Economy', fn: () => renderEconomyChart(data.economic) },
+            { name: 'AgeHistogram', fn: () => renderAgeHistogram(data.survival_age_raw) },
+            { name: 'SurvivalScatter', fn: () => renderSurvivalScatter(data.scatter_data) },
+            { name: 'Embarkation', fn: () => renderEmbarkation(data.chronology.embarkation) },
+            { name: 'SurvivalPort', fn: () => renderSurvivalPort(data.chronology.survival_port) },
+            { name: 'RescueShips', fn: () => renderRescueShips(data.chronology.rescue_ships) },
+            { name: 'PostSituation', fn: () => renderPostSituation(data.chronology.post_situation) },
+            { name: 'FamilyDistribution', fn: () => renderFamilyDistribution(data.family_stats) },
+            { name: 'FamilySurvival', fn: () => renderFamilySurvival(data.family_stats) },
+            { name: 'FamilyClass', fn: () => renderFamilyClass(data.family_stats) }
+        ];
+
+        chartFuncs.forEach(cf => {
+            try {
+                cf.fn();
+            } catch (e) {
+                console.error(`Error rendering ${cf.name}:`, e);
+            }
+        });
+    }
+
+    function renderSankey(data) {
+        if (!data || data.length === 0) return;
+        const ctx = document.getElementById('sankeyChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.sankey) charts.sankey.destroy();
+
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        charts.sankey = new Chart(ctx, {
+            type: 'sankey',
+            data: {
+                datasets: [{
+                    label: 'Flujo de Pasajeros',
+                    data: data,
+                    colorFrom: (c) => isLight ? '#294a60' : '#00f2ff',
+                    colorTo: (c) => isLight ? '#294a60' : '#ff9d00',
+                    colorMode: 'gradient',
+                    size: 'max',
+                    labels: {
+                        color: isLight ? '#294a60' : '#ffffff',
+                        font: { family: 'Roboto Condensed', weight: 'bold', size: 10 }
+                    }
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { family: 'Roboto Condensed' },
+                        bodyFont: { family: 'Roboto Condensed' }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderHeatmap(data) {
+        if (!data || data.length === 0) return;
+        const ctx = document.getElementById('heatmapChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.heatmap) charts.heatmap.destroy();
+
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        const matrixData = data.map(d => ({ x: d.class, y: d.age, v: d.rate, count: d.count }));
+
+        charts.heatmap = new Chart(ctx, {
+            type: 'matrix',
+            data: {
+                datasets: [{
+                    data: matrixData,
+                    backgroundColor(c) {
+                        const v = c.dataset.data[c.dataIndex].v;
+                        const alpha = Math.max(0.2, v / 100);
+                        return isLight ? `rgba(41, 74, 96, ${alpha})` : `rgba(0, 242, 255, ${alpha})`;
+                    },
+                    borderRadius: 4,
+                    borderWidth: 0,
+                    width: ({ chart }) => (chart.chartArea || {}).width / 4 - 4,
+                    height: ({ chart }) => (chart.chartArea || {}).height / 4 - 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { family: 'Roboto Condensed' },
+                        bodyFont: { family: 'Roboto Condensed' },
+                        callbacks: {
+                            label: (c) => {
+                                const d = c.dataset.data[c.dataIndex];
+                                return [`${d.y} | ${d.x}`, `Supervivencia: ${d.v}%`, `N= ${d.count}`];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category',
+                        labels: ['1ª', '2ª', '3ª', 'Tripulación'],
+                        ticks: { color: textColor, font: { family: 'Roboto Condensed', size: 14 } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        type: 'category',
+                        labels: ['Niños (0-14)', 'Jóvenes (15-30)', 'Adultos (31-50)', 'Mayores (51+)'],
+                        ticks: { color: textColor, font: { family: 'Roboto Condensed', size: 14 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderPyramid(pyramid) {
+        if (!pyramid || !pyramid.labels) return;
+        const ctx = document.getElementById('pyramidChart')?.getContext('2d');
+        if (!ctx) return;
+
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        if (charts.pyramid) charts.pyramid.destroy();
+
+        const labels = [...pyramid.labels].reverse();
+        const males = [...pyramid.males].reverse();
+        const females = [...pyramid.females].reverse();
+
+        const maxVal = Math.max(...males, ...females);
+        const chartLimit = Math.ceil(maxVal * 1.1) || 10;
+
+        const getGradient = (c, side) => {
+            const chart = c.chart;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return null;
+            const centerX = (chartArea.left + chartArea.right) / 2;
+            const gradientWidth = (chartArea.right - chartArea.left) * 0.48;
+
+            if (side === 'left') {
+                const g = ctx.createLinearGradient(centerX - gradientWidth, 0, centerX, 0);
+                g.addColorStop(0, 'rgba(0, 162, 255, 0.9)');
+                g.addColorStop(1, 'rgba(0, 162, 255, 0.05)');
+                return g;
+            } else {
+                const g = ctx.createLinearGradient(centerX, 0, centerX + gradientWidth, 0);
+                g.addColorStop(0, 'rgba(255, 94, 175, 0.05)');
+                g.addColorStop(1, 'rgba(255, 94, 175, 0.9)');
+                return g;
+            }
+        };
+
+        charts.pyramid = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Hombres', data: males.map(v => -v), backgroundColor: (c) => getGradient(c, 'left'), borderRadius: 4, categoryPercentage: 1.0, barPercentage: 0.85 },
+                    { label: 'Mujeres', data: females, backgroundColor: (c) => getGradient(c, 'right'), borderRadius: 4, categoryPercentage: 1.0, barPercentage: 0.85 }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: false,
+                        min: -chartLimit,
+                        max: chartLimit,
+                        ticks: { color: textColor, callback: v => Math.abs(v), font: { family: 'Roboto Condensed', size: 13 } },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        position: 'center',
+                        ticks: {
+                            color: '#fff',
+                            font: { family: 'Roboto Condensed', size: 15, weight: '900' },
+                            backdropColor: 'rgba(0,0,0,0.7)',
+                            showLabelBackdrop: true,
+                            padding: 0,
+                            z: 10
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: textColor, font: { family: 'Roboto Condensed' } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.9)',
+                        titleFont: { family: 'Roboto Condensed' },
+                        bodyFont: { family: 'Roboto Condensed' },
+                        callbacks: { label: (c) => `${c.dataset.label}: ${Math.abs(c.raw)}` }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderRadar(survivalData) {
+        if (!survivalData || Object.keys(survivalData).length === 0) return;
+        const ctx = document.getElementById('radarChart')?.getContext('2d');
+        if (!ctx) return;
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const accentCol = isLight ? '#294a60' : '#ff9800';
+        const gridCol = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+
+        if (charts.radar) charts.radar.destroy();
+        charts.radar = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: Object.keys(survivalData),
+                datasets: [{ label: '% Supervivencia', data: Object.values(survivalData), backgroundColor: isLight ? 'rgba(41, 74, 96, 0.2)' : 'rgba(255, 152, 0, 0.2)', borderColor: accentCol, borderWidth: 2 }]
+            },
+            options: { maintainAspectRatio: false, scales: { r: { angleLines: { color: gridCol }, grid: { color: gridCol }, pointLabels: { color: isLight ? '#294a60' : '#aaa' }, ticks: { display: false }, suggestedMax: 100 } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function renderNestedBar(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('nestedBarChart')?.getContext('2d');
+        if (!ctx) return;
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const gridCol = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        if (charts.nested) charts.nested.destroy();
+        const labels = Object.keys(data);
+        charts.nested = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels, datasets: [
+                    { label: 'Hombres', data: labels.map(l => (data[l] && data[l].Hombres) || 0), backgroundColor: '#2196f3' },
+                    { label: 'Mujeres', data: labels.map(l => (data[l] && data[l].Mujeres) || 0), backgroundColor: '#f06292' }
+                ]
+            },
+            options: { maintainAspectRatio: false, scales: { y: { grid: { color: gridCol }, ticks: { color: textColor } }, x: { ticks: { color: textColor } } }, plugins: { legend: { labels: { color: textColor } } } }
+        });
+    }
+
+    function renderEmbarkation(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('embarkationChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.embark) charts.embark.destroy();
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        const palette = ['#ff9d00', '#00f2ff', '#00a2ff', '#ff5eaf', '#00ff88'];
+
+        charts.embark = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    data: Object.values(data),
+                    backgroundColor: palette.map(p => p + '80'),
+                    borderColor: palette,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: { r: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } } },
+                plugins: {
+                    legend: { position: 'right', labels: { color: textColor, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function renderSurvivalPort(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('survivalPortChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.survPort) charts.survPort.destroy();
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        charts.survPort = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: '% Supervivencia',
+                    data: Object.values(data),
+                    backgroundColor: '#00ff8880',
+                    borderColor: '#00ff88',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { min: 0, max: 100, ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: textColor } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function renderRescueShips(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('rescueShipsChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.rescue) charts.rescue.destroy();
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        charts.rescue = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: 'Sobrevivientes',
+                    data: Object.values(data),
+                    backgroundColor: '#00a2ff80',
+                    borderColor: '#00a2ff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } },
+                    y: { ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function renderPostSituation(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('postSituationChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.postSit) charts.postSit.destroy();
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        charts.postSit = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    data: Object.values(data),
+                    backgroundColor: ['#00ff8880', '#ff9d0080', '#66666680'],
+                    borderColor: ['#00ff88', '#ff9d00', '#666666'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function renderDestinations(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('destinationChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.dest) charts.dest.destroy();
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        const palette = [
+            '#00f2ff', '#00a2ff', '#0055ff', '#ff9d00', '#ff5eaf', 
+            '#00ff88', '#b38d42', '#cf5c36', '#8c2f39', '#5b8a72',
+            '#9b5de5', '#f15bb5', '#fee440', '#00bbf9', '#00f5d4'
+        ];
+
+        charts.dest = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    data: Object.values(data),
+                    backgroundColor: palette,
+                    borderWidth: 0,
+                    borderRadius: 10,
+                    spacing: 5
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: {
+                    legend: { position: 'right', labels: { color: textColor, font: { family: 'Roboto Condensed', size: 10 }, usePointStyle: true } }
+                }
+            }
+        });
+    }
+
+    function renderOrigins(data) {
+        if (!data || Object.keys(data).length === 0) return;
+        const ctx = document.getElementById('originChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.origins) charts.origins.destroy();
+
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#294a60' : '#aaa';
+
+        const grad = ctx.createLinearGradient(0, 0, 0, 400);
+        grad.addColorStop(0, 'rgba(255, 157, 0, 0.8)');
+        grad.addColorStop(1, 'rgba(255, 157, 0, 0.1)');
+
+        charts.origins = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: 'Volumen',
+                    data: Object.values(data),
+                    backgroundColor: grad,
+                    borderRadius: 6,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } },
+                    y: { ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.03)' } }
+                }
+            }
+        });
+    }
+
+    // renderSurvivalSex y renderSurvivalClassDetailed eliminados por petición.
+
+    function renderAgeHistogram(data) {
+        if (!data || !data.survivors || !data.deceased) {
+            console.warn("AgeHistogram: Missing data", data);
+            return;
+        }
+        const ctx = document.getElementById('ageHistogramChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.ageHistogram) charts.ageHistogram.destroy();
+
+        const bins = 20;
+        const maxAge = 80;
+        const binWidth = maxAge / bins;
+        const labels = Array.from({ length: bins }, (_, i) => `${Math.round(i * binWidth)}-${Math.round((i + 1) * binWidth)}`);
+
+        const getCounts = (ages) => {
+            const counts = new Array(bins).fill(0);
+            ages.forEach(age => {
+                const binIdx = Math.min(Math.floor(age / binWidth), bins - 1);
+                counts[binIdx]++;
+            });
+            return counts;
+        };
+
+        charts.ageHistogram = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Supervivientes', data: getCounts(data.survivors), backgroundColor: 'rgba(0, 255, 85, 0.5)', borderColor: 'rgba(0, 255, 85, 0.8)', borderWidth: 1, barPercentage: 1.0, categoryPercentage: 1.0 },
+                    { label: 'Fallecidos', data: getCounts(data.deceased), backgroundColor: 'rgba(255, 45, 117, 0.5)', borderColor: 'rgba(255, 45, 117, 0.8)', borderWidth: 1, barPercentage: 1.0, categoryPercentage: 1.0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: '#aaa' }, grid: { display: false } },
+                    y: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#aaa' } }
+                }
+            }
+        });
+    }
+
+    function renderSurvivalScatter(data) {
+        if (!data || !Array.isArray(data)) {
+            console.warn("SurvivalScatter: Missing or invalid data", data);
+            return;
+        }
+        const ctx = document.getElementById('survivalScatterChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.survivalScatter) charts.survivalScatter.destroy();
+
+
+        const chartData = data.map(d => ({
+            x: d.age,
+            y: d.price,
+            v: d.survived,
+            c: d.class,
+            name: d.name
+        }));
+
+        charts.survivalScatter = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Pasajeros',
+                    data: chartData,
+                    pointBackgroundColor: (c) => {
+                        if (!c.raw) return '#fff';
+                        return c.raw.v === 1 ? 'rgba(0, 242, 255, 0.7)' : 'rgba(255, 45, 117, 0.7)';
+                    },
+                    pointRadius: (c) => {
+                        if (!c.raw) return 5;
+                        return c.raw.c === 4 ? 3 : (5 - c.raw.c) * 2; // Size by class
+                    }
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Edad', color: '#aaa' }, ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { title: { display: true, text: 'Tarifa (Liras)', color: '#aaa' }, ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (c) => {
+                                const d = c.raw;
+                                return `${d.name} (${d.age} años) - ${d.y} L. | ${d.v === 1 ? 'Sobreviviente' : 'Fallecido'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderEconomyChart(data) {
+        if (!data || !data.by_class) return;
+        const ctx = document.getElementById('economyChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.economy) charts.economy.destroy();
+
+        const isLight = document.body.getAttribute('data-theme') === 'light';
+        const labels = Object.keys(data.by_class);
+        const values = Object.values(data.by_class);
+        const totalLiras = values.reduce((a, b) => a + b, 0);
+        const conv = data.conversion_factor || 5.8;
+        const totalEur = Math.round(totalLiras * conv);
+
+        // Spectacular Radial Gradients for Gauge
+        const generateGradient = (index) => {
+            const colors = [
+                ['#00f2ff', '#0066ff'], // 1ª
+                ['#ff9d00', '#ff5e00'], // 2ª
+                ['#ff5eaf', '#ff2d75'], // 3ª B
+                ['#00ff88', '#008855']  // 3ª P
+            ];
+            const pair = colors[index % colors.length];
+            const grad = ctx.createLinearGradient(0, 0, 0, 400);
+            grad.addColorStop(0, pair[0]);
+            grad.addColorStop(1, pair[1]);
+            return grad;
+        };
+
+        charts.economy = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: labels.map((_, i) => generateGradient(i)),
+                    borderWidth: 0,
+                    hoverOffset: 20,
+                    borderRadius: 20,
+                    spacing: 10
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '80%',
+                circumference: 180,
+                rotation: -90,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: isLight ? '#294a60' : '#aaa',
+                            font: { family: 'Roboto Condensed', size: 13 },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { family: 'Roboto Condensed' },
+                        bodyFont: { family: 'Roboto Condensed' },
+                        callbacks: {
+                            label: (c) => `${c.label}: ${c.raw.toLocaleString()} L. (~${Math.round(c.raw * conv).toLocaleString()}€)`
+                        }
+                    }
+                }
+            },
+            plugins: [{
+                id: 'gaugeText',
+                beforeDraw: (chart) => {
+                    const { ctx, width, height } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    const centerX = width / 2;
+                    const centerY = height * 0.75;
+
+                    // Total EUR Glow
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = 'rgba(255, 157, 0, 0.5)';
+                    ctx.font = 'bold 36px Outfit, sans-serif';
+                    ctx.fillStyle = isLight ? '#294a60' : '#fff';
+                    ctx.fillText(`${totalEur.toLocaleString()}€`, centerX, centerY - 20);
+
+                    ctx.shadowBlur = 0;
+                    ctx.font = '600 12px Roboto Condensed, sans-serif';
+                    ctx.fillStyle = isLight ? '#666' : '#888';
+                    ctx.fillText('INVERSIÓN TOTAL ESTIMADA', centerX, centerY + 15);
+                    ctx.restore();
+                }
+            }]
+        });
+    }
+
+    function countUp(id, endValue, suffix = '', isFloat = false) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // Use data-raw-value for reliable start value tracking
+        const startValue = parseFloat(el.getAttribute('data-raw-value')) || 0;
+        const duration = 1000;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = 1 - Math.pow(1 - Math.min(elapsed / duration, 1), 3); // Ease out cubic
+            const current = startValue + (endValue - startValue) * progress;
+
+            el.innerText = (isFloat ? current.toFixed(1) : Math.round(current).toLocaleString()) + suffix;
+            el.setAttribute('data-raw-value', current); // Store current progress as raw
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                el.setAttribute('data-raw-value', endValue); // Ensure final exact value
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    function updateDashboardSummary(data) {
+        if (!data || !data.subset_info) return;
+        try {
+            countUp('summary-total', data.subset_info.total || 0);
+
+            const mentions = data.subset_info.mentions || 0;
+            countUp('summary-mentions', mentions);
+
+            const eur = data.subset_info.total_eur || 0;
+            countUp('summary-economy', eur, '€');
+
+            const age = (data.avg_age !== null && data.avg_age !== undefined) ? Number(data.avg_age) : 0;
+            countUp('summary-age', age, '', true);
+
+            const subset = data.subset_info.name;
+            const overallTotal = data.subset_info.overall_total || data.subset_info.total || 1;
+            const status = data.status || {};
+            const survivorsCount = status['SOBREVIVIENTE'] || 0;
+            const deceasedCount = (status['FALLECIDO/A'] || 0) + (status['DESAPARECIDO/A'] || 0);
+
+            let rate = 0;
+            if (subset === 'deceased') {
+                rate = (deceasedCount / overallTotal) * 100;
+                document.getElementById('summary-rate-label').innerText = 'Tasa Mortalidad';
+                document.getElementById('summary-rate').className = 'stat-value glow-text-deceased';
+            } else {
+                rate = (survivorsCount / overallTotal) * 100;
+                document.getElementById('summary-rate-label').innerText = 'Supervivencia';
+                document.getElementById('summary-rate').className = 'stat-value glow-text-success';
+            }
+            countUp('summary-rate', rate, '%', true);
+
+        } catch (err) {
+            console.error("Summary update error:", err);
+        }
+    }
+    // --- FAMILY ANALYTICS --- 
+    function renderFamilyDistribution(familyData) {
+        if (!familyData || !familyData.distribution) return;
+        const ctx = document.getElementById('familyDistributionChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.familyDistribution) charts.familyDistribution.destroy();
+
+        try {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            const textColor = isLight ? '#294a60' : '#aaa';
+            const color = isLight ? '#294a60' : '#00a2ff';
+
+            const labels = Object.keys(familyData.distribution);
+            const data = Object.values(familyData.distribution);
+
+            charts.familyDistribution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pasajeros',
+                        data: data,
+                        backgroundColor: color,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { family: 'var(--font-tech)' },
+                            bodyFont: { family: 'var(--font-main)' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: textColor },
+                            grid: { color: 'rgba(128,128,128,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: textColor, font: { family: 'var(--font-tech)', size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Chart Render Error:", e);
+            document.getElementById('familyDistributionChart').parentElement.innerHTML = 
+                `<div style="color:#ff4444; font-size:12px; font-family:monospace; padding:10px; overflow:auto">[Render Error]<br>${e.message}</div>`;
+        }
+    }
+
+    function renderFamilySurvival(familyData) {
+        if (!familyData || !familyData.survival) return;
+        const ctx = document.getElementById('familySurvivalChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.familySurvival) charts.familySurvival.destroy();
+
+        try {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            const textColor = isLight ? '#294a60' : '#aaa';
+            const colorSurv = isLight ? '#2E8B57' : '#00ff55';
+            const colorDead = '#ff2d75';
+
+            const labels = Object.keys(familyData.survival);
+            const survivedData = labels.map(l => familyData.survival[l].survived);
+            const deadData = labels.map(l => familyData.survival[l].total - familyData.survival[l].survived);
+
+            charts.familySurvival = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Supervivientes', data: survivedData, backgroundColor: colorSurv, borderRadius: 2 },
+                        { label: 'Fallecidos/Desaparecidos', data: deadData, backgroundColor: colorDead, borderRadius: 2 }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: textColor, font: { family: 'var(--font-tech)' } } },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { family: 'var(--font-tech)' },
+                            bodyFont: { family: 'var(--font-main)' },
+                            callbacks: {
+                                footer: (items) => {
+                                    let total = 0;
+                                    let surv = 0;
+                                    items.forEach(i => {
+                                        total += i.raw;
+                                        if(i.datasetIndex === 0) surv = i.raw;
+                                    });
+                                    let pct = total > 0 ? ((surv / total) * 100).toFixed(1) : 0;
+                                    return 'Tasa de supervivencia: ' + pct + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { color: textColor },
+                            grid: { color: 'rgba(128,128,128,0.1)' }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor, font: { family: 'var(--font-tech)', size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Chart Render Error:", e);
+            document.getElementById('familySurvivalChart').parentElement.innerHTML = 
+                `<div style="color:#ff4444; font-size:12px; font-family:monospace; padding:10px; overflow:auto">[Render Error]<br>${e.message}</div>`;
+        }
+    }
+
+    function renderFamilyClass(familyData) {
+        if (!familyData || !familyData.class_distribution) return;
+        const ctx = document.getElementById('familyClassChart')?.getContext('2d');
+        if (!ctx) return;
+        if (charts.familyClass) charts.familyClass.destroy();
+
+        try {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            const textColor = isLight ? '#294a60' : '#aaa';
+
+            const classes = ['1ª Clase', '2ª Clase', '3ª Clase', 'Tripulación'];
+            
+            const sizeLabels = ['1 Persona (Solo)', '2 Personas (Pareja)', '3-4 Personas', '5-9 Personas', '10+ Personas'];
+            const colors = isLight ? 
+                ['#294a60', '#5b8a72', '#b38d42', '#cf5c36', '#8c2f39'] : 
+                ['#00a2ff', '#00ff55', '#ff9d00', '#ff2d75', '#a200ff'];
+
+            const datasets = sizeLabels.map((sl, idx) => {
+                return {
+                    label: sl,
+                    data: classes.map(c => (familyData.class_distribution[c] || {})[sl] || 0),
+                    backgroundColor: colors[idx]
+                };
+            });
+
+            charts.familyClass = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: classes,
+                    datasets: datasets
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: textColor, font: { family: 'var(--font-tech)', size: 9 }, boxWidth: 10 } 
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: textColor, font: { family: 'var(--font-tech)' } },
+                            grid: { display: false }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: textColor },
+                            grid: { color: 'rgba(128,128,128,0.1)' }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Chart Render Error:", e);
+            document.getElementById('familyClassChart').parentElement.innerHTML = 
+                `<div style="color:#ff4444; font-size:12px; font-family:monospace; padding:10px; overflow:auto">[Render Error]<br>${e.message}</div>`;
+        }
+    }
+
+</script>
+{% endblock %}```

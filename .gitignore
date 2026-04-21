@@ -1,0 +1,75 @@
+# =========================================================
+# .gitignore - Proyecto S.S. Sirio
+# =========================================================
+
+# --- VARIABLES DE ENTORNO (¡CRÍTICO!) ---
+.env
+.env.local
+.env.*.local
+
+# --- PYTHON ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# --- FLASK ---
+instance/
+.webassets-cache
+
+# --- BASE DE DATOS ---
+*.db
+*.sqlite3
+*.sql
+
+# --- ARCHIVOS SUBIDOS POR USUARIOS ---
+static/uploads/*
+!static/uploads/.gitkeep
+
+# --- BACKUPS Y EXPORTS ---
+db_backups/
+exports/
+*.csv
+*.zip
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- LOGS ---
+*.log
+logs/
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- TESTING ---
+.pytest_cache/
+htmlcov/
+.coverage
+.tox/
+
+# --- DOCUMENTACIÓN TEMPORAL ---
+*.tmp
+*.bak
+*.old
+
+# --- SCRATCH Y CLUTTER ---
+test_*.py
+verify_*.py
+tmp_*.py
+scratch/
+.gemini/
+*.sql
+*.zip
+*.csv

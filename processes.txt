@@ -1,0 +1,299 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0  22700 13952 ?        Ss   Feb02   0:39 /usr/lib/systemd/systemd --system --deserialize=120
+root           2  0.0  0.0      0     0 ?        S    Feb02   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        S    Feb02   0:00 [pool_workqueue_release]
+root           4  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-rcu_g]
+root           5  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-rcu_p]
+root           6  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-slub_]
+root           7  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-netns]
+root          10  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/0:0H-events_highpri]
+root          12  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-mm_pe]
+root          13  0.0  0.0      0     0 ?        I    Feb02   0:00 [rcu_tasks_kthread]
+root          14  0.0  0.0      0     0 ?        I    Feb02   0:00 [rcu_tasks_rude_kthread]
+root          15  0.0  0.0      0     0 ?        I    Feb02   0:00 [rcu_tasks_trace_kthread]
+root          16  0.0  0.0      0     0 ?        S    Feb02   0:03 [ksoftirqd/0]
+root          17  0.0  0.0      0     0 ?        I    Feb02   0:33 [rcu_preempt]
+root          18  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/0]
+root          19  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/0]
+root          20  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/0]
+root          21  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/2]
+root          22  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/2]
+root          23  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/2]
+root          24  0.0  0.0      0     0 ?        S    Feb02   0:03 [ksoftirqd/2]
+root          26  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/2:0H-events_highpri]
+root          27  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/4]
+root          28  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/4]
+root          29  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/4]
+root          30  0.0  0.0      0     0 ?        S    Feb02   0:02 [ksoftirqd/4]
+root          32  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/4:0H-events_highpri]
+root          33  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/6]
+root          34  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/6]
+root          35  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/6]
+root          36  0.0  0.0      0     0 ?        S    Feb02   0:02 [ksoftirqd/6]
+root          38  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/6:0H-events_highpri]
+root          39  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/1]
+root          40  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/1]
+root          41  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/1]
+root          42  0.0  0.0      0     0 ?        S    Feb02   0:02 [ksoftirqd/1]
+root          44  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/1:0H-events_highpri]
+root          45  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/3]
+root          46  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/3]
+root          47  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/3]
+root          48  0.0  0.0      0     0 ?        S    Feb02   0:02 [ksoftirqd/3]
+root          50  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/3:0H-events_highpri]
+root          51  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/5]
+root          52  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/5]
+root          53  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/5]
+root          54  0.0  0.0      0     0 ?        S    Feb02   0:02 [ksoftirqd/5]
+root          56  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/5:0H-events_highpri]
+root          57  0.0  0.0      0     0 ?        S    Feb02   0:00 [cpuhp/7]
+root          58  0.0  0.0      0     0 ?        S    Feb02   0:00 [idle_inject/7]
+root          59  0.0  0.0      0     0 ?        S    Feb02   0:01 [migration/7]
+root          60  0.0  0.0      0     0 ?        S    Feb02   0:03 [ksoftirqd/7]
+root          62  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/7:0H-events_highpri]
+root          63  0.0  0.0      0     0 ?        S    Feb02   0:00 [kdevtmpfs]
+root          64  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-inet_]
+root          65  0.0  0.0      0     0 ?        S    Feb02   0:00 [kauditd]
+root          69  0.0  0.0      0     0 ?        S    Feb02   0:00 [khungtaskd]
+root          71  0.0  0.0      0     0 ?        S    Feb02   0:00 [oom_reaper]
+root          73  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-write]
+root          74  0.0  0.0      0     0 ?        S    Feb02   0:11 [kcompactd0]
+root          75  0.0  0.0      0     0 ?        SN   Feb02   0:00 [ksmd]
+root          78  0.0  0.0      0     0 ?        SN   Feb02   0:06 [khugepaged]
+root          79  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kinte]
+root          80  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kbloc]
+root          81  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-blkcg]
+root          82  0.0  0.0      0     0 ?        S    Feb02   0:00 [irq/9-acpi]
+root          84  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-tpm_d]
+root          85  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-ata_s]
+root          86  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-md]
+root          87  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-md_bi]
+root          88  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-edac-]
+root          89  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-devfr]
+root          90  0.0  0.0      0     0 ?        S    Feb02   0:00 [watchdogd]
+root          92  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/4:1H-kblockd]
+root          93  0.0  0.0      0     0 ?        S    Feb02   0:02 [kswapd0]
+root          94  0.0  0.0      0     0 ?        S    Feb02   0:00 [ecryptfs-kthread]
+root          95  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kthro]
+root          97  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-acpi_]
+root          98  0.0  0.0      0     0 ?        S    Feb02   0:00 [scsi_eh_0]
+root          99  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-scsi_]
+root         100  0.0  0.0      0     0 ?        S    Feb02   0:00 [scsi_eh_1]
+root         101  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-scsi_]
+root         103  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-mld]
+root         104  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/3:1H-kblockd]
+root         105  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-ipv6_]
+root         112  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kstrp]
+root         116  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/u385:0]
+root         121  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-crypt]
+root         133  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-charg]
+root         158  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/6:1H-kblockd]
+root         162  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/2:1H-kblockd]
+root         163  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/5:1H-kblockd]
+root         174  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/0:1H-kblockd]
+root         175  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/1:1H-kblockd]
+root         176  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/7:1H-kblockd]
+root         201  0.0  0.0      0     0 ?        S    Feb02   0:00 [hwrng]
+root         249  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-raid5]
+root         289  0.0  0.0      0     0 ?        S    Feb02   0:02 [jbd2/vda1-8]
+root         290  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-ext4-]
+root         385  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kmpat]
+root         386  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-kmpat]
+root         510  0.0  0.0      0     0 ?        S    Feb02   0:00 [jbd2/vda16-8]
+root         511  0.0  0.0      0     0 ?        I<   Feb02   0:00 [kworker/R-ext4-]
+message+     730  0.0  0.0  10096  5248 ?        Ss   Feb02   0:02 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         744  0.0  0.0  19076  9344 ?        Ss   Feb02   0:01 /usr/lib/systemd/systemd-logind
+root         867  0.0  0.0   6148  2048 ttyS0    Ss+  Feb02   0:00 /sbin/agetty -o -p -- \u --keep-baud 115200,57600,38400,9600 - vt220
+root         947  0.0  0.0   6104  1920 tty1     Ss+  Feb02   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+root        1037  0.0  0.4 2194036 74288 ?       Ssl  Feb02   0:43 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+root        1448  0.0  0.0 1238384 14812 ?       Sl   Feb02   0:14 /usr/bin/containerd-shim-runc-v2 -namespace moby -id 9f0fd96353cf8c1daf5940f6d28d0abc5449d807ab2140b519979d50ab3239f8 -address /run/containerd/containerd.sock
+1000        1469  0.0  0.0    860   256 ?        Ss   Feb02   0:08 tini -- /docker-entrypoint.sh
+root        1503  0.0  0.0 1745100 3968 ?        Sl   Feb02   0:00 /usr/bin/docker-proxy -proto tcp -host-ip 0.0.0.0 -host-port 5678 -container-ip 172.18.0.2 -container-port 5678 -use-listen-fd
+root        1510  0.0  0.0 1818832 4096 ?        Sl   Feb02   0:00 /usr/bin/docker-proxy -proto tcp -host-ip :: -host-port 5678 -container-ip 172.18.0.2 -container-port 5678 -use-listen-fd
+1000        1528  0.0  1.6 22410536 273412 ?     Sl   Feb02   3:41 node /usr/local/bin/n8n
+1000        1610  0.0  0.7 21707828 116224 ?     Sl   Feb02   3:04 node --disallow-code-generation-from-strings --disable-proto=delete /usr/local/lib/node_modules/n8n/node_modules/.pnpm/@n8n+task-runner@file+packages+@n8n+task-runner_@opentelemetry+api@1.9.0_@opentelemetry_eb51b38615a039445701c88b088f88d0/node_modules/@n8n/task-runner/dist/start.js
+root       15848  0.0  0.0      0     0 ?        I<   Feb03   0:00 [kworker/R-tls-s]
+root      204227  0.0  0.0   7224  2560 ?        Ss   Feb04   0:00 /usr/sbin/cron -f -P
+root      204234  0.0  0.3 2171552 49536 ?       Ssl  Feb04   2:02 /usr/bin/containerd
+polkitd   204273  0.0  0.0 383704  9416 ?        Ssl  Feb04   0:02 /usr/lib/polkit-1/polkitd --no-debug
+root      204275  0.0  0.1 223416 27008 ?        SLsl Feb04   0:10 /sbin/multipathd -d -s
+root      204281  0.0  0.9 255832 159300 ?       S<s  Feb04   0:23 /usr/lib/systemd/systemd-journald
+root      204283  0.0  0.0  12024  8064 ?        Ss   Feb04   0:06 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root      204286  0.0  0.0  21660  2172 ?        Ss   Feb04   0:00 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+www-data  204287  0.0  0.0  24096  8904 ?        S    Feb04   0:00 nginx: worker process
+www-data  204288  0.0  0.0  24360  8912 ?        S    Feb04   0:00 nginx: worker process
+www-data  204289  0.0  0.0  24232  8972 ?        S    Feb04   0:01 nginx: worker process
+www-data  204290  0.0  0.0  24116  8832 ?        S    Feb04   0:00 nginx: worker process
+www-data  204291  0.0  0.0  24092  8804 ?        S    Feb04   0:01 nginx: worker process
+www-data  204292  0.0  0.0  24112  8872 ?        S    Feb04   0:00 nginx: worker process
+www-data  204293  0.0  0.0  24368  9128 ?        S    Feb04   0:01 nginx: worker process
+www-data  204294  0.0  0.0  24104  8540 ?        S    Feb04   0:00 nginx: worker process
+systemd+  204313  0.0  0.0  21692 12928 ?        Ss   Feb04   0:02 /usr/lib/systemd/systemd-resolved
+systemd+  204314  0.0  0.0  91028  7808 ?        Ssl  Feb04   0:00 /usr/lib/systemd/systemd-timesyncd
+root      204318  0.0  0.0 468828 13312 ?        Ssl  Feb04   0:02 /usr/libexec/udisks2/udisksd
+syslog    204320  0.0  0.0 222508  6016 ?        Ssl  Feb04   0:07 /usr/sbin/rsyslogd -n -iNONE
+root      204334  0.0  0.0 392092 12544 ?        Ssl  Feb04   0:00 /usr/sbin/ModemManager
+root      204337  0.0  0.0  25048  6400 ?        Ss   Feb04   0:00 /usr/lib/systemd/systemd-udevd
+root      204355  0.0  0.0      0     0 ?        S    Feb04   0:00 [psimon]
+systemd+  204356  0.0  0.0  19024  9472 ?        Ss   Feb04   0:00 /usr/lib/systemd/systemd-networkd
+postgres  204357  0.0  0.2 231604 34432 ?        Ss   Feb04   0:05 /usr/lib/postgresql/18/bin/postgres -D /var/lib/postgresql/18/main -c config_file=/etc/postgresql/18/main/postgresql.conf
+postgres  204358  0.0  0.0 231604 10112 ?        Ss   Feb04   0:00 postgres: 18/main: io worker 0
+postgres  204359  0.0  0.0 231604  7296 ?        Ss   Feb04   0:00 postgres: 18/main: io worker 1
+postgres  204360  0.0  0.0 231604  6784 ?        Ss   Feb04   0:00 postgres: 18/main: io worker 2
+postgres  204361  0.0  0.0 231740 12032 ?        Ss   Feb04   0:00 postgres: 18/main: checkpointer 
+postgres  204362  0.0  0.0 231756  7424 ?        Ss   Feb04   0:01 postgres: 18/main: background writer 
+postgres  204365  0.0  0.0 231604 10368 ?        Ss   Feb04   0:01 postgres: 18/main: walwriter 
+postgres  204366  0.0  0.0 233180  8964 ?        Ss   Feb04   0:01 postgres: 18/main: autovacuum launcher 
+postgres  204367  0.0  0.0 233180  8452 ?        Ss   Feb04   0:00 postgres: 18/main: logical replication launcher 
+root      277150  0.0  0.0  17384  6272 ?        Ss   Feb04   0:00 /usr/sbin/wpa_supplicant -u -s -O DIR=/run/wpa_supplicant GROUP=netdev
+avahi     277358  0.0  0.0   8556  4480 ?        Ss   Feb04   0:00 avahi-daemon: running [ubuntu.local]
+avahi     277359  0.0  0.0   8424  1316 ?        S    Feb04   0:00 avahi-daemon: chroot helper
+root      278113  0.0  0.0      0     0 ?        S    Feb04   0:00 [psimon]
+root      326058  0.0  0.0  20280 11136 ?        Ss   05:11   0:00 /usr/lib/systemd/systemd --user
+root      326059  0.0  0.0  21160  3380 ?        S    05:11   0:00 (sd-pam)
+root      326065  0.0  0.0      0     0 ?        S    05:11   0:00 [psimon]
+root      326990  0.0  0.0   7872  3584 ?        Ss   05:16   0:03 bash -s
+root      327032  0.0  0.0   2800  1792 ?        S    05:17   0:00 sh /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/bin/antigravity-server --start-server --host=127.0.0.1 --port=0 --connection-token-file /root/.antigravity-server/.1504c8cc4b34dbfbb4a97ebe954b3da2b5634516.token --telemetry-level off --enable-remote-auto-shutdown --accept-server-license-terms
+root      327041  0.0  0.9 11881680 160116 ?     Sl   05:17   0:40 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/server-main.js --start-server --host=127.0.0.1 --port=0 --connection-token-file /root/.antigravity-server/.1504c8cc4b34dbfbb4a97ebe954b3da2b5634516.token --telemetry-level off --enable-remote-auto-shutdown --accept-server-license-terms
+root      327066  0.2  0.5 1449240 87256 ?       Sl   05:17   2:05 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/bootstrap-fork --type=ptyHost --logsPath /root/.antigravity-server/data/logs/20260205T051700
+root      327163  0.0  0.0   8252  4352 pts/0    Ss   05:17   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      333064  0.0  0.0  17172  6912 pts/0    S+   06:01   0:00 sudo systemctl status hesiox.service
+root      333065  0.0  0.0  17172  2496 pts/1    Ss   06:01   0:00 sudo systemctl status hesiox.service
+root      333066  0.0  0.0  17632  6368 pts/1    S+   06:01   0:00 systemctl status hesiox.service
+root      333067  0.0  0.0   6500  2432 pts/1    S+   06:01   0:00 pager
+root      333597  0.0  0.0   8252  4480 pts/2    Ss   06:05   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      333652  0.0  0.0  17172  6912 pts/2    S+   06:05   0:00 sudo systemctl status hesiox.service
+root      333653  0.0  0.0  17172  2496 pts/3    Ss   06:05   0:00 sudo systemctl status hesiox.service
+root      333654  0.0  0.0  17632  6244 pts/3    S+   06:05   0:00 systemctl status hesiox.service
+root      333656  0.0  0.0   6500  2432 pts/3    S+   06:05   0:00 pager
+root      334956  0.0  0.0   8252  4480 pts/4    Ss   06:16   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      335022  0.0  0.0  17168  6912 pts/4    S+   06:16   0:00 sudo systemctl status hesiox.service
+root      335023  0.0  0.0  17168  2492 pts/5    Ss   06:16   0:00 sudo systemctl status hesiox.service
+root      335024  0.0  0.0  17632  6340 pts/5    S+   06:16   0:00 systemctl status hesiox.service
+root      335025  0.0  0.0   6500  2432 pts/5    S+   06:16   0:00 pager
+root      337567  0.0  0.0   8252  4480 pts/6    Ss   06:39   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      337620  0.0  0.0  17168  6912 pts/6    S+   06:39   0:00 sudo systemctl status hesiox.service
+root      337621  0.0  0.0  17168  2464 pts/7    Ss   06:39   0:00 sudo systemctl status hesiox.service
+root      337622  0.0  0.0  17632  6300 pts/7    S+   06:39   0:00 systemctl status hesiox.service
+root      337623  0.0  0.0   6500  2432 pts/7    S+   06:39   0:00 pager
+root      337806  0.0  0.0   8252  4480 pts/8    Ss   06:39   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      339386  0.0  0.0  17172  6912 pts/8    S+   06:53   0:00 sudo systemctl status hesiox.service
+root      339387  0.0  0.0  17172  2496 pts/9    Ss   06:53   0:00 sudo systemctl status hesiox.service
+root      339388  0.0  0.0  17632  6096 pts/9    S+   06:53   0:00 systemctl status hesiox.service
+root      339389  0.0  0.0   6500  2432 pts/9    S+   06:53   0:00 pager
+root      339581  0.0  0.0   8252  4480 pts/10   Ss   06:53   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      339812  0.0  0.0  17168  6912 pts/10   S+   06:55   0:00 sudo systemctl status hesiox.service
+root      339813  0.0  0.0  17168  2496 pts/11   Ss   06:55   0:00 sudo systemctl status hesiox.service
+root      339814  0.0  0.0  17632  6224 pts/11   S+   06:55   0:00 systemctl status hesiox.service
+root      339815  0.0  0.0   6500  2432 pts/11   S+   06:55   0:00 pager
+root      340250  0.0  0.0   8252  4480 pts/12   Ss   06:59   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      340419  0.0  0.0  17172  6912 pts/12   S+   07:00   0:00 sudo systemctl status hesiox.service
+root      340420  0.0  0.0  17172  2496 pts/13   Ss   07:00   0:00 sudo systemctl status hesiox.service
+root      340421  0.0  0.0  17632  6360 pts/13   S+   07:00   0:00 systemctl status hesiox.service
+root      340422  0.0  0.0   6500  2432 pts/13   S+   07:00   0:00 pager
+root      341354  0.0  0.0   8252  4480 pts/14   Ss   07:07   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      341411  0.0  0.0  17164  6912 pts/14   S+   07:07   0:00 sudo systemctl status hesiox.service
+root      341412  0.0  0.0  17164  2432 pts/15   Ss   07:07   0:00 sudo systemctl status hesiox.service
+root      341413  0.0  0.0  17632  6344 pts/15   S+   07:07   0:00 systemctl status hesiox.service
+root      341414  0.0  0.0   6500  2432 pts/15   S+   07:07   0:00 pager
+root      341984  0.0  0.0   8252  4480 pts/16   Ss   07:12   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      342453  0.0  0.0  17164  6912 pts/16   S+   07:16   0:00 sudo systemctl status hesiox.service
+root      342454  0.0  0.0  17164  2492 pts/17   Ss   07:16   0:00 sudo systemctl status hesiox.service
+root      342455  0.0  0.0  17632  6328 pts/17   S+   07:16   0:00 systemctl status hesiox.service
+root      342457  0.0  0.0   6500  2432 pts/17   S+   07:16   0:00 pager
+root      342969  0.0  0.0   8252  4480 pts/18   Ss   07:19   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      343312  0.0  0.0  17168  6912 pts/18   S+   07:21   0:00 sudo systemctl status hesiox.service
+root      343313  0.0  0.0  17168  2492 pts/19   Ss   07:21   0:00 sudo systemctl status hesiox.service
+root      343314  0.0  0.0  17632  6248 pts/19   S+   07:21   0:00 systemctl status hesiox.service
+root      343316  0.0  0.0   6500  2432 pts/19   S+   07:21   0:00 pager
+root      344032  0.0  0.0   8252  4480 pts/20   Ss   07:26   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      344091  0.0  0.0  17164  6912 pts/20   S+   07:26   0:00 sudo systemctl status hesiox.service
+root      344092  0.0  0.0  17164  2492 pts/21   Ss   07:26   0:00 sudo systemctl status hesiox.service
+root      344093  0.0  0.0  17632  6276 pts/21   S+   07:26   0:00 systemctl status hesiox.service
+root      344094  0.0  0.0   6500  2432 pts/21   S+   07:26   0:00 pager
+root      344248  0.0  0.0   8252  4480 pts/22   Ss   07:27   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      344278  0.0  0.0  17168  6912 pts/22   S+   07:27   0:00 sudo systemctl status hesiox.service
+root      344279  0.0  0.0  17168  2492 pts/23   Ss   07:27   0:00 sudo systemctl status hesiox.service
+root      344280  0.0  0.0  17632  6352 pts/23   S+   07:27   0:00 systemctl status hesiox.service
+root      344281  0.0  0.0   6500  2304 pts/23   S+   07:27   0:00 pager
+root      345107  0.0  0.0   8252  4480 pts/24   Ss   07:35   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      345162  0.0  0.0  17168  6912 pts/24   S+   07:35   0:00 sudo systemctl status hesiox.service
+root      345164  0.0  0.0  17168  2496 pts/25   Ss   07:35   0:00 sudo systemctl status hesiox.service
+root      345165  0.0  0.0  17632  6328 pts/25   S+   07:35   0:00 systemctl status hesiox.service
+root      345166  0.0  0.0   6500  2432 pts/25   S+   07:35   0:00 pager
+root      345687  0.0  0.0   8252  4480 pts/26   Ss   07:38   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      345754  0.0  0.0  17168  6912 pts/26   S+   07:38   0:00 sudo systemctl status hesiox.service
+root      345755  0.0  0.0  17168  2492 pts/27   Ss   07:38   0:00 sudo systemctl status hesiox.service
+root      345756  0.0  0.0  17632  6196 pts/27   S+   07:38   0:00 systemctl status hesiox.service
+root      345757  0.0  0.0   6500  2432 pts/27   S+   07:38   0:00 pager
+root      345920  0.0  0.0   8252  4480 pts/28   Ss   07:39   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      345950  0.0  0.0  17168  6912 pts/28   S+   07:39   0:00 sudo systemctl status hesiox.service
+root      345951  0.0  0.0  17168  2492 pts/29   Ss   07:39   0:00 sudo systemctl status hesiox.service
+root      345952  0.0  0.0  17632  6356 pts/29   S+   07:39   0:00 systemctl status hesiox.service
+root      345953  0.0  0.0   6500  2304 pts/29   S+   07:39   0:00 pager
+root      346027  0.0  0.0   8252  4480 pts/30   Ss   07:39   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      346069  0.0  0.0  17168  6912 pts/30   S+   07:39   0:00 sudo systemctl status hesiox.service
+root      346070  0.0  0.0  17168  2496 pts/31   Ss   07:39   0:00 sudo systemctl status hesiox.service
+root      346071  0.0  0.0  17632  6368 pts/31   S+   07:39   0:00 systemctl status hesiox.service
+root      346072  0.0  0.0   6500  2432 pts/31   S+   07:39   0:00 pager
+root      346493  0.0  0.0   8252  4480 pts/32   Ss   07:43   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      346546  0.0  0.1  34368 24448 ?        Ss   07:43   0:05 /opt/hesiox/venv/bin/python3 /opt/hesiox/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --limit-request-line 8190 app:app
+root      346549  0.0  0.0  17168  6912 pts/32   S+   07:43   0:00 sudo systemctl status hesiox.service
+root      346550  0.0  0.0  17168  2496 pts/33   Ss   07:43   0:00 sudo systemctl status hesiox.service
+root      346551  0.0  0.0  17632  6356 pts/33   S+   07:43   0:00 systemctl status hesiox.service
+root      346552  0.0  0.0   6500  2304 pts/33   S+   07:43   0:00 pager
+root      346553  0.0  9.9 5130412 1620168 ?     Sl   07:43   0:24 /opt/hesiox/venv/bin/python3 /opt/hesiox/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --limit-request-line 8190 app:app
+root      346554  0.1  8.7 5541872 1427632 ?     Sl   07:43   1:00 /opt/hesiox/venv/bin/python3 /opt/hesiox/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --limit-request-line 8190 app:app
+root      346562  0.2 10.2 7255640 1671560 ?     Sl   07:43   1:29 /opt/hesiox/venv/bin/python3 /opt/hesiox/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --limit-request-line 8190 app:app
+root      346563  0.0  9.9 5128208 1617208 ?     Sl   07:43   0:24 /opt/hesiox/venv/bin/python3 /opt/hesiox/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --limit-request-line 8190 app:app
+postgres  346724  0.0  0.1 236164 26232 ?        Ss   07:44   0:02 postgres: 18/main: hesiox_user hesiox 127.0.0.1(53488) idle
+postgres  346844  0.0  0.1 235180 26640 ?        Ss   07:45   0:02 postgres: 18/main: hesiox_user hesiox 127.0.0.1(51254) idle
+postgres  346860  0.0  0.1 235852 26212 ?        Ss   07:45   0:02 postgres: 18/main: hesiox_user hesiox 127.0.0.1(51308) idle
+postgres  346861  0.0  0.1 236244 26376 ?        Ss   07:45   0:01 postgres: 18/main: hesiox_user hesiox 127.0.0.1(51318) idle
+postgres  346940  0.0  0.1 236012 26500 ?        Ss   07:46   0:01 postgres: 18/main: hesiox_user hesiox 127.0.0.1(57218) idle
+root      349629  0.0  0.0   8252  4352 pts/34   Ss+  08:18   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      350777  0.0  0.0   8252  4480 pts/35   Ss+  08:25   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      356986  0.0  0.0   7872  3584 ?        Ss   10:12   0:02 bash -s
+root      357144  0.0  0.0   8252  4352 pts/36   Ss+  10:12   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      362973  0.0  0.0      0     0 ?        I    11:13   0:01 [kworker/2:0-rcu_gp]
+root      368213  0.0  0.0      0     0 ?        I    12:50   0:01 [kworker/0:1-events]
+root      369220  0.0  0.0   7872  3584 ?        Ss   13:17   0:01 bash -s
+root      369341  0.0  0.0   8252  4352 pts/37   Ss+  13:17   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      375532  0.0  0.0      0     0 ?        I    14:17   0:00 [kworker/1:0-cgroup_destroy]
+root      381262  0.0  0.0      0     0 ?        I    15:50   0:00 [kworker/5:1-mm_percpu_wq]
+root      382296  0.0  0.0      0     0 ?        I    16:10   0:00 [kworker/3:3-events]
+root      383243  0.0  0.0  15648 11148 ?        Ss   16:29   0:07 sshd: root@notty
+root      383346  0.0  0.0   7872  3584 ?        Ss   16:29   0:00 bash -s
+root      383389 10.2  1.9 44076364 315928 ?     Sl   16:29  15:54 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node --dns-result-order=ipv4first /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=false
+root      383400  0.0  0.4 1394992 80656 ?       Sl   16:29   0:02 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/bootstrap-fork --type=fileWatcher
+root      383423  0.0  0.8 1089716 144048 ?      Sl   16:29   0:04 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/css-language-features/server/dist/node/cssServerMain --node-ipc --clientProcessId=383389
+root      383463  0.0  0.0   8252  4480 pts/38   Ss   16:29   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      383489  2.8  7.6 5959604 1255344 ?     Sl   16:29   4:27 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/antigravity/bin/language_server_linux_x64 --enable_lsp --extension_server_port 46497 --csrf_token aadd7213-1b49-4c4b-b948-e159c0ba161c --random_port --workspace_id file_opt_hesiox --cloud_code_endpoint https://daily-cloudcode-pa.googleapis.com --app_data_dir antigravity --parent_pipe_path /tmp/server_6a8b3a99774d9cc0
+root      383529  0.0  0.9 1093100 151992 ?      Sl   16:29   0:01 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node --max-old-space-size=3072 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/node_modules/typescript/lib/tsserver.js --serverMode partialSemantic --useInferredProjectPerProjectRoot --disableAutomaticTypingAcquisition --cancellationPipeName /tmp/vscode-typescript0/46c37cd444532892dadd/tscancellation-ad853d25369bd98d0093.tmp* --locale en --noGetErrOnBackgroundUpdate --canUseWatchEvents --validateDefaultNpmLocation --useNodeIpc
+root      383530  0.0  1.0 1107220 170432 ?      Sl   16:29   0:02 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node --max-old-space-size=3072 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/node_modules/typescript/lib/tsserver.js --useInferredProjectPerProjectRoot --enableTelemetry --cancellationPipeName /tmp/vscode-typescript0/46c37cd444532892dadd/tscancellation-796e4a6f13d40fb91615.tmp* --locale en --noGetErrOnBackgroundUpdate --canUseWatchEvents --validateDefaultNpmLocation --useNodeIpc
+root      383543  0.1  1.3 1139584 219836 ?      Sl   16:29   0:11 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/html-language-features/server/dist/node/htmlServerMain --node-ipc --clientProcessId=383389
+root      383550  0.0  0.4 1036236 79280 ?       Sl   16:29   0:00 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/node_modules/typescript/lib/typingsInstaller.js --globalTypingsCacheLocation /root/.cache/typescript/5.9 --enableTelemetry --typesMapLocation /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/node_modules/typescript/lib/typesMap.json --validateDefaultNpmLocation
+root      387285  0.0  0.0      0     0 ?        I    17:01   0:00 [kworker/6:2-mm_percpu_wq]
+root      388285  0.0  0.0      0     0 ?        I    17:09   0:00 [kworker/5:0-cgroup_destroy]
+root      390302  0.0  0.3 1020032 63596 ?       Sl   17:27   0:00 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProcessId=383389
+root      391822  0.0  0.0      0     0 ?        I    17:40   0:00 [kworker/4:3-mm_percpu_wq]
+root      394059  0.0  0.0      0     0 ?        I    17:59   0:00 [kworker/2:2-events]
+root      394175  0.0  0.0      0     0 ?        I    18:00   0:00 [kworker/3:0-mm_percpu_wq]
+root      394554  0.0  0.0      0     0 ?        I    18:03   0:00 [kworker/u384:4-events_power_efficient]
+root      397141  0.0  0.0      0     0 ?        I    18:20   0:00 [kworker/7:3-cgroup_destroy]
+root      398241  0.0  0.0      0     0 ?        I    18:27   0:00 [kworker/u384:1-events_unbound]
+root      398498  0.0  0.0      0     0 ?        I    18:30   0:00 [kworker/0:3-events]
+root      400487  0.0  0.0      0     0 ?        I    18:47   0:00 [kworker/u384:2-flush-253:0]
+root      400758  0.0  0.0      0     0 ?        I    18:50   0:00 [kworker/6:3-rcu_par_gp]
+root      401094  0.0  0.0      0     0 ?        I    18:52   0:00 [kworker/1:2-mm_percpu_wq]
+root      401101  0.0  0.0      0     0 ?        I    18:52   0:00 [kworker/7:1-events]
+root      401773  0.0  0.0      0     0 ?        I    18:57   0:00 [kworker/4:0]
+root      401777  0.0  0.0      0     0 ?        I    18:57   0:00 [kworker/7:2-events]
+root      401825  0.0  0.0      0     0 ?        I    18:58   0:00 [kworker/u384:0-events_unbound]
+root      402466  0.0  0.0   8252  4480 pts/39   Ss+  19:03   0:00 /bin/bash --init-file /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+root      402595  0.2  0.3 1016132 59564 ?       Sl   19:03   0:00 /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/node /root/.antigravity-server/bin/1.16.5-1504c8cc4b34dbfbb4a97ebe954b3da2b5634516/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clientProcessId=383389
+root      402664  0.0  0.0   6112  1792 ?        S    19:03   0:00 sleep 10
+root      402669  0.0  0.0   6112  1792 ?        S    19:03   0:00 sleep 10
+root      402671  0.0  0.0   6112  1792 ?        S    19:03   0:00 sleep 10
+root      402673  0.0  0.0   6112  1792 ?        S    19:03   0:00 sleep 10
+root      402684  0.0  0.0  13016  5504 pts/38   R+   19:03   0:00 ps aux

@@ -1,0 +1,187 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Gestión de Publicaciones — Proyecto Sirio{% endblock %}
+{% block page_title %}Gestión de Publicaciones / Fuentes{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Base de Datos Maestra</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn-sirio" title="Volver a Hemerotecas">
+    <i class="fa-solid fa-building-columns"></i>
+    <span class="btn-text">HEMEROTECAS</span>
+</a>
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('hemerotecas.nueva_publicacion') }}" class="btn-sirio active" title="Nueva Publicación">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">NUEVA</span>
+</a>
+
+<a href="{{ url_for('hemerotecas.migrar_publicacion') }}" class="btn-sirio" title="Migrar Publicaciones">
+    <i class="fa-solid fa-right-left"></i>
+    <span class="btn-text">MIGRAR</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column h-100 overflow-hidden">
+
+    <!-- Metrics Strip -->
+    <div class="p-3 pb-0 flex-shrink-0">
+        <div class="metric-strip" style="max-width: 800px;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Publicaciones Registradas</span>
+                    <span class="metric-value">{{ total_medios }}</span>
+                </div>
+                <i class="fa-solid fa-newspaper metric-icon"></i>
+            </div>
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Noticias Vinculadas</span>
+                    <span class="metric-value text-info">{{ total_noticias }}</span>
+                </div>
+                <i class="fa-solid fa-link metric-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    {% if filtro_activo %}
+    <div class="px-3 pt-3">
+        <div
+            class="alert bg-dark-panel border border-warning d-flex justify-content-between align-items-center mb-0 p-2 px-3 rounded-0">
+            <div>
+                <span class="text-muted small text-uppercase me-2"><i class="fa-solid fa-filter text-warning me-1"></i>
+                    Hemeroteca:</span>
+                <strong class="text-warning">{{ filtro_activo }}</strong>
+            </div>
+            <a href="{{ url_for('hemerotecas.lista_publicaciones') }}" class="btn-sirio btn-sm text-decoration-none">
+                <i class="fa-solid fa-times me-1"></i> Borrar Filtro
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Toolbar -->
+    <div
+        class="px-3 py-2 border-bottom border-light bg-dark-panel d-flex justify-content-between align-items-center mt-3 flex-shrink-0">
+        <div class="position-relative" style="max-width: 400px; width: 100%;">
+            <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+                style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem;"></i>
+            <input type="text" id="buscador" class="form-control-sirio ps-4"
+                placeholder="Buscar publicación, ciudad o país..." onkeyup="filtrarTabla()">
+        </div>
+
+    </div>
+
+    <!-- Table Container -->
+    <div class="content-scroll-area bg-dark flex-grow-1 overflow-auto p-0" style="position: relative;">
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table-sirio table-hover m-0" id="tablaMedios">
+                <thead style="position: sticky; top: 0; z-index: 100; background: var(--ds-bg-panel);">
+                    <tr>
+                        <th style="width: 25%">Nombre Publicación</th>
+                        <th style="width: 20%">Hemeroteca</th>
+                        <th style="width: 12%">Ciudad</th>
+                        <th style="width: 12%">Provincia</th>
+                        <th style="width: 10%">País</th>
+                        <th style="width: 5%">URL</th>
+                        <th style="width: 6%" class="text-center">Arts.</th>
+                        <th style="width: 10%" class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in publicaciones %}
+                    <tr class="fila-medio">
+                        <td>
+                            <strong class="text-white d-block" style="font-size: 13px;">{{ p.nombre }}</strong>
+                            {% if p.tipo %}
+                            <span class="badge bg-dark border border-secondary text-muted rounded-0"
+                                style="font-size: 9px; padding: 2px 4px;">{{ p.tipo|upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.hemeroteca_rel %}
+                            <a href="{{ url_for('hemerotecas.lista_publicaciones', hemeroteca_id=p.hemeroteca_id) }}"
+                                class="text-accent text-decoration-none small">
+                                <i class="fa-solid fa-building-columns opacity-50 me-1"></i> {{
+                                p.hemeroteca_rel.nombre }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted opacity-50 small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-light small">{{ p.ciudad or '-' }}</td>
+                        <td class="text-light small">{{ p.provincia or '-' }}</td>
+                        <td>
+                            {% if p.pais_publicacion %}
+                            {% set c_code = p.pais_publicacion|country_flag %}
+                            <div class="d-flex align-items-center" title="{{ p.pais_publicacion }}">
+                                {% if c_code and c_code != 'xx' %}<span class="fi fi-{{ c_code }} me-2"></span>{% endif
+                                %}
+                                <span class="small text-muted">{{ p.pais_publicacion[:3]|upper }}</span>
+                            </div>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.url_publi %}
+                            <a href="{{ p.url_publi }}" target="_blank" rel="noopener" title="Ver publicación"
+                                class="text-info" style="font-size: 1rem;">
+                                <i class="fa-solid fa-paperclip"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.articulos|length > 0 %}
+                            <a href="{{ url_for('noticias.listar', publicacion=p.nombre) }}"
+                                class="badge bg-dark border border-secondary text-info text-decoration-none hover-warning"
+                                title="Ver noticias de {{ p.nombre }}">
+                                {{ p.articulos|length }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted opacity-25 small">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="btn-group">
+                                <a href="{{ url_for('hemerotecas.editar_publicacion', id=p.id_publicacion) }}"
+                                    class="p-1 px-2" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a href="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}"
+                                    class="p-1 px-2 hover-danger" title="Borrar"
+                                    onclick="return confirm('¿Borrar esta publicación?')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filtrarTabla() {
+        let input = document.getElementById("buscador");
+        let filter = input.value.toUpperCase();
+        let tr = document.querySelectorAll(".fila-medio");
+
+        tr.forEach(row => {
+            let text = row.textContent || row.innerText;
+            if (text.toUpperCase().indexOf(filter) > -1) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
+
+{% endblock %}

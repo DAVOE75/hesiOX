@@ -1,0 +1,146 @@
+/* ============================================================
+   04-BUTTONS.CSS - Button Styles
+   ============================================================ */
+
+/* ====== BOTONES PRINCIPALES ====== */
+.btn-warning {
+    background: linear-gradient(135deg, var(--app-accent) 0%, var(--app-accent-hover) 100%);
+    border: 2px solid var(--app-accent);
+    color: #1a1a1a;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, var(--app-accent-hover) 0%, var(--app-accent) 100%);
+    border-color: var(--app-accent-hover);
+    color: #000;
+    box-shadow: 0 6px 12px rgba(255, 152, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-outline-warning {
+    color: var(--app-accent);
+    border: 2px solid var(--app-accent);
+    background: transparent;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+    background: var(--app-accent);
+    border-color: var(--app-accent);
+    color: #5a5a5a !important;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.25);
+}
+
+.btn-info {
+    background-color: var(--app-info);
+    border-color: var(--app-info);
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #c4c4c4;
+    border-color: #c4c4c4;
+}
+
+.btn-success {
+    background-color: var(--app-success);
+    border-color: var(--app-success);
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #5a9442;
+    border-color: #5a9442;
+}
+
+.btn-danger {
+    background-color: var(--app-danger);
+    border-color: var(--app-danger);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #a00000;
+    border-color: #a00000;
+}
+
+/* ====== ICONOS Y BOTONES AUXILIARES ====== */
+.icon {
+    display: inline-block;
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands";
+    font-weight: 900;
+    margin-right: 8px;
+    vertical-align: -0.12em;
+}
+
+.btn .icon,
+.btn i[class*="fa-"] {
+    margin-right: 0px;
+    font-size: 1.0em;
+}
+
+/* ====== TOOLBAR BUTTONS ====== */
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    color: #ccc;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.toolbar-btn-primary {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+.toolbar-btn-primary:hover {
+    background: rgba(255, 152, 0, 0.25);
+    color: #ff9800;
+    border-color: var(--app-accent);
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.1);
+}
+
+/* ====== ACTION BUTTONS ====== */
+.action-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}

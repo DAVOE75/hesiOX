@@ -1,0 +1,241 @@
+/* ============================================================
+   12-TINYMCE-SIRIO.CSS
+   Aggressive Sirio Theme Overrides for TinyMCE 6
+   ============================================================ */
+
+/* Main container */
+/* Main container */
+.tox-tinymce {
+    border: 1px solid #333 !important;
+    border-radius: 2px !important;
+    background-color: #0f0f0f !important;
+}
+
+/* Fix focus border - change from blue to orange */
+.tox-tinymce.tox-tinymce--focused {
+    border-color: #ff9800 !important;
+    box-shadow: 0 0 0 1px #ff9800 !important;
+}
+
+/* 2. TOOLBAR & MENUS */
+.tox .tox-menubar, 
+.tox .tox-toolbar, 
+.tox .tox-toolbar__primary, 
+.tox .tox-toolbar__overflow,
+.tox .tox-toolbar-overlord,
+.tox .tox-editor-header {
+    background-color: #181818 !important;
+    background-image: none !important;
+    border-bottom: 1px solid #111 !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
+/* Toolbar separator */
+.tox .tox-toolbar__group {
+    border-right: 1px solid #222 !important;
+}
+
+/* 3. BUTTONS (Rest State) */
+.tox .tox-tbtn {
+    border-radius: 2px !important;
+    color: #bbb !important;
+    height: 34px !important;
+    margin: 2px !important;
+}
+
+.tox .tox-tbtn svg {
+    fill: #bbb !important;
+}
+
+/* Hover State */
+.tox .tox-tbtn:hover {
+    background-color: #333 !important;
+    color: #fff !important;
+}
+.tox .tox-tbtn:hover svg {
+    fill: #fff !important;
+}
+
+/* Active/Enabled State - SIRIO ORANGE (Aggressive Kill Blue) */
+.tox .tox-tbtn--enabled, 
+.tox .tox-tbtn--enabled:hover,
+.tox .tox-tbtn--active,
+.tox .tox-tbtn--active:hover {
+    background-color: #ff9800 !important;
+    color: #000 !important;
+    border: none !important;
+}
+
+.tox .tox-tbtn--enabled svg,
+.tox .tox-tbtn--active svg {
+    fill: #000 !important;
+}
+
+.tox .tox-tbtn--select:hover {
+    background-color: rgba(255, 152, 0, 0.2) !important;
+    color: #ff9800 !important;
+}
+
+/* Split buttons */
+.tox .tox-split-button:hover {
+    background-color: #333 !important;
+}
+
+/* 4. MENUS & DROPDOWNS */
+.tox .tox-menu {
+    background-color: #1a1a1a !important;
+    border: 1px solid #444 !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.8) !important;
+    padding: 4px !important;
+    border-radius: 2px !important;
+}
+
+.tox .tox-collection__item {
+    color: #ccc !important;
+    border-radius: 2px !important;
+}
+
+/* Selection in menus */
+.tox .tox-collection__item--active {
+    background-color: #ff9800 !important;
+    color: #000 !important;
+}
+
+.tox .tox-collection__item--active .tox-collection__item-label,
+.tox .tox-collection__item--active svg {
+    color: #000 !important;
+    fill: #000 !important;
+}
+
+/* Checkmarks and Enabled items in menus */
+.tox .tox-collection__item--enabled {
+    color: #ff9800 !important;
+}
+.tox .tox-collection__item--enabled svg {
+    fill: #ff9800 !important;
+}
+
+/* Remove any blue highlights in dropdowns */
+.tox .tox-mbtn--active,
+.tox .tox-mbtn:focus:not(:disabled),
+.tox .tox-mbtn--select:hover {
+    background: #333 !important;
+    color: #ff9800 !important;
+    border-radius: 2px !important;
+}
+
+/* Color Picker & Swatches */
+.tox .tox-swatch--active {
+    box-shadow: inset 0 0 0 2px #ff9800 !important;
+}
+
+/* 5. PROMPTS & DIALOGS (Aggressive) */
+.tox-dialog-wrap__backdrop {
+    background-color: rgba(0,0,0,0.7) !important;
+    backdrop-filter: blur(4px);
+}
+
+.tox .tox-dialog {
+    background-color: #121212 !important;
+    border: 1px solid #ff9800 !important;
+    color: #eee !important;
+    border-radius: 2px !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9) !important;
+}
+
+.tox .tox-dialog__header,
+.tox .tox-dialog__footer {
+    background-color: #0a0a0a !important;
+    color: #eee !important;
+    border-color: #333 !important;
+}
+
+.tox .tox-dialog__title {
+    color: #ff9800 !important;
+    font-family: 'Roboto Condensed', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+
+.tox .tox-button {
+    background-color: #2b2b2b !important;
+    border: 1px solid #444 !important;
+    color: #eee !important;
+    border-radius: 0px !important;
+    text-transform: uppercase !important;
+    font-size: 11px !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 700 !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s !important;
+}
+
+.tox .tox-button:hover {
+    background-color: #333 !important;
+    border-color: #666 !important;
+}
+
+/* Primary buttons (OK, Save, etc) */
+.tox .tox-button:not(.tox-button--secondary) {
+    background-color: #ff9800 !important;
+    color: #000 !important;
+    border: none !important;
+}
+
+.tox .tox-button:not(.tox-button--secondary):hover {
+    background-color: #ffa726 !important;
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.4) !important;
+}
+
+.tox .tox-textfield, 
+.tox .tox-listbox fieldset,
+.tox .tox-selectfield select {
+    background-color: #000 !important;
+    border: 1px solid #333 !important;
+    color: #ddd !important;
+    border-radius: 0px !important;
+}
+
+.tox .tox-textfield:focus {
+    border-color: #ff9800 !important;
+}
+
+/* 6. STATUS BAR */
+.tox .tox-statusbar {
+    background-color: #0a0a0a !important;
+    border-top: 1px solid #222 !important;
+    color: #666 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+}
+
+.tox .tox-statusbar__path-item, 
+.tox .tox-statusbar__wordcount,
+.tox .tox-statusbar a,
+.tox .tox-statusbar__branding svg {
+    color: #555 !important;
+    fill: #555 !important;
+}
+
+/* 7. NOTIFICATIONS & TOOLTIPS */
+.tox .tox-notification--in {
+    background-color: #222 !important;
+    border: 1px solid #ff9800 !important;
+    color: #fff !important;
+    border-radius: 2px !important;
+}
+
+.tox .tox-tooltip__body {
+    background-color: #000 !important;
+    color: #ff9800 !important;
+    border: 1px solid #ff9800 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    border-radius: 0px !important;
+}
+
+/* Kill all default blue outlines */
+.tox *:focus {
+    outline: none !important;
+}

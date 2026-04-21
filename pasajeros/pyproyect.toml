@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sirio"
+version = "0.1.0"
+description = "Librería y CLI para análisis y visualización de datos de los pasajeros del Sirio (Humanidades Digitales)"
+authors = [
+    { name = "David García Pascual" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "plotly>=5.24",
+    "kaleido>=0.2",
+    "pyvis>=0.3",
+    "folium>=0.16",
+    "selenium>=4.23",
+    "webdriver-manager>=4.0",
+    "streamlit>=1.37",
+    "openpyxl>=3.1",
+    "python-pptx>=0.6.23",
+    "setuptools>=61.0",
+    "geopy>=2.4",
+    "branca>=0.7"
+]
+
+[project.scripts]
+sirio = "sirio_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["sirio"]

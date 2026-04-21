@@ -1,0 +1,100 @@
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'DELETE', 'OPTIONS'} /api/vector_layers/<int:layer_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/vector_layers/<int:layer_id>/export
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/vector_layers/import
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/vector_layers/reorder
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/vector_layers/migrate
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/noticias_por_publicacion
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/batch_geocoding
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/eliminar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/borrar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/restaurar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/limpiar_referencias
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/rebuscar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia/gestion/contexto_lugar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/rebuscar_batch
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/batch_delete
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/batch_unlink
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/reactivar_batch
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/editar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/cambiar-tipo-masivo
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/tipos-ubicacion/listar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/tipos-ubicacion/restaurar/<string:codigo>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/tipos-ubicacion/crear
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'PUT'} /api/tipos-ubicacion/editar/<int:tipo_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'DELETE', 'OPTIONS'} /api/tipos-ubicacion/eliminar/<int:tipo_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/unificar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/gestion/crear
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia/ciudad/<nombre>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia_corpus/embeddings
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia_corpus
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /cartografia/topografia-semantica
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia/semantica
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/noticia/toggle_incluido/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/cartografia/semantica/interpretar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia/semantica/detalles
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia/rareza
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia_corpus/export
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /noticias/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /noticias/detalle/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/cartografia_noticia/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/valores_filtrados
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/map-data
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/map-distribution
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /filtrar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /actualizar_nota/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /cartografia/gestor
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /listar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS', 'POST'} /nueva
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS', 'POST'} /editar/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /duplicar/<int:noticia_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /eliminar/<int:noticia_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /imagen/eliminar/<int:imagen_id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/ediciones/<tipo_recurso>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /noticias/lector
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/noticias/simple_list
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/noticia/contenido/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/publicaciones_list
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/noticia/resumir/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/noticia/update_content/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /noticia/generar_pdf_final
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS', 'POST'} /temas/gestor
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /api/temas
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/temas/renombrar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/temas/eliminar
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /api/temas/crear
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS'} /hemerotecas
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS', 'POST'} /hemeroteca/nueva
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'GET', 'HEAD', 'OPTIONS', 'POST'} /hemeroteca/editar/<int:id>
+Apr 14 07:28:43 ubuntu gunicorn[1389142]:   {'OPTIONS', 'POST'} /hemeroteca/borrar/<int:id>
+Apr 14 07:31:38 ubuntu gunicorn[1389143]: [AIService Gemini] Configurando Gemini con modelo: gemini-2.5-flash
+Apr 14 07:31:38 ubuntu gunicorn[1389143]: [AIService Gemini] Llamando a generate_content...
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: [AIService Gemini] Respuesta recibida: response:
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: GenerateContentResponse(
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:     done=True,
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:     iterator=None,
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:     result=protos.GenerateContentResponse({
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:       "candidates": [
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:         {
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:           "content": {
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:             "parts": [
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:               {
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:                 "text": "Como experto en el an\u00e1lisis diacr\u00f3nico de la expresi\u00f3n emocional a trav\u00e9s de grandes corpus, este conjunto de datos ofrece una ventana fascinante, aunque fragmentada, a la psico-historia latente en el material textual subyacente. La volatilidad es, sin duda, la caracter\u00edstica m\u00e1s definitoria: el corpus no revela una evoluci\u00f3n emocional gradual, sino m\u00e1s bien picos de intensidad extrema separados por vastos silencios temporales. El hito temporal m\u00e1s prominente se sit\u00faa inequ\u00edvocamente entre agosto y noviembre de 1906, extendi\u00e9ndose con menor intensidad hasta 1908. Durante este breve per\u00edodo, observamos una explosi\u00f3n de todas las emociones, con `Tristeza` alcanzando un asombroso pico de 155 ocurrencias en 1906-08, superando con creces a cualquier otra emoci\u00f3n en cualquier otro momento. Este cl\u00faster sugiere un evento o serie de eventos de gran calado que generaron una resonancia emocional profunda y multifac\u00e9tica, dominada por el pesar, pero acompa\u00f1ada de una fuerte `Anticipaci\u00f3n`, `Confianza`, `Ira` y `Miedo`. El abrupto descenso posterior a 1908, con el corpus volviendo a una quietud emocional casi total hasta 1919 y luego hasta el siglo XXI, subraya la naturaleza epis\u00f3dica de estos datos.\n\nDentro de este periodo de alta intensidad, los cruces narrativos son reveladores. Mientras que `Tristeza` mantiene una hegemon\u00eda casi constante durante el pico de 1906-1908, no es la \u00fanica protagonista. En 1906-08, la `Anticipaci\u00f3n` (112) y la `Confianza` (95), junto con la `Ira` y el `Miedo` (ambos con 90), muestran una coexistencia compleja con la `Tristeza`, sugiriendo un per\u00edodo de grandes expectativas y ansiedades mezcladas con desesperaci\u00f3n. Un cruce notable se observa en 1907-05, donde el `Miedo` (16) emerge como la emoci\u00f3n predominante en un contexto general de bajos recuentos, superando incluso a la `Tristeza` y la `Anticipaci\u00f3n` en ese mes espec\u00edfico. Similarmente, en 1907-04, la `Ira` (8) se eleva temporalmente sobre otras emociones casi nulas, indicando quiz\u00e1s un punto de fricci\u00f3n o frustraci\u00f3n particular. Estos micro-picos de emociones espec\u00edficas, aunque peque\u00f1os en valor absoluto, son significativos en su contexto relativo, sugiriendo cambios en el foco emocional del discurso.\n\nLa transici\u00f3n al siglo XXI muestra una reducci\u00f3n dr\u00e1stica en la cantidad y variedad de emociones registradas. Los datos a partir de 2013 son extremadamente espor\u00e1dicos y de baja frecuencia, lo que dificulta extraer tendencias robustas. Sin embargo, incluso en esta era de baja expresi\u00f3n, la `Anticipaci\u00f3n` (15 en 2017-08) y la `Alegr\u00eda` (12 en 2017-08) logran breves resurgimientos, sugiriendo momentos puntuales de optimismo o expectativa. Es interesante notar que, incluso en la proyecci\u00f3n o registro futuro de 2026-01, solo `Ira` y `Tristeza` aparecen con un valor m\u00ednimo de 1, lo que podr\u00eda interpretarse como una persistencia subyacente de estas emociones negativas, actuando como un tenue eco de las intensidades pasadas. El corpus, en su conjunto, pinta un cuadro de una historia emocional marcada por convulsiones intensas y localizadas, m\u00e1s que por una corriente continua de sentimiento."
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:               }
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:             ],
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:             "role": "model"
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:           },
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:           "finish_reason": "STOP",
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:           "index": 0
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:         }
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:       ],
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:       "usage_metadata": {
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:         "prompt_token_count": 1162,
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:         "candidates_token_count": 796,
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:         "total_token_count": 3613
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:       },
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:       "model_version": "gemini-2.5-flash"
+Apr 14 07:31:52 ubuntu gunicorn[1389143]:     }),
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: )
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: [AIService Gemini] Texto: Como experto en el análisis diacrónico de la expresión emocional a través de grandes corpus, este conjunto de datos ofrece una ventana fascinante, aunque fragmentada, a la psico-historia latente en el material textual subyacente. La volatilidad es, sin duda, la característica más definitoria: el corpus no revela una evolución emocional gradual, sino más bien picos de intensidad extrema separados por vastos silencios temporales. El hito temporal más prominente se sitúa inequívocamente entre agosto y noviembre de 1906, extendiéndose con menor intensidad hasta 1908. Durante este breve período, observamos una explosión de todas las emociones, con `Tristeza` alcanzando un asombroso pico de 155 ocurrencias en 1906-08, superando con creces a cualquier otra emoción en cualquier otro momento. Este clúster sugiere un evento o serie de eventos de gran calado que generaron una resonancia emocional profunda y multifacética, dominada por el pesar, pero acompañada de una fuerte `Anticipación`, `Confianza`, `Ira` y `Miedo`. El abrupto descenso posterior a 1908, con el corpus volviendo a una quietud emocional casi total hasta 1919 y luego hasta el siglo XXI, subraya la naturaleza episódica de estos datos.
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: Dentro de este periodo de alta intensidad, los cruces narrativos son reveladores. Mientras que `Tristeza` mantiene una hegemonía casi constante durante el pico de 1906-1908, no es la única protagonista. En 1906-08, la `Anticipación` (112) y la `Confianza` (95), junto con la `Ira` y el `Miedo` (ambos con 90), muestran una coexistencia compleja con la `Tristeza`, sugiriendo un período de grandes expectativas y ansiedades mezcladas con desesperación. Un cruce notable se observa en 1907-05, donde el `Miedo` (16) emerge como la emoción predominante en un contexto general de bajos recuentos, superando incluso a la `Tristeza` y la `Anticipación` en ese mes específico. Similarmente, en 1907-04, la `Ira` (8) se eleva temporalmente sobre otras emociones casi nulas, indicando quizás un punto de fricción o frustración particular. Estos micro-picos de emociones específicas, aunque pequeños en valor absoluto, son significativos en su contexto relativo, sugiriendo cambios en el foco emocional del discurso.
+Apr 14 07:31:52 ubuntu gunicorn[1389143]: La transición al siglo XXI muestra una reducción drástica en la cantidad y variedad de emociones registradas. Los datos a partir de 2013 son extremadamente esporádicos y de baja frecuencia, lo que dificulta extraer tendencias robustas. Sin embargo, incluso en esta era de baja expresión, la `Anticipación` (15 en 2017-08) y la `Alegría` (12 en 2017-08) logran breves resurgimientos, sugiriendo momentos puntuales de optimismo o expectativa. Es interesante notar que, incluso en la proyección o registro futuro de 2026-01, solo `Ira` y `Tristeza` aparecen con un valor mínimo de 1, lo que podría interpretarse como una persistencia subyacente de estas emociones negativas, actuando como un tenue eco de las intensidades pasadas. El corpus, en su conjunto, pinta un cuadro de una historia emocional marcada por convulsiones intensas y localizadas, más que por una corriente continua de sentimiento.

@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: sirio
+Version: 0.1.0
+Summary: Librería para análisis y visualización de datos de los pasajeros del Sirio (Humanidades Digitales)
+Author: David
+Classifier: Programming Language :: Python :: 3
+Classifier: Intended Audience :: Education
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Requires-Python: >=3.9
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: plotly
+Requires-Dist: pyvis
+Requires-Dist: folium
+Requires-Dist: selenium
+Requires-Dist: streamlit
+Requires-Dist: branca
+Requires-Dist: matplotlib
+Requires-Dist: kaleido
+Requires-Dist: python-pptx
+Dynamic: author
+Dynamic: classifier
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

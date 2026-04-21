@@ -1,0 +1,282 @@
+<div class="table-responsive" style="overflow-x:auto;">
+  <table class="table table-sirio table-hover align-middle tabla-prensa" id="tablaRegistros" style="min-width:1200px; table-layout:fixed;">
+    <thead class="text-white sticky-top" style="z-index: 10;">
+      <tr class="table-header-center">
+        <th data-col="check" class="col-check text-center" style="width: 28px; min-width: 28px; max-width: 32px;">
+          <input type="checkbox" id="selectAll" class="doc-check form-check-input" title="Seleccionar todos">
+        </th>
+
+        <th data-col="ref" class="text-center col-ref" title="Referencia" style="width: 38px; min-width: 32px; max-width: 44px;">Ref.</th>
+        <th data-col="titulo" class="col-title" style="min-width: 320px; max-width: 480px; width: 28%; word-break:break-word;">Título</th>
+        <th data-col="publicacion" class="text-center col-pub">Publicación</th>
+          <th data-col="url_publi" class="text-center col-url">URL Publicación</th>
+        <th data-col="autor" class="text-center col-auth">Autor</th>
+        <th data-col="fecha" class="text-center col-date">Fecha</th>
+        <th data-col="num" class="text-center col-num">Núm.</th>
+
+        <!-- NUEVAS -->
+        <th data-col="pag" class="text-center col-page">Pág.</th>
+        <th data-col="ciudad" class="text-center col-city">Ciudad</th>
+        <th data-col="pais" class="text-center col-country">País</th>
+        <th data-col="tipo" class="text-center col-type">Tipo</th>
+        <th data-col="licencia" class="text-center col-lic">Licencia</th>
+
+        <th data-col="temas" class="text-center col-topics">Temas</th>
+        <th data-col="incl" class="text-center col-incl">Incl.</th>
+        <th data-col="acciones" class="text-center col-actions">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for r in registros %}
+      <tr data-id="{{ r.id }}" data-titulo="{{ (r.titulo or '[Sin título]')|e }}"
+        data-publicacion="{{ (r.publicacion or '')|e }}" data-fecha="{{ (r.fecha_original or '')|e }}"
+        data-autor="{{ (r.autor or '')|e }}" data-ciudad="{{ (r.ciudad or '')|e }}" data-temas="{{ (r.temas or '')|e }}"
+        data-incluido="{{ 'si' if r.incluido else 'no' }}" data-licencia="{{ (r.licencia or 'CC BY-SA 4.0')|e }}"
+        data-contenido="{{ (r.contenido or '')|e }}"
+        data-texto-original="{{ (r.texto_original or '')|e }}">
+        <!-- CHECK -->
+        <td data-col="check" class="text-center">
+          <input type="checkbox" class="doc-check registro-checkbox form-check-input" data-id="{{ r.id }}">
+        </td>
+
+        <!-- REF -->
+        <td data-col="ref" class="text-center table-v-middle">
+          {% if r.numero_referencia %}
+          <a href="javascript:void(0);" onclick="abrirCita('{{ r.id }}')"
+            class="badge bg-warning bg-opacity-10 text-warning border border-warning link-ref" 
+            style="cursor: pointer; padding: 6px 10px; font-size: 0.85rem; text-decoration: none; transition: all 0.3s ease; display: inline-block;"
+            title="Ver cita bibliográfica"
+            data-bs-toggle="tooltip" 
+            data-bs-placement="top"
+            onmouseover="this.style.backgroundColor='rgba(255, 193, 7, 0.25)'; this.style.transform='scale(1.05)';"
+            onmouseout="this.style.backgroundColor='rgba(255, 193, 7, 0.1)'; this.style.transform='scale(1)';">
+            [{{ r.numero_referencia }}]
+          </a>
+          {% else %}
+          <span class="text-muted small">—</span>
+          {% endif %}
+        </td>
+
+        <!-- TITULO -->
+        <td data-col="titulo" class="table-v-middle">
+          <strong class="text-white">{{ r.titulo or '[Sin título]' }}</strong>
+        </td>
+
+        <!-- PUBLICACION -->
+        <td data-col="publicacion" class="text-center table-v-middle">
+          {% set pub_name = (r.publicacion or '').strip() %}
+
+          {% if r.id_publicacion %}
+          <a href="{{ url_for('hemerotecas.editar_publicacion', id=r.id_publicacion) }}"
+            class="text-accent text-decoration-none font-monospace small">
+            {{ pub_name if pub_name else '—' }}
+          </a>
+          {% else %}
+          {% set pub_id = pub_links.get(pub_name) if pub_links else None %}
+          {% if pub_id %}
+          <a href="{{ url_for('hemerotecas.editar_publicacion', id=pub_id) }}"
+            class="text-accent text-decoration-none link-dotted">
+            {{ pub_name }}
+          </a>
+          {% else %}
+          {{ pub_name if pub_name else '—' }}
+          {% endif %}
+          {% endif %}
+          </td>
+
+          <!-- URL PUBLICACION -->
+          <td data-col="url_publi" class="text-center table-v-middle">
+            {% if r.url_publi %}
+              <a href="{{ r.url_publi }}" target="_blank" rel="noopener" class="text-info small">{{ r.url_publi }}</a>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+        </td>
+
+        <!-- AUTOR -->
+        <td data-col="autor" class="text-center table-v-middle">
+          {% if r.apellido_autor and r.nombre_autor %}
+            {{ r.apellido_autor }}, {{ r.nombre_autor }}
+          {% elif r.apellido_autor %}
+            {{ r.apellido_autor }}
+          {% elif r.nombre_autor %}
+            {{ r.nombre_autor }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+
+        <!-- FECHA -->
+        <td data-col="fecha" class="text-center table-v-middle">
+          {{ r.fecha_original or '—' }}
+        </td>
+
+        <!-- NUMERO -->
+        <td data-col="num" class="text-center table-v-middle">
+          {{ r.numero or '—' }}
+        </td>
+
+        <!-- PÁG. (antes Núm/Vol) -->
+        <td data-col="pag" class="text-center table-v-middle">
+          {{ r.pagina_inicio if r.pagina_inicio else '—' }}
+        </td>
+
+        <!-- CIUDAD -->
+        <td data-col="ciudad" class="text-center table-v-middle">
+          {{ r.ciudad or '—' }}
+        </td>
+
+        <!-- PAÍS -->
+        <td data-col="pais" class="text-center table-v-middle">
+          {% set c_val = (r.pais or r.pais_publicacion) %}
+          {% if c_val %}
+          {% set c_code = c_val|country_flag %}
+          {% if c_code and c_code != 'xx' %}
+          <span class="fi fi-{{ c_code }}" title="{{ c_val }}" style="margin-right: 5px;"></span>
+          {% endif %}
+          {{ c_val }}
+          {% else %}
+          —
+          {% endif %}
+        </td>
+
+        <!-- TIPO -->
+        <td data-col="tipo" class="text-center table-v-middle">
+          {{ (r.tipo_recurso or r.tipo) if (r.tipo_recurso or r.tipo) else '—' }}
+        </td>
+
+        <!-- LICENCIA -->
+        <td data-col="licencia" class="text-center table-v-middle">
+          {{ r.licencia or '—' }}
+        </td>
+
+        <!-- TEMAS (nota editable + temas + recortes) -->
+        <td data-col="temas" class="text-center table-col-temas">
+          <div class="d-flex flex-column justify-content-start align-items-center w-100">
+
+            {% if r.notas %}
+            <div class="nota-editable text-warning small mb-1 w-100" contenteditable="true" data-id="{{ r.id }}">
+              {{ r.notas }}
+            </div>
+            {% else %}
+            <div class="nota-editable text-warning small w-100 mb-1" contenteditable="true" data-id="{{ r.id }}"
+              style="min-height: 10px; opacity: 0.5;"></div>
+            {% endif %}
+
+            <div class="text-light lh-sm">{{ r.temas or '' }}</div>
+
+            {% if r.imagenes.count() > 0 %}
+            <a href="{{ url_for('ver_imagenes_prensa', id=r.id) }}" target="_blank" title="Ver Recortes de Prensa"
+              class="text-accent text-decoration-none small">
+              <i class="fa-solid fa-note-sticky me-1"></i>
+              Ver Recorte
+            </a>
+            {% endif %}
+          </div>
+        </td>
+
+        <!-- INCL -->
+        <td data-col="incl" class="text-center table-v-middle">
+          {{ 'Sí' if r.incluido else 'No' }}
+        </td>
+
+        <!-- ACCIONES -->
+        <td data-col="acciones" class="table-actions-cell text-center table-v-middle text-nowrap">
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-xs btn-outline-secondary px-1 py-0 dropdown-toggle" type="button" id="accionesDropdown{{ r.id }}" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 24px; font-size: 0.85em;">
+              <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm py-0" aria-labelledby="accionesDropdown{{ r.id }}" style="min-width: 100px; font-size: 0.92em;">
+              <li>
+                <a href="{{ url_for('noticias.editar', id=r.id, next=request.full_path) }}" class="dropdown-item d-flex align-items-center text-body small py-1">
+                  <i class="fa-solid fa-pen me-2 text-primary"></i> Editar
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('noticias.noticia_duplicar', noticia_id=r.id) }}" class="dropdown-item d-flex align-items-center text-body small py-1">
+                  <i class="fa-solid fa-copy me-2 text-secondary"></i> Duplicar
+                </a>
+              </li>
+              <li>
+                <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center text-body small py-1 ver-noticia-btn">
+                  <i class="fa-regular fa-file-lines me-2 text-success"></i> Ver
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('noticias.detalle_noticia', id=r.id) }}" class="dropdown-item d-flex align-items-center text-body small py-1">
+                  <i class="fa-solid fa-map-location-dot me-2 text-primary"></i> Ver completo / Cartografía
+                </a>
+              </li>
+              <li>
+                <a href="#" class="dropdown-item d-flex align-items-center text-body small py-1 editar-localizacion-btn" data-id="{{ r.id }}" data-lat="{{ r.latitud or '' }}" data-lon="{{ r.longitud or '' }}">
+                  <i class="fa-solid fa-location-crosshairs me-2 text-warning"></i> Editar localización
+                </a>
+              </li>
+              <li>
+                <a href="{{ url_for('noticia_exportar_pdf', noticia_id=r.id) }}" class="dropdown-item d-flex align-items-center text-body small py-1">
+                  <i class="fa-solid fa-file-pdf me-2 text-danger"></i> PDF
+                </a>
+              </li>
+              <li><hr class="dropdown-divider my-1"></li>
+              <li>
+                <form method="POST" action="{{ url_for('noticias.noticia_eliminar', noticia_id=r.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="dropdown-item d-flex align-items-center text-danger small py-1" style="min-width: 80px; font-size: 0.92em;" title="Eliminar noticia" onclick="return confirm('¿Eliminar esta noticia?');">
+                    <i class="fa-solid fa-trash-can me-2"></i> Eliminar
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+
+      {% else %}
+      <tr>
+        <td colspan="15" class="text-center text-muted p-3">Sin resultados que mostrar</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>
+</div>
+
+<p class="text-end text-warning mt-2">
+  Resultados: <strong>{{ total }}</strong>
+</p>
+
+{% if total_paginas > 1 %}
+<nav aria-label="Paginación" class="mt-3">
+  <ul class="pagination justify-content-center">
+    {% if page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="#" onclick="cambiarPagina('{{ page - 1 }}')">« Anterior</a>
+    </li>
+    {% endif %}
+
+    {% for p in range(inicio, fin + 1) %}
+    {% if p == page %}
+    <li class="page-item active"><a class="page-link fw-bold" href="#">{{ p }}</a></li>
+    {% else %}
+    <li class="page-item"><a class="page-link" href="#" onclick="cambiarPagina('{{ p }}')">{{ p }}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if page < total_paginas %} <li class="page-item">
+      <a class="page-link" href="#" onclick="cambiarPagina('{{ page + 1 }}')">Siguiente »</a>
+      </li>
+      {% endif %}
+  </ul>
+</nav>
+<!-- Filtro de noticias por página -->
+<div class="d-flex justify-content-center align-items-center mt-2 mb-3">
+  <label for="noticiasPorPagina" class="me-2 text-light small fw-bold">Noticias por página:</label>
+  <select id="noticiasPorPagina" name="noticias_por_pagina" class="form-select form-select-sm w-auto" style="min-width: 80px; font-size: 0.95em;">
+    <option value="20" {% if noticias_por_pagina == 20 %}selected{% endif %}>20</option>
+    <option value="50" {% if noticias_por_pagina == 50 %}selected{% endif %}>50</option>
+    <option value="100" {% if noticias_por_pagina == 100 %}selected{% endif %}>100</option>
+    <option value="150" {% if noticias_por_pagina == 150 %}selected{% endif %}>150</option>
+  </select>
+</div>
+{% endif %}

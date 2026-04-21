@@ -1,0 +1,359 @@
+{% extends "base_desktop.html" %}
+
+{% block page_title %}Gestor de Temas{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Administración de Etiquetas</span>
+{% endblock %}
+
+{% block top_actions %}
+<button type="button" class="btn-sirio active" onclick="mostrarModalCrear()">
+    <i class="fa-solid fa-plus me-1"></i> NUEVO TEMA
+</button>
+<div class="vr mx-1 opacity-25"></div>
+<a href="{{ url_for('index') }}" class="btn-sirio">
+    <i class="fa-solid fa-arrow-left me-1"></i> VOLVER AL LISTADO
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column h-100 overflow-hidden bg-dark">
+
+    <!-- Metrics Strip -->
+    <div class="p-3 pb-0 flex-shrink-0">
+        <div class="metric-strip" style="max-width: 600px;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Temas Registrados</span>
+                    <span class="metric-value">{{ temas_stats|length }}</span>
+                </div>
+                <i class="fa-solid fa-tags metric-icon"></i>
+            </div>
+            {% if temas_stats %}
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Tema más frecuente</span>
+                    <span class="metric-value text-info" style="font-size: 0.85rem;">{{ temas_stats[0].nombre }}</span>
+                </div>
+                <i class="fa-solid fa-fire-flame-curved metric-icon text-warning opacity-75"></i>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Toolbar Info -->
+    <div class="px-3 py-2 border-bottom border-secondary bg-dark-panel d-flex justify-content-between align-items-center mt-3 flex-shrink-0">
+        <div class="small">
+             <i class="fa-solid fa-list-check me-2 text-accent"></i>
+             <span class="fw-bold text-accent">{{ temas_stats|length }}</span> <span class="text-muted opacity-75 small text-uppercase letter-spacing-1">categorías definidas</span>
+        </div>
+        <div class="small text-muted opacity-50 d-none d-md-block" style="font-size: 10px;">
+            <i class="fa-solid fa-circle-info me-1"></i> Haz clic en el nombre para renombrar rápidamente.
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-scroll-area bg-dark flex-grow-1 overflow-auto p-0" style="position: relative;">
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table-sirio table-hover m-0" id="tablaTemas">
+                <thead style="position: sticky; top: 0; z-index: 100; background: var(--ds-bg-panel);">
+                    <tr>
+                        <th style="width: 70%;" class="ps-4">Tema / Etiqueta</th>
+                        <th style="width: 15%;" class="text-center">Frecuencia</th>
+                        <th style="width: 15%;" class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="temasTableBody">
+                    {% if not temas_stats %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 opacity-25 fst-italic">
+                            <i class="fa-solid fa-tags d-block fs-2 mb-2"></i>
+                            No hay temas definidos.
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% for t in temas_stats %}
+                    <tr id="row-tema-{{ t.nombre|replace(' ', '-') }}" class="theme-row">
+                        <td class="ps-4 py-2">
+                            <div class="theme-name-container d-flex align-items-center cursor-pointer" onclick="startRenameInline('{{ t.nombre }}')">
+                                <span class="tema-nombre fw-bold text-white-50" style="font-size: 13px;">{{ t.nombre }}</span>
+                                <i class="fa-solid fa-pencil ms-2 opacity-0 edit-hint" style="font-size: 10px; color: var(--ds-accent-primary);"></i>
+                            </div>
+                        </td>
+                        <td class="text-center py-2">
+                            {% if t.cantidad > 10 %}
+                                <span class="badge bg-dark-panel border border-info text-info rounded-0 p-1 px-2" style="font-size: 10px; min-width: 50px;">
+                                    {{ t.cantidad }} <span class="opacity-50">USOS</span>
+                                </span>
+                            {% else %}
+                                <span class="badge bg-dark-panel border border-secondary text-muted rounded-0 p-1 px-2" style="font-size: 10px; min-width: 50px;">
+                                    {{ t.cantidad }} <span class="opacity-50">USOS</span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 py-2">
+                            <div class="action-buttons-view">
+                                <div class="btn-group">
+                                    <button type="button" class="p-1 px-2 text-info bg-transparent border-0"
+                                            onclick="startRenameInline('{{ t.nombre }}')" title="Editar">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" class="p-1 px-2 text-danger bg-transparent border-0 hover-danger"
+                                            onclick="confirmarEliminar('{{ t.nombre }}')" title="Borrar">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="action-buttons-edit d-none">
+                                <div class="d-flex gap-1 justify-content-end">
+                                    <button class="btn btn-sirio-warning btn-sm py-0 px-2" onclick="saveRenameInline('{{ t.nombre }}')">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sirio-secondary btn-sm py-0 px-2" onclick="cancelRenameInline('{{ t.nombre }}')">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Formulario Oculto para Eliminar -->
+<form id="formEliminar" action="{{ url_for('noticias.gestor_temas') }}" method="POST" style="display: none;">
+    <input type="hidden" name="accion" value="eliminar">
+    <input type="hidden" name="tema_old" id="tema_del_input">
+</form>
+
+<style>
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .bg-dark-panel { background-color: #121212; }
+    
+    .table-sirio {
+        background: transparent !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+    
+    .table-sirio thead th {
+        color: var(--ds-accent-primary, #ff9800) !important;
+        font-size: 10px !important;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--ds-accent-primary, #ff9800) !important;
+        padding: 10px 8px;
+        letter-spacing: 1px;
+    }
+
+    .theme-row {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .theme-row:hover {
+        background: rgba(255, 152, 0, 0.03) !important;
+    }
+
+    .theme-row:hover .edit-hint {
+        opacity: 0.5;
+    }
+
+    .cursor-pointer { cursor: pointer; }
+    
+    .form-control-sirio-sm {
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid var(--ds-accent-primary, #ff9800) !important;
+        color: #fff !important;
+        font-size: 13px !important;
+        height: 28px !important;
+        padding: 2px 8px !important;
+        border-radius: 4px;
+    }
+
+    .hover-danger:hover {
+        color: #ff4444 !important;
+        text-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+    }
+</style>
+
+<script>
+    function startRenameInline(oldName) {
+        const escapedId = oldName.replace(/\s+/g, '-');
+        const row = document.getElementById(`row-tema-${escapedId}`);
+        if (!row) return;
+
+        const nameContainer = row.querySelector('.theme-name-container');
+        nameContainer.innerHTML = `
+            <input type="text" class="form-control form-control-sirio-sm w-100" 
+                   value="${oldName}" 
+                   id="inline-input-${escapedId}"
+                   onkeyup="if(event.key==='Enter') saveRenameInline('${oldName}')"
+                   onkeydown="if(event.key==='Escape') cancelRenameInline('${oldName}')">
+        `;
+
+        row.querySelector('.action-buttons-view').classList.add('d-none');
+        row.querySelector('.action-buttons-edit').classList.remove('d-none');
+
+        const input = document.getElementById(`inline-input-${escapedId}`);
+        input.focus();
+        input.select();
+    }
+
+    function cancelRenameInline(oldName) {
+        const escapedId = oldName.replace(/\s+/g, '-');
+        const row = document.getElementById(`row-tema-${escapedId}`);
+        if (!row) return;
+
+        const nameContainer = row.querySelector('.theme-name-container');
+        nameContainer.innerHTML = `
+            <span class="tema-nombre fw-bold text-white-50" style="font-size: 13px;">${oldName}</span>
+            <i class="fa-solid fa-pencil ms-2 opacity-0 edit-hint" style="font-size: 10px; color: var(--ds-accent-primary);"></i>
+        `;
+
+        row.querySelector('.action-buttons-view').classList.remove('d-none');
+        row.querySelector('.action-buttons-edit').classList.add('d-none');
+    }
+
+    function saveRenameInline(oldName) {
+        const escapedId = oldName.replace(/\s+/g, '-');
+        const input = document.getElementById(`inline-input-${escapedId}`);
+        const newName = input.value.trim();
+
+        if (!newName || newName === oldName) {
+            cancelRenameInline(oldName);
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.href;
+
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'accion';
+        actionInput.value = 'renombrar';
+        form.appendChild(actionInput);
+
+        const oldInput = document.createElement('input');
+        oldInput.type = 'hidden';
+        oldInput.name = 'tema_old';
+        oldInput.value = oldName;
+        form.appendChild(oldInput);
+
+        const newInput = document.createElement('input');
+        newInput.type = 'hidden';
+        newInput.name = 'tema_new';
+        newInput.value = newName;
+        form.appendChild(newInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function mostrarModalCrear() {
+        const tableBody = document.getElementById('temasTableBody');
+        if (!tableBody) return;
+
+        if (document.getElementById('row-new-theme')) {
+            document.getElementById('input-new-theme').focus();
+            return;
+        }
+
+        const newRow = document.createElement('tr');
+        newRow.id = 'row-new-theme';
+        newRow.className = 'theme-row bg-dark-panel';
+        newRow.innerHTML = `
+            <td class="ps-4 py-2">
+                <input type="text" id="input-new-theme" class="form-control form-control-sirio-sm" 
+                       placeholder="Nuevo nombre..."
+                       style="max-width: 250px;"
+                       onkeyup="if(event.key==='Enter') saveCreateInline()"
+                       onkeydown="if(event.key==='Escape') cancelCreateInline()">
+            </td>
+            <td class="text-center py-2">
+                <span class="badge bg-dark-panel border border-secondary text-muted rounded-0 p-1 px-2" style="font-size: 10px;">
+                    0 USOS
+                </span>
+            </td>
+            <td class="pe-4 py-2 text-end">
+                <div class="d-flex gap-1 justify-content-end">
+                    <button class="btn btn-sirio-warning btn-sm py-0 px-2" onclick="saveCreateInline()">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                    <button class="btn btn-sirio-secondary btn-sm py-0 px-2" onclick="cancelCreateInline()">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tableBody.insertBefore(newRow, tableBody.firstChild);
+        document.getElementById('input-new-theme').focus();
+    }
+
+    function cancelCreateInline() {
+        const row = document.getElementById('row-new-theme');
+        if (row) row.remove();
+    }
+
+    function saveCreateInline() {
+        const input = document.getElementById('input-new-theme');
+        const newName = input.value.trim();
+        if (!newName) {
+            cancelCreateInline();
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.href;
+
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'accion';
+        actionInput.value = 'crear';
+        form.appendChild(actionInput);
+
+        const newInput = document.createElement('input');
+        newInput.type = 'hidden';
+        newInput.name = 'tema_new';
+        newInput.value = newName;
+        form.appendChild(newInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function confirmarEliminar(nombre) {
+        Swal.fire({
+            title: '¿Eliminar tema?',
+            text: `Se desvinculará "${nombre}" de todos los registros.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            background: '#1a1a1a',
+            color: '#fff',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#333',
+            customClass: {
+                popup: 'border border-secondary rounded-0 shadow-lg',
+                title: 'text-danger small fw-bold text-uppercase',
+                htmlContainer: 'small opacity-75'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('formEliminar');
+                document.getElementById('tema_del_input').value = nombre;
+                form.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

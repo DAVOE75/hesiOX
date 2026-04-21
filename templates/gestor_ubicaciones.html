@@ -1,0 +1,3911 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Gestor de Ubicaciones - hesiOX{% endblock %}
+
+{% block page_title %}Gestor de Ubicaciones{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center gap-2">
+    <button class="btn btn-xs btn-sirio-outline-pro" onclick="rebuscarTodasUbicaciones()"
+        title="Escanear todo el corpus con IA NER">
+        <i class="fa-solid fa-brain me-1"></i> Mapear Todo
+    </button>
+    <button class="btn btn-xs btn-sirio-outline-pro" onclick="abrirModalImportar()"
+        title="Importar desde CSV o GeoJSON">
+        <i class="fa-solid fa-file-import me-1"></i> Importar
+    </button>
+    <button class="btn btn-xs btn-sirio-outline-pro" onclick="verMetricasCalidad()"
+        title="Ver métricas de calidad de datos">
+        <i class="fa-solid fa-chart-line me-1"></i> Metricas
+    </button>
+    <button class="btn btn-xs btn-sirio-outline-pro" onclick="abrirGestionTipos()"
+        title="Gestionar tipos de ubicaciones">
+        <i class="fa-solid fa-tags me-1"></i> Tipos
+    </button>
+
+    <div class="ms-1 ps-1" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Gestor de Ubicaciones</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>Edición Directa</strong>: Modifica nombres y coordenadas en la misma fila.</li><li><strong>Búsqueda Masiva</strong>: Usa NER e IA para detectar ciudades en el corpus.</li><li><strong>Calidad de Datos</strong>: Sincroniza frecuencias y unifica duplicados.</li></ul>">
+        <i class="fa-solid fa-circle-question text-warning"
+            style="cursor: help; margin-left: auto; font-size: 1.2rem;"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ds-amber: #ff9800;
+        --ds-amber-alpha: rgba(255, 152, 0, 0.15);
+        --ds-amber-border: rgba(255, 152, 0, 0.4);
+        --ds-bg-dark: #0a0a0a;
+        --ds-bg-panel: #111111;
+        --ds-text-heading: #ffb74d;
+        --ds-row-edit-bg: rgba(255, 152, 0, 0.05);
+    }
+
+    [data-theme="light"] {
+        --ds-amber: #294a60;
+        --ds-amber-alpha: rgba(41, 74, 96, 0.15);
+        --ds-amber-border: rgba(41, 74, 96, 0.4);
+        --ds-bg-dark: #f8f9fa;
+        --ds-bg-panel: #ffffff;
+        --ds-text-heading: #294a60;
+        --ds-row-edit-bg: rgba(41, 74, 96, 0.05);
+    }
+
+    /* Stats Dashboard */
+    .stat-box {
+        background: var(--ds-bg-panel);
+        border: 1px solid var(--ds-amber-border);
+        padding: 12px 15px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-box i {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.5rem;
+        opacity: 0.2;
+        color: var(--ds-amber);
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--ds-text-muted, #888);
+        margin-bottom: 2px;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 900;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Section Cards */
+    .section-card {
+        border: 1px solid var(--ds-amber-border);
+        background: var(--ds-bg-panel);
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .section-header {
+        background: var(--ds-amber-alpha);
+        padding: 6px 15px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--ds-amber);
+        border-bottom: 1px solid var(--ds-amber-border);
+    }
+
+    .section-body {
+        padding: 15px;
+    }
+
+    /* Forms */
+    .form-minimal-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--ds-text-muted, #777);
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .form-control-sirio {
+        background: var(--ds-bg-dark) !important;
+        border: 1px solid var(--ds-border-color, #333) !important;
+        color: var(--ds-text-main, #fff) !important;
+        border-radius: 2px !important;
+        font-size: 0.85rem;
+    }
+
+    .form-control-sirio:focus {
+        border-color: var(--ds-amber) !important;
+        box-shadow: 0 0 0 1px var(--ds-amber-alpha) !important;
+    }
+
+    .bg-sirio-dark {
+        background: var(--ds-bg-dark) !important;
+    }
+
+    .border-sirio-group {
+        border-color: var(--ds-amber-border) !important;
+    }
+
+    /* Buttons */
+    .btn-sirio-pro {
+        background: var(--ds-amber) !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        border-radius: 2px !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border: none;
+        padding: 8px 16px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    [data-theme="dark"] .btn-sirio-pro {
+        color: #000 !important;
+    }
+
+    .btn-sirio-pro:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .btn-sirio-outline-pro {
+        background: transparent !important;
+        border: 1px solid var(--ds-amber) !important;
+        color: var(--ds-amber) !important;
+        font-weight: 800 !important;
+        border-radius: 2px !important;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-sirio-outline-pro:hover {
+        background: var(--ds-amber-alpha) !important;
+    }
+
+    /* Table & Toolbar */
+    .table-sirio {
+        font-size: 0.75rem;
+    }
+
+    .table-sirio thead th {
+        background: var(--ds-bg-sidebar, #1a1a1a) !important;
+        color: var(--ds-amber) !important;
+        text-transform: uppercase;
+        font-weight: 800;
+        border-bottom: 1px solid var(--ds-amber-border) !important;
+        padding: 6px 8px !important;
+        white-space: nowrap;
+    }
+
+    .table-sirio tbody tr {
+        border-bottom: 1px solid var(--ds-border-color, #222) !important;
+    }
+
+    .table-sirio tbody td {
+        padding: 4px 8px !important;
+        vertical-align: middle;
+    }
+
+    .action-icon {
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 2px;
+        transition: all 0.2s;
+        color: var(--ds-text-muted, #888);
+        font-size: 0.85rem;
+    }
+
+    .action-icon:hover {
+        background: var(--ds-amber-alpha);
+        color: var(--ds-amber);
+    }
+
+    .text-amber {
+        color: var(--ds-amber) !important;
+    }
+
+    /* Mini Map Adjustments */
+    #mini-map-preview {
+        height: 100%;
+        border: 1px solid var(--ds-amber-border);
+        background: var(--ds-bg-dark);
+    }
+
+    /* Legend */
+    .legend-sirio {
+        background: var(--ds-bg-panel);
+        border-top: 1px solid var(--ds-amber-border);
+        padding: 8px 15px;
+        font-size: 0.7rem;
+        display: flex;
+        gap: 15px;
+        color: var(--ds-text-muted);
+        flex-wrap: wrap;
+    }
+
+    /* Mode Buttons (Filter Group) */
+    .mode-btn-group {
+        display: flex;
+        width: 100%;
+        background: var(--ds-bg-dark);
+        border-bottom: 2px solid var(--ds-amber-border);
+        margin-bottom: 15px;
+    }
+
+    .mode-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 12px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--ds-text-muted);
+        transition: all 0.3s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-right: 1px solid var(--ds-amber-border);
+    }
+
+    .mode-btn:last-child {
+        border-right: none;
+    }
+
+    .mode-btn.active[data-mode="all"] {
+        background: var(--ds-amber);
+        color: #fff;
+    }
+
+    [data-theme="dark"] .mode-btn.active[data-mode="all"] {
+        color: #000;
+    }
+
+    .mode-btn[data-mode="verified"] {
+        color: #4caf50;
+        font-family: 'JetBrains Mono', monospace;
+        opacity: 0.6;
+    }
+
+    .mode-btn.active[data-mode="verified"] {
+        background: rgba(76, 175, 80, 0.1);
+        border-bottom: 2px solid #4caf50;
+        opacity: 1;
+    }
+
+    .mode-btn[data-mode="pending"] {
+        color: var(--ds-amber);
+        opacity: 0.6;
+    }
+
+    .mode-btn.active[data-mode="pending"] {
+        background: rgba(255, 152, 0, 0.1);
+        border-bottom: 2px solid var(--ds-amber);
+        opacity: 1;
+    }
+
+    .mode-btn[data-mode="unmapped"] {
+        color: #f44336;
+        opacity: 0.6;
+    }
+
+    .mode-btn.active[data-mode="unmapped"] {
+        background: rgba(244, 67, 54, 0.1);
+        border-bottom: 2px solid #f44336;
+        opacity: 1;
+    }
+
+    .mode-btn[data-mode="desvinculadas"] {
+        color: #ff9800;
+        opacity: 0.6;
+    }
+
+    .mode-btn.active[data-mode="desvinculadas"] {
+        background: rgba(255, 152, 0, 0.1);
+        border-bottom: 2px solid #ff9800;
+        opacity: 1;
+    }
+
+    /* Reset Search Button Styling */
+    .search-reset-btn {
+        cursor: pointer;
+        transition: all 0.2s;
+        border-left: none !important;
+        color: var(--ds-text-muted);
+    }
+
+    .search-reset-btn:hover {
+        background: var(--ds-amber-alpha) !important;
+        color: var(--ds-amber) !important;
+    }
+
+    [data-theme="light"] .search-reset-btn:hover {
+        background: rgba(41, 74, 96, 0.1) !important;
+        color: #294a60 !important;
+    }
+
+
+    .mode-btn.active[data-mode="pending"] {
+        background: var(--ds-amber-alpha);
+        border-bottom: 2px solid var(--ds-amber);
+        opacity: 1;
+    }
+
+    .mode-btn[data-mode="unmapped"] {
+        color: #f44336;
+        font-family: 'JetBrains Mono', monospace;
+        opacity: 0.6;
+    }
+
+    .mode-btn.active[data-mode="unmapped"] {
+        background: rgba(244, 67, 54, 0.1);
+        border-bottom: 2px solid #b90101;
+        opacity: 1;
+    }
+
+    /* Inline Editing Styles */
+    .edit-row-active {
+        background: var(--ds-row-edit-bg) !important;
+    }
+
+    .form-control-inline {
+        background: var(--ds-bg-dark) !important;
+        border: 1px solid var(--ds-amber-border) !important;
+        color: var(--ds-text-main) !important;
+        padding: 2px 4px;
+        font-size: 0.75rem;
+        height: 24px;
+        border-radius: 2px;
+        width: 100%;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .form-control-inline:focus {
+        border-color: var(--ds-amber) !important;
+        outline: none;
+        box-shadow: 0 0 0 1px var(--ds-amber-alpha);
+    }
+
+    .hover-amber:hover {
+        color: var(--ds-amber) !important;
+        cursor: pointer;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    /* Modal Sirio Style (Ported from Detalle) */
+    .modal-sirio-content {
+        background-color: var(--ds-bg-panel, #000) !important;
+        border: 1px solid var(--ds-amber-border) !important;
+        border-radius: 4px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-sirio-header {
+        border-bottom: 1px solid var(--ds-amber-border) !important;
+        background: var(--ds-amber-alpha);
+    }
+
+    .sirio-input-group .form-control {
+        background: var(--ds-bg-dark) !important;
+        border-color: var(--ds-amber-border) !important;
+        color: var(--ds-text-main, #fff) !important;
+    }
+
+    .btn-sirio-outline {
+        border: 1px solid var(--ds-amber-border);
+        color: var(--ds-amber);
+        background: transparent;
+        transition: all 0.2s;
+    }
+
+    .btn-sirio-outline:hover {
+        background: var(--ds-amber-alpha);
+        color: #fff;
+    }
+
+    /* PRO COMPONENT: Selection Bar */
+    .selection-bar-pro {
+        border: 1px solid var(--ds-amber-border);
+        border-left: 3px solid var(--ds-amber);
+        padding: 8px 16px;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 10px;
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+    }
+
+    .selection-bar-pro .sb-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--ds-amber-border);
+        flex-shrink: 0;
+    }
+
+    .selection-bar-pro .sb-count {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--ds-amber);
+        white-space: nowrap;
+    }
+
+    .selection-bar-pro .sb-count strong {
+        font-size: 1rem;
+        margin-right: 4px;
+    }
+
+    .btn-sb {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 5px 14px;
+        margin-right: 5px;
+        text-transform: uppercase;
+        transition: all .15s;
+    }
+
+    .btn-sb:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-sb-dismiss {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 1rem;
+        line-height: 1;
+        padding: 2px 6px;
+        margin-left: auto;
+        transition: color .15s;
+    }
+
+    .btn-sb-dismiss:hover {
+        color: #fff;
+    }
+
+    /* Dashboard Grid Pro */
+    .dashboard-grid-pro {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .pro-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 8px;
+        margin-left: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: var(--ds-amber-alpha);
+        color: var(--ds-amber);
+        border: 1px solid var(--ds-amber-border);
+    }
+</style>
+{% endblock %}
+
+
+
+
+{% block content %}
+<div class="p-3 custom-scrollbar">
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box rounded">
+                <div class="stat-label">Total Puntos</div>
+                <div class="stat-value text-white" id="stat-total-locs">0</div>
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box rounded">
+                <div class="stat-label">Verificados</div>
+                <div class="stat-value text-success" id="stat-verif-percent">0%</div>
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box rounded">
+                <div class="stat-label">Menciones Totales</div>
+                <div class="stat-value text-info" id="stat-total-mentions">0</div>
+                <i class="fa-solid fa-newspaper"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box rounded">
+                <div class="stat-label">Sin Coordenadas</div>
+                <div class="stat-value text-danger" id="stat-unmapped-locs">0</div>
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-2">
+        <!-- TOOLBAR PRO -->
+        <div class="col-12">
+            <div id="selection-bar-pro" class="selection-bar-pro">
+                <div class="sb-count">
+                    <strong id="selected-count-badge">0</strong> seleccionados
+                </div>
+                <div class="sb-divider"></div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sb" style="background:var(--ds-amber);color:#ffffff;"
+                        onclick="ejecutarVerificacionSeleccionados()">
+                        <i class="fa-solid fa-check-double me-1"></i> Verificar
+                    </button>
+                    <button class="btn btn-sb"
+                        style="background:transparent;border:1px solid #8b5cf6;color:#8b5cf6;"
+                        onclick="abrirModalCambiarTipoMasivo()">
+                        <i class="fa-solid fa-tag me-1"></i> Cambiar tipo
+                    </button>
+                    <button class="btn btn-xs"
+                        style="background:transparent;border:1px solid var(--ds-amber);color:var(--ds-amber);font-size:.68rem;font-weight:700;margin-left:5px;padding:5px 14px;letter-spacing:.5px;text-transform:uppercase;"
+                        onclick="ejecutarDesvincularMasivo()">
+                        <i class="fa-solid fa-link-slash me-1"></i> Desvincular
+                    </button>
+                    <button class="btn btn-sb"
+                        style="background:transparent;border:1px solid var(--ds-amber-border);color:var(--ds-amber);"
+                        onclick="ejecutarGeocodificacionMasivaSeleccionados()">
+                        <i class="fa-solid fa-brain me-1"></i> Recalcular coordenadas
+                    </button>
+                    <button class="btn btn-sb"
+                        style="background:transparent;border:1px solid var(--ds-accent-primary);color:var(--ds-accent-primary);"
+                        onclick="ejecutarRecalcularFrecuenciasMasivo()">
+                        <i class="fa-solid fa-calculator me-1"></i> Recalcular frecuencias
+                    </button>
+                    <button class="btn btn-sb"
+                        style="background:transparent;border:1px solid #17a2b8;color:#17a2b8;"
+                        onclick="ejecutarRestaurarBorradosMasivo()">
+                        <i class="fa-solid fa-undo me-1"></i> Restaurar borrados
+                    </button>
+                    <button class="btn btn-xs"
+                        style="background:transparent;border:1px solid #5c0000;color:#5c0000;font-size:.68rem;font-weight:700;margin-left:5px;padding:5px 14px;letter-spacing:.5px;text-transform:uppercase;"
+                        onclick="ejecutarBorradoMasivo()">
+                        <i class="fa-solid fa-trash me-1"></i> Borrar
+                    </button>
+                </div>
+                <button class="btn-sb-dismiss ms-auto" onclick="clearAllSelections()"
+                    title="Limpiar selección">&#x2715;</button>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="section-card">
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-layer-group me-2"></i>CONTROL DE DATOS (NIVEL PRO)</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-xs btn-sirio-outline py-0 px-2"
+                            style="font-size:0.6rem; width: auto !important;" onclick="exportCurrentViewGeoJSON()">
+                            <i class="fa-solid fa-file-export me-1"></i> GEOJSON
+                        </button>
+                        <button class="btn btn-xs btn-sirio-outline py-0 px-2"
+                            style="font-size:0.6rem; width: auto !important;" onclick="exportCurrentViewCSV()">
+                            <i class="fa-solid fa-file-csv me-1"></i> CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <!-- Advanced Search & Filter Row (Aligned) -->
+                    <div class="d-flex gap-2 mb-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-sirio-dark border-sirio-group text-amber">
+                                <i class="fa-solid fa-filter"></i>
+                            </span>
+                            <input type="text" id="search-loc-table"
+                                class="form-control form-control-sirio border-sirio-group"
+                                placeholder=" Filtrar por nombre, coordenadas o país..."
+                                style="width: 80% !important; height: 45px;">
+                            <span class="input-group-text bg-sirio-dark border-sirio-group search-reset-btn px-2"
+                                onclick="resetSearch()" title="Limpiar búsqueda">
+                                <i class="fa-solid fa-times"></i>
+                            </span>
+                            <select id="sel-filter-freq" class="form-select form-select-sm form-control-sirio"
+                                style="max-width:155px; border-left: 1px solid var(--ds-amber-border); border-radius:0 4px 4px 0;"
+                                onchange="applyFilters()">
+                                <option value="0">Todas</option>
+                                <option value="5">+5 menciones</option>
+                                <option value="10">+10 menciones</option>
+                                <option value="50">+50 menciones</option>
+                                <option value="100">+100 menciones</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por Tipo de Lugar -->
+                    <div class="mb-3">
+                        <label class="form-minimal-label mb-1">
+                            <i class="fa-solid fa-layer-group me-1"></i>Filtrar por Tipo de Lugar
+                        </label>
+                        <div class="position-relative">
+                            <select id="sel-filter-tipo" class="form-select form-select-sm form-control-sirio" 
+                                    onchange="applyFilters(); updateTipoFilterIcon()" style="padding-left: 28px;">
+                                <option value="" data-icon="">... Todos los tipos ...</option>
+                            </select>
+                            <i id="tipo-filter-icon" class="fa-solid fa-layer-group" 
+                               style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ds-amber); font-size: 0.75rem;"></i>
+                        </div>
+                    </div>
+
+                    <div class="mode-btn-group rounded overflow-hidden m-0 flex-shrink-0 mb-3"
+                        style="border-bottom:none; border:1px solid var(--ds-amber-border);">
+                        <button class="mode-btn active" data-mode="all" onclick="setLocStatusFilter('all', this)"
+                            style="padding:8px;">
+                            ALL
+                        </button>
+                        <button class="mode-btn" data-mode="verified" onclick="setLocStatusFilter('verified', this)"
+                            style="padding:8px;">
+                            <i class="fa-solid fa-check-double text-success"></i> VERIF.
+                        </button>
+                        <button class="mode-btn" data-mode="pending" onclick="setLocStatusFilter('pending', this)"
+                            style="padding:8px;">
+                            <i class="fa-solid fa-clock text-amber"></i> PEND.
+                        </button>
+                        <button class="mode-btn" data-mode="unmapped" onclick="setLocStatusFilter('unmapped', this)"
+                            style="padding:8px;">
+                            <i class="fa-solid fa-map-pin text-danger"></i> NO-GPS
+                        </button>
+                        <button class="mode-btn" data-mode="desvinculadas" onclick="setLocStatusFilter('desvinculadas', this)"
+                            style="padding:8px;">
+                            <i class="fa-solid fa-link-slash text-warning"></i> DESV.
+                        </button>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button class="btn btn-sirio-outline-pro btn-sm flex-grow-1"
+                            onclick="rebuscarTodasUbicaciones()">
+                            <i class="fa-solid fa-sync me-1"></i> SYNC GLOBAL
+                        </button>
+                        <button class="btn btn-sirio-outline-pro btn-sm flex-grow-1" onclick="unificarDuplicadosCaja()">
+                            <i class="fa-solid fa-object-group me-1"></i> UNIFICAR MAYÚSCULAS
+                        </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-sirio-outline-pro btn-sm w-100" id="btn-toggle-deleted"
+                            onclick="toggleDeletedView()" title="Ver Ubicaciones Borradas">
+                            <i class="fa-solid fa-trash-can-arrow-up"></i>
+                            <span class="btn-text" id="toggle-deleted-text">VER RECHAZADOS / BORRADOS</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i>INTELIGENCIA ARTIFICIAL (AVANZADO)
+                </div>
+                <div class="section-body">
+                    <p class="xsmall text-muted mb-2 italic">Reconocimiento de Entidades (NER) y geocodificación
+                        mediante IA sobre el Corpus total.</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="xsmall text-muted mb-1"><i class="fa-solid fa-robot me-1"></i>Modelo de
+                                IA</label>
+                            <select id="sel-potencia-geocoding"
+                                class="form-select form-select-sm form-control-sirio w-100">
+                                <optgroup label="Google Gemini">
+                                    <option value="flash" selected>Gemini 2.0 Flash (Rápido)</option>
+                                    <option value="flash-thinking">Gemini 2.0 Flash Thinking</option>
+                                    <option value="pro">Gemini 1.5 Pro (Preciso)</option>
+                                </optgroup>
+                                <optgroup label="OpenAI">
+                                    <option value="openai">GPT-4o</option>
+                                    <option value="gpt4-mini">GPT-4o Mini (Económico)</option>
+                                </optgroup>
+                                <optgroup label="Anthropic">
+                                    <option value="claude">Claude 3.5 Sonnet</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="xsmall text-muted mb-1"><i class="fa-solid fa-language me-1"></i>Idioma de
+                                Análisis</label>
+                            <select id="sel-idioma-geocoding"
+                                class="form-select form-select-sm form-control-sirio w-100">
+                                <option value="es" selected>🇪🇸 Español</option>
+                                <option value="en">🇬🇧 Inglés</option>
+                                <option value="fr">🇫🇷 Francés</option>
+                                <option value="de">🇩🇪 Alemán</option>
+                                <option value="pt">🇵🇹 Portugués</option>
+                                <option value="it">🇮🇹 Italiano</option>
+                                <option value="ar">🇸🇦 Árabe</option>
+                                <option value="zh">🇨🇳 Chino</option>
+                                <option value="ru">🇷🇺 Ruso</option>
+                                <option value="ca">Catalán</option>
+                                <option value="eu">Euskera</option>
+                                <option value="gl">Gallego</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-sirio-pro btn-sm w-100" onclick="ejecutarGeocodificacionIA()">
+                        <i class="fa-solid fa-brain me-1"></i> ANALIZAR CON IA
+                    </button>
+                    <!-- Progress Bar -->
+                    <div id="batch-geocoding-status" class="mt-3" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span id="batch-geocoding-status-text"
+                                class="xsmall text-amber fw-bold">Analizando...</span>
+                            <span class="xsmall text-muted" id="batch-geocoding-percent">0%</span>
+                        </div>
+                        <div class="progress bg-dark" style="height: 4px; border: 1px solid var(--ds-amber-border);">
+                            <div id="batch-geocoding-progress-bar"
+                                class="progress-bar bg-amber progress-bar-striped progress-bar-animated"
+                                role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <i class="fa-solid fa-plus-circle me-2"></i>CREAR PUNTO DE REFERENCIA
+                </div>
+                <div class="section-body">
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <input type="text" id="new-loc-name" class="form-control form-control-sirio"
+                                placeholder="Nombre...">
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-sirio-pro w-100" onclick="crearUbicacion()">CREAR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moved Actions Legend to Left Column -->
+                <div id="actions-legend"
+                    class="mt-2 p-2 rounded shadow-sm border-top border-secondary border-opacity-25"
+                    style="background: var(--ds-bg-panel); border-top: 1px solid var(--ds-amber-border) !important;">
+                    <div class="d-flex align-items-center mb-1">
+                        <span class="xsmall fw-bold text-amber text-uppercase me-2"
+                            style="font-size: 0.65rem; letter-spacing: 1px;">
+                            <i class="fa-solid fa-circle-info me-1"></i> Guía de Acciones
+                        </span>
+                        <hr class="flex-grow-1 m-0 opacity-25">
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between gap-2 px-1">
+                        <span class="legend-item xsmall"><i class="fa-solid fa-magnifying-glass text-info"></i>
+                            Zoom</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-pen text-amber"></i> Editar</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-magnifying-glass-location text-info"></i>
+                            Buscar</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-newspaper text-info"></i> Noticias</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-broom text-warning"></i> Limpiar</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-arrows-rotate text-info"></i>
+                            Recalcular</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-trash text-danger"></i> Borrar</span>
+                        <span class="legend-item xsmall"><i class="fa-solid fa-undo text-info"></i> Deshacer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 d-flex flex-column" style="min-height: 500px;">
+            <div class="rounded overflow-hidden flex-grow-1 d-flex flex-column" id="card-tactical-map"
+                style="display: block; border: 1px solid var(--ds-amber-border); background: var(--ds-bg-panel);">
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-crosshairs me-2"></i>Mapa Táctico: <span id="preview-name"
+                            class="text-white">-</span></span>
+                </div>
+                <div class="section-body p-0 position-relative d-flex flex-column flex-grow-1">
+                    <div id="mini-map-preview" class="flex-grow-1 position-relative">
+                        <!-- IDE Layers Control -->
+                        <div class="position-absolute bottom-0 start-0 p-2" style="z-index: 1000;">
+                            <div class="dropdown">
+                                <button class="btn btn-dark btn-sm opacity-75 shadow-sm border-secondary" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false" title="Capas IDE Personal"
+                                    onfocus="loadUserIDEForMiniMap()">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark p-2" id="ide-minimap-list"
+                                    style="min-width: 200px; font-size: 0.75rem; border-color: var(--bs-secondary); background: rgba(20,20,20,0.95); backdrop-filter: blur(4px);">
+                                    <li
+                                        class="dropdown-header xsmall text-uppercase text-warning p-1 pb-2 border-bottom border-secondary mb-2">
+                                        IDE Personal</li>
+                                    <div id="ide-minimap-items">
+                                        <li class="p-2 text-center text-muted xsmall">Cargando...</li>
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-black bg-opacity-75 d-flex justify-content-between align-items-center">
+                        <div class="font-mono xsmall" id="preview-coords-text">Lat: -, Lon: -</div>
+                        <button class="btn btn-xs btn-sirio-pro py-1 px-3" onclick="saveMiniMapCoords()">
+                            <i class="fa-solid fa-save me-1"></i> GUARDAR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Row for search and filters was here, now consolidated in Pro panel -->
+
+
+    <div class="bg-transparent border-secondary border-opacity-25 overflow-hidden">
+        <div class="custom-scrollbar" style="height: calc(100vh - 350px); overflow-y: auto;">
+            <table class="table table-dark table-hover table-sirio mb-0" id="table-ubicaciones">
+                <thead class="sticky-top">
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox" class="form-check-input" id="select-all-locs">
+                        </th>
+                        <th style="width: 30px;" title="Verificada: Es una ubicación real (BD global para reconocimiento futuro) o NO es ubicación (lista negra global)">V</th>
+                        <th style="width: 30px;" title="Vinculada: Relacionada con este proyecto específico. Si está verificada pero desvinculada, no aparecerá en el mapa de este proyecto">L</th>
+                        <th>Nombre</th>
+                        <th class="text-center" style="width: 80px;">Tipo</th>
+                        <th class="text-center">Tit.</th>
+                        <th class="text-center">Cont.</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Lat (X)</th>
+                        <th class="text-center">Lon (Y)</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span id="loc-table-count">Ubicaciones cargadas: 0</span>
+        </div>
+    </div>
+</div>
+
+<datalist id="datalist-lugares"></datalist>
+
+<!-- Hidden elements for legacy logic compat -->
+<form id="filtros-mapa-corpus" class="d-none"></form>
+
+<!-- Modal Mapear Ubicación (Ported from Detalle) -->
+<div class="modal fade" id="modalMapearUbicacion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width:350px;">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-magnifying-glass-location me-2"></i>Buscar y Mapear
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="small text-muted mb-3" style="font-size: 11px;">
+                    Indique el nombre o coordenadas para actualizar <br>
+                    <strong id="mapear-original-text" class="text-warning fst-italic"></strong>
+                </p>
+                <div class="mb-3">
+                    <label class="form-label small text-warning text-uppercase fw-bold"
+                        style="font-size: 9px; letter-spacing: 0.5px;">Buscar Ubicación Real</label>
+                    <div class="input-group input-group-sm flex-nowrap sirio-input-group">
+                        <input type="text" id="mapear-search-name" class="form-control" placeholder="Ej: Cosignano"
+                            style="border-right: 0;">
+                        <button class="btn btn-sirio-outline" type="button" id="btn-paste-search" title="Pegar"
+                            style="border-left: 0;">
+                            <i class="fa-solid fa-paste"></i>
+                        </button>
+                        <button class="btn btn-sirio-outline" type="button" id="btn-search-google-maps-modal"
+                            title="Maps">
+                            <i class="fa-solid fa-earth-americas"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" id="btn-confirmar-mapeo"
+                    class="btn btn-warning w-100 btn-sm text-uppercase fw-bold"
+                    style="font-size: 10px; height: 32px; letter-spacing: 0.5px;">
+                    Actualizar Coordenadas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cambiar Tipo Masivo -->
+<div class="modal fade" id="modalCambiarTipoMasivo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm" style="max-width:400px;">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-tag me-2"></i>Cambiar Tipo de Lugar
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="small text-muted mb-3" style="font-size: 11px;">
+                    Seleccione uno o más tipos para <strong id="tipo-count-badge" class="text-warning">0</strong> ubicaciones seleccionadas
+                </p>
+                <div class="mb-3">
+                    <label class="form-label small text-warning text-uppercase fw-bold"
+                        style="font-size: 9px; letter-spacing: 0.5px;">Nuevos Tipos de Lugar (Ctrl/Cmd + Click para múltiple)</label>
+                    <select id="sel-nuevo-tipo" class="form-select form-select-sm form-control-sirio" multiple size="10" style="height: 200px;">
+                        <option value="unknown">Cargando...</option>
+                    </select>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                        <i class="fa-solid fa-info-circle me-1"></i>Puede seleccionar múltiples tipos (ej: Isla + Provincia)
+                    </small>
+                </div>
+                <button type="button" onclick="ejecutarCambioTipoMasivo()"
+                    class="btn btn-warning w-100 btn-sm text-uppercase fw-bold"
+                    style="font-size: 10px; height: 32px; letter-spacing: 0.5px;">
+                    Aplicar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Contexto Lugar (Geocoding Lineage) -->
+<div class="modal fade" id="modalContextoLugar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 12px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-book-open-reader me-2"></i>Contexto de Menciones: <span
+                        id="contexto-lugar-nombre" class="text-white">-</span>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3 custom-scrollbar" style="background: var(--ds-bg-dark);">
+                <div id="contexto-loading" class="text-center py-4 text-muted">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x mb-2 text-amber"></i>
+                    <p class="small text-uppercase fw-bold" style="letter-spacing: 1px;">Extrayendo contexto NER...</p>
+                </div>
+                <div id="contexto-error" class="alert alert-danger d-none small"></div>
+                <div id="contexto-content" class="d-none">
+                    <div
+                        class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-50">
+                        <span class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;"><i
+                                class="fa-solid fa-newspaper me-1"></i>Aparece en <span id="contexto-count"
+                                class="text-amber">0</span> noticias</span>
+                    </div>
+                    <div id="contexto-list" class="d-flex flex-column gap-3">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Importar Ubicaciones -->
+<div class="modal fade" id="modalImportUbicaciones" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-file-import me-2"></i>Importación Masiva (PRO)
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="alert alert-info border-info border-opacity-25 bg-info bg-opacity-10 small mb-3">
+                    <i class="fa-solid fa-circle-info me-2"></i>Formatos soportados: <strong>CSV</strong> (nombre, lat,
+                    lon) o <strong>GeoJSON</strong> (FeatureCollection).
+                </div>
+                <div class="mb-3">
+                    <label class="form-minimal-label">Seleccionar Archivo</label>
+                    <input type="file" id="import-file-input" class="form-control form-control-sirio"
+                        accept=".csv,.json,.geojson">
+                </div>
+                <div id="import-preview" class="d-none mb-3">
+                    <div class="xsmall text-muted mb-1 text-uppercase fw-bold">Previsualización</div>
+                    <div id="import-preview-content"
+                        class="p-2 bg-black bg-opacity-50 border border-secondary border-opacity-20 rounded font-monospace"
+                        style="font-size: 10px; max-height: 100px; overflow: auto;"></div>
+                </div>
+                <button type="button" class="btn btn-sirio-pro w-100" id="btn-ejecutar-import"
+                    onclick="procesarArchivoImportado()">
+                    Comenzar Importación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Métricas de Calidad -->
+<div class="modal fade" id="modalMetricasCalidad" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Salud de Datos Geográficos
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="stat-box rounded text-center">
+                            <div class="stat-label">Precisión GPS</div>
+                            <div class="stat-value text-success" id="metric-gps-precision">--</div>
+                            <div class="xsmall text-muted mt-1">Ubicaciones mapeadas</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box rounded text-center">
+                            <div class="stat-label">Duplicidad</div>
+                            <div class="stat-value text-warning" id="metric-duplicity">--</div>
+                            <div class="xsmall text-muted mt-1">Nombres redundantes</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box rounded text-center">
+                            <div class="stat-label">Confianza NER</div>
+                            <div class="stat-value text-info" id="metric-ner-confidence">--</div>
+                            <div class="xsmall text-muted mt-1">Score IA promedio</div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="section-card m-0">
+                            <div class="section-header">Distribución por País</div>
+                            <div class="section-body p-2" id="metric-country-dist"
+                                style="max-height: 200px; overflow-y: auto;">
+                                <!-- Bar chart or list -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gestión de Tipos de Ubicación -->
+<div class="modal fade" id="modalGestionTipos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-accent text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-tags me-2"></i>Gestión de Tipos de Ubicación
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3">
+                <!-- Botón para añadir nuevo tipo -->
+                <div class="mb-3">
+                    <button class="btn btn-sirio btn-sm" onclick="mostrarFormularioNuevoTipo()">
+                        <i class="fa-solid fa-plus me-1"></i> Añadir Nuevo Tipo
+                    </button>
+                </div>
+
+                <!-- Formulario para crear/editar tipo (oculto por defecto) -->
+                <div id="formTipoUbicacion" class="section-card mb-3" style="display: none; position: relative; z-index: 100;">
+                    <div class="section-header">
+                        <i class="fa-solid fa-pen me-2"></i><span id="formTipoTitle">Nuevo Tipo</span>
+                    </div>
+                    <div class="section-body p-3">
+                        <input type="hidden" id="tipoId" value="">
+                        <div class="row g-3">
+                            <div class="col-md-6" id="codigoField">
+                                <label class="form-label small fw-bold">Código*</label>
+                                <input type="text" id="tipoCodigo" class="form-control form-control-sm sirio-input" 
+                                    placeholder="ej: gulf, country" maxlength="50">
+                                <small class="text-muted">Solo minúsculas y guiones bajos</small>
+                            </div>
+                            <div class="col-md-6" id="nombreField">
+                                <label class="form-label small fw-bold">Nombre*</label>
+                                <input type="text" id="tipoNombre" class="form-control form-control-sm sirio-input" 
+                                    placeholder="ej: Golfo, País" maxlength="100">
+                            </div>
+                            <div class="col-md-6" style="position: relative; z-index: 50;">
+                                <label class="form-label small fw-bold">Categoría</label>
+                                <select id="tipoCategoria" class="form-select form-select-sm sirio-input">
+                                    <option value="Ciudades y Poblaciones">Ciudades y Poblaciones</option>
+                                    <option value="Vías">Vías</option>
+                                    <option value="Edificios">Edificios</option>
+                                    <option value="Geografía Natural">Geografía Natural</option>
+                                    <option value="Hidrografía">Hidrografía</option>
+                                    <option value="Administrativo">Administrativo</option>
+                                    <option value="Otros">Otros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Icono</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="tipoIcono" class="form-control form-control-sm sirio-input" 
+                                        placeholder="fa-solid fa-water" maxlength="100" oninput="actualizarPreviewIcono()">
+                                    <button class="btn btn-outline-secondary px-2 border-secondary" type="button" onclick="abrirSelectorIconos()" title="Seleccionar Icono">
+                                        <i class="fa-solid fa-list-ul text-warning"></i>
+                                    </button>
+                                    <span class="input-group-text" style="background: var(--ds-bg-panel); border-color: var(--ds-border); width: 45px; justify-content: center;">
+                                        <i id="previewIcono" class="fa-solid fa-question" style="font-size: 1.1rem;"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted"><a href="javascript:void(0)" onclick="abrirSelectorIconos()" class="text-decoration-underline text-warning cursor-pointer" style="font-size: 0.75rem;"><i class="fa-solid fa-images me-1"></i>Abrir Galería de Iconos</a></small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Orden</label>
+                                <input type="number" id="tipoOrden" class="form-control form-control-sm sirio-input" 
+                                    value="999" min="0" max="9999">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-sirio btn-sm" onclick="guardarTipo()">
+                                <i class="fa-solid fa-save me-1"></i> Guardar
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="cancelarFormularioTipo()">
+                                <i class="fa-solid fa-times me-1"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listado de tipos -->
+                <div class="section-card m-0">
+                    <div class="section-header">Tipos Disponibles</div>
+                    <div class="section-body p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover m-0">
+                                <thead style="position: sticky; top: 0; background: var(--ds-bg-panel); z-index: 5;">
+                                    <tr>
+                                        <th style="font-size: 0.7rem;">Nombre</th>
+                                        <th style="font-size: 0.7rem;">Categoría</th>
+                                        <th style="font-size: 0.7rem;">Icono</th>
+                                        <th style="font-size: 0.7rem;">Orden</th>
+                                        <th style="font-size: 0.7rem; width: 120px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaTiposUbicacion">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted small py-3">
+                                            <i class="fa-solid fa-spinner fa-spin me-2"></i>... Cargando tipos ...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tipos eliminados (recuperables) -->
+                    <div id="seccionTiposEliminados" class="mt-3" style="display:none;">
+                        <div class="border rounded p-2" style="background: rgba(255,100,100,0.05); border-color: rgba(255,100,100,0.3) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-bold text-danger"><i class="fa-solid fa-recycle me-1"></i>Tipos Eliminados (Recuperables)</small>
+                                <button class="btn btn-xs btn-outline-secondary" style="font-size:0.65rem; padding:2px 6px;" onclick="document.getElementById('seccionTiposEliminados').style.display='none'">✕</button>
+                            </div>
+                            <table class="table table-sm m-0">
+                                <tbody id="listaTiposEliminados" style="font-size:0.75rem;">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Selector de Iconos -->
+<div class="modal fade" id="modalSelectorIconos" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content modal-sirio-content shadow-lg">
+            <div class="modal-header modal-sirio-header p-3">
+                <h6 class="modal-title text-warning text-uppercase fw-bold m-0"
+                    style="font-size: 11px; letter-spacing: 1px;">
+                    <i class="fa-solid fa-icons me-2"></i>Seleccionar Icono
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-3" style="background: var(--ds-bg-dark);">
+                <div class="mb-3">
+                    <input type="text" id="buscadorIconos" class="form-control form-control-sm sirio-input" placeholder="Buscar icono (ej: casa, agua, banco, montaña...)" oninput="filtrarIconos()">
+                </div>
+                <div id="contenedorIconos" class="d-flex flex-wrap gap-2 justify-content-center" style="max-height: 50vh; overflow-y: auto;">
+                    <!-- Los iconos se generan por JS -->
+                </div>
+                <div class="mt-3 text-end">
+                    <small class="text-muted">¿No encuentras el que buscas? <a href="https://fontawesome.com/icons" target="_blank" class="text-warning text-decoration-none" tabindex="-1">Busca en FontAwesome</a> y pega su código</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .highlight-amber {
+        background-color: var(--ds-amber-alpha);
+        color: var(--ds-amber);
+        font-weight: bold;
+        padding: 0 4px;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px var(--ds-amber-border);
+    }
+
+    .snippet-box {
+        background: var(--ds-bg-panel);
+        border: 1px solid var(--ds-amber-border);
+        border-left: 3px solid var(--ds-amber);
+        padding: 10px 15px;
+        font-size: 0.8rem;
+        line-height: 1.6;
+        color: var(--ds-text-main, #e0e0e0);
+    }
+
+    .snippet-meta {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--ds-text-muted);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .snippet-type-badge {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2px 6px;
+        border-radius: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Botón editar tipo - base */
+    .btn-edit-tipo {
+        border: 1px solid;
+        background: transparent;
+        transition: all 0.2s ease;
+    }
+
+    /* Botón editar tipo - modo oscuro */
+    [data-bs-theme="dark"] .btn-edit-tipo {
+        color: #ff9800;
+        border-color: #ff9800;
+    }
+    [data-bs-theme="dark"] .btn-edit-tipo:hover {
+        background-color: #ff9800;
+        border-color: #ff9800;
+        color: #fff;
+    }
+
+    /* Botón editar tipo - modo claro */
+    [data-bs-theme="light"] .btn-edit-tipo {
+        color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    [data-bs-theme="light"] .btn-edit-tipo:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // State variables
+    let _currentLocData = [];
+    let _currentPage = 1;
+    const _pageSize = 50;
+
+    // Fallback para notificaciones si el objeto global no está definido
+    window.SirioNotifications = window.SirioNotifications || {
+        success: (m) => console.log("SIRIO SUCCESS:", m),
+        error: (m) => console.error("SIRIO ERROR:", m),
+        info: (m) => console.info("SIRIO INFO:", m),
+        warning: (m) => console.warn("SIRIO WARNING:", m)
+    };
+    let _currentStatusFilter = 'all';
+    let _viewDeleted = false;
+    let _miniMap = null;
+    let _miniMarker = null;
+    let _isMapLoading = false;
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function () {
+        cargarDatos();
+        initMiniMap(); // Initialize map showing Spain by default
+        updateTipoFilterIcon(); // Initialize tipo filter icon
+
+        // Search listener
+        const searchInput = document.getElementById('search-loc-table');
+        if (searchInput) {
+            searchInput.oninput = (e) => {
+                _currentPage = 1;
+                renderTablaUbicaciones(e.target.value);
+            };
+        }
+
+        // Master checkbox
+        const checkMaster = document.getElementById('select-all-locs');
+        if (checkMaster) {
+            checkMaster.onchange = function () {
+                document.querySelectorAll('.loc-select-row').forEach(c => c.checked = this.checked);
+                toggleBatchButtons();
+            };
+        }
+
+        // Delegate listener for individual checkboxes
+        const tableBody = document.querySelector('#table-ubicaciones tbody');
+        if (tableBody) {
+            tableBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('loc-select-row')) {
+                    toggleBatchButtons();
+                }
+            });
+        }
+    });
+
+    function resetSearch() {
+        const input = document.getElementById('search-loc-table');
+        if (input) {
+            input.value = '';
+            _currentPage = 1;
+            renderTablaUbicaciones('');
+            input.focus();
+        }
+    }
+
+    function toggleBatchButtons() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const selectionBar = document.getElementById('selection-bar-pro');
+        const selectedCountBadge = document.getElementById('selected-count-badge');
+
+        if (selectionBar) {
+            if (checked.length > 0) {
+                selectionBar.style.display = 'flex';
+                selectedCountBadge.textContent = checked.length;
+            } else {
+                selectionBar.style.display = 'none';
+            }
+        }
+    }
+
+    function clearAllSelections() {
+        document.querySelectorAll('.loc-select-row').forEach(c => c.checked = false);
+        const checkMaster = document.getElementById('select-all-locs');
+        if (checkMaster) checkMaster.checked = false;
+        toggleBatchButtons();
+    }
+
+    function applyFilters() {
+        _currentPage = 1;
+        renderTablaUbicaciones();
+    }
+
+    function updateTipoFilterIcon() {
+        const select = document.getElementById('sel-filter-tipo');
+        const iconEl = document.getElementById('tipo-filter-icon');
+        if (!select || !iconEl) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const iconClass = selectedOption?.getAttribute('data-icon') || 'fa-solid fa-layer-group';
+        
+        // Actualizar icono
+        iconEl.className = iconClass + ' text-warning';
+        iconEl.style.cssText = 'position: absolute; left: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 0.75rem;';
+    }
+
+    async function cargarDatos(params = {}) {
+        // Asegurar que tenemos los tipos cargados para el editor y filtros
+        if (!_tiposUbicacionCache || _tiposUbicacionCache.length === 0) {
+            await cargarTiposUbicacion();
+        }
+
+        if (_isMapLoading) return;
+        _isMapLoading = true;
+
+        if (_viewDeleted) params.solo_borrados = true;
+        else params.all_states = true; // Gestor view shows Verified + Pending
+
+        const url = "{{ url_for('noticias.cartografia_corpus_api') }}?" + new URLSearchParams(params);
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            _currentLocData = data.ciudades || [];
+            _currentLocData.sort((a, b) => (b.frecuencia || 0) - (a.frecuencia || 0));
+
+            _currentPage = 1;
+            renderTablaUbicaciones();
+        } catch (e) {
+            console.error("Error loading location data:", e);
+        } finally {
+            _isMapLoading = false;
+        }
+    }
+
+    let _currentContextoNombre = null;
+
+    async function cargarContextoLugar(nombre) {
+        _currentContextoNombre = nombre;
+        const modal = new bootstrap.Modal(document.getElementById('modalContextoLugar'));
+        document.getElementById('contexto-lugar-nombre').textContent = nombre;
+        document.getElementById('contexto-loading').classList.remove('d-none');
+        document.getElementById('contexto-error').classList.add('d-none');
+        document.getElementById('contexto-content').classList.add('d-none');
+        document.getElementById('contexto-list').innerHTML = '';
+
+        modal.show();
+
+        try {
+            const resp = await fetch(`{{ url_for('noticias.api_get_contexto_lugar') }}?nombre=${encodeURIComponent(nombre)}`);
+            const data = await resp.json();
+
+            document.getElementById('contexto-loading').classList.add('d-none');
+
+            if (data.success) {
+                document.getElementById('contexto-count').textContent = data.total_noticias;
+                document.getElementById('contexto-content').classList.remove('d-none');
+
+                const list = document.getElementById('contexto-list');
+
+                if (data.snippets.length === 0) {
+                    list.innerHTML = `<div class="text-center text-muted small p-4">No se encontraron menciones en el texto actual.</div>`;
+                    return;
+                }
+
+                data.snippets.forEach(item => {
+                    let html = `<div class="snippet-box rounded">`;
+                    
+                    // Header con meta info y botón de vinculación
+                    html += `<div class="d-flex justify-content-between align-items-start mb-2">`;
+                    html += `<div class="snippet-meta flex-grow-1">
+                        <span><i class="fa-regular fa-calendar-text me-1 text-amber"></i> ${item.fecha}</span>
+                        <span><i class="fa-solid fa-building me-1 text-amber"></i> ${item.medio}</span>
+                    </div>`;
+                    
+                    // Botón de vincular/desvincular
+                    const isVinculada = item.vinculada !== false && item.frecuencia_efectiva > 0;
+                    const btnClass = 'btn-outline-warning';
+                    const btnIcon = 'fa-link-slash';
+                    const btnText = 'Desvincular';
+                    const btnTitle = item.frecuencia > 1
+                        ? `${item.frecuencia_efectiva} vinc / ${item.frecuencia_desvinculada || 0} desvinc - Click para desvincular 1`
+                        : 'Última mención vinculada - Click para desvincular (ocultará la noticia)';
+                    
+                    html += `<button class="btn btn-xs ${btnClass}" 
+                        onclick="toggleVinculacionContexto(${item.lugar_id}, false, '${nombre}')" 
+                        title="${btnTitle}"
+                        style="padding: 2px 8px; font-size: 0.65rem; white-space: nowrap;">
+                        <i class="fa-solid ${btnIcon} me-1"></i>${btnText}
+                    </button>`;
+                    html += `</div>`;
+                    
+                    // Título de la noticia con enlace
+                    if (item.titulo) {
+                        const urlDetalle = `/noticias/${item.noticia_id}`;
+                        html += `<div class="mb-2">
+                            <a href="${urlDetalle}" target="_blank" class="text-decoration-none" style="color: var(--ds-text-main);">
+                                <h6 class="mb-1 d-flex align-items-center gap-2" style="font-size: 0.85rem;">
+                                    <i class="fa-solid fa-newspaper text-amber" style="font-size: 0.75rem;"></i>
+                                    <span class="fw-bold" style="line-height: 1.3;">${item.titulo}</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem; opacity: 0.5;"></i>
+                                </h6>
+                            </a>
+                        </div>`;
+                    }
+
+                    if (item.titulo_snippets && item.titulo_snippets.length > 0) {
+                        html += `<div class="mb-2">`;
+                        html += `<span class="snippet-type-badge text-info ms-0 mb-1 d-inline-block" style="font-size: 0.6rem;">TÍTULO</span>`;
+                        item.titulo_snippets.forEach(snip => {
+                            html += `<div class="fst-italic opacity-75">"...${snip}..."</div>`;
+                        });
+                        html += `</div>`;
+                    }
+
+                    if (item.contenido_snippets && item.contenido_snippets.length > 0) {
+                        html += `<div>`;
+                        html += `<span class="snippet-type-badge text-muted ms-0 mb-1 d-inline-block" style="font-size: 0.6rem;">CONTENIDO</span>`;
+                        item.contenido_snippets.forEach(snip => {
+                            html += `<div class="opacity-75">"...${snip}..."</div>`;
+                        });
+                        html += `</div>`;
+                    }
+
+                    html += `</div>`;
+                    list.insertAdjacentHTML('beforeend', html);
+                });
+
+            } else {
+                const errDiv = document.getElementById('contexto-error');
+                errDiv.textContent = data.error || "Error cargando contexto";
+                errDiv.classList.remove('d-none');
+            }
+        } catch (e) {
+            console.error("Error loading contexto:", e);
+            document.getElementById('contexto-loading').classList.add('d-none');
+            const errDiv = document.getElementById('contexto-error');
+            errDiv.textContent = "Error de conexión con el servidor.";
+            errDiv.classList.remove('d-none');
+        }
+    }
+
+    function actualizarTablaUbicaciones() {
+        cargarDatos();
+    }
+
+    function toggleDeletedView() {
+        _viewDeleted = !_viewDeleted;
+        const btn = document.getElementById('btn-toggle-deleted');
+        if (_viewDeleted) {
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="fa-solid fa-eye me-1"></i> Ver Activos';
+            btn.classList.replace('btn-sirio-outline-pro', 'btn-sirio-pro');
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fa-solid fa-eye-slash me-1"></i> Ver Borrados';
+            btn.classList.replace('btn-sirio-pro', 'btn-sirio-outline-pro');
+        }
+        _currentPage = 1;
+        cargarDatos();
+    }
+
+    function setLocStatusFilter(status, btn) {
+        _currentStatusFilter = status;
+        _currentPage = 1;
+
+        // Update active class on mode buttons
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        renderTablaUbicaciones();
+    }
+
+    /**
+     * Obtiene el icono Font Awesome correspondiente al tipo de lugar
+     * @param {string} tipo - Tipo de lugar según Nominatim (city, road, building, etc.)
+     * @returns {string} - Clase CSS de Font Awesome
+     */
+    function getTipoLugarIcon(tipo) {
+        if (!tipo || tipo === 'unknown') return 'fa-solid fa-location-dot';
+
+        // Buscar en cache (por código o por nombre)
+        const tc = _tiposUbicacionCache.find(t => 
+            t.codigo.toLowerCase() === tipo.toLowerCase() || 
+            t.nombre.toLowerCase() === tipo.toLowerCase()
+        );
+        if (tc && tc.icono) return tc.icono;
+        
+        const iconMap = {
+            // Ciudades y Poblaciones
+            'city': 'fa-solid fa-city',
+            'town': 'fa-solid fa-building',
+            'village': 'fa-solid fa-house-chimney',
+            'hamlet': 'fa-solid fa-house',
+            'suburb': 'fa-solid fa-building-user',
+            
+            // Vías y Transporte
+            'road': 'fa-solid fa-road',
+            'street': 'fa-solid fa-road',
+            'highway': 'fa-solid fa-road-circle-exclamation',
+            'path': 'fa-solid fa-person-hiking',
+            
+            // Edificios y Lugares Específicos
+            'building': 'fa-solid fa-building',
+            'house': 'fa-solid fa-house',
+            'church': 'fa-solid fa-church',
+            'chapel': 'fa-solid fa-church',
+            'mosque': 'fa-solid fa-mosque',
+            'synagogue': 'fa-solid fa-star-of-david',
+            'castle': 'fa-solid fa-fort-awesome',
+            'fort': 'fa-solid fa-chess-rook',
+            'hospital': 'fa-solid fa-hospital',
+            'school': 'fa-solid fa-school',
+            'university': 'fa-solid fa-graduation-cap',
+            'stadium': 'fa-solid fa-futbol',
+            'lighthouse': 'fa-solid fa-tower-observation',
+            
+            // Geografía Natural
+            'mountain': 'fa-solid fa-mountain',
+            'peak': 'fa-solid fa-mountain-sun',
+            'volcano': 'fa-solid fa-volcano',
+            'hill': 'fa-solid fa-mountain',
+            'valley': 'fa-solid fa-water',
+            'cave': 'fa-solid fa-dungeon',
+            'cape': 'fa-solid fa-location-arrow',
+            
+            // Hidrografía
+            'river': 'fa-solid fa-water',
+            'stream': 'fa-solid fa-water',
+            'lake': 'fa-solid fa-water',
+            'reservoir': 'fa-solid fa-water',
+            'bay': 'fa-solid fa-water',
+            'sea': 'fa-solid fa-water',
+            'ocean': 'fa-solid fa-water',
+            'island': 'fa-solid fa-island-tropical',
+            'beach': 'fa-solid fa-umbrella-beach',
+            
+            // Administrativo
+            'state': 'fa-solid fa-landmark',
+            'province': 'fa-solid fa-landmark',
+            'region': 'fa-solid fa-map',
+            'county': 'fa-solid fa-map-location-dot',
+            
+            // Otros
+            'square': 'fa-solid fa-chess-board',
+            'park': 'fa-solid fa-tree',
+            'forest': 'fa-solid fa-tree',
+            'cemetery': 'fa-solid fa-cross',
+            'airport': 'fa-solid fa-plane',
+            'railway': 'fa-solid fa-train',
+            'bridge': 'fa-solid fa-bridge'
+        };
+        
+        return iconMap[tipo.toLowerCase()] || 'fa-solid fa-location-dot';
+    }
+
+    /**
+     * Obtiene un color distintivo según el tipo de lugar
+     * @param {string} tipo - Tipo de lugar
+     * @returns {string} - Clase CSS de color
+     */
+    function getTipoLugarColor(tipo) {
+        if (!tipo || tipo === 'unknown') return 'text-muted opacity-50';
+        
+        // Todos los tipos conocidos en naranja
+        return 'text-warning';
+    }
+
+    /**
+     * Obtiene el nombre en español del tipo de lugar
+     * @param {string} tipo - Tipo de lugar en inglés
+     * @returns {string} - Nombre en español
+     */
+    function getTipoLugarNombre(tipo) {
+        if (!tipo || tipo === 'unknown') return 'Desconocido';
+        
+        // Buscar en cache (por código o por nombre)
+        const tc = _tiposUbicacionCache.find(t => 
+            t.codigo.toLowerCase() === tipo.toLowerCase() || 
+            t.nombre.toLowerCase() === tipo.toLowerCase()
+        );
+        if (tc) return tc.nombre;
+        
+        const nombreMap = {
+            // Ciudades y Poblaciones
+            'city': 'Ciudad',
+            'town': 'Pueblo',
+            'village': 'Aldea',
+            'hamlet': 'Caserío',
+            'suburb': 'Barrio',
+            'locality': 'Localidad',
+            
+            // Vías y Transporte
+            'road': 'Carretera',
+            'street': 'Calle',
+            'highway': 'Autopista',
+            'path': 'Sendero',
+            'pedestrian': 'Zona Peatonal',
+            'footway': 'Camino Peatonal',
+            'track': 'Pista',
+            'primary': 'Vía Principal',
+            'secondary': 'Vía Secundaria',
+            'tertiary': 'Vía Terciaria',
+            'residential': 'Calle Residencial',
+            'unclassified': 'Vía sin Clasificar',
+            'service': 'Vía de Servicio',
+            'living_street': 'Calle Residencial',
+            'steps': 'Escaleras',
+            
+            // Edificios y Lugares Específicos
+            'building': 'Edificio',
+            'house': 'Casa',
+            'church': 'Iglesia',
+            'chapel': 'Capilla',
+            'mosque': 'Mezquita',
+            'synagogue': 'Sinagoga',
+            'castle': 'Castillo',
+            'fort': 'Fortaleza',
+            'hospital': 'Hospital',
+            'school': 'Escuela',
+            'university': 'Universidad',
+            'stadium': 'Estadio',
+            'lighthouse': 'Faro',
+            'place_of_worship': 'Lugar de Culto',
+            'townhall': 'Ayuntamiento',
+            'tower': 'Torre',
+            'memorial': 'Memorial',
+            'monument': 'Monumento',
+            'attraction': 'Atracción',
+            'fountain': 'Fuente',
+            'parking': 'Aparcamiento',
+            'apartments': 'Apartamentos',
+            'detached': 'Casa Aislada',
+            'hotel': 'Hotel',
+            'hostel': 'Hostal',
+            'guest_house': 'Casa de Huéspedes',
+            'clinic': 'Clínica',
+            'pharmacy': 'Farmacia',
+            'kindergarten': 'Guardería',
+            'theatre': 'Teatro',
+            'station': 'Estación',
+            'bus_stop': 'Parada de Autobús',
+            
+            // Geografía Natural
+            'mountain': 'Montaña',
+            'peak': 'Pico',
+            'volcano': 'Volcán',
+            'hill': 'Colina',
+            'valley': 'Valle',
+            'cave': 'Cueva',
+            'rock': 'Roca',
+            'cape': 'Cabo',
+            
+            // Hidrografía
+            'river': 'Río',
+            'stream': 'Arroyo',
+            'lake': 'Lago',
+            'reservoir': 'Embalse',
+            'bay': 'Bahía',
+            'sea': 'Mar',
+            'ocean': 'Océano',
+            'gulf': 'Golfo',
+            'island': 'Isla',
+            'beach': 'Playa',
+            'marina': 'Puerto Deportivo',
+            'water': 'Agua',
+            
+            // Administrativo
+            'country': 'País',
+            'state': 'Estado/Provincia',
+            'province': 'Provincia',
+            'region': 'Región',
+            'county': 'Condado',
+            'administrative': 'División Administrativa',
+            
+            // Comercio y Servicios
+            'shop': 'Tienda',
+            'supermarket': 'Supermercado',
+            'restaurant': 'Restaurante',
+            'cafe': 'Cafetería',
+            'fast_food': 'Comida Rápida',
+            'bar': 'Bar',
+            'confectionery': 'Confitería',
+            'pastry': 'Pastelería',
+            'florist': 'Floristería',
+            'beauty': 'Salón de Belleza',
+            'office': 'Oficina',
+            'bank': 'Banco',
+            'government': 'Edificio Gubernamental',
+            'travel_agency': 'Agencia de Viajes',
+            
+            // Otros
+            'square': 'Plaza',
+            'park': 'Parque',
+            'forest': 'Bosque',
+            'cemetery': 'Cementerio',
+            'airport': 'Aeropuerto',
+            'railway': 'Ferrocarril',
+            'bridge': 'Puente',
+            'industrial': 'Zona Industrial',
+            'works': 'Fábrica',
+            'farm': 'Granja',
+            'playground': 'Parque Infantil',
+            'sports_centre': 'Centro Deportivo',
+            'swimming_pool': 'Piscina',
+            'yes': 'Edificación',
+            'artwork': 'Obra de Arte',
+            'viewpoint': 'Mirador',
+            'bunker': 'Búnker',
+            'diplomatic': 'Sede Diplomática',
+            'archive': 'Archivo',
+            'general': 'General'
+        };
+        
+        return nombreMap[tipo.toLowerCase()] || tipo.charAt(0).toUpperCase() + tipo.slice(1);
+    }
+
+    function renderTablaUbicaciones(filterText = '') {
+        const tbody = document.querySelector('#table-ubicaciones tbody');
+        if (!tbody) return;
+
+        const filterInput = document.getElementById('search-loc-table');
+        const filter = (filterText || (filterInput ? filterInput.value : '')).toLowerCase();
+        const freqFilter = parseInt(document.getElementById('sel-filter-freq')?.value || '0');
+        const tipoFilter = document.getElementById('sel-filter-tipo')?.value || '';
+
+        let filtered = _currentLocData.filter(loc => {
+            if (_currentStatusFilter === 'verified' && !loc.verified) return false;
+            if (_currentStatusFilter === 'pending' && loc.verified) return false;
+            if (_currentStatusFilter === 'unmapped' && (loc.lat != null && loc.lon != null)) return false;
+            // DESV: Mostrar ubicaciones verificadas que tienen AL MENOS una ocurrencia desvinculada
+            if (_currentStatusFilter === 'desvinculadas' && (!loc.verified || !loc.frecuencia_desvinculada || loc.frecuencia_desvinculada <= 0)) return false;
+
+            // Frequency Filter
+            if (freqFilter > 0 && (loc.frecuencia || 0) < freqFilter) return false;
+
+            // Tipo de Lugar Filter (soporta múltiples tipos en ubicaciones separados por coma)
+            if (tipoFilter) {
+                const tiposLugar = (loc.tipo_lugar || 'unknown').toLowerCase().split(',').map(t => t.trim());
+                const tipoFiltro = tipoFilter.toLowerCase().trim();
+                // Verifica si alguno de los tipos de la ubicación coincide con el filtro
+                if (!tiposLugar.includes(tipoFiltro)) return false;
+            }
+
+            if (filter && !loc.nombre.toLowerCase().includes(filter)) return false;
+            return true;
+        });
+
+        if (_currentPage === 1) {
+            tbody.innerHTML = '';
+        }
+
+        const shown = filtered;
+
+        shown.forEach(loc => {
+            const tr = document.createElement('tr');
+            tr.dataset.nombre = loc.nombre;
+            tr.className = 'loc-row';
+            tr.id = `row-${loc.nombre.replace(/\s+/g, '-')}`;
+
+            const isVerified = !!loc.verified;
+            const verifIcon = isVerified ?
+                `<i class="fa-solid fa-check-circle text-success cursor-pointer" onclick="toggleVerificacionCiudadRow(this, false)" title="✓ Verificada: Es una ubicación real (BD global). Click para marcar como NO ubicación"></i>` :
+                `<i class="fa-regular fa-circle text-muted opacity-50 cursor-pointer" onclick="toggleVerificacionCiudadRow(this, true)" title="✗ NO verificada: Marcar como NO ubicación (lista negra global). Click para verificar como ubicación real"></i>`;
+            
+            const isVinculada = loc.vinculada !== false; // true por defecto salvo que sea explícitamente false
+            const vinculadaIcon = isVinculada ?
+                `<i class="fa-solid fa-link text-info cursor-pointer" onclick="toggleVinculacionRow(this)" title="🔗 Vinculada a este proyecto: Aparecerá en el mapa corpus. Click para desvincular (si fue mencionada por otro motivo)"></i>` :
+                `<i class="fa-solid fa-link-slash text-warning opacity-50 cursor-pointer" onclick="toggleVinculacionRow(this)" title="⛓️‍💫 Desvinculada: Es ubicación real pero NO aparecerá en el mapa de este proyecto. Click para vincular"></i>`;
+            
+            const isDeleted = !!loc.deleted;
+            const isBlacklisted = !!loc.blacklisted;
+
+            // Icono y color según tipo de lugar (pueden ser múltiples separados por coma)
+            const tipoLugar = loc.tipo_lugar || 'unknown';
+            const tipos = tipoLugar.split(',').map(t => t.trim()).filter(t => t);
+            
+            let tiposHtml = '';
+            if (tipos.length > 0) {
+                tiposHtml = tipos.map(tipo => {
+                    const tipoIcon = getTipoLugarIcon(tipo);
+                    const tipoColor = getTipoLugarColor(tipo);
+                    const tipoTitle = getTipoLugarNombre(tipo);
+                    return `<i class="${tipoIcon} ${tipoColor}" style="font-size: 0.85rem;" title="${tipoTitle}"></i>`;
+                }).join(' ');
+            } else {
+                const tipoIcon = getTipoLugarIcon('unknown');
+                const tipoColor = getTipoLugarColor('unknown');
+                const tipoTitle = getTipoLugarNombre('unknown');
+                tiposHtml = `<i class="${tipoIcon} ${tipoColor}" style="font-size: 0.85rem;" title="${tipoTitle}"></i>`;
+            }
+
+            let statusBadge = '';
+            if (isDeleted) {
+                if (isVerified) {
+                    statusBadge = '<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 xsmall ms-2" title="Es ubicación en otros proyectos, pero rechazada aquí">UBICACIÓN AJENA</span>';
+                } else {
+                    statusBadge = isBlacklisted ?
+                        '<span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 xsmall ms-2" title="No es una ubicación (Global)">NO ES UBICACIÓN</span>' :
+                        '<span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 xsmall ms-2" title="Rechazada localmente">RECHAZADO</span>';
+                }
+            }
+
+            tr.innerHTML = `
+                <td><input type="checkbox" class="form-check-input loc-select-row" data-nombre="${loc.nombre}"></td>
+                <td class="text-center">${verifIcon}</td>
+                <td class="text-center">${vinculadaIcon}</td>
+                <td class="col-nombre">
+                    <span class="fw-bold cursor-pointer hover-amber" onclick="centrarEnMiniMapRow(this)">${loc.nombre}</span>
+                    ${statusBadge}
+                </td>
+                <td class="text-center col-tipo">${tiposHtml}</td>
+                <td class="text-center text-info col-frec-titulo cursor-pointer hover-amber" onclick="cargarContextoLugar('${loc.nombre}')" title="Ver Menciones en Título">${loc.frec_titulo || 0}</td>
+                <td class="text-center text-muted col-frec-contenido cursor-pointer hover-amber" onclick="cargarContextoLugar('${loc.nombre}')" title="Ver Menciones en Contenido">${loc.frec_contenido || 0}</td>
+                <td class="text-center fw-bold col-frecuencia cursor-pointer hover-amber" onclick="cargarContextoLugar('${loc.nombre}')" title="Ver Contexto Total">
+                    ${loc.frecuencia}${loc.frecuencia_desvinculada > 0 ? ' <span class="text-warning small">(-' + loc.frecuencia_desvinculada + ')</span>' : ''}
+                </td>
+                <td class="text-center font-mono opacity-75 col-lat">${loc.lat ? loc.lat.toFixed(5) : '-'}</td>
+                <td class="text-center font-mono opacity-75 col-lon">${loc.lon ? loc.lon.toFixed(5) : '-'}</td>
+                <td class="text-end col-acciones">
+                    <div class="d-flex justify-content-end gap-1">
+                        <i class="fa-solid fa-magnifying-glass action-icon" onclick="centrarEnMiniMapRow(this)" title="Ver en Mapa Táctico"></i>
+                        <i class="fa-solid fa-pen action-icon" onclick="activarEdicionInlineRow(this)" title="Editar en Fila"></i>
+                        <i class="fa-solid fa-magnifying-glass-location action-icon" onclick="abrirGoogleMapsRow(this)" title="Buscar en Google Maps"></i>
+                        <a href="{{ url_for('noticias.listar') }}?lugar=${encodeURIComponent(loc.nombre)}" target="_blank" class="text-info">
+                            <i class="fa-solid fa-newspaper action-icon" title="Ver Noticias"></i>
+                        </a>
+                        <i class="fa-solid fa-broom action-icon text-warning" onclick="limpiarReferenciasIndividualRow(this)" title="Limpiar Referencias (Poner a 0)"></i>
+                        <i class="fa-solid fa-arrows-rotate action-icon text-info" onclick="recalcularFrecuenciaIndividualRow(this)" title="Recuperar (Recalcular Frecuencia)"></i>
+                        ${isDeleted ?
+                    `<i class="fa-solid fa-undo action-icon text-info" onclick="restaurarUbicacionRow(this)" title="Restaurar (Hacer visible)"></i>` :
+                    `<i class="fa-solid fa-ban action-icon text-danger" onclick="borrarUbicacionRow(this)" title="Eliminar definitivamente (No es ubicación - Global)"></i>`
+                }
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('loc-table-count').textContent = `Ubicaciones cargadas: ${filtered.length}`;
+
+        // Update stats
+        if (_currentPage === 1) {
+            document.getElementById('stat-total-locs').textContent = _currentLocData.length;
+            document.getElementById('stat-total-mentions').textContent = _currentLocData.reduce((acc, l) => acc + (l.frecuencia || 0), 0);
+            document.getElementById('stat-unmapped-locs').textContent = _currentLocData.filter(l => l.lat == null).length;
+            const verif = _currentLocData.filter(l => l.verified).length;
+            document.getElementById('stat-verif-percent').textContent = (_currentLocData.length > 0 ? Math.round((verif / _currentLocData.length) * 100) : 0) + '%';
+        }
+
+        // Sync batch buttons visibility
+        toggleBatchButtons();
+    }
+
+    async function recalcularFrecuenciaIndividual(nombre) {
+        if (!confirm(`¿Recalcular frecuencia para "${nombre}" en todo el corpus?`)) return;
+        SirioNotifications.info(`Recalculando "${nombre}"...`);
+        try {
+            const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: [nombre] })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`"${nombre}" actualizado.`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al recalcular frecuencia.");
+        }
+    }
+
+    async function limpiarReferenciasIndividual(nombre) {
+        if (!confirm(`¿Borrar todas las referencias de "${nombre}" en este proyecto?\nLas frecuencias se pondrán a 0.`)) return;
+        try {
+            const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                SirioNotifications.success(`Limpiadas ${data.affected} referencias de "${nombre}".`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al limpiar referencias.");
+        }
+    }
+
+    async function ejecutarLimpiezaMasiva() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        if (checked.length === 0) return;
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (!confirm(`¿Limpiar frecuencias de ${nombres.length} ubicaciones seleccionadas?`)) return;
+
+        try {
+            const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                SirioNotifications.success(`Limpiadas ${data.affected} referencias.`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error en limpieza masiva.");
+        }
+    }
+
+    let _miniMapBaseLayer = null;
+
+    // Mini-map logic
+    function initMiniMap() {
+        if (_miniMap) return;
+        _miniMap = L.map('mini-map-preview', {
+            attributionControl: false
+        }).setView([40, -3.7], 6);
+
+        const theme = document.body.getAttribute('data-theme') || 'dark';
+        const tileUrl = theme === 'light'
+            ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+        _miniMapBaseLayer = L.tileLayer(tileUrl).addTo(_miniMap);
+
+        // Theme sync for mini-map
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    const newTheme = document.body.getAttribute('data-theme');
+                    const newUrl = newTheme === 'light'
+                        ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                    if (_miniMapBaseLayer) {
+                        _miniMapBaseLayer.setUrl(newUrl);
+                    }
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true });
+
+        _miniMap.on('click', function (e) {
+            if (_miniMarker) {
+                _miniMarker.setLatLng(e.latlng);
+                actualizarLabelCoords(e.latlng.lat, e.latlng.lng);
+            }
+        });
+    }
+
+    function centrarEnMiniMap(nombre, lat, lon) {
+        selectLocForMiniMap(nombre, lat, lon);
+        if (_miniMap && lat && lon) {
+            _miniMap.setView([lat, lon], 14);
+        }
+    }
+
+    // Safer wrappers for row actions
+    function centrarEnMiniMapRow(el) {
+        const tr = el.closest('tr');
+        const nombre = tr.dataset.nombre;
+        const loc = _currentLocData.find(l => l.nombre === nombre);
+        if (loc) {
+            centrarEnMiniMap(loc.nombre, loc.lat, loc.lon);
+        }
+    }
+
+    function selectLocForMiniMap(nombre, lat, lon) {
+        const cardMap = document.getElementById('card-tactical-map');
+        if (cardMap) cardMap.style.display = 'block';
+        const loginName = document.getElementById('preview-name');
+        if (loginName) loginName.textContent = nombre;
+
+        // Ensure map is sized correctly and IDE layers are ready
+        setTimeout(() => {
+            if (_miniMap) {
+                _miniMap.invalidateSize();
+                loadUserIDEForMiniMap();
+            }
+        }, 300);
+
+        if (!_miniMap) initMiniMap();
+
+        const targetLat = lat || 40;
+        const targetLon = lon || -3;
+        const latlng = [targetLat, targetLon];
+
+        if (_miniMarker) {
+            _miniMarker.setLatLng(latlng);
+        } else {
+            _miniMarker = L.marker(latlng, { draggable: true }).addTo(_miniMap);
+            _miniMarker.on('dragend', function () {
+                const pos = _miniMarker.getLatLng();
+                actualizarLabelCoords(pos.lat, pos.lng);
+            });
+        }
+
+        _miniMap.setView(latlng, _miniMap.getZoom() > 10 ? _miniMap.getZoom() : 12);
+        _miniMap.invalidateSize();
+        actualizarLabelCoords(targetLat, targetLon);
+    }
+
+    function actualizarLabelCoords(lat, lon) {
+        document.getElementById('preview-coords-text').textContent = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+    }
+
+    function hideTacticalMap() {
+        document.getElementById('card-tactical-map').style.display = 'none';
+    }
+
+    async function saveMiniMapCoords() {
+        if (!_miniMarker) return;
+        const pos = _miniMarker.getLatLng();
+        const nombre = document.getElementById('preview-name').textContent;
+
+        try {
+            const res = await fetch("{{ url_for('noticias.gestion_editar_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre_antiguo: nombre, nombre_nuevo: nombre, lat: pos.lat, lon: pos.lng })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.SirioNotifications) SirioNotifications.success(`"${nombre}" actualizado.`);
+                else console.log(`"${nombre}" actualizado.`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function toggleVerificacionCiudad(nombre, verificada) {
+        try {
+            await fetch("{{ url_for('noticias.api_verificar_ciudad') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre, verificada: verificada })
+            });
+            const loc = _currentLocData.find(l => l.nombre === nombre);
+            if (loc) loc.verified = verificada;
+            renderTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    function abrirGoogleMaps(nombre) {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nombre)}`, '_blank');
+    }
+
+    function abrirGoogleMapsRow(el) {
+        const tr = el.closest('tr');
+        abrirGoogleMaps(tr.dataset.nombre);
+    }
+
+    function activarEdicionInlineRow(el) {
+        const tr = el.closest('tr');
+        activarEdicionInline(tr.dataset.nombre);
+    }
+
+    function renderTipoOptions(selectedValues = [], asChoicesData = false) {
+        if (!_tiposUbicacionCache || _tiposUbicacionCache.length === 0) {
+            if (asChoicesData) {
+                return [{ value: 'unknown', label: 'Desconocido (Sin tipos)', selected: selectedValues.includes('unknown') }];
+            }
+            return '<option value="unknown">Desconocido (Sin tipos)</option>';
+        }
+
+        // Agrupar por categoría
+        const porCategoria = {};
+        _tiposUbicacionCache.forEach(t => {
+            if (!porCategoria[t.categoria]) porCategoria[t.categoria] = [];
+            porCategoria[t.categoria].push(t);
+        });
+
+        // Ordenar categorías
+        const categorias = Object.keys(porCategoria).sort((a, b) => {
+            if (a === 'Otros') return 1;
+            if (b === 'Otros') return -1;
+            return a.localeCompare(b);
+        });
+
+        if (asChoicesData) {
+            const choices = [];
+
+            categorias.forEach(cat => {
+                const groupOptions = [];
+                porCategoria[cat].forEach(t => {
+                    if (String(t.nombre).toLowerCase() === 'desconocido' || t.codigo === 'unknown') return;
+                    groupOptions.push({
+                        value: t.nombre,
+                        label: t.nombre,
+                        customProperties: { categoria: cat, icon: t.icono },
+                        selected: selectedValues.some(v => String(v).toLowerCase() === String(t.nombre).toLowerCase())
+                    });
+                });
+                if (groupOptions.length > 0) {
+                    choices.push({
+                        label: cat,
+                        choices: groupOptions
+                    });
+                }
+            });
+            
+            choices.push({
+                label: 'Sin Clasificar',
+                choices: [
+                    { value: 'unknown', label: 'Desconocido', selected: selectedValues.includes('unknown') }
+                ]
+            });
+            return choices;
+        }
+
+        let html = '';
+        
+        categorias.forEach(cat => {
+            let catHtml = '';
+            porCategoria[cat].forEach(t => {
+                if (String(t.nombre).toLowerCase() === 'desconocido' || t.codigo === 'unknown') return;
+                // Por la pista del usuario, usaremos NOMBRE como identificador principal
+                const isSelected = selectedValues.some(v => String(v).toLowerCase() === String(t.nombre).toLowerCase());
+                catHtml += `<option value="${t.nombre}" data-icon="${t.icono || ''}" ${isSelected ? 'selected' : ''}>${t.nombre}</option>`;
+            });
+            if (catHtml) {
+                html += `<optgroup label="${cat}">${catHtml}</optgroup>`;
+            }
+        });
+        
+        html += `<optgroup label="Sin Clasificar">
+            <option value="unknown" ${selectedValues.includes('unknown') ? 'selected' : ''}>Desconocido</option>
+        </optgroup>`;
+
+        return html;
+    }
+
+    function activarEdicionInline(nombre) {
+        // Use attribute selector instead of id to handle special characters in ID
+        const tr = document.querySelector(`tr[data-nombre="${CSS.escape(nombre)}"]`);
+        if (!tr || tr.classList.contains('edit-row-active')) return;
+
+        const loc = _currentLocData.find(l => l.nombre === nombre);
+        if (!loc) return;
+
+        tr.classList.add('edit-row-active');
+
+        // Cells
+        const colNombre = tr.querySelector('.col-nombre');
+        const colFrecTitulo = tr.querySelector('.col-frec-titulo');
+        const colFrecContenido = tr.querySelector('.col-frec-contenido');
+        const colFrecuencia = tr.querySelector('.col-frecuencia');
+        const colLat = tr.querySelector('.col-lat');
+        const colLon = tr.querySelector('.col-lon');
+        const colAcciones = tr.querySelector('.col-acciones');
+
+        // Store original content for cancel
+        tr._originalHTML = tr.innerHTML;
+
+        // Add tipo_lugar field (multiselect)
+        const tiposActuales = loc.tipo_lugar ? loc.tipo_lugar.split(',').map(t => t.trim()) : ['unknown'];
+        
+        const tipoLugarSelector = `
+            <select class="form-control-inline form-select form-select-sm" multiple size="10" style="font-size: 0.75rem; height: 200px;">
+                ${renderTipoOptions(tiposActuales)}
+            </select>
+            <small class="text-muted d-block mt-1" style="font-size: 0.65rem;">
+                <i class="fa-solid fa-info-circle me-1"></i>Ctrl/Cmd + Click para múltiple
+            </small>
+        `;
+
+        colNombre.innerHTML = `
+            <div class="input-group input-group-sm flex-nowrap">
+                <input type="text" class="form-control-inline" value="${loc.nombre.replace(/"/g, '&quot;')}" list="datalist-lugares">
+                <button class="btn btn-xs btn-sirio-outline px-2 border-0 hover-amber" type="button" onclick="abrirModalMapearRow(this)" title="Buscar y Mapear">
+                    <i class="fa-solid fa-magnifying-glass-location"></i>
+                </button>
+            </div>
+            <div class="mt-1">
+                <label class="xsmall text-muted" style="font-size: 0.65rem;">Tipo:</label>
+                ${tipoLugarSelector}
+            </div>
+        `;
+        colFrecTitulo.innerHTML = `<input type="number" class="form-control-inline text-center" value="${loc.frec_titulo || 0}">`;
+        colFrecContenido.innerHTML = `<input type="number" class="form-control-inline text-center" value="${loc.frec_contenido || 0}">`;
+        colFrecuencia.innerHTML = `<input type="number" class="form-control-inline text-center" value="${loc.frecuencia}">`;
+        colLat.innerHTML = `<input type="number" class="form-control-inline text-center" value="${loc.lat || ''}" step="any">`;
+        colLon.innerHTML = `<input type="number" class="form-control-inline text-center" value="${loc.lon || ''}" step="any">`;
+
+        colAcciones.innerHTML = `
+            <div class="d-flex justify-content-end gap-1">
+                <i class="fa-solid fa-save action-icon text-success" onclick="guardarEdicionInlineRow(this)" title="Guardar"></i>
+                <i class="fa-solid fa-times action-icon text-danger" onclick="cancelarEdicionInlineRow(this)" title="Cancelar"></i>
+            </div>
+        `;
+
+        // Update datalist if needed
+        actualizarDatalist();
+
+        // Add auto-fill listener for the name input
+        const nameInput = tr.querySelector('.col-nombre input');
+        if (nameInput) {
+            nameInput.addEventListener('change', (e) => {
+                const newVal = e.target.value.trim();
+                const existing = _currentLocData.find(l => l.nombre.toLowerCase() === newVal.toLowerCase());
+                if (existing) {
+                    const latInput = tr.querySelector('.col-lat input');
+                    const lonInput = tr.querySelector('.col-lon input');
+                    if (latInput && existing.lat != null) latInput.value = existing.lat;
+                    if (lonInput && existing.lon != null) lonInput.value = existing.lon;
+                    SirioNotifications.info(`Adoptando coordenadas de "${existing.nombre}" (Fusión sugerida)`);
+                }
+            });
+        }
+    }
+
+    function cancelarEdicionInlineRow(el) {
+        const tr = el.closest('tr');
+        cancelarEdicionInline(tr.dataset.nombre);
+    }
+
+    function cancelarEdicionInline(nombre) {
+        const rowId = `row-${nombre.replace(/\s+/g, '-')}`;
+        const tr = document.getElementById(rowId);
+        if (tr && tr._originalHTML) {
+            tr.innerHTML = tr._originalHTML;
+            tr.classList.remove('edit-row-active');
+        }
+    }
+
+    async function guardarEdicionInlineRow(el) {
+        const tr = el.closest('tr');
+        guardarEdicionInline(tr.dataset.nombre, tr);
+    }
+
+    async function guardarEdicionInline(nombreAntiguo, tr) {
+        if (!tr) {
+            tr = document.querySelector(`tr[data-nombre="${CSS.escape(nombreAntiguo)}"]`);
+        }
+        if (!tr) return;
+
+        const inputs = tr.querySelectorAll('input.form-control-inline');
+        const selectTipo = tr.querySelector('select.form-control-inline');
+        
+        // Obtener múltiples tipos seleccionados y unir con coma
+        let tipoLugar = null;
+        if (selectTipo) {
+            const selectedOptions = Array.from(selectTipo.selectedOptions).map(opt => opt.value);
+            tipoLugar = selectedOptions.length > 0 ? selectedOptions.join(',') : 'unknown';
+        }
+        
+        const payload = {
+            nombre_antiguo: nombreAntiguo,
+            nombre_nuevo: inputs[0].value,
+            tipo_lugar: tipoLugar,
+            frec_titulo: parseInt(inputs[1].value) || 0,
+            frec_contenido: parseInt(inputs[2].value) || 0,
+            frecuencia: parseInt(inputs[3].value) || 0,
+            lat: inputs[4].value ? parseFloat(inputs[4].value) : null,
+            lon: inputs[5].value ? parseFloat(inputs[5].value) : null
+        };
+
+        try {
+            const res = await fetch("{{ url_for('noticias.gestion_editar_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.SirioNotifications) SirioNotifications.success(`"${payload.nombre_nuevo}" actualizado.`);
+                actualizarTablaUbicaciones();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function actualizarDatalist() {
+        const dl = document.getElementById('datalist-lugares');
+        if (!dl) return;
+        dl.innerHTML = '';
+        const uniqueNames = [...new Set(_currentLocData.map(l => l.nombre))];
+        uniqueNames.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n;
+            dl.appendChild(opt);
+        });
+    }
+
+    async function saveFullLocationEdit() {
+        // Redirection for legacy code if somehow called, but we use inline now
+        console.warn("saveFullLocationEdit is deprecated. Use inline editing.");
+    }
+
+    async function crearUbicacion() {
+        const nombre = document.getElementById('new-loc-name').value;
+        const lat = document.getElementById('new-loc-lat').value;
+        const lon = document.getElementById('new-loc-lon').value;
+        if (!nombre) return alert("Falta nombre");
+
+        const payload = { nombre: nombre };
+        if (lat && lon) {
+            payload.lat = parseFloat(lat);
+            payload.lon = parseFloat(lon);
+        }
+
+        try {
+            const res = await fetch("{{ url_for('noticias.gestion_crear_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('new-loc-name').value = '';
+                document.getElementById('new-loc-lat').value = '';
+                document.getElementById('new-loc-lon').value = '';
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function borrarUbicacionRow(el) {
+        borrarUbicacion(el.closest('tr').dataset.nombre);
+    }
+
+    async function borrarUbicacion(nombre) {
+        if (!confirm(`¿Borrar "${nombre}"?`)) return;
+        try {
+            await fetch("{{ url_for('noticias.gestion_borrar_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre })
+            });
+            actualizarTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    async function restaurarUbicacionRow(el) {
+        restaurarUbicacion(el.closest('tr').dataset.nombre);
+    }
+
+    async function restaurarUbicacion(nombre) {
+        try {
+            await fetch("{{ url_for('noticias.gestion_restaurar_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre })
+            });
+            actualizarTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    function toggleVerificacionCiudadRow(el, verificada) {
+        toggleVerificacionCiudad(el.closest('tr').dataset.nombre, verificada);
+    }
+
+    async function toggleVerificacionCiudad(nombre, verificada) {
+        try {
+            await fetch("{{ url_for('noticias.api_verificar_ciudad') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre, verificada: verificada })
+            });
+            const loc = _currentLocData.find(l => l.nombre === nombre);
+            if (loc) loc.verified = verificada;
+            renderTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    function toggleVinculacionRow(el) {
+        const tr = el.closest('tr');
+        const nombre = tr.dataset.nombre;
+        const loc = _currentLocData.find(l => l.nombre === nombre);
+        
+        if (!loc) return;
+        
+        const isVinculada = loc.vinculada !== false;
+        
+        if (isVinculada) {
+            // Desvincular (marcar como borrado)
+            if (!confirm(`¿Desvincular "${nombre}" de este proyecto?\n\n• La ubicación es real pero NO aparecerá en el mapa de este proyecto\n• Útil si fue mencionada por otro motivo (nombre de barco, persona, etc.)\n• Se mantiene en BD global para reconocimiento futuro`)) return;
+            ejecutarDesvincularIndividual(nombre);
+        } else {
+            // Vincular (restaurar)
+            if (!confirm(`¿Vincular "${nombre}" a este proyecto?\n\n• La ubicación volverá a aparecer en el mapa corpus\n• Solo si es realmente una ubicación geográfica en este contexto`)) return;
+            ejecutarVincularIndividual(nombre);
+        }
+    }
+
+    async function ejecutarDesvincularIndividual(nombre) {
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_unlink_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: [nombre] })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`"${nombre}" desvinculado del mapa.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al desvincular ubicación.");
+        }
+    }
+
+    async function ejecutarVincularIndividual(nombre) {
+        try {
+            const res = await fetch("{{ url_for('noticias.gestion_restaurar_ubicacion') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`"${nombre}" vinculado al mapa.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al vincular ubicación.");
+        }
+    }
+
+    async function toggleVinculacionContexto(lugarId, vincular, nombreUbicacion) {
+        try {
+            const res = await fetch(`{{ url_for('noticias.vincular_ubicacion', ubicacion_id=0) }}`.replace('/0/', `/${lugarId}/`), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ vinculada: vincular })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const accion = vincular ? 'vinculada' : 'desvinculada';
+                if (data.frecuencia_efectiva > 0) {
+                    SirioNotifications.success(`Mención ${accion}. Quedan ${data.frecuencia_efectiva} vinculadas.`);
+                    // Recargar el contexto para actualizar los contadores
+                    if (_currentContextoNombre) {
+                        await cargarContextoLugar(_currentContextoNombre);
+                    }
+                } else {
+                    SirioNotifications.info(`Todas las menciones desvinculadas. La noticia desaparecerá del contexto.`);
+                    // Recargar el contexto después de un momento para que se vea el cambio
+                    setTimeout(async () => {
+                        if (_currentContextoNombre) {
+                            await cargarContextoLugar(_currentContextoNombre);
+                        }
+                    }, 500);
+                }
+                // Actualizar la tabla principal
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al cambiar vinculación.");
+        }
+    }
+
+    function limpiarReferenciasIndividualRow(el) {
+        limpiarReferenciasIndividual(el.closest('tr').dataset.nombre);
+    }
+
+    async function limpiarReferenciasIndividual(nombre) {
+        if (!confirm(`¿Borrar todas las referencias de "${nombre}" en este proyecto?\nLas frecuencias se pondrán a 0.`)) return;
+        try {
+            const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombre: nombre })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                SirioNotifications.success(`Limpiadas ${data.affected} referencias de "${nombre}".`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al limpiar referencias.");
+        }
+    }
+
+    function recalcularFrecuenciaIndividualRow(el) {
+        recalcularFrecuenciaIndividual(el.closest('tr').dataset.nombre);
+    }
+
+    async function recalcularFrecuenciaIndividual(nombre) {
+        if (!confirm(`¿Recalcular frecuencia para "${nombre}" en todo el corpus?`)) return;
+        SirioNotifications.info(`Recalculando "${nombre}"...`);
+        try {
+            const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: [nombre] })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`"${nombre}" actualizado.`);
+                actualizarTablaUbicaciones();
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al recalcular frecuencia.");
+        }
+    }
+
+    // NER / Batch Processing
+    async function ejecutarGeocodificacionMasiva() {
+        if (window._batchRunning) return;
+        if (!confirm("¿Iniciar NER base? Buscará ciudades en el corpus y las geocodificará.")) return;
+
+        const btn = document.querySelector('button[onclick="ejecutarGeocodificacionMasiva()"]');
+        const statusContainer = document.getElementById('batch-geocoding-status');
+        const statusText = document.getElementById('batch-geocoding-status-text');
+        const progressBar = document.getElementById('batch-geocoding-progress-bar');
+
+        if (!statusContainer) return;
+
+        window._batchRunning = true;
+        btn.disabled = true;
+        statusContainer.style.display = 'block';
+
+        let totalProcessed = 0;
+        try {
+            while (true) {
+                const res = await fetch("{{ url_for('noticias.api_batch_geocoding') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                totalProcessed += data.processed;
+                const totalTarget = totalProcessed + data.remaining;
+                const percent = totalTarget > 0 ? (totalProcessed / totalTarget) * 100 : 100;
+
+                progressBar.style.width = percent + '%';
+                const percentText = document.getElementById('batch-geocoding-percent');
+                if (percentText) percentText.innerText = Math.round(percent) + '%';
+                statusText.innerText = `NER Base: Procesadas ${totalProcessed}. Quedan ${data.remaining}...`;
+
+                if (data.status === 'finished' || data.remaining === 0) break;
+                await new Promise(r => setTimeout(r, 600));
+            }
+            if (window.SirioNotifications) SirioNotifications.success("NER Base finalizado.");
+            else console.log("NER Base finalizado.");
+            actualizarTablaUbicaciones();
+        } catch (e) { alert("Error: " + e.message); }
+        finally { btn.disabled = false; window._batchRunning = false; setTimeout(() => statusContainer.style.display = 'none', 2000); }
+    }
+
+    async function ejecutarGeocodificacionIA() {
+        if (window._batchRunning) return;
+        const power = document.getElementById('sel-potencia-geocoding').value;
+        if (!confirm(`¿Iniciar NER Avanzado (${power})? Refinará las entidades con modelos de lenguaje.`)) return;
+
+        const btn = document.querySelector('button[onclick="ejecutarGeocodificacionIA()"]');
+        const statusContainer = document.getElementById('batch-geocoding-status');
+        const statusText = document.getElementById('batch-geocoding-status-text');
+        const progressBar = document.getElementById('batch-geocoding-progress-bar');
+
+        window._batchRunning = true;
+        btn.disabled = true;
+        statusContainer.style.display = 'block';
+
+        let totalProcessed = 0;
+        try {
+            while (true) {
+                const res = await fetch("{{ url_for('noticias.api_batch_geocoding') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ use_ai: true, potencia: power })
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                totalProcessed += data.processed;
+                const totalTarget = totalProcessed + data.remaining;
+                const percent = totalTarget > 0 ? (totalProcessed / totalTarget) * 100 : 100;
+
+                progressBar.style.width = percent + '%';
+                const percentText = document.getElementById('batch-geocoding-percent');
+                if (percentText) percentText.innerText = Math.round(percent) + '%';
+                statusText.innerText = `[IA: ${power}] Refinadas ${totalProcessed}. Quedan ${data.remaining}...`;
+
+                if (data.status === 'finished' || data.remaining === 0) break;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            SirioNotifications.success("Refinamiento IA completado.");
+            actualizarTablaUbicaciones();
+        } catch (e) { alert("Error: " + e.message); }
+        finally { btn.disabled = false; window._batchRunning = false; setTimeout(() => statusContainer.style.display = 'none', 2000); }
+    }
+
+    async function rebuscarTodasUbicaciones() {
+        if (!confirm("¿Sincronización Global? Recalculará las frecuencias de menciones para cada punto en todo el corpus.")) return;
+        try {
+            const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+            });
+            const data = await res.json();
+            SirioNotifications.success(data.message || "Sincronización finalizada.");
+            actualizarTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    async function unificarDuplicadosCaja() {
+        if (!confirm("¿Unificar Mayúsculas? Agrupará automáticamente entidades duplicadas por capitalización (ej: 'MADRID' y 'Madrid').")) return;
+        try {
+            const res = await fetch("{{ url_for('noticias.api_unificar_duplicados') }}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+            });
+            const data = await res.json();
+            SirioNotifications.success(`Unificación completada. Fucionadas ${data.unificados} entidades.`);
+            actualizarTablaUbicaciones();
+        } catch (e) { console.error(e); }
+    }
+
+    // --- Search & Map (Canonical Mapping) Logic ---
+    let _modalMapearInstance = null;
+    let _activeMapearTarget = null;
+
+    function abrirModalMapearRow(el) {
+        abrirModalMapear(el.closest('tr').dataset.nombre);
+    }
+
+    function abrirModalMapear(originalText) {
+        _activeMapearTarget = originalText;
+        if (!_modalMapearInstance) {
+            _modalMapearInstance = new bootstrap.Modal(document.getElementById('modalMapearUbicacion'));
+        }
+        document.getElementById('mapear-original-text').textContent = originalText;
+        document.getElementById('mapear-search-name').value = '';
+
+        // Handlers
+        document.getElementById('btn-confirmar-mapeo').onclick = () => ejecutarMapeoBusqueda(originalText);
+        document.getElementById('btn-search-google-maps-modal').onclick = () => {
+            const inputVal = document.getElementById('mapear-search-name').value.trim();
+            const query = inputVal || originalText;
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
+        };
+        document.getElementById('btn-paste-search').onclick = async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) document.getElementById('mapear-search-name').value = text;
+            } catch (err) { alert('No se pudo pegar. Permisos requeridos.'); }
+        };
+
+        _modalMapearInstance.show();
+    }
+
+    async function ejecutarMapeoBusqueda(originalText) {
+        const searchName = document.getElementById('mapear-search-name').value.trim();
+        if (!searchName) { alert('Ingrese un nombre de búsqueda.'); return; }
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_verificar_geo') }}?q=" + encodeURIComponent(searchName));
+            const data = await res.json();
+
+            if (data.results && data.results.length > 0) {
+                const best = data.results[0];
+                const lat = best.lat;
+                const lon = best.lon;
+
+                // Guardar directamente en el Corpus
+                const saveRes = await fetch("{{ url_for('noticias.gestion_editar_ubicacion') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        nombre_antiguo: originalText,
+                        nombre_nuevo: originalText,
+                        lat: lat,
+                        lon: lon
+                    })
+                });
+
+                const saveData = await saveRes.json();
+                if (saveData.success) {
+                    if (window.SirioNotifications) SirioNotifications.success(`"${originalText}" actualizado.`);
+                    if (_modalMapearInstance) _modalMapearInstance.hide();
+
+                    // Refrescar tabla
+                    actualizarTablaUbicaciones();
+
+                    // Si hay una edición inline abierta para este lugar, actualizar sus inputs
+                    const tr = document.querySelector(`tr.edit-row-active[data-nombre="${CSS.escape(originalText)}"]`);
+                    if (tr) {
+                        const latInput = tr.querySelector('.col-lat input');
+                        const lonInput = tr.querySelector('.col-lon input');
+                        if (latInput && lonInput) {
+                            latInput.value = lat;
+                            lonInput.value = lon;
+                        }
+                    }
+                } else {
+                    alert("Error al guardar: " + saveData.error);
+                }
+            } else {
+                alert("No se encontraron coordenadas para esa búsqueda.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error al buscar/guardar coordenadas.");
+        }
+    }
+
+    async function ejecutarDesverificacionGlobal() {
+        if (!confirm("¿Desverificación Masiva? Todas las ubicaciones (activas y borradas) volverán a estado 'Pendiente'.")) return;
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_verificar_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ verificada: false, all_project: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`Completado. ${data.updated_count} ubicaciones marcadas como pendientes.`);
+                cargarDatos();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function ejecutarBorradoMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        if (!confirm(`¿Borrar y añadir a lista negra ${nombres.length} ubicaciones seleccionadas?\n(No volverán a aparecer en futuros procesamientos NER)`)) return;
+
+        SirioNotifications.info(`Borrando ${nombres.length} ubicaciones...`);
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_delete_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.updated_count || nombres.length} ubicaciones borradas.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error batch: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error("Batch Delete Error:", e);
+            SirioNotifications.error("Error en la conexión con el servidor.");
+        }
+    }
+
+    async function ejecutarDesvincularMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        if (!confirm(`¿Desvincular (Borrar del proyecto actual) ${nombres.length} ubicaciones seleccionadas?\n(A diferencia de 'Borrar', NO se añadirán a la lista negra global)`)) return;
+
+        SirioNotifications.info(`Desvinculando ${nombres.length} ubicaciones...`);
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_unlink_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.updated_count || nombres.length} ubicaciones desvinculadas.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error batch: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error("Batch Unlink Error:", e);
+            SirioNotifications.error("Error en la conexión con el servidor.");
+        }
+    }
+
+    async function ejecutarRecalcularFrecuenciasMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        if (!confirm(`¿Recalcular frecuencias para ${nombres.length} ubicaciones seleccionadas?\n(Se volverán a buscar en todo el corpus y recalcular menciones)`)) return;
+
+        SirioNotifications.info(`Recalculando frecuencias de ${nombres.length} ubicaciones...`);
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.total_actualizados} registros actualizados, ${data.total_creados} creados.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error batch: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error("Batch Recalcular Frecuencias Error:", e);
+            SirioNotifications.error("Error en la conexión con el servidor.");
+        }
+    }
+
+    async function ejecutarRestaurarBorradosMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        if (!confirm(`¿Restaurar ${nombres.length} ubicaciones borradas?\n(Se marcarán como activas y se quitarán de la lista negra)`)) return;
+
+        SirioNotifications.info(`Restaurando ${nombres.length} ubicaciones...`);
+
+        try {
+            const res = await fetch("{{ url_for('noticias.gestion_reactivar_batch_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.updated_count} ubicaciones restauradas correctamente.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error batch: " + (data.error || "Desconocido"));
+            }
+        } catch (e) {
+            console.error("Batch Restaurar Borrados Error:", e);
+            SirioNotifications.error("Error en la conexión con el servidor.");
+        }
+    }
+
+    async function ejecutarVerificacionSeleccionados() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) return;
+
+        if (!confirm(`¿Verificar ${nombres.length} ubicaciones seleccionadas?`)) return;
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_verificar_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres, verificada: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.updated_count} ubicaciones verificadas.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + data.error);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function abrirModalCambiarTipoMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        document.getElementById('tipo-count-badge').textContent = nombres.length;
+        const modal = new bootstrap.Modal(document.getElementById('modalCambiarTipoMasivo'));
+        modal.show();
+    }
+
+    async function ejecutarCambioTipoMasivo() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        const select = document.getElementById('sel-nuevo-tipo');
+        const selectedOptions = Array.from(select.selectedOptions).map(opt => opt.value);
+        const nuevoTipo = selectedOptions.join(',');
+        
+        if (nombres.length === 0) {
+            SirioNotifications.warning("No hay ubicaciones seleccionadas.");
+            return;
+        }
+
+        if (!nuevoTipo || selectedOptions.length === 0) {
+            SirioNotifications.warning("Debe seleccionar al menos un tipo.");
+            return;
+        }
+
+        try {
+            const tipoNombres = selectedOptions.map(t => getTipoLugarNombre(t)).join(', ');
+            SirioNotifications.info(`Cambiando tipo a "${tipoNombres}" para ${nombres.length} ubicaciones...`);
+            
+            const res = await fetch("{{ url_for('noticias.api_cambiar_tipo_masivo') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres, tipo_lugar: nuevoTipo })
+            });
+            
+            const data = await res.json();
+            
+            if (data.success) {
+                SirioNotifications.success(`${data.count} registros actualizados correctamente.`);
+                // Cerrar modal
+                const modalEl = document.getElementById('modalCambiarTipoMasivo');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                // Recargar datos
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error al cambiar tipos: " + e.message);
+        }
+    }
+
+    async function ejecutarDesverificacionSeleccionados() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) return;
+
+        if (!confirm(`¿Desverificar ${nombres.length} ubicaciones seleccionadas?`)) return;
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_unverify_ubicaciones') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success) {
+                SirioNotifications.success(`${data.updated_count} ubicaciones marcadas como pendientes.`);
+                cargarDatos();
+            } else {
+                SirioNotifications.error("Error: " + data.error);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // --- PRO EXPORT & AI FUNCTIONS ---
+
+    function exportCurrentViewGeoJSON() {
+        // We export the FILTERED dataset
+        const filterInput = document.getElementById('search-loc-table');
+        const filter = (filterInput ? filterInput.value : '').toLowerCase();
+        const freqFilter = parseInt(document.getElementById('sel-filter-freq')?.value || '0');
+
+        const filtered = _currentLocData.filter(loc => {
+            if (_currentStatusFilter === 'verified' && !loc.verified) return false;
+            if (_currentStatusFilter === 'pending' && loc.verified) return false;
+            if (_currentStatusFilter === 'unmapped' && (loc.lat != null && loc.lon != null)) return false;
+            if (freqFilter > 0 && (loc.frecuencia || 0) < freqFilter) return false;
+            if (filter && !loc.nombre.toLowerCase().includes(filter)) return false;
+            return loc.lat != null && loc.lon != null; // Only geocoded for GeoJSON
+        });
+
+        const geojson = {
+            type: "FeatureCollection",
+            features: filtered.map(loc => ({
+                type: "Feature",
+                properties: {
+                    name: loc.nombre,
+                    frecuencia: loc.frecuencia,
+                    verified: loc.verified
+                },
+                geometry: {
+                    type: "Point",
+                    coordinates: [loc.lon, loc.lat]
+                }
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hesiox_locations_${new Date().toISOString().slice(0, 10)}.geojson`;
+        a.click();
+    }
+
+    function exportCurrentViewCSV() {
+        const filterInput = document.getElementById('search-loc-table');
+        const filter = (filterInput ? filterInput.value : '').toLowerCase();
+        const freqFilter = parseInt(document.getElementById('sel-filter-freq')?.value || '0');
+
+        const filtered = _currentLocData.filter(loc => {
+            if (_currentStatusFilter === 'verified' && !loc.verified) return false;
+            if (_currentStatusFilter === 'pending' && loc.verified) return false;
+            if (_currentStatusFilter === 'unmapped' && (loc.lat != null && loc.lon != null)) return false;
+            if (freqFilter > 0 && (loc.frecuencia || 0) < freqFilter) return false;
+            if (filter && !loc.nombre.toLowerCase().includes(filter)) return false;
+            return true;
+        });
+
+        let csv = "Nombre,Latitud,Longitud,Frecuencia,Verificada\n";
+        filtered.forEach(loc => {
+            csv += `"${loc.nombre}",${loc.lat || ''},${loc.lon || ''},${loc.frecuencia || 0},${loc.verified}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hesiox_locations_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+    }
+
+    function abrirModalImportar() {
+        const modal = new bootstrap.Modal(document.getElementById('modalImportUbicaciones'));
+        modal.show();
+    }
+
+    async function verMetricasCalidad() {
+        const modal = new bootstrap.Modal(document.getElementById('modalMetricasCalidad'));
+        modal.show();
+
+        // Calculate metrics from current dataset
+        const total = _currentLocData.length;
+        const mapped = _currentLocData.filter(l => l.lat != null && l.lon != null).length;
+        const verified = _currentLocData.filter(l => l.verified).length;
+        const precision = total > 0 ? Math.round((mapped / total) * 100) : 0;
+
+        // Duplicity check (same name, different case)
+        const names = _currentLocData.map(l => l.nombre.toLowerCase());
+        const uniqueNames = new Set(names);
+        const duplicity = total > 0 ? Math.round(((total - uniqueNames.size) / total) * 100) : 0;
+
+        document.getElementById('metric-gps-precision').textContent = precision + '%';
+        document.getElementById('metric-duplicity').textContent = duplicity + '%';
+        document.getElementById('metric-ner-confidence').textContent = 'HIGH'; // Mock for now until we have scores
+
+        // Country distribution
+        const countries = {};
+        _currentLocData.forEach(l => {
+            const c = l.pais || 'Global/Unknown';
+            countries[c] = (countries[c] || 0) + 1;
+        });
+
+        const sortedCountries = Object.entries(countries).sort((a, b) => b[1] - a[1]);
+        const html = sortedCountries.map(([c, count]) => `
+            <div class="d-flex align-items-center mb-1">
+                <div class="xsmall text-muted text-truncate me-2" style="width: 120px;">${c}</div>
+                <div class="progress flex-grow-1" style="height: 4px; background: rgba(255,255,255,0.05);">
+                    <div class="progress-bar bg-sirio" style="width: ${(count / total) * 100}%"></div>
+                </div>
+                <div class="xsmall text-white ms-2 font-monospace" style="width: 30px; text-align: right;">${count}</div>
+            </div>
+        `).join('');
+        document.getElementById('metric-country-dist').innerHTML = html || '<div class="text-muted xsmall">No hay datos suficientes.</div>';
+    }
+
+    async function procesarArchivoImportado() {
+        SirioNotifications.info("Importación iniciada...");
+        // Placeholder for real logic - would involve reading file and sending to backend
+        alert("Función Pro: La importación de coordenadas externas requiere procesamiento en servidor de cartografía secundario.");
+    }
+
+    async function ejecutarGeocodificacionMasivaSeleccionados() {
+        const checked = document.querySelectorAll('.loc-select-row:checked');
+        const nombres = Array.from(checked).map(c => c.dataset.nombre);
+        if (nombres.length === 0) return;
+
+        const power = document.getElementById('sel-potencia-geocoding').value;
+        if (!confirm(`¿Iniciar NER Avanzado (${power}) sobre los ${nombres.length} seleccionados?`)) return;
+
+        SirioNotifications.info("Iniciando procesamiento IA sobre selección...");
+
+        try {
+            const res = await fetch("{{ url_for('noticias.api_batch_geocoding') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ use_ai: true, potencia: power, nombres: nombres })
+            });
+            const data = await res.json();
+            if (data.success || data.status === 'finished') {
+                SirioNotifications.success("Procesamiento de selección completado.");
+                cargarDatos();
+                clearAllSelections();
+            } else {
+                SirioNotifications.error("Error: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            SirioNotifications.error("Error en la solicitud IA.");
+        }
+    }
+
+    // ─── MINI-MAP IDE INTEGRATION ─────────────────────────────────────────────
+    let _ideFavs = [];
+    window._miniMapUserLayers = {};
+
+    async function loadUserIDEForMiniMap() {
+        if (_ideFavs.length > 0) { renderIDEMiniMapMenu(); return; }
+        try {
+            const r = await fetch('/api/user/wms-favoritos');
+            _ideFavs = await r.json();
+            renderIDEMiniMapMenu();
+        } catch (e) {
+            console.warn("[IDE] Error loading favorites for mini-map", e);
+        }
+    }
+
+    function renderIDEMiniMapMenu() {
+        const container = document.getElementById('ide-minimap-items');
+        if (!container) return;
+        if (_ideFavs.length === 0) {
+            container.innerHTML = '<li class="p-2 text-center text-muted xsmall">No tienes capas favoritas.</li>';
+            return;
+        }
+        container.innerHTML = _ideFavs.map(f => `
+            <li class="px-1 mb-1">
+                <div class="form-check form-switch d-flex align-items-center gap-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="mini-ide-${f.id}" 
+                           ${window._miniMapUserLayers[f.id] ? 'checked' : ''}
+                           onchange="toggleIDEOnMiniMap('${f.id}', this.checked)">
+                    <label class="form-check-label text-truncate xsmall text-light cursor-pointer" for="mini-ide-${f.id}" title="${f.name}">${f.name}</label>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    function toggleIDEOnMiniMap(id, show) {
+        if (!_miniMap) return;
+        const fav = _ideFavs.find(f => f.id === id);
+        if (!fav) return;
+
+        if (show) {
+            let layer;
+            if (fav.type === 'WMS') {
+                layer = L.tileLayer.wms(fav.url, {
+                    layers: fav.layers,
+                    format: fav.format || 'image/png',
+                    transparent: true,
+                    opacity: fav.opacity || 0.85,
+                    zIndex: fav.zIndex || 10,
+                    version: '1.1.1'
+                });
+            } else {
+                layer = L.tileLayer(fav.url, {
+                    opacity: fav.opacity || 0.85,
+                    zIndex: fav.zIndex || 9
+                });
+            }
+            layer.addTo(_miniMap);
+            window._miniMapUserLayers[id] = layer;
+        } else {
+            if (window._miniMapUserLayers[id]) {
+                _miniMap.removeLayer(window._miniMapUserLayers[id]);
+            }
+        }
+    }
+
+    // ==================== GESTIÓN DE TIPOS DE UBICACIÓN ====================
+    
+    let _tiposUbicacionCache = [];
+    let _editandoTipoId = null;
+    let _tiposUbicacionPromise = null;
+
+    async function abrirGestionTipos() {
+        const modal = new bootstrap.Modal(document.getElementById('modalGestionTipos'));
+        modal.show();
+        cancelarFormularioTipo(); // Reset form
+        await cargarTiposUbicacion();
+        await cargarTiposEliminados();
+    }
+
+    async function cargarTiposUbicacion(forceReload = false) {
+        if (forceReload) {
+            _tiposUbicacionPromise = null;
+            _tiposUbicacionCache = [];
+        }
+        if (_tiposUbicacionPromise) return _tiposUbicacionPromise;
+
+        _tiposUbicacionPromise = (async () => {
+            console.log("[GestorTipos] Iniciando carga...");
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const url = "{{ url_for('noticias.api_tipos_ubicacion_listar') }}";
+                const res = await fetch(url, { 
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    if (res.status === 401) throw new Error("Sesión expirada");
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                
+                if (data.success) {
+                    _tiposUbicacionCache = data.tipos;
+                    _actualizarUIConTipos(data.tipos);
+                } else {
+                    console.error("[GestorTipos] Fallo en API:", data.error);
+                    _actualizarUIError(data.error || "Error de servidor");
+                }
+                return data;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                let msg = e.message;
+                if (e.name === 'AbortError') {
+                    console.error('[GestorTipos] Timeout.');
+                    msg = "Tiempo agotado";
+                } else {
+                    console.error('[GestorTipos] Error:', e);
+                }
+                _actualizarUIError(msg);
+                return { success: false, error: msg };
+            } finally {
+                // Permitir reintento tras 5 segundos si falló
+                if (!_tiposUbicacionCache || _tiposUbicacionCache.length === 0) {
+                    setTimeout(() => { _tiposUbicacionPromise = null; }, 5000);
+                }
+            }
+        })();
+
+        return _tiposUbicacionPromise;
+    }
+
+    function _actualizarUIConTipos(tipos) {
+        // Actualizar el filtro superior
+        const filterSelect = document.getElementById('sel-filter-tipo');
+        if (filterSelect) {
+            const currentVal = filterSelect.value;
+            const choicesInstance = window.choicesInstances ? window.choicesInstances['sel-filter-tipo'] : null;
+            
+            if (choicesInstance) {
+                const choicesData = [{ value: '', label: 'Todos los tipos', placeholder: true, selected: !currentVal }];
+                const optionsData = renderTipoOptions([currentVal], true);
+                const finalChoices = choicesData.concat(optionsData);
+                
+                choicesInstance.removeActiveItems();
+                choicesInstance.clearChoices();
+                choicesInstance.setChoices(finalChoices, 'value', 'label', true);
+            } else {
+                filterSelect.innerHTML = `<option value="">Todos los tipos</option>` + renderTipoOptions([currentVal]);
+                filterSelect.value = currentVal;
+            }
+            updateTipoFilterIcon();
+        }
+
+        // Actualizar selector masivo en modal
+        const bulkSelect = document.getElementById('sel-nuevo-tipo');
+        if (bulkSelect) {
+            const choicesInstance = window.choicesInstances ? window.choicesInstances['sel-nuevo-tipo'] : null;
+            if (choicesInstance) {
+                const choicesData = renderTipoOptions([], true);
+                choicesInstance.removeActiveItems();
+                choicesInstance.clearChoices();
+                choicesInstance.setChoices(choicesData, 'value', 'label', true);
+            } else {
+                bulkSelect.innerHTML = renderTipoOptions();
+            }
+        }
+
+        renderizarTablaTipos(tipos);
+    }
+
+    function _actualizarUIError(msg) {
+        const filterSelect = document.getElementById('sel-filter-tipo');
+        if (filterSelect) {
+            filterSelect.innerHTML = `<option value="">Error: ${msg}</option>`;
+        }
+        
+        const bulkSelect = document.getElementById('sel-nuevo-tipo');
+        if (bulkSelect) {
+            bulkSelect.innerHTML = `<option value="">Error: ${msg}</option>`;
+        }
+
+        const tbody = document.getElementById('listaTiposUbicacion');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger small py-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Error: ${msg}</td></tr>`;
+        }
+    }
+
+    async function cargarTiposEliminados() {
+        try {
+            const res = await fetch('/api/tipos-ubicacion/listar?incluir_inactivos=true', { cache: 'no-store' });
+            const data = await res.json();
+            if (!data.success) return;
+            const eliminados = data.tipos.filter(t => !t.activo);
+            const seccion = document.getElementById('seccionTiposEliminados');
+            const tbody = document.getElementById('listaTiposEliminados');
+            if (eliminados.length === 0) {
+                seccion.style.display = 'none';
+                return;
+            }
+            seccion.style.display = 'block';
+            tbody.innerHTML = eliminados.map(t => `
+                <tr>
+                    <td style="padding:3px 6px;">${t.nombre}</td>
+                    <td style="padding:3px 6px; color:#999;">${t.categoria}</td>
+                    <td style="padding:3px 6px;">${t.orden}</td>
+                    <td style="padding:3px 6px;">
+                        <button class="btn btn-xs btn-outline-success" style="font-size:0.65rem;padding:2px 8px;"
+                            onclick="restaurarTipo(${t.id}, '${t.nombre.replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-rotate-left me-1"></i>Restaurar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error('Error cargando tipos eliminados:', e);
+        }
+    }
+
+    async function restaurarTipo(tipoId, nombre) {
+        if (!confirm(`¿Restaurar el tipo "${nombre}"?`)) return;
+        try {
+            const res = await fetch(`/api/tipos-ubicacion/editar/${tipoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ activo: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+                mostrarToast(`Tipo "${nombre}" restaurado correctamente`, 'success');
+                await cargarTiposUbicacion(true);
+                await cargarTiposEliminados();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Error restaurando tipo:', e);
+            alert('Error de conexión al restaurar');
+        }
+    }
+
+    function renderizarTablaTipos(tipos) {
+        const tbody = document.getElementById('listaTiposUbicacion');
+        
+        if (!tipos || tipos.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted small py-3">
+                        No hay tipos de ubicación definidos
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Agrupar por categoría
+        const porCategoria = {};
+        tipos.forEach(tipo => {
+            if (!porCategoria[tipo.categoria]) {
+                porCategoria[tipo.categoria] = [];
+            }
+            porCategoria[tipo.categoria].push(tipo);
+        });
+
+        let html = '';
+        // Ordenar categorías alfabéticamente pero "Otros" siempre al final
+        const categorias = Object.keys(porCategoria).sort((a, b) => {
+            if (a === 'Otros') return 1;
+            if (b === 'Otros') return -1;
+            return a.localeCompare(b);
+        });
+        
+        categorias.forEach(categoria => {
+            // Header de categoría
+            html += `
+                <tr style="background: var(--ds-amber-alpha);">
+                    <td colspan="5" class="small fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        ${categoria}
+                    </td>
+                </tr>
+            `;
+            
+            // Tipos de esta categoría
+            porCategoria[categoria].forEach(tipo => {
+                const iconoPreview = tipo.icono ? `<i class="${tipo.icono}"></i>` : '-';
+                html += `
+                    <tr>
+                        <td class="small">${tipo.nombre}</td>
+                        <td class="small text-muted" style="font-size: 0.7rem;">${tipo.categoria}</td>
+                        <td class="small">${iconoPreview}</td>
+                        <td class="small text-center">${tipo.orden}</td>
+                        <td class="small">
+                            <button class="btn btn-xs btn-edit-tipo" onclick="editarTipo(${tipo.id})" 
+                                title="Editar" style="padding: 2px 8px; font-size: 0.7rem;">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn btn-xs btn-outline-danger" onclick="eliminarTipo(${tipo.id}, '${tipo.nombre}')" 
+                                title="Eliminar" style="padding: 2px 8px; font-size: 0.7rem;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    function mostrarFormularioNuevoTipo() {
+        _editandoTipoId = null;
+        document.getElementById('formTipoTitle').textContent = 'Nuevo Tipo';
+        document.getElementById('tipoId').value = '';
+        document.getElementById('tipoCodigo').value = '';
+        document.getElementById('tipoNombre').value = '';
+        document.getElementById('tipoCategoria').value = 'Otros';
+        document.getElementById('tipoIcono').value = '';
+        document.getElementById('tipoOrden').value = '999';
+        
+        // Mostrar campo código en modo creación
+        document.getElementById('codigoField').style.display = 'block';
+        document.getElementById('nombreField').classList.remove('col-md-12');
+        document.getElementById('nombreField').classList.add('col-md-6');
+        
+        // Resetear preview del icono
+        document.getElementById('previewIcono').className = 'fa-solid fa-question';
+        
+        document.getElementById('formTipoUbicacion').style.display = 'block';
+    }
+    
+    const ICONOS_DISPONIBLES = [
+        // Edificios y Poblaciones
+        { id: 'fa-solid fa-city', tags: ['ciudad', 'edificio', 'city', 'building', 'poblacion', 'metropolis'] },
+        { id: 'fa-solid fa-building', tags: ['edificio', 'construccion', 'building', 'bloque'] },
+        { id: 'fa-solid fa-house', tags: ['casa', 'hogar', 'house', 'home', 'vivienda'] },
+        { id: 'fa-solid fa-church', tags: ['iglesia', 'religion', 'church', 'templo', 'catedral'] },
+        { id: 'fa-solid fa-place-of-worship', tags: ['templo', 'religion', 'worship', 'culto', 'monasterio'] },
+        { id: 'fa-solid fa-mosque', tags: ['mezquita', 'religion', 'mosque', 'islam'] },
+        { id: 'fa-solid fa-synagogue', tags: ['sinagoga', 'religion', 'synagogue', 'judaismo'] },
+        { id: 'fa-solid fa-vihara', tags: ['vihara', 'religion', 'templo', 'budismo'] },
+        { id: 'fa-solid fa-monument', tags: ['monumento', 'estatua', 'monument', 'memorial'] },
+        { id: 'fa-solid fa-chess-rook', tags: ['castillo', 'torre', 'castle', 'fortaleza', 'fuerte'] },
+        { id: 'fa-solid fa-tower-observation', tags: ['torre', 'vigia', 'observacion', 'tower'] },
+        { id: 'fa-solid fa-hospital', tags: ['hospital', 'medico', 'salud', 'clinica'] },
+        { id: 'fa-solid fa-school', tags: ['escuela', 'colegio', 'educacion', 'school', 'universidad'] },
+        { id: 'fa-solid fa-industry', tags: ['industria', 'fabrica', 'industry', 'planta', 'factory'] },
+        { id: 'fa-solid fa-store', tags: ['tienda', 'comercio', 'store', 'shop', 'mercado'] },
+        { id: 'fa-solid fa-cart-shopping', tags: ['carrito', 'compra', 'supermercado', 'tienda'] },
+        { id: 'fa-solid fa-bank', tags: ['banco', 'economia', 'bank', 'monumento'] },
+        { id: 'fa-solid fa-building-columns', tags: ['institucion', 'museo', 'gobierno', 'museum', 'ayuntamiento'] },
+        { id: 'fa-solid fa-landmark', tags: ['hito', 'templo', 'landmark', 'museo', 'ruina'] },
+        { id: 'fa-solid fa-hotel', tags: ['hotel', 'alojamiento', 'bed', 'hostal', 'pension'] },
+        { id: 'fa-solid fa-bed', tags: ['cama', 'alojamiento', 'hotel', 'dormir'] },
+        { id: 'fa-solid fa-utensils', tags: ['restaurante', 'comida', 'food', 'restaurant', 'bar'] },
+        { id: 'fa-solid fa-mug-hot', tags: ['cafe', 'bar', 'cafeteria', 'bebida', 'cup'] },
+        { id: 'fa-solid fa-gas-pump', tags: ['gasolinera', 'combustible', 'gas', 'station'] },
+        { id: 'fa-solid fa-dumpster', tags: ['basura', 'vertedero', 'dumpster', 'limpieza'] },
+        { id: 'fa-solid fa-tents', tags: ['tiendas', 'campamento', 'tents', 'camp'] },
+        
+        // Naturaleza y Geografía
+        { id: 'fa-solid fa-mountain', tags: ['montaña', 'pico', 'mountain', 'hill', 'colina'] },
+        { id: 'fa-solid fa-mountain-sun', tags: ['parque', 'naturaleza', 'paisaje', 'sierra'] },
+        { id: 'fa-solid fa-volcano', tags: ['volcan', 'fuego', 'volcano', 'lava'] },
+        { id: 'fa-solid fa-tree', tags: ['arbol', 'bosque', 'tree', 'naturaleza', 'selva'] },
+        { id: 'fa-solid fa-leaf', tags: ['hoja', 'naturaleza', 'leaf', 'planta'] },
+        { id: 'fa-solid fa-campground', tags: ['campamento', 'tienda', 'camp', 'camping'] },
+        { id: 'fa-solid fa-cloud', tags: ['nube', 'cielo', 'clima', 'tiempo', 'cloud'] },
+        { id: 'fa-solid fa-sun', tags: ['sol', 'clima', 'desierto', 'sun', 'luz'] },
+        { id: 'fa-solid fa-snowflake', tags: ['nieve', 'frio', 'hielo', 'glaciar', 'snow'] },
+        
+        // Fauna y Agricultura
+        { id: 'fa-solid fa-tractor', tags: ['tractor', 'granja', 'agricultura', 'campo', 'farm'] },
+        { id: 'fa-solid fa-wheat-awn', tags: ['trigo', 'campo', 'cultivo', 'agricultura', 'cereal'] },
+        { id: 'fa-solid fa-cow', tags: ['vaca', 'ganaderia', 'animal', 'fauna'] },
+        { id: 'fa-solid fa-horse', tags: ['caballo', 'ecuestre', 'animal', 'hipica'] },
+        
+        // Agua y Costas
+        { id: 'fa-solid fa-water', tags: ['agua', 'lago', 'rio', 'mar', 'water', 'lake', 'river'] },
+        { id: 'fa-solid fa-ocean', tags: ['oceano', 'mar', 'ola', 'ocean', 'sea'] },
+        { id: 'fa-solid fa-ship', tags: ['barco', 'navio', 'ship', 'mar', 'bote', 'crucero'] },
+        { id: 'fa-solid fa-sailboat', tags: ['velero', 'barco', 'sailboat', 'mar'] },
+        { id: 'fa-solid fa-ferry', tags: ['ferry', 'barco', 'transporte', 'mar'] },
+        { id: 'fa-solid fa-anchor', tags: ['ancla', 'puerto', 'port', 'mar', 'muelle'] },
+        { id: 'fa-solid fa-bridge-water', tags: ['puente', 'rio', 'bridge', 'viaducto', 'acueducto'] },
+        { id: 'fa-solid fa-fish', tags: ['pez', 'pesca', 'fish', 'mar', 'fauna'] },
+        { id: 'fa-solid fa-umbrella-beach', tags: ['playa', 'arena', 'beach', 'costa', 'sombrilla'] },
+        { id: 'fa-solid fa-swimming-pool', tags: ['piscina', 'baño', 'agua', 'pool'] },
+        { id: 'fa-solid fa-faucet-drip', tags: ['fuente', 'grifo', 'agua', 'manantial'] },
+        
+        // Vías y Transporte
+        { id: 'fa-solid fa-road', tags: ['calle', 'carretera', 'via', 'camino', 'road', 'street'] },
+        { id: 'fa-solid fa-route', tags: ['ruta', 'camino', 'route', 'trayecto'] },
+        { id: 'fa-solid fa-car', tags: ['coche', 'auto', 'vehiculo', 'car', 'parking'] },
+        { id: 'fa-solid fa-taxi', tags: ['taxi', 'coche', 'parada'] },
+        { id: 'fa-solid fa-bus', tags: ['autobus', 'bus', 'parada', 'estacion'] },
+        { id: 'fa-solid fa-train', tags: ['tren', 'estacion', 'ferrocarril', 'train', 'via'] },
+        { id: 'fa-solid fa-train-tram', tags: ['tranvia', 'tram', 'transporte', 'tren'] },
+        { id: 'fa-solid fa-motorcycle', tags: ['moto', 'motocicleta', 'motorcycle'] },
+        { id: 'fa-solid fa-bicycle', tags: ['bicicleta', 'bici', 'via', 'carril'] },
+        { id: 'fa-solid fa-truck', tags: ['camion', 'transporte', 'mercancia', 'truck', 'logistica'] },
+        { id: 'fa-solid fa-plane', tags: ['avion', 'aeropuerto', 'plane', 'airport'] },
+        { id: 'fa-solid fa-plane-departure', tags: ['avion', 'vuelo', 'aeropuerto'] },
+        { id: 'fa-solid fa-helicopter', tags: ['helicoptero', 'helicopter', 'helipuerto'] },
+        
+        // Ocio, Cultura y Herramientas
+        { id: 'fa-solid fa-ticket', tags: ['ticket', 'entrada', 'cine', 'teatro'] },
+        { id: 'fa-solid fa-film', tags: ['cine', 'pelicula', 'teatro', 'film'] },
+        { id: 'fa-solid fa-camera', tags: ['camara', 'foto', 'mirador', 'vistas'] },
+        { id: 'fa-solid fa-gamepad', tags: ['juego', 'recreativo', 'consola', 'ocio'] },
+        { id: 'fa-solid fa-palette', tags: ['arte', 'museo', 'galeria', 'pintura'] },
+        { id: 'fa-solid fa-book', tags: ['libro', 'biblioteca', 'archivo', 'lectura'] },
+        { id: 'fa-solid fa-graduation-cap', tags: ['universidad', 'educacion', 'colegio'] },
+        { id: 'fa-solid fa-cross', tags: ['cruz', 'cristianismo', 'iglesia'] },
+        { id: 'fa-solid fa-star-of-david', tags: ['estrella', 'david', 'judaismo', 'sinagoga'] },
+        { id: 'fa-solid fa-hammer', tags: ['martillo', 'herramienta', 'taller', 'fabrica'] },
+        { id: 'fa-solid fa-wrench', tags: ['llave', 'mecanico', 'taller'] },
+        { id: 'fa-solid fa-scissors', tags: ['tijeras', 'peluqueria', 'sastre'] },
+        { id: 'fa-solid fa-gem', tags: ['joya', 'diamante', 'mina', 'yacimiento'] },
+        
+        // Marcadores y Formas Generales
+        { id: 'fa-solid fa-map', tags: ['mapa', 'region', 'provincia', 'map', 'territorio'] },
+        { id: 'fa-solid fa-map-location-dot', tags: ['mapa', 'punto', 'ruta', 'location'] },
+        { id: 'fa-solid fa-earth-americas', tags: ['mundo', 'pais', 'tierra', 'country'] },
+        { id: 'fa-solid fa-earth-europe', tags: ['mundo', 'pais', 'tierra', 'country', 'europa'] },
+        { id: 'fa-solid fa-earth-asia', tags: ['mundo', 'pais', 'tierra', 'country', 'asia'] },
+        { id: 'fa-solid fa-earth-africa', tags: ['mundo', 'pais', 'tierra', 'country', 'africa'] },
+        { id: 'fa-solid fa-flag', tags: ['bandera', 'estado', 'nacion', 'flag'] },
+        { id: 'fa-solid fa-location-dot', tags: ['hito', 'punto', 'marcador', 'location', 'pin'] },
+        { id: 'fa-solid fa-map-pin', tags: ['pin', 'chincheta', 'marcador'] },
+        { id: 'fa-solid fa-location-crosshairs', tags: ['diana', 'objetivo', 'gps', 'crosshair'] },
+        { id: 'fa-solid fa-star', tags: ['estrella', 'destacado', 'star', 'favorito'] },
+        { id: 'fa-solid fa-circle', tags: ['circulo', 'punto', 'circle', 'forma'] },
+        { id: 'fa-solid fa-square', tags: ['cuadrado', 'forma', 'square'] },
+        { id: 'fa-solid fa-diamond', tags: ['diamante', 'rombo', 'forma'] }
+    ];
+
+    let _modalSelectorIconos = null;
+
+    function abrirSelectorIconos() {
+        if (!_modalSelectorIconos) {
+            _modalSelectorIconos = new bootstrap.Modal(document.getElementById('modalSelectorIconos'));
+        }
+        document.getElementById('buscadorIconos').value = '';
+        renderizarIconos(ICONOS_DISPONIBLES);
+        _modalSelectorIconos.show();
+    }
+
+    function cerrarSelectorIconos() {
+        if (_modalSelectorIconos) {
+            _modalSelectorIconos.hide();
+        }
+    }
+
+    function renderizarIconos(listaIconos) {
+        const contenedor = document.getElementById('contenedorIconos');
+        contenedor.innerHTML = '';
+        
+        if (listaIconos.length === 0) {
+            contenedor.innerHTML = '<div class="text-muted p-3 small text-center w-100">No se encontraron iconos para tu búsqueda.</div>';
+            return;
+        }
+
+        listaIconos.forEach(icono => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-outline-warning d-flex flex-column align-items-center justify-content-center m-1';
+            btn.style.width = '35px';
+            btn.style.height = '35px';
+            btn.style.transition = 'all 0.1s ease';
+            btn.style.backgroundColor = 'var(--ds-bg-panel)';
+            btn.title = icono.id;
+            
+            btn.innerHTML = `<i class="${icono.id}" style="font-size: 1rem;"></i>`;
+            
+            btn.onclick = () => {
+                document.getElementById('tipoIcono').value = icono.id;
+                actualizarPreviewIcono();
+                cerrarSelectorIconos();
+            };
+            
+            // Hover effects handled by Bootstrap btn-outline-warning, but let's ensure it looks good
+            btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
+            btn.onmouseout = () => btn.style.transform = 'scale(1)';
+            
+            contenedor.appendChild(btn);
+        });
+    }
+
+    function filtrarIconos() {
+        const texto = document.getElementById('buscadorIconos').value.toLowerCase().trim();
+        if (!texto) {
+            renderizarIconos(ICONOS_DISPONIBLES);
+            return;
+        }
+        
+        const filtrados = ICONOS_DISPONIBLES.filter(icono => {
+            return icono.id.toLowerCase().includes(texto) || 
+                   icono.tags.some(tag => tag.toLowerCase().includes(texto));
+        });
+        
+        renderizarIconos(filtrados);
+    }
+
+    function actualizarPreviewIcono() {
+        const iconoInput = document.getElementById('tipoIcono').value.trim();
+        const previewIcono = document.getElementById('previewIcono');
+        
+        if (iconoInput) {
+            previewIcono.className = iconoInput;
+        } else {
+            previewIcono.className = 'fa-solid fa-question';
+        }
+    }
+
+    function editarTipo(tipoId) {
+        const tipo = _tiposUbicacionCache.find(t => t.id === tipoId);
+        if (!tipo) return;
+
+        _editandoTipoId = tipoId;
+        document.getElementById('formTipoTitle').textContent = 'Editar Tipo';
+        document.getElementById('tipoId').value = tipo.id;
+        document.getElementById('tipoCodigo').value = tipo.codigo;
+        document.getElementById('tipoNombre').value = tipo.nombre;
+        document.getElementById('tipoCategoria').value = tipo.categoria;
+        document.getElementById('tipoIcono').value = tipo.icono || '';
+        document.getElementById('tipoOrden').value = tipo.orden;
+        
+        // Mantener campo código visible en modo edición
+        document.getElementById('codigoField').style.display = 'block';
+        document.getElementById('nombreField').classList.remove('col-md-12');
+        document.getElementById('nombreField').classList.add('col-md-6');
+        
+        // Actualizar preview del icono
+        actualizarPreviewIcono();
+        
+        document.getElementById('formTipoUbicacion').style.display = 'block';
+        
+        // Scroll al formulario
+        document.getElementById('formTipoUbicacion').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelarFormularioTipo() {
+        document.getElementById('formTipoUbicacion').style.display = 'none';
+        _editandoTipoId = null;
+    }
+
+    async function guardarTipo() {
+        const codigo = document.getElementById('tipoCodigo').value.trim().toLowerCase();
+        const nombre = document.getElementById('tipoNombre').value.trim();
+        const categoria = document.getElementById('tipoCategoria').value;
+        const icono = document.getElementById('tipoIcono').value.trim();
+        const ordenInput = document.getElementById('tipoOrden').value.trim();
+        const orden = ordenInput ? parseInt(ordenInput) : 999;
+
+        if (!codigo || !nombre) {
+            alert('Código y nombre son obligatorios');
+            return;
+        }
+
+        // Validar código (solo letras minúsculas y guiones bajos)
+        if (!/^[a-z_]+$/.test(codigo)) {
+            alert('El código solo puede contener letras minúsculas y guiones bajos');
+            return;
+        }
+
+        const datos = { codigo, nombre, categoria, icono, orden };
+
+        try {
+            let url, method;
+            if (_editandoTipoId) {
+                // Editar
+                url = `/api/tipos-ubicacion/editar/${_editandoTipoId}`;
+                method = 'PUT';
+            } else {
+                // Crear
+                url = '/api/tipos-ubicacion/crear';
+                method = 'POST';
+            }
+
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(datos)
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                mostrarToast(data.message, 'success');
+                cancelarFormularioTipo();
+                await cargarTiposUbicacion(true);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Error guardando tipo:', e);
+            alert('Error de conexión al guardar');
+        }
+    }
+
+    async function eliminarTipo(tipoId, nombre) {
+        if (!confirm(`¿Eliminar el tipo "${nombre}"?\n\nEsto solo lo desactivará, no eliminará los datos existentes.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/tipos-ubicacion/eliminar/${tipoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                mostrarToast(data.message, 'success');
+                await cargarTiposUbicacion(true);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Error eliminando tipo:', e);
+            alert('Error de conexión al eliminar');
+        }
+    }
+
+    function mostrarToast(mensaje, tipo = 'info') {
+        // Simple toast notification
+        const colors = {
+            success: '#2ecc71',
+            error: '#e74c3c',
+            info: '#3498db',
+            warning: '#f39c12'
+        };
+        
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[tipo] || colors.info};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 99999;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = mensaje;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Cargar tipos al inicio
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarTiposUbicacion();
+    });
+</script>
+{% endblock %}

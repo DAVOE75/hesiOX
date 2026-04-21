@@ -1,0 +1,171 @@
+/* ============================================================
+   09-COMPACT-NAV.CSS - Botones Compactos del Toolbar Desktop
+   Solo afecta a: .toolbar-header .btn-sirio
+   ============================================================ */
+
+/* === NAVBAR PRINCIPAL (Sin cambios - estado original) === */
+.navbar-sirio {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border-bottom: 2px solid #ff9800;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* === BOTONES COMPACTOS DEL TOOLBAR DESKTOP === */
+.toolbar-header {
+    display: flex;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(10, 10, 10, 0.9) 100%);
+    border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-height: 48px;
+}
+
+/* Contenedor de botones - Estado comprimido por defecto */
+.toolbar-header .btn-sirio,
+.toolbar-header .btn,
+.toolbar-header .dropdown>button,
+.toolbar-header a.btn-sirio {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px !important;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden;
+    min-width: 40px;
+    max-width: 40px !important;
+    height: 32px;
+    background: rgba(43, 43, 43, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Iconos siempre visibles - quitar margen */
+.toolbar-header .btn-sirio i,
+.toolbar-header .btn-sirio svg,
+.toolbar-header .btn i,
+.toolbar-header .btn svg,
+.toolbar-header a.btn-sirio i,
+.toolbar-header a.btn-sirio svg {
+    flex-shrink: 0;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    transition: transform 0.3s ease;
+}
+
+/* Texto oculto por defecto - tanto con clase .btn-text como texto directo */
+.toolbar-header .btn-sirio .btn-text,
+.toolbar-header .btn .btn-text,
+.toolbar-header a.btn-sirio .btn-text {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Badges y otros elementos no deben colapsar */
+.toolbar-header .btn-sirio .badge,
+.toolbar-header .btn .badge {
+    opacity: 1 !important;
+    max-width: none !important;
+}
+
+/* === HOVER: Expande el botón === */
+.toolbar-header .btn-sirio:hover,
+.toolbar-header .btn:hover,
+.toolbar-header a.btn-sirio:hover,
+.toolbar-header .dropdown:hover>button {
+    max-width: 300px !important;
+    padding-right: 16px !important;
+}
+
+.toolbar-header .btn-sirio:hover .btn-text,
+.toolbar-header .btn:hover .btn-text,
+.toolbar-header a.btn-sirio:hover .btn-text {
+    opacity: 1;
+    max-width: 250px;
+    margin-left: 8px;
+}
+
+.toolbar-header .btn-sirio:hover i,
+.toolbar-header .btn-sirio:hover svg,
+.toolbar-header .btn:hover i,
+.toolbar-header .btn:hover svg,
+.toolbar-header a.btn-sirio:hover i,
+.toolbar-header a.btn-sirio:hover svg {
+    transform: scale(1.15);
+}
+
+/* === ACTIVO: Siempre expandido con efecto naranja === */
+.toolbar-header .btn-sirio.active,
+.toolbar-header .btn.active,
+.toolbar-header a.btn-sirio.active {
+    max-width: 200px !important;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.25) 0%, rgba(255, 152, 0, 0.15) 100%) !important;
+    border-color: rgba(255, 152, 0, 0.6) !important;
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.3) !important;
+}
+
+.toolbar-header .btn-sirio.active .btn-text,
+.toolbar-header .btn.active .btn-text,
+.toolbar-header a.btn-sirio.active .btn-text {
+    opacity: 1;
+    max-width: 250px;
+    margin-left: 2px;
+}
+
+.toolbar-header .btn-sirio.active i,
+.toolbar-header .btn-sirio.active svg,
+.toolbar-header a.btn-sirio.active i,
+.toolbar-header a.btn-sirio.active svg {
+    color: #ff9800;
+    transform: scale(1.15);
+}
+
+/* === DROPDOWN EN TOOLBAR === */
+.toolbar-header .dropdown.show>button {
+    max-width: 300px !important;
+}
+
+/* Iconos tipo caret o chevron se mantienen visibles */
+.toolbar-header .btn-sirio i.fa-caret-down,
+.toolbar-header .btn-sirio i.fa-chevron-down {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.toolbar-header .btn-sirio:hover i.fa-caret-down,
+.toolbar-header .btn-sirio:hover i.fa-chevron-down,
+.toolbar-header .btn-sirio.active i.fa-caret-down,
+.toolbar-header .btn-sirio.active i.fa-chevron-down {
+    opacity: 1;
+}
+
+/* === EXCEPCIONES: Botones que NO se comprimen === */
+/* Los botones de Filtros y Exportar permanecen expandidos siempre */
+.toolbar-header #btn-filtros,
+.toolbar-header #btn-exportar {
+    max-width: none !important;
+    min-width: auto !important;
+    padding: 6px 12px !important;
+}
+
+.toolbar-header #btn-filtros .btn-text,
+.toolbar-header #btn-exportar .btn-text {
+    opacity: 1 !important;
+    max-width: none !important;
+    margin-left: 6px !important;
+}
+
+.toolbar-header #btn-filtros:hover,
+.toolbar-header #btn-exportar:hover {
+    max-width: none !important;
+    background: rgba(51, 51, 51, 0.9);
+    border-color: rgba(255, 152, 0, 0.4);
+}

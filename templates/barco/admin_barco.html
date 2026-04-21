@@ -1,0 +1,1034 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Administración SIG - S.S. Sirio{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/barco.css') }}">
+<!-- Leaflet Draw CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+<style>
+    .admin-container {
+        max-width: 90%;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .admin-card {
+        background: var(--br-card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--br-border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--ds-shadow-panel);
+    }
+
+    .nav-tabs-custom {
+        border-bottom: 2px solid var(--br-border);
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs-custom .nav-link {
+        color: var(--br-text-muted);
+        border: none;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+        background: none;
+        color: var(--br-accent);
+    }
+
+    .nav-tabs-custom .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--br-accent);
+    }
+
+    /* Estilos para Leaflet Draw */
+    .leaflet-draw-toolbar a {
+        background-color: var(--br-card-bg) !important;
+        border-color: var(--br-border) !important;
+        color: var(--br-text-main) !important;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: var(--br-accent-dim) !important;
+        color: var(--br-accent) !important;
+        box-shadow: none;
+    }
+
+    .leaflet-draw-actions li a {
+        background-color: var(--br-card-bg) !important;
+        color: var(--br-text-main) !important;
+    }
+
+    .leaflet-draw-tooltip {
+        background: var(--br-card-bg);
+        border: 1px solid var(--br-accent);
+        color: var(--br-text-main);
+    }
+
+    #map-admin {
+        height: 700px;
+        width: 100%;
+        background: #ededed;
+        border: 1px solid var(--br-accent);
+        border-radius: 8px;
+        z-index: 10;
+        box-shadow: var(--ds-shadow-panel);
+    }
+
+    /* Lloyd's Reference Viewer */
+    #lloyds-viewer {
+        position: fixed;
+        right: -450px;
+        top: 80px;
+        width: 450px;
+        height: 85vh;
+        background: var(--br-card-bg);
+        border-left: 2px solid var(--br-accent);
+        z-index: 9999;
+        transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--ds-shadow-float);
+        backdrop-filter: blur(15px);
+    }
+
+    #lloyds-viewer.active {
+        right: 0;
+    }
+
+    #lloyds-viewer-toggle {
+        position: absolute;
+        left: -50px;
+        top: 20px;
+        width: 50px;
+        height: 50px;
+        background: var(--br-accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 12px 0 0 12px;
+        font-size: 1.2rem;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .viewer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background: #000;
+    }
+
+    .lloyds-map-container {
+        width: 100%;
+        height: 48%;
+        margin-bottom: 15px;
+        border: 2px solid var(--br-border);
+        border-radius: 4px;
+        background: #111;
+    }
+
+    .viewer-label {
+        font-size: 0.75rem;
+        color: var(--br-accent);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: bold;
+    }
+
+    .leaflet-bottom .leaflet-control-zoom {
+        margin-bottom: 30px !important;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="admin-container" style="width: 98%; margin: 0 auto;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1 shadow-sm">Administración <span class="text-accent">S.S. SIRIO</span></h1>
+            <p class="text-muted small">Gestión de habitáculos y espacios técnicos SIG (Polígonos)</p>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <a href="{{ url_for('barco.plano') }}" class="btn btn-outline-light btn-sm px-3">
+                <i class="fas fa-map me-1"></i> Ver Plano</a>
+            <a href="{{ url_for('barco.ficha') }}" class="btn btn-outline-accent btn-sm px-3">
+                <i class="fas fa-file-alt me-1"></i> Ver Ficha</a>
+        </div>
+    </div>
+
+    <!-- Lloyd's Viewer (Fixed Side Panel) -->
+    <div id="lloyds-viewer">
+        <div id="lloyds-viewer-toggle" title="Ver Original Lloyd's">
+            <i class="fas fa-magnifying-glass-plus"></i>
+        </div>
+        <div
+            class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center bg-dark shadow">
+            <h6 class="mb-0 text-accent fw-bold"><i class="fas fa-history me-2"></i>Lloyd's Register 1883</h6>
+            <button class="btn-close btn-close-white"
+                onclick="document.getElementById('lloyds-viewer').classList.remove('active')"></button>
+        </div>
+        <div class="viewer-content p-2">
+            <div class="viewer-label bg-black p-1 rounded-top mb-0 small opacity-75"><i
+                    class="fas fa-ship me-1"></i>Página 1: Estructura</div>
+            <div id="lloyds-map-1" class="lloyds-map-container mb-3 shadow-sm"></div>
+
+            <div class="viewer-label bg-black p-1 rounded-top mb-0 small opacity-75"><i
+                    class="fas fa-calendar-alt me-1"></i>Página 2: Equipamiento</div>
+            <div id="lloyds-map-2" class="lloyds-map-container shadow-sm"></div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs nav-tabs-custom" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="sig-tab" data-bs-toggle="tab" data-bs-target="#sig-pane" type="button"
+                role="tab">Polígonos SIG</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data-pane" type="button"
+                role="tab">Ficha Técnica</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="motores-tab" data-bs-toggle="tab" data-bs-target="#motores-pane" type="button"
+                role="tab">Ficha de Maquinaria</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        <!-- PANE: PUNTOS/POLÍGONOS SIG -->
+        <div class="tab-pane fade show active" id="sig-pane" role="tabpanel">
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h4 mb-0">Gestor de Habitáculos</h3>
+                            <div class="badge bg-accent text-dark">Dibuja polígonos para definir áreas</div>
+                        </div>
+                        <p class="text-muted small mb-3">Utiliza las herramientas del mapa para dibujar o editar
+                            polígonos que representen salones, camarotes o maquinaria.</p>
+                        <div id="map-admin"></div>
+                        <p class="text-secondary small mt-1 text-end"><i>Escala Original del Plano: 1:300</i></p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="p-3 bg-dark h-100 rounded border border-secondary shadow">
+                            <h5 id="form-title" class="text-accent mb-3">Añadir Nuevo Espacio</h5>
+                            <form id="form-punto">
+                                <input type="hidden" id="p-id">
+                                <div class="mb-3">
+                                    <label>Nombre de la Sección</label>
+                                    <input type="text" id="p-nombre" class="form-control" required
+                                        placeholder="Ej: Salón de 1ª Clase">
+                                </div>
+                                <div class="mb-3">
+                                    <label>Categoría (según plano)</label>
+                                    <select id="p-categoria" class="form-control">
+                                        <option value="Alojamiento">Alojamiento y Camarotes</option>
+                                        <option value="Salones">Zonas Comunes y Salones</option>
+                                        <option value="Maquinaria">Maquinaria y Propulsión</option>
+                                        <option value="Servicios">Servicios (Cocina, Lavandería)</option>
+                                        <option value="Carga">Carga y Almacén</option>
+                                        <option value="Cubierta">Estructura y Cubierta</option>
+                                        <option value="Sanidad">Sanidad / Enfermería</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Descripción Histórica</label>
+                                    <textarea id="p-desc" class="form-control" rows="4"
+                                        placeholder="Detalles sobre el uso de este habitáculo..."></textarea>
+                                </div>
+
+                                <div id="coords-display"
+                                    class="p-2 mb-3 bg-black rounded border border-secondary small">
+                                    <div class="text-accent mb-1">Geometría:</div>
+                                    <div id="p-geom-info" class="text-muted">Ningún polígono seleccionado</div>
+                                    <input type="hidden" id="p-coords">
+                                    <input type="hidden" id="p-x">
+                                    <input type="hidden" id="p-y">
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-accent w-100">Guardar Espacio</button>
+                                    <button type="button" id="btn-delete" class="btn btn-outline-danger"
+                                        style="display:none;">Eliminar</button>
+                                </div>
+                                <button type="button" id="btn-cancel" class="btn btn-link btn-sm w-100 text-muted mt-2"
+                                    onclick="resetForm()">Cancelar edición</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5 class="mb-3">Listado de Espacios Guardados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm table-hover border border-secondary">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Tipo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="puntos-list">
+                                <!-- Cargado vía JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- PANE: FICHA TÉCNICA -->
+        <div class="tab-pane fade" id="data-pane" role="tabpanel">
+            <form id="form-ficha">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <h3 class="h4 mb-0">Editor Exhaustivo Lloyd's Register Survey (1883) v2.1</h3>
+                            <div class="lang-selector d-flex gap-2 p-1 bg-dark rounded border border-secondary">
+                                <button type="button" class="btn btn-sm btn-outline-light px-2 py-0 border-0" onclick="setLanguage('es')" title="Solo Español">
+                                    <span style="font-size: 1.2rem;">🇪🇸</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light px-2 py-0 border-0" onclick="setLanguage('en')" title="Only English">
+                                    <span style="font-size: 1.2rem;">🇬🇧</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-accent px-2 py-0 border-0" onclick="setLanguage('both')" title="Bilingüe">
+                                    <i class="fa-solid fa-language"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-accent btn-sm px-4 shadow-sm">
+                            <i class="fa-solid fa-save me-2"></i> Guardar Ficha Absoluta
+                        </button>
+                    </div>
+
+                    <div class="accordion accordion-flush" id="lloydsAccordion">
+                        {% for section in lloyds_sections %}
+                        <div class="accordion-item bg-transparent border-0 mb-3 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button
+                                    class="accordion-button {% if loop.index > 1 %}collapsed{% endif %} bg-dark text-accent py-3 fw-bold border border-secondary rounded-top"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}">
+                                    <span class="lloyds-label">{{ section.title }}</span>
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ loop.index }}"
+                                class="accordion-collapse collapse {% if loop.first %}show{% endif %}">
+                                <div
+                                    class="accordion-body bg-black bg-opacity-50 border border-secondary border-top-0 rounded-bottom p-4">
+                                    <div class="row g-4">
+                                        {% for field, label in section.fields %}
+                                        <div class="col-md-12 col-xl-6 p-3 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                                            <label class="form-label text-accent x-small d-block mb-2 lloyds-label fw-bold">{{ label }}</label>
+                                            
+                                            <div class="input-group input-group-sm mb-2 shadow-sm">
+                                                <span class="input-group-text bg-secondary bg-opacity-25 border-secondary text-white-50" style="width: 35px; justify-content: center;">ES</span>
+                                                {% if field == 'general_remarks_observaciones_generales' %}
+                                                <textarea class="form-control bg-dark text-white border-secondary lloyds-input-es" data-field="{{ field }}" rows="4" placeholder="Español / Métrico"></textarea>
+                                                {% else %}
+                                                <input type="text" class="form-control bg-dark text-white border-secondary lloyds-input-es" data-field="{{ field }}" placeholder="Español / Métrico">
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-secondary bg-opacity-25 border-secondary text-white-50" style="width: 35px; justify-content: center;">EN</span>
+                                                {% if field == 'general_remarks_observaciones_generales' %}
+                                                <textarea class="form-control bg-dark text-white border-secondary lloyds-input-en" data-field="{{ field }}" rows="4" placeholder="English / Imperial"></textarea>
+                                                {% else %}
+                                                <input type="text" class="form-control bg-dark text-white border-secondary lloyds-input-en" data-field="{{ field }}" placeholder="English / Imperial">
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Hidden real field that gets synced before submit -->
+                                            <input type="hidden" name="{{ field }}" id="hidden-{{ field }}" value="{{ lloyds.get(field, '') }}" class="lloyds-hidden-sync">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="text-end pt-3">
+                        <button type="submit" class="btn btn-accent px-5">Guardar Todo</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- PANE: FICHA DE MOTORES (MAQUINARIA) -->
+        <div class="tab-pane fade" id="motores-pane" role="tabpanel">
+            <form id="form-motores">
+                <div class="admin-card" style="border-top: 3px solid #f97316;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <h3 class="h4 mb-0 text-white"><i class="fa-solid fa-gears me-2 text-warning"></i>Informe de Maquinaria Lloyd's (1883)</h3>
+                            <div class="lang-selector d-flex gap-2 p-1 bg-dark rounded border border-secondary shadow-sm">
+                                <button type="button" class="btn btn-sm btn-outline-light px-2 py-0 border-0" onclick="setLanguage('es')" title="Solo Español">
+                                    <span style="font-size: 1.1rem;">🇪🇸</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light px-2 py-0 border-0" onclick="setLanguage('en')" title="Only English">
+                                    <span style="font-size: 1.1rem;">🇬🇧</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-accent px-2 py-0 border-0" onclick="setLanguage('both')" title="Bilingüe">
+                                    <i class="fa-solid fa-language"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                             <button type="button" class="btn btn-outline-warning btn-sm px-3" onclick="fillMotoresDefaults()" title="Restaurar datos históricos del Sirio">
+                                <i class="fa-solid fa-history me-1"></i> Cargar Históricos
+                            </button>
+                            <button type="submit" class="btn btn-accent btn-sm px-4 shadow-sm">
+                                <i class="fa-solid fa-save me-2"></i> Guardar Motores
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="accordion accordion-flush" id="motoresAccordion">
+                        {% for section in motores_sections %}
+                        <div class="accordion-item bg-transparent border-0 mb-3 shadow-sm">
+                            <h2 class="accordion-header">
+                                <button
+                                    class="accordion-button {% if loop.index > 1 %}collapsed{% endif %} bg-dark text-white py-3 fw-bold border border-secondary rounded-top"
+                                    style="border-left: 4px solid #f97316 !important;"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse-motores-{{ loop.index }}">
+                                    <span class="lloyds-label">{{ section.title }}</span>
+                                </button>
+                            </h2>
+                            <div id="collapse-motores-{{ loop.index }}"
+                                class="accordion-collapse collapse {% if loop.first %}show{% endif %}">
+                                <div
+                                    class="accordion-body bg-black bg-opacity-50 border border-secondary border-top-0 rounded-bottom p-4">
+                                    <div class="row g-4">
+                                        {% for field, label in section.fields %}
+                                        <div class="col-md-12 col-xl-6 p-3 border border-secondary border-opacity-25 rounded bg-dark bg-opacity-25">
+                                            <label class="form-label text-warning x-small d-block mb-2 lloyds-label fw-bold">{{ label }}</label>
+                                            
+                                            <div class="input-group input-group-sm mb-2 shadow-sm">
+                                                <span class="input-group-text bg-secondary bg-opacity-25 border-secondary text-white-50" style="width: 35px; justify-content: center;">ES</span>
+                                                {% if 'remarks' in field or 'details' in field %}
+                                                <textarea class="form-control bg-dark text-white border-secondary motores-input-es" data-field="{{ field }}" rows="4" placeholder="Español / Métrico"></textarea>
+                                                {% else %}
+                                                <input type="text" class="form-control bg-dark text-white border-secondary motores-input-es" data-field="{{ field }}" placeholder="Español / Métrico">
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-secondary bg-opacity-25 border-secondary text-white-50" style="width: 35px; justify-content: center;">EN</span>
+                                                {% if 'remarks' in field or 'details' in field %}
+                                                <textarea class="form-control bg-dark text-white border-secondary motores-input-en" data-field="{{ field }}" rows="4" placeholder="English / Imperial"></textarea>
+                                                {% else %}
+                                                <input type="text" class="form-control bg-dark text-white border-secondary motores-input-en" data-field="{{ field }}" placeholder="English / Imperial">
+                                                {% endif %}
+                                            </div>
+
+                                            <input type="hidden" name="{{ field }}" id="hidden-motores-{{ field }}" value="{{ motores.get(field, '') }}" class="motores-hidden-sync">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet Draw JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. GESTIÓN DE LA FICHA TÉCNICA (MODO DUAL) ---
+        const formFicha = document.getElementById('form-ficha');
+        
+        /**
+         * Inicializa los campos ES/EN partiendo del valor oculto unificado
+         */
+        function initDualInputs() {
+            document.querySelectorAll('.lloyds-hidden-sync').forEach(hidden => {
+                const fieldName = hidden.name;
+                const fullValue = hidden.value;
+                const esInput = document.querySelector(`.lloyds-input-es[data-field="${fieldName}"]`);
+                const enInput = document.querySelector(`.lloyds-input-en[data-field="${fieldName}"]`);
+                
+                if (esInput && enInput) {
+                    if (fullValue.includes('(')) {
+                        const parts = fullValue.split('(');
+                        esInput.value = parts[0].trim();
+                        enInput.value = parts[1].replace(')', '').trim();
+                    } else if (fullValue.includes('|')) {
+                         const parts = fullValue.split('|');
+                         esInput.value = parts[0].trim();
+                         enInput.value = parts[1].trim();
+                    } else if (fullValue.includes('/')) {
+                         const parts = fullValue.split('/');
+                         esInput.value = parts[0].trim();
+                         enInput.value = parts[1].trim();
+                    } else {
+                        esInput.value = fullValue;
+                        enInput.value = '';
+                    }
+                }
+            });
+        }
+
+        /**
+         * Combina los valores ES/EN en el campo oculto antes de enviar
+         */
+        function syncDualBeforeSubmit() {
+            document.querySelectorAll('.lloyds-hidden-sync').forEach(hidden => {
+                const fieldName = hidden.name;
+                const esVal = document.querySelector(`.lloyds-input-es[data-field="${fieldName}"]`).value.trim();
+                const enVal = document.querySelector(`.lloyds-input-en[data-field="${fieldName}"]`).value.trim();
+                
+                if (esVal && enVal) {
+                    hidden.value = `${esVal} (${enVal})`;
+                } else {
+                    hidden.value = esVal || enVal || '';
+                }
+            });
+        }
+
+        // --- 1B. GESTIÓN DE LA FICHA DE MOTORES (UNIFICADO) ---
+        const formMotores = document.getElementById('form-motores');
+        
+        function initMotoresDualInputs() {
+            document.querySelectorAll('.motores-hidden-sync').forEach(hidden => {
+                const fieldName = hidden.name;
+                const fullValue = hidden.value;
+                const esInput = document.querySelector(`.motores-input-es[data-field="${fieldName}"]`);
+                const enInput = document.querySelector(`.motores-input-en[data-field="${fieldName}"]`);
+                
+                if (esInput && enInput) {
+                    if (fullValue.includes('(')) {
+                        const parts = fullValue.split('(');
+                        esInput.value = parts[0].trim();
+                        enInput.value = parts[1].replace(')', '').trim();
+                    } else {
+                        esInput.value = fullValue;
+                        enInput.value = '';
+                    }
+                }
+            });
+        }
+
+        function syncMotoresBeforeSubmit() {
+            document.querySelectorAll('.motores-hidden-sync').forEach(hidden => {
+                const fieldName = hidden.name;
+                const esVal = document.querySelector(`.motores-input-es[data-field="${fieldName}"]`).value.trim();
+                const enVal = document.querySelector(`.motores-input-en[data-field="${fieldName}"]`).value.trim();
+                if (esVal && enVal) {
+                    hidden.value = `${esVal} (${enVal})`;
+                } else {
+                    hidden.value = esVal || enVal || '';
+                }
+            });
+        }
+
+        if (formMotores) {
+            initMotoresDualInputs();
+            formMotores.onsubmit = async (e) => {
+                e.preventDefault();
+                syncMotoresBeforeSubmit();
+                const formData = new FormData(formMotores);
+                const data = {};
+                for (let [name, value] of formData) { data[name] = value; }
+
+                try {
+                    const res = await fetch('{{ url_for("barco.api_update_motores") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await res.json();
+                    if (result.status === 'success') {
+                        Swal.fire({
+                            title: '¡Motores Guardados!',
+                            text: 'El informe de maquinaria ha sido actualizado.',
+                            icon: 'success',
+                            confirmButtonColor: '#f97316',
+                            background: '#1a1a1a',
+                            color: '#fff'
+                        });
+                    }
+                } catch (err) { console.error(err); }
+            };
+        }
+
+        // Defaults para motores
+        window.fillMotoresDefaults = function() {
+            const defaults = {
+                engine_type_tipo_motor: {es: "Motores Compound de 2 cilindros", en: "2-Cylinder Compound Engines"},
+                engine_cylinder_diameter_diametro_cilindro: {es: "Ø 813 mm y Ø 1.676 mm", en: "32\" and 66\""},
+                engine_stroke_carrera: {es: "1.524 mm", en: "60\""},
+                engine_revolutions_revoluciones: {es: "42 rpm", en: "42 rpm"},
+                engine_high_pressure_alta_presion: {es: "5,5 bar", en: "78 psi"},
+                engine_low_pressure_baja_presion: {es: "1,7 bar", en: "25 psi"},
+                boilers_main_calderas_principales: {es: "3 Calderas cilíndricas de doble extremo", en: "3 Double-ended cylindrical boilers"}
+            };
+            
+            Object.keys(defaults).forEach(field => {
+                const es = document.querySelector(`.motores-input-es[data-field="${field}"]`);
+                const en = document.querySelector(`.motores-input-en[data-field="${field}"]`);
+                if (es && en) {
+                    es.value = defaults[field].es;
+                    en.value = defaults[field].en;
+                }
+            });
+            Swal.fire({
+                title: 'Datos Cargados',
+                text: 'Se han pre-rellenado los campos con los datos históricos principales.',
+                icon: 'info',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+        };
+
+        if (formFicha) {
+            initDualInputs();
+
+            formFicha.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                // Sincronizar campos duales a campos reales ocultos
+                syncDualBeforeSubmit();
+
+                const formData = new FormData(formFicha);
+                const data = {};
+                for (let [name, value] of formData) {
+                    data[name] = value;
+                }
+
+                try {
+                    const res = await fetch('{{ url_for("barco.api_update_lloyds") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await res.json();
+                    if (result.status === 'success') {
+                        // Opcional: Re-inicializar para limpiar posibles inconsistencias
+                        // initDualInputs();
+                        
+                        Swal.fire({
+                            title: '¡Guardado!',
+                            text: 'La ficha técnica absoluta ha sido actualizada.',
+                            icon: 'success',
+                            confirmButtonColor: '#cdb263',
+                            background: '#1a1a1a',
+                            color: '#fff'
+                        });
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error al guardar los datos técnicos.');
+                }
+            };
+        }
+
+        // --- 0. GESTIÓN DE IDIOMAS ---
+        window.setLanguage = function(lang) {
+            const container = document.body;
+            container.classList.remove('hide-en', 'hide-es');
+            if (lang === 'es') container.classList.add('hide-en');
+            if (lang === 'en') container.classList.add('hide-es');
+            
+            // Actualizar estado visual de botones
+            document.querySelectorAll('.lang-selector .btn').forEach(btn => btn.classList.remove('btn-outline-accent'));
+        };
+
+        // Formatear etiquetas bilingües al cargar
+        function formatBimodalElements() {
+            document.querySelectorAll('.lloyds-label').forEach(el => {
+                if (el.querySelector('.lang-es')) return;
+                const text = el.innerText;
+                if (text.includes('(')) {
+                    const parts = text.split('(');
+                    const es = parts[0].trim();
+                    const en = parts[1].replace(')', '').trim();
+                    el.innerHTML = `<span class="lang-es">${es}</span><span class="lang-sep">|</span><span class="lang-en" style="font-style: italic; opacity: 0.8;">${en}</span>`;
+                }
+            });
+        }
+        formatBimodalElements();
+
+        // ==========================================
+        // 1. LLoyd's Reference Viewer (Leaflet)
+        // ==========================================
+        let lloydsMap1, lloydsMap2;
+        function initLloydsViewer() {
+            if (lloydsMap1) {
+                lloydsMap1.invalidateSize();
+                lloydsMap2.invalidateSize();
+                return;
+            }
+
+            const lBounds = [[0, 0], [1000, 750]];
+
+            lloydsMap1 = L.map('lloyds-map-1', {
+                crs: L.CRS.Simple,
+                minZoom: -2,
+                maxZoom: 2,
+                zoomControl: false,
+                attributionControl: false
+            });
+            L.control.zoom({ position: 'bottomleft' }).addTo(lloydsMap1);
+            L.imageOverlay('/static/img/lloyds/lloyds_1.jpg', lBounds).addTo(lloydsMap1);
+            lloydsMap1.fitBounds(lBounds);
+
+            lloydsMap2 = L.map('lloyds-map-2', {
+                crs: L.CRS.Simple,
+                minZoom: -2,
+                maxZoom: 2,
+                zoomControl: false,
+                attributionControl: false
+            });
+            L.control.zoom({ position: 'bottomleft' }).addTo(lloydsMap2);
+            L.imageOverlay('/static/img/lloyds/lloyds_2.jpg', lBounds).addTo(lloydsMap2);
+            lloydsMap2.fitBounds(lBounds);
+        }
+
+        // Listener para el toggle del visor
+        const viewerToggle = document.getElementById('lloyds-viewer-toggle');
+        if (viewerToggle) {
+            viewerToggle.addEventListener('click', () => {
+                const viewer = document.getElementById('lloyds-viewer');
+                viewer.classList.toggle('active');
+                if (viewer.classList.contains('active')) {
+                    setTimeout(() => {
+                        initLloydsViewer();
+                        // Refrescar tamaño por si el panel cambió
+                        if (lloydsMap1) lloydsMap1.invalidateSize();
+                        if (lloydsMap2) lloydsMap2.invalidateSize();
+                    }, 400);
+                }
+            });
+        }
+
+        // --- 0B. CAMBIO DINÁMICO DE IMÁGENES EN EL VISOR ---
+        const shipImages = ['/static/img/lloyds/lloyds_1.jpg', '/static/img/lloyds/lloyds_2.jpg'];
+        const engineImages = ['/static/img/lloyds/motores_1.jpg', '/static/img/lloyds/motores_2.jpg'];
+        
+        function updateViewerImages(type) {
+            if (!lloydsMap1 || !lloydsMap2) return;
+            const imgs = type === 'motores' ? engineImages : shipImages;
+            
+            lloydsMap1.eachLayer(l => { if (l instanceof L.ImageOverlay) lloydsMap1.removeLayer(l); });
+            lloydsMap2.eachLayer(l => { if (l instanceof L.ImageOverlay) lloydsMap2.removeLayer(l); });
+            
+            const lBounds = [[0, 0], [1000, 750]];
+            L.imageOverlay(imgs[0], lBounds).addTo(lloydsMap1);
+            L.imageOverlay(imgs[1], lBounds).addTo(lloydsMap2);
+            
+            // Actualizar etiquetas si existen en el DOM
+            const labels = document.querySelectorAll('.viewer-label');
+            if (labels.length >= 2) {
+                if (type === 'motores') {
+                    labels[0].innerHTML = '<i class="fas fa-gears me-1"></i>Página 1: Motores/Bombas';
+                    labels[1].innerHTML = '<i class="fas fa-fire-burner me-1"></i>Página 2: Calderas';
+                } else {
+                    labels[0].innerHTML = '<i class="fas fa-ship me-1"></i>Página 1: Estructura';
+                    labels[1].innerHTML = '<i class="fas fa-calendar-alt me-1"></i>Página 2: Equipamiento';
+                }
+            }
+        }
+
+        // Listeners para las pestañas
+        document.getElementById('data-tab').addEventListener('click', () => updateViewerImages('ship'));
+        document.getElementById('motores-tab').addEventListener('click', () => updateViewerImages('motores'));
+
+        // --- 2. GESTIÓN DEL SIG (MAPA CON POLÍGONOS) ---
+        const w = 4000, h = 2000;
+        const bounds = [[0, 0], [h, w]];
+
+        const map = L.map('map-admin', {
+            crs: L.CRS.Simple,
+            minZoom: -2,
+            maxZoom: 2,
+            zoomControl: false,
+            attributionControl: false
+        });
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+        L.imageOverlay("{{ url_for('static', filename='img/barco/sirio_plano.jpg') }}", bounds).addTo(map);
+        map.fitBounds(bounds);
+
+        // Capas para dibujo y visualización
+        const drawnItems = new L.FeatureGroup().addTo(map);
+        let activeLayers = [];
+
+        // Herramientas de dibujo
+        const drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems, remove: false },
+            draw: {
+                polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#cdb263' } },
+                rectangle: { shapeOptions: { color: '#cdb263' } },
+                circle: { shapeOptions: { color: '#cdb263' } },
+                polyline: false, circlemarker: false, marker: true
+            }
+        });
+        map.addControl(drawControl);
+
+        // Capturar dibujo
+        map.on(L.Draw.Event.CREATED, function (e) {
+            const layer = e.layer;
+            drawnItems.clearLayers();
+            drawnItems.addLayer(layer);
+            updateFormDataFromLayer(layer);
+        });
+
+        map.on(L.Draw.Event.EDITED, function (e) {
+            const layers = e.layers;
+            layers.eachLayer(function (layer) {
+                updateFormDataFromLayer(layer);
+            });
+        });
+
+        function updateFormDataFromLayer(layer) {
+            if (layer instanceof L.Marker) {
+                const ll = layer.getLatLng();
+                document.getElementById('p-x').value = ll.lng;
+                document.getElementById('p-y').value = ll.lat;
+                document.getElementById('p-coords').value = '';
+                document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Punto:</span> ${ll.lng.toFixed(0)}, ${ll.lat.toFixed(0)}`;
+            } else if (layer instanceof L.Circle || (layer.getRadius && typeof layer.getRadius === 'function')) {
+                const ll = layer.getLatLng();
+                const radius = layer.getRadius();
+                document.getElementById('p-x').value = ll.lng;
+                document.getElementById('p-y').value = ll.lat;
+                document.getElementById('p-coords').value = JSON.stringify({ type: 'circle', radius: radius });
+                
+                // Área en m2 (asumiendo escala Sirio: 3600px = 115.82m)
+                const areaM2 = (Math.PI * Math.pow(radius, 2) * Math.pow(115.82 / 3600, 2)).toFixed(1);
+                const volM3 = (areaM2 * 2.5).toFixed(1);
+                
+                document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Círculo:</span> Radio ${radius.toFixed(1)} px<br><small class="text-accent mt-1 d-block"><i class="fas fa-ruler-combined"></i> Área: ${areaM2} m² | Vol: ${volM3} m³</small>`;
+            } else {
+                const latlngs = layer.getLatLngs()[0];
+                const coords = latlngs.map(ll => [ll.lat, ll.lng]);
+                document.getElementById('p-coords').value = JSON.stringify(coords);
+
+                // Centroide aproximado para el marcador
+                const bounds = layer.getBounds();
+                const center = bounds.getCenter();
+                document.getElementById('p-x').value = center.lng;
+                document.getElementById('p-y').value = center.lat;
+
+                // Calcular Área (m2) y Volumen (m3) asumiendo 3600px = 115.82m
+                let areaPx2 = 0;
+                const n = coords.length;
+                for (let i = 0; i < n; i++) {
+                    let j = (i + 1) % n;
+                    let xi = coords[i][1]; let yi = coords[i][0];
+                    let xj = coords[j][1]; let yj = coords[j][0];
+                    areaPx2 += (xi * yj) - (xj * yi);
+                }
+                const areaM2 = (Math.abs(areaPx2 / 2) * Math.pow(115.82 / 3600, 2)).toFixed(1);
+                const volM3 = (areaM2 * 2.5).toFixed(1);
+
+                document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Polígono:</span> ${latlngs.length} vértices<br><small class="text-accent mt-1 d-block"><i class="fas fa-ruler-combined"></i> Área: ${areaM2} m² | Vol: ${volM3} m³</small>`;
+            }
+        }
+
+        window.resetForm = function () {
+            document.getElementById('form-punto').reset();
+            document.getElementById('p-id').value = '';
+            document.getElementById('p-geom-info').innerText = 'Ningún polígono seleccionado';
+            document.getElementById('form-title').innerText = "Añadir Nuevo Espacio";
+            document.getElementById('btn-delete').style.display = 'none';
+            drawnItems.clearLayers();
+        };
+
+        const categoryColors = {
+            'Alojamiento': '#3b82f6',
+            'Salones': '#eab308',
+            'Maquinaria': '#ef4444',
+            'Servicios': '#8b5cf6',
+            'Carga': '#f97316',
+            'Cubierta': '#10b981',
+            'Sanidad': '#ec4899'
+        };
+        const getCatColor = (cat) => categoryColors[cat] || '#cdb263';
+
+        async function cargarPuntos() {
+            const res = await fetch('{{ url_for("barco.api_puntos") }}');
+            const puntos = await res.json();
+            const list = document.getElementById('puntos-list');
+            list.innerHTML = '';
+
+            activeLayers.forEach(l => map.removeLayer(l));
+            activeLayers = [];
+
+            puntos.forEach(p => {
+                let layer;
+                const cColor = getCatColor(p.categoria);
+                if (p.coordenadas && p.coordenadas.length > 0) {
+                    layer = L.polygon(p.coordenadas, { color: cColor, fillColor: cColor, fillOpacity: 0.3 }).addTo(map);
+                } else {
+                    layer = L.marker([p.y, p.x], {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: ${cColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        })
+                    }).addTo(map);
+                }
+
+                layer.on('click', () => editPunto(p));
+                activeLayers.push(layer);
+
+                list.innerHTML += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td class="small">${p.nombre}</td>
+                        <td><span class="badge text-dark fw-bold border border-secondary" style="background-color: ${getCatColor(p.categoria)}">${p.categoria}</span></td>
+                        <td><small>${p.coordenadas ? ( (typeof p.coordenadas === 'string' ? p.coordenadas.includes('radius') : p.coordenadas.radius) ? 'Círculo' : 'Polígono') : 'Punto'}</small></td>
+                        <td>
+                            <button class="btn btn-xs btn-outline-accent" onclick='editPunto(${JSON.stringify(p).replace(/'/g, "&apos;")})'>Editar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.editPunto = function (p) {
+            resetForm();
+            document.getElementById('p-id').value = p.id;
+            document.getElementById('p-nombre').value = p.nombre;
+            document.getElementById('p-categoria').value = p.categoria;
+            document.getElementById('p-desc').value = p.descripcion;
+            document.getElementById('p-x').value = p.x;
+            document.getElementById('p-y').value = p.y;
+            
+            let coords = p.coordenadas;
+            if (typeof coords === 'string') {
+                try { coords = JSON.parse(coords); } catch(e) { console.error("Error parsing coords:", e); }
+            }
+            document.getElementById('p-coords').value = coords ? JSON.stringify(coords) : '';
+
+            document.getElementById('form-title').innerText = "Editando: " + p.nombre;
+            document.getElementById('btn-delete').style.display = 'block';
+
+            drawnItems.clearLayers();
+            if (coords) {
+                if (coords.radius || coords.type === 'circle') {
+                    const r = coords.radius || coords.r; // Soporte flexible
+                    const l = L.circle([p.y, p.x], { radius: r, color: '#ffea00' }).addTo(drawnItems);
+                    document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Círculo:</span> Radio ${r.toFixed(1)} px`;
+                    map.fitBounds(l.getBounds());
+                } else if (Array.isArray(coords) && coords.length > 0) {
+                    const l = L.polygon(coords, { color: '#ffea00' }).addTo(drawnItems);
+                    document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Polígono:</span> ${coords.length} vértices`;
+                    map.fitBounds(l.getBounds());
+                }
+            } else {
+                const l = L.marker([p.y, p.x]).addTo(drawnItems);
+                document.getElementById('p-geom-info').innerHTML = `<span class="text-white">Punto:</span> ${p.x.toFixed(0)}, ${p.y.toFixed(0)}`;
+                map.setView([p.y, p.x], 1);
+            }
+        };
+
+        const formPunto = document.getElementById('form-punto');
+        formPunto.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('p-id').value;
+            const xStr = document.getElementById('p-x').value;
+            const yStr = document.getElementById('p-y').value;
+            const coordsStr = document.getElementById('p-coords').value;
+
+            // Validación de geometría
+            if (!xStr && !yStr && !coordsStr) {
+                alert("Por favor, dibuja primero un polígono o coloca un marcador en el mapa.");
+                return;
+            }
+
+            const data = {
+                nombre: document.getElementById('p-nombre').value,
+                categoria: document.getElementById('p-categoria').value,
+                descripcion: document.getElementById('p-desc').value,
+                x: xStr ? parseFloat(xStr) : null,
+                y: yStr ? parseFloat(yStr) : null,
+                coordenadas: coordsStr ? JSON.parse(coordsStr) : null
+            };
+
+            if (!data.nombre) {
+                alert("Por favor, introduce un nombre para el espacio/punto.");
+                return;
+            }
+
+            // Limpieza manual de NaN por seguridad (aunque ya se controla con ternario)
+            if (isNaN(data.x)) data.x = null;
+            if (isNaN(data.y)) data.y = null;
+
+            const url = id ? `{{ url_for("barco.api_puntos") }}/${id}` : '{{ url_for("barco.api_puntos") }}';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    await cargarPuntos();
+                    resetForm();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error al guardar el espacio SIG.");
+            }
+        };
+
+        document.getElementById('btn-delete').onclick = async () => {
+            const id = document.getElementById('p-id').value;
+            if (!id || !confirm('¿Seguro que deseas eliminar este espacio?')) return;
+            await fetch(`{{ url_for("barco.api_puntos") }}/${id}`, { method: 'DELETE' });
+            await cargarPuntos();
+            resetForm();
+        };
+
+
+
+        // --- 3. AUTO-TAB HASH ---
+        if (window.location.hash) {
+            const hash = window.location.hash;
+            const tabTrigger = document.querySelector(`button[data-bs-target="${hash.replace('-tab', '-pane')}"]`);
+            if (tabTrigger) {
+                const tab = new bootstrap.Tab(tabTrigger);
+                tab.show();
+                if (hash === '#motores-tab') setTimeout(() => updateViewerImages('motores'), 500);
+            }
+        }
+
+        cargarPuntos();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Ficha Técnica de Motores S.S. Sirio - Lloyd's Report on Machinery{% endblock %}
+
+{% block page_title %}Informe de Maquinaria{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/barco.css') }}">
+{% endblock %}
+
+
+{% block top_actions %}
+<div class="d-flex align-items-center justify-content-end w-100 gap-2">
+    <!-- Selector de IA -->
+    <div class="dropdown dropdown-ia">
+        <button class="btn dropdown-toggle" type="button" id="dropdownIA"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-microchip me-1"></i> <span class="btn-text">IA: Gemini Flash</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg py-2" aria-labelledby="dropdownIA">
+            <li>
+                <h6 class="dropdown-header small text-uppercase opacity-50 py-1"
+                    style="font-size: 0.6rem; letter-spacing: 2px;">Potencia de Análisis</h6>
+            </li>
+            <li><a class="dropdown-item py-2 active" href="javascript:void(0)" onclick="setIAPotency('flash', this)"><i class="fa-solid fa-bolt-lightning me-2 opacity-50"></i>Gemini Flash</a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="setIAPotency('pro', this)"><i class="fa-solid fa-brain me-2 opacity-50"></i>Gemini Pro</a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="setIAPotency('openai', this)"><i class="fa-solid fa-sparkles me-2 opacity-50"></i>GPT-4o</a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="setIAPotency('anthropic', this)"><i class="fa-solid fa-ghost me-2 opacity-50"></i>Claude 3.5</a></li>
+        </ul>
+    </div>
+
+    <!-- Selector de Idiomas -->
+    <div class="sirio-segmented-control">
+        <button type="button" class="btn btn-sm" id="btn-es" onclick="setLanguage('es')" title="Solo Español">ES</button>
+        <button type="button" class="btn btn-sm" id="btn-en" onclick="setLanguage('en')" title="Only English">GB</button>
+        <button type="button" class="btn btn-sm active" id="btn-both" onclick="setLanguage('both')" title="Bilingüe"><i class="fa-solid fa-language"></i></button>
+    </div>
+
+    <!-- Navegación -->
+    <div class="d-flex gap-1 border-start border-white border-opacity-10 ps-2">
+        <button onclick="openInsight('all', 'S.S. SIRIO - Análisis Global Maquinaria', event)" class="btn btn-sirio" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
+            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Global
+        </button>
+
+        <a href="{{ url_for('barco.ficha') }}" class="btn btn-sirio btn-sirio-secondary">
+            <i class="fa-solid fa-anchor me-1"></i> El Barco
+        </a>
+        <button onclick="window.print()" class="btn btn-sirio btn-sirio-secondary">
+            <i class="fa-solid fa-print me-1"></i> Imprimir
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="technical-container">
+
+    <div class="hero-technical-card shadow-lg">
+        <div class="engine-badge mb-3">
+            <i class="fa-solid fa-gear fa-spin" style="animation-duration: 4s;"></i>
+            Lloyd's Report on Machinery · Nº 6147
+        </div>
+        <i class="fa-solid fa-cogs fa-3x mb-3 mt-2" style="color: var(--br-accent);"></i>
+        <h1 class="display-6 fw-bold mb-2">S.S. SIRIO · MOTORES</h1>
+        <p class="text-muted mb-2">
+            <span class="lang-es">Informe Técnico de Maquinaria</span>
+            <span class="lang-sep">|</span>
+            <span class="lang-en">Technical Report on Machinery</span>
+        </p>
+        <div class="mt-2 small opacity-75" style="color: var(--br-accent);">
+
+            <span class="lang-es">Glasgow, Junio de 1883 · R. Napier &amp; Sons</span>
+            <span class="lang-sep">|</span>
+            <span class="lang-en">Glasgow, June 1883 · R. Napier &amp; Sons</span>
+        </div>
+    </div>
+
+    {% if not motores %}
+    <div class="alert border-0 text-center py-5 rounded-4 shadow-sm" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent) !important;">
+        <i class="fa-solid fa-gear fa-3x mb-3 opacity-50" style="color: var(--br-accent);"></i>
+        <h4 style="color: var(--br-accent);">Ficha de Motores Inicializada</h4>
+        <p class="text-muted px-5">La estructura del Informe de Maquinaria de 1883 está configurada y lista para recibir datos.</p>
+        <a href="{{ url_for('barco.admin', _anchor='motores-tab') }}" class="btn btn-sm px-4 mt-3" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
+            <i class="fa-solid fa-gears me-2"></i>Ir a Gestión de Motores
+        </a>
+    </div>
+
+    {% else %}
+
+    <div class="accordion accordion-flush" id="motoresAccordion">
+        {% for section in motores_sections %}
+        <div class="accordion-item shadow-sm border-0 mb-3" style="background: transparent !important;">
+            <h2 class="accordion-header p-0">
+                <button class="accordion-button {% if loop.index > 1 %}collapsed{% endif %}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapse-m{{ loop.index }}">
+
+                    <span class="lloyds-bimodal-text fw-bold flex-grow-1">{{ section.title }}</span>
+
+                    <span class="btn-ai-analysis btn-ai-header"
+                        onclick="openInsight('{{ loop.index }}', '{{ section.title }}', event)"
+                        title="Analizar sección con IA">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </span>
+
+                    <i class="fa-solid fa-chevron-down accordion-icon"></i>
+                </button>
+            </h2>
+            <div id="collapse-m{{ loop.index }}"
+                class="accordion-collapse collapse {% if loop.index == 1 %}show{% endif %}"
+                data-bs-parent="#motoresAccordion">
+                <div class="accordion-body">
+
+                    <div class="technical-grid">
+                        {% for field, label in section.fields %}
+                        <div class="technical-item">
+                            <label class="small-technical-label lloyds-bimodal-text">{{ label }}</label>
+                            <div class="technical-value {% if motores.get(field) and '(' in motores.get(field)|string %}lloyds-bimodal-text{% endif %}">
+                                {% if motores.get(field) %}
+                                    {% if field == 'motor_general_remarks' %}
+                                    <pre class="bg-dark p-2 rounded mb-0 text-white-50 small"
+                                        style="white-space: pre-wrap; font-family: 'Inter', sans-serif; border: 1px solid rgba(255,255,255,0.05);">{{ motores.get(field) }}</pre>
+                                    {% else %}
+                                    {{ motores.get(field) }}
+                                    {% endif %}
+                                {% else %}
+                                <span class="opacity-25">- - -</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% endif %}
+
+    <!-- AI Insight Modal -->
+    <div id="insightModal" class="insight-modal" onclick="if(event.target==this) closeInsight()">
+        <div class="insight-modal-content" onclick="event.stopPropagation()">
+            <div class="insight-modal-header">
+                <h3 class="insight-title" id="modalTitle">Análisis Técnico con IA</h3>
+                <span class="close-insight" onclick="closeInsight()"><i class="fa-solid fa-xmark"></i></span>
+            </div>
+
+            <div class="ai-loading" id="aiLoading">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+                <div class="ai-loading-text">La IA está analizando los datos de maquinaria...</div>
+            </div>
+
+            <div class="insight-modal-body" id="modalBody">
+                <!-- Se inyecta por JS -->
+            </div>
+
+            <div style="display:none">
+                {% for section in motores_sections %}
+                <div id="desc-data-{{ loop.index }}">{{ section.description|safe if section.description else '' }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let _iaPotency = 'flash';
+
+    window.setIAPotency = function(p, el) {
+        _iaPotency = p;
+        document.querySelectorAll('.dropdown-ia .dropdown-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        let label = 'Gemini Flash';
+        if (p === 'pro') label = 'Gemini Pro';
+        else if (p === 'openai') label = 'GPT-4o';
+        else if (p === 'anthropic') label = 'Claude 3.5';
+
+        const btn = document.getElementById('dropdownIA');
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-microchip me-1"></i> <span class="btn-text">${label}</span>`;
+    };
+
+    window.setLanguage = function (lang) {
+        const container = document.body;
+        container.classList.remove('hide-en', 'hide-es');
+        localStorage.setItem('barco_lang', lang);
+
+        if (lang === 'es') container.classList.add('hide-en');
+        if (lang === 'en') container.classList.add('hide-es');
+
+        // Toggle button active state
+        document.querySelectorAll('.sirio-segmented-control .btn').forEach(btn => btn.classList.remove('active'));
+        if (lang === 'es') document.getElementById('btn-es').classList.add('active');
+        else if (lang === 'en') document.getElementById('btn-en').classList.add('active');
+        else document.getElementById('btn-both').classList.add('active');
+    };
+
+
+    window.openInsight = async function(id, title, event) {
+        if (event) event.stopPropagation();
+
+        const modal = document.getElementById('insightModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const loading = document.getElementById('aiLoading');
+
+        let contextBase = '';
+        if (id !== 'all') {
+            const contextEl = document.getElementById(`desc-data-${id}`);
+            if (contextEl) contextBase = contextEl.innerHTML;
+        }
+
+        modalTitle.innerText = title.split('|')[0].split('/')[0].trim();
+        modalBody.innerHTML = '';
+        modalBody.style.display = 'none';
+        loading.style.display = 'block';
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const response = await fetch("{{ url_for('barco.api_analizar_motores') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    section_id: id,
+                    model: _iaPotency,
+                    context: contextBase
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.analisis) {
+                let cleanAnalisis = data.analisis.replace(/```(html)?/g, '').replace(/```/g, '').trim();
+                modalBody.innerHTML = `<div class="ai-response">${cleanAnalisis}</div>`;
+                loading.style.display = 'none';
+                modalBody.style.display = 'block';
+            } else {
+                throw new Error(data.error || 'Error desconocido al generar el análisis');
+            }
+        } catch(e) {
+            console.error(e);
+            modalBody.innerHTML = `
+                <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small mt-4">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    No se ha podido completar el análisis con IA.<br>
+                    <small class="opacity-50">${e.message}</small>
+                </div>
+                <div class="mt-4 p-3 border border-secondary rounded bg-dark">
+                    <h6 class="text-white small text-uppercase">Contexto Histórico Original:</h6>
+                    <div class="text-muted small">${contextBase}</div>
+                </div>
+            `;
+            loading.style.display = 'none';
+            modalBody.style.display = 'block';
+        }
+    };
+
+    window.closeInsight = function() {
+        document.getElementById('insightModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+    };
+
+    function formatBimodalElements() {
+        const targets = '.technical-value, .small-technical-label, .accordion-button span, .lloyds-bimodal-text';
+        document.querySelectorAll(targets).forEach(el => {
+            if (el.dataset.formatted || el.children.length > 0) return;
+            const text = el.innerText.trim();
+
+            // 1. Caso: Paréntesis (...)
+            if (text.includes('(') && text.indexOf('(') > 0) {
+                const parts = text.split('(');
+                const es = parts[0].trim();
+                const en = parts.slice(1).join('(').replace(/\)$/, '').trim();
+                if (es && en) {
+                    el.innerHTML = `<span class="lang-es">${es}</span><span class="lang-sep"> / </span><span class="lang-en" style="font-style: italic; opacity: 0.85;">${en}</span>`;
+                    el.dataset.formatted = "true";
+                }
+            } 
+            // 2. Caso: Barra / o Pipe |
+            else if (text.includes('/') || text.includes('|')) {
+                const sep = text.includes('/') ? '/' : '|';
+                const parts = text.split(sep);
+                if (parts.length >= 2) {
+                    const es = parts[0].trim();
+                    const en = parts.slice(1).join(sep).trim();
+                    if (es && en) {
+                        el.innerHTML = `<span class="lang-es">${es}</span><span class="lang-sep"> ${sep} </span><span class="lang-en" style="font-style: italic; opacity: 0.85;">${en}</span>`;
+                        el.dataset.formatted = "true";
+                    }
+                }
+            }
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        formatBimodalElements();
+        // Cargar preferencia guardada o español por defecto
+        const savedLang = localStorage.getItem('barco_lang') || 'es';
+        setLanguage(savedLang);
+    });
+
+</script>
+{% endblock %}

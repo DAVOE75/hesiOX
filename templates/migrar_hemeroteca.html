@@ -1,0 +1,161 @@
+{% extends 'base_desktop.html' %}
+{% block title %}Migrar Hemeroteca — hesiOX{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
+            <div>
+                <h2 class="text-warning m-0 migrar-title">MIGRAR HEMEROTECA</h2>
+                <span class="text-light small migrar-subtitle">CAMBIAR DE PROYECTO</span>
+            </div>
+
+            <a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn btn-outline-light">
+                ⬅️ Cancelar
+            </a>
+        </div>
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Información de la hemeroteca -->
+        <div class="card bg-dark border-warning mb-4">
+            <div class="card-header bg-transparent border-warning text-warning">
+                <svg width="16" height="16" fill="currentColor" class="me-2">
+                    <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.5"
+                        fill="none" />
+                </svg>
+                Hemeroteca a Migrar
+            </div>
+            <div class="card-body">
+                <h5 class="text-light mb-2">{{ hemeroteca.nombre }}</h5>
+                <div class="row text-light small">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Institución:</strong> {{ hemeroteca.institucion or '—' }}</p>
+                        <p class="mb-1"><strong>País:</strong> {{ hemeroteca.pais or '—' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Ciudad:</strong> {{ hemeroteca.ciudad or '—' }}</p>
+                        <p class="mb-1"><strong>URL:</strong>
+                            {% if hemeroteca.url %}
+                            <a href="{{ hemeroteca.url }}" target="_blank" class="text-info">{{ hemeroteca.url[:40]
+                                }}...</a>
+                            {% else %}—{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de publicaciones vinculadas -->
+        <div class="alert alert-info border-info bg-dark mb-4">
+            <svg width="16" height="16" fill="currentColor" class="me-2">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none" />
+                <text x="8" y="11" text-anchor="middle" font-size="12" font-weight="bold" fill="currentColor">i</text>
+            </svg>
+            <strong>Importante:</strong> Esta hemeroteca tiene publicaciones vinculadas. Al migrar, las publicaciones SE
+            MANTIENEN vinculadas a esta hemeroteca.
+        </div>
+
+        <!-- Formulario de migración -->
+        <div class="card bg-dark border-secondary">
+            <div class="card-body p-4">
+                <form method="POST">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-4">
+                        <label for="proyecto_id" class="form-label text-warning fw-bold">
+                            <svg width="16" height="16" fill="currentColor" class="me-2">
+                                <path d="M2 5h8v2H2z" />
+                                <path d="M8 3l3 3-3 3v-2H2V4h6V3z" />
+                            </svg>
+                            Selecciona el Proyecto Destino
+                        </label>
+                        <select name="proyecto_id" id="proyecto_id"
+                            class="form-select bg-dark text-light border-warning select-migrar" required>
+                            <option value="">-- Selecciona un proyecto --</option>
+                            {% for p in proyectos %}
+                            <option value="{{ p.id }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted mt-2 d-block">
+                            La hemeroteca se moverá al proyecto seleccionado. Sus publicaciones vinculadas se
+                            mantendrán.
+                        </small>
+                    </div>
+
+                    {% if not proyectos %}
+                    <div class="alert alert-warning border-warning bg-dark">
+                        <strong>⚠️ No hay otros proyectos disponibles</strong><br>
+                        No puedes migrar esta hemeroteca porque no existen otros proyectos en el sistema.
+                    </div>
+                    {% endif %}
+
+                    <!-- Resumen de migración -->
+                    <div class="card bg-dark border-secondary mb-4">
+                        <div class="card-header bg-transparent border-secondary text-light small">
+                            📋 Resumen de Migración
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-dark table-sm mb-0">
+                                <tr>
+                                    <td class="text-muted">Hemeroteca:</td>
+                                    <td class="text-light fw-bold">{{ hemeroteca.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Proyecto Actual:</td>
+                                    <td class="text-warning">
+                                        {% if hemeroteca.proyecto_id %}
+                                        {{ hemeroteca.proyecto_rel.nombre if hemeroteca.proyecto_rel else 'Desconocido'
+                                        }}
+                                        {% else %}
+                                        Sin proyecto
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Publicaciones Vinculadas:</td>
+                                    <td class="text-info">{{ hemeroteca.publicaciones|length }} publicaciones</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex gap-2 justify-content-end pt-3 border-top border-secondary">
+                        <a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn btn-secondary">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold" {% if not proyectos %}disabled{%
+                            endif %}>
+                            <svg width="14" height="14" fill="currentColor" class="me-1">
+                                <path d="M2 5h8v2H2z" />
+                                <path d="M8 3l3 3-3 3v-2H2V4h6V3z" />
+                            </svg>
+                            Migrar Hemeroteca
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Advertencia -->
+        <div class="alert alert-warning border-warning bg-dark mt-3">
+            <strong>⚠️ Advertencia:</strong> Esta acción moverá la hemeroteca al proyecto seleccionado. Las
+            publicaciones vinculadas a esta hemeroteca permanecerán vinculadas, independientemente del proyecto al que
+            pertenezcan.
+        </div>
+
+    </div>
+
+{% endblock %}

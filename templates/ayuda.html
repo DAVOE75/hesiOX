@@ -1,0 +1,1556 @@
+{% extends 'base.html' %}
+
+{% block title %}Centro de Ayuda — hesiOX{% endblock %}
+{% block body_class %}hesirox-style{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap');
+
+    /* ========================================
+   CENTRO DE AYUDA - Diseño Premium
+   ======================================== */
+
+    .help-hero {
+        border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+        padding: 3rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .help-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 50%, rgba(255, 152, 0, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 70% 80%, rgba(23, 162, 184, 0.03) 0%, transparent 50%);
+        animation: pulse-bg 15s ease-in-out infinite;
+    }
+
+    @keyframes pulse-bg {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+    }
+
+    .help-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .help-search-box {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .help-search-box input {
+        background: rgba(30, 30, 30, 0.9);
+        border: 2px solid #333;
+        border-radius: 50px;
+        padding: 1rem 1.5rem 1rem 3.5rem;
+        font-size: 1.1rem;
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .help-search-box input:focus {
+        border-color: #ff9800;
+        box-shadow: 0 0 20px rgba(255, 152, 0, 0.2);
+        outline: none;
+    }
+
+    .help-search-box .search-icon {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    /* Quick Access Cards */
+    .quick-access-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .quick-access-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .quick-access-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .quick-card {
+        background: linear-gradient(145deg, #1e1e1e, #151515);
+        border: 1px solid #2a2a2a;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .quick-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--card-color, #ff9800);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(var(--card-rgb, 255, 152, 0), 0.1);
+    }
+
+    .quick-card.card-orange {
+        --card-color: #ff9800;
+        --card-rgb: 255, 152, 0;
+    }
+
+    .quick-card.card-blue {
+        --card-color: #17a2b8;
+        --card-rgb: 23, 162, 184;
+    }
+
+    .quick-card.card-green {
+        --card-color: #28a745;
+        --card-rgb: 40, 167, 69;
+    }
+
+    .quick-card.card-purple {
+        --card-color: #9c27b0;
+        --card-rgb: 156, 39, 176;
+    }
+
+    .quick-card-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(var(--card-rgb, 255, 152, 0), 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .quick-card:hover .quick-card-icon {
+        background: rgba(var(--card-rgb, 255, 152, 0), 0.2);
+        transform: scale(1.1);
+    }
+
+    .quick-card-icon svg {
+        width: 28px;
+        height: 28px;
+        fill: var(--card-color, #ff9800);
+    }
+
+    .quick-card-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .quick-card-desc {
+        color: #aaa;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+        background: #0d0d0d27;
+        padding: 4rem 0;
+    }
+
+    .section-title {
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-subtitle {
+        color: #999;
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Category Pills */
+    .category-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+    }
+
+    .category-pill {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        color: #aaa;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .category-pill:hover,
+    .category-pill.active {
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+        border-color: #ff9800;
+        color: #000;
+    }
+
+    .category-pill svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* FAQ Cards */
+    .faq-card {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .faq-card:hover {
+        border-color: #444;
+    }
+
+    .faq-question {
+        padding: 1.25rem 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+    }
+
+    .faq-question:hover {
+        background: rgba(255, 152, 0, 0.05);
+    }
+
+    .faq-question h4 {
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .faq-question h4 .faq-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 152, 0, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .faq-question h4 .faq-icon svg {
+        width: 16px;
+        height: 16px;
+        fill: #ff9800;
+    }
+
+    .faq-toggle {
+        width: 28px;
+        height: 28px;
+        background: #2a2a2a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .faq-toggle svg {
+        width: 14px;
+        height: 14px;
+        fill: #888;
+        transition: transform 0.3s ease;
+    }
+
+    .faq-card.open .faq-toggle {
+        background: #ff9800;
+    }
+
+    .faq-card.open .faq-toggle svg {
+        fill: #000;
+        transform: rotate(180deg);
+    }
+
+    .faq-answer {
+        padding: 0 1.5rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .faq-card.open .faq-answer {
+        padding: 0 1.5rem 1.5rem;
+        max-height: 2000px;
+    }
+
+    .faq-answer-content {
+        color: #ccc;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        border-top: 1px solid #2a2a2a;
+        padding-top: 1.25rem;
+    }
+
+    .faq-answer-content strong {
+        color: #ff9800;
+    }
+
+    .faq-answer-content ul,
+    .faq-answer-content ol {
+        padding-left: 1.5rem;
+        margin: 0.75rem 0;
+    }
+
+    .faq-answer-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .faq-answer-content code {
+        background: #0d0d0d;
+        color: #17a2b8;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    /* Shortcuts Section */
+    .shortcuts-section {
+        background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+        padding: 4rem 0;
+    }
+
+    .shortcut-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .shortcut-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .shortcut-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .shortcut-card {
+        background: #1e1e1e;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .shortcut-card:hover {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
+    }
+
+    .shortcut-keys {
+        display: flex;
+        gap: 0.25rem;
+        flex-shrink: 0;
+    }
+
+    .key {
+        background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        padding: 0.4rem 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 0 #0d0d0d;
+    }
+
+    .shortcut-desc {
+        color: #ccc;
+        font-size: 0.9rem;
+    }
+
+    /* Resources Section */
+    .resources-section {
+        background: #0d0d0d;
+        padding: 4rem 0;
+        border-top: 1px solid #1a1a1a;
+    }
+
+    .resource-card {
+        background: linear-gradient(145deg, #1e1e1e, #151515);
+        border: 1px solid #2a2a2a;
+        border-radius: 16px;
+        padding: 2rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .resource-card:hover {
+        transform: translateY(-5px);
+        border-color: #ff9800;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .resource-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(255, 152, 0, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .resource-icon svg {
+        width: 28px;
+        height: 28px;
+        fill: #ff9800;
+    }
+
+    .resource-card h5 {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .resource-card p {
+        color: #aaa;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .resource-link {
+        color: #ff9800;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .resource-link:hover {
+        color: #ffc107;
+        gap: 0.75rem;
+    }
+
+    .resource-link svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+    }
+
+    /* Contact Section */
+    .contact-section {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+        padding: 4rem 0;
+        border-top: 1px solid rgba(255, 152, 0, 0.2);
+    }
+
+    .contact-card {
+        background: rgba(255, 152, 0, 0.05);
+        border: 1px solid rgba(255, 152, 0, 0.2);
+        border-radius: 16px;
+        padding: 2.5rem;
+        text-align: center;
+    }
+
+    .contact-card h4 {
+        color: #ff9800;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .contact-card p {
+        color: #aaa;
+        margin-bottom: 1.5rem;
+    }
+
+    .contact-methods {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .contact-btn {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .contact-btn:hover {
+        background: #ff9800;
+        border-color: #ff9800;
+        color: #000;
+    }
+
+    .contact-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+    }
+
+    /* Version Badge */
+    .version-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 50px;
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+        color: #28a745;
+    }
+
+    /* Floating Back Button */
+    .back-btn-float {
+        position: fixed;
+        bottom: 4rem;
+        right: 2rem;
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+        border: none;
+        border-radius: 50px;
+        padding: 1rem 1.5rem;
+        color: #000;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 20px rgba(255, 152, 0, 0.4);
+        transition: all 0.3s ease;
+        z-index: 100;
+    }
+
+    .back-btn-float:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(255, 152, 0, 0.5);
+        color: #000;
+    }
+
+    .back-btn-float svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="help-hero">
+    <div class="container help-hero-content">
+        <div class="text-center mb-4">
+            <img src="{{ url_for('static', filename='img/hesiox_logo2.png') }}" alt="hesiOX" style="height: 150px;"
+                class="mb-3">
+            <h1 class="display-5 fw-bold text-white mb-2">Centro de Ayuda</h1>
+            <p class="lead mb-3">Todo lo que necesitas para dominar hesiOX</p>
+            <span class="version-badge">
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                    <path
+                        d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                </svg>
+                Versión 2.8.0 — Centro de Ayuda
+            </span>
+        </div>
+
+        <!-- Search Box -->
+        <div class="help-search-box position-relative">
+            <svg class="search-icon" viewBox="0 0 16 16" width="20" height="20" fill="currentColor">
+                <path
+                    d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+            </svg>
+            <input type="text" id="globalSearch" class="form-control"
+                placeholder="Buscar en la ayuda... (ej: cómo crear proyecto, OCR, exportar)">
+        </div>
+
+        <!-- Quick Access Cards -->
+        <div class="quick-access-grid">
+            <a href="#faq-primeros-pasos" class="quick-card card-orange">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 16 16">
+                        <path
+                            d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2l-2.218-.887zm3.564 1.426L5.596 5 8 5.961 14.154 3.5l-2.404-.961zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z" />
+                    </svg>
+                </div>
+                <h3 class="quick-card-title">Primeros Pasos</h3>
+                <p class="quick-card-desc">Guía de inicio rápido</p>
+            </a>
+            <a href="#faq-articulos" class="quick-card card-blue">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 16 16">
+                        <path
+                            d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z" />
+                        <path
+                            d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z" />
+                    </svg>
+                </div>
+                <h3 class="quick-card-title">Gestión de Noticias</h3>
+                <p class="quick-card-desc">Crear, editar, organizar</p>
+            </a>
+            <a href="#faq-ocr" class="quick-card card-green">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 16 16">
+                        <path
+                            d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z" />
+                        <path
+                            d="M6.854 4.646a.5.5 0 0 1 0 .708L4.207 8l2.647 2.646a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 0 1 .708 0zm2.292 0a.5.5 0 0 0 0 .708L11.793 8l-2.647 2.646a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708 0z" />
+                    </svg>
+                </div>
+                <h3 class="quick-card-title">OCR e IA</h3>
+                <p class="quick-card-desc">Digitalización inteligente</p>
+            </a>
+            <a href="#faq-exportacion" class="quick-card card-purple">
+                <div class="quick-card-icon">
+                    <svg viewBox="0 0 16 16">
+                        <path
+                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                        <path
+                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                    </svg>
+                </div>
+                <h3 class="quick-card-title">Exportación</h3>
+                <p class="quick-card-desc">Citas y formatos</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section" id="faq">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">Preguntas Frecuentes</h2>
+            <p class="section-subtitle">Respuestas rápidas a las dudas más comunes</p>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="category-pills">
+            <button class="category-pill active" data-category="all">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                </svg>
+                Todas
+            </button>
+            <button class="category-pill" data-category="primeros-pasos">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-3-3a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z" />
+                </svg>
+                Inicio
+            </button>
+            <button class="category-pill" data-category="articulos">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5z" />
+                </svg>
+                Noticias
+            </button>
+            <button class="category-pill" data-category="ocr">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z" />
+                </svg>
+                OCR
+            </button>
+            <button class="category-pill" data-category="busqueda">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                </svg>
+                Búsqueda
+            </button>
+            <button class="category-pill" data-category="exportacion">
+                <svg viewBox="0 0 16 16">
+                    <path
+                        d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path
+                        d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                </svg>
+                Exportar
+            </button>
+        </div>
+
+        <!-- FAQ Items -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Lector Pro v2 (Fase 1) -->
+                <div class="faq-card" data-category="articulos" id="faq-lector-pro">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><i class="fa-solid fa-bolt text-warning"></i></span>
+                            ¿Qué novedades incluye el "Lector Pro v2"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>El Lector se ha profesionalizado para investigaciones de alto rendimiento:</p>
+                            <ul>
+                                <li><strong>Modo Foco (F)</strong>: Oculta la interfaz para lectura inmersiva.</li>
+                                <li><strong>Barra de Progreso</strong>: Indicador visual superior del avance de lectura.
+                                </li>
+                                <li><strong>Estadísticas</strong>: Conteo de palabras y tiempo estimado de lectura (~200
+                                    ppm).</li>
+                                <li><strong>Citas Académicas</strong>: Generador automático de citas en formato APA.
+                                </li>
+                                <li><strong>Zen Navigation</strong>: Navegación ultra-fluida con las flechas del
+                                    teclado.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Cartography (Nuevo v3.2.1) -->
+                <div class="faq-card" data-category="busqueda" id="faq-cartografia-avanzada">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><i class="fa-solid fa-map-location-dot text-warning"></i></span>
+                            ¿Qué es la "Advanced Cartography Suite"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Es una mejora masiva del Mapa del Corpus que incluye:</p>
+                            <ul>
+                                <li><strong>Panel Analítico</strong>: Gráficos de barra y tarta que se actualizan al
+                                    mover el mapa.</li>
+                                <li><strong>Reproducción Temporal</strong>: Botón <em>Play</em> para ver la evolución de
+                                    las noticias en el tiempo.</li>
+                                <li><strong>Simbología Dinámica</strong>: Marcadores que pulsan e irradian según su
+                                    importancia.</li>
+                                <li><strong>Integración SDE/Voronoi</strong>: Capas de análisis espacial integradas con
+                                    los filtros.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digitalización Vectorial GIS (Nuevo v2.8.0) -->
+                <div class="faq-card" data-category="busqueda" id="faq-gis-vectorial">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><i class="fa-solid fa-draw-polygon text-warning"></i></span>
+                            ¿Cómo funciona la "Digitalización Vectorial GIS"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Esta herramienta permite crear capas vectoriales propias sobre la cartografía histórica:</p>
+                            <ul>
+                                <li><strong>Dibujo en Mapa</strong>: Crea puntos, líneas (rutas) y polígonos (áreas) directamente desde el Visor de Mapa.</li>
+                                <li><strong>Panel de Atributos</strong>: Cada elemento vectorial puede tener metadatos personalizados vinculados a las noticias.</li>
+                                <li><strong>Exportación Estándar</strong>: Descarga tus digitalizaciones en formato <strong>GeoJSON</strong>, compatible con QGIS, ArcGIS y Google Earth.</li>
+                                <li><strong>Interoperabilidad</strong>: Permite recrear trazados históricos desaparecidos (murallas, antiguas vías, etc.) con precisión de coordenadas.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topografía Semántica (Nuevo v2.8.0) -->
+                <div class="faq-card" data-category="busqueda" id="faq-topografia-semantica">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><i class="fa-solid fa-brain text-warning"></i></span>
+                            ¿Qué es la "Topografía Semántica"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Es una técnica de análisis que combina procesamiento de lenguaje natural (NLP) con cartografía:</p>
+                            <ul>
+                                <li><strong>Mapping de Conceptos</strong>: Visualiza la densidad de temas o sentimientos sobre el territorio.</li>
+                                <li><strong>Simulación de Rutas</strong>: Calcula trayectorias lógicas entre puntos geográficos basadas en la información documental.</li>
+                                <li><strong>Navegación Narrativa</strong>: Convierte un conjunto de noticias en una secuencia espacial que puede ser "recorrida" virtualmente.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- La Brújula de Rarezas (Nuevo v3.2.2) -->
+                <div class="faq-card" data-category="ocr" id="faq-brujula-rarezas">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><i class="fa-solid fa-gem text-warning"></i></span>
+                            ¿Cómo funciona la "Brújula de Rarezas"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Esta herramienta utiliza IA avanzada para descubrir hallazgos anómalos en la geografía
+                                del corpus:</p>
+                            <ul>
+                                <li><strong>Detección de Anomalías</strong>: Identifica lugares donde aparecen conceptos
+                                    estadísticamente improbables.</li>
+                                <li><strong>Modo Dinámico</strong>: Los marcadores (Azul o Naranja Sirio) y sus popups
+                                    se adaptan automáticamente al tema claro u oscuro del sistema.</li>
+                                <li><strong>Interpretación IA</strong>: Al abrir un marcador, Gemini analiza el hallazgo
+                                    y genera una descripción narrativa del porqué de esa singularidad.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Novedades: Mapeo Canónico -->
+                <div class="faq-card" data-category="busqueda" id="faq-mapeo-canonico">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                                </svg></span>
+                            ¿Qué es el "Mapeo Canónico" (Buscar y Mapear)?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Esta función permite geolocalizar términos que contienen <strong>variaciones
+                                    ortográficas, erratas o traducciones</strong> sin alterar el texto original de la
+                                noticia.</p>
+                            <p><strong>Métodos disponibles:</strong></p>
+                            <ul>
+                                <li><strong>Búsqueda Manual:</strong> En el visor de noticias, usa el menú contextual
+                                    <strong>"Buscar y Mapear"</strong>
+                                    sobre un texto seleccionado. Indica el nombre real/geográfico (ej: escribe "Segovia"
+                                    para mapear un texto que
+                                    dice "Sigovia").
+                                </li>
+                                <li><strong>Búsqueda con Google Maps (Nuevo en v2.8.0):</strong> Usa la opción
+                                    <strong>"Buscar y Mapear con Google Maps"</strong>
+                                    del menú contextual. Se abrirá una ventana donde puedes:
+                                    <ul>
+                                        <li>Buscar el lugar directamente en Google Maps integrado</li>
+                                        <li>Copiar y pegar coordenadas desde Google Maps externo</li>
+                                        <li>Visualizar el lugar antes de guardarlo</li>
+                                        <li>Confirmar las coordenadas con un solo clic</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p>El sistema guardará la coordenada real pero mantendrá la literalidad del documento
+                                histórico.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Novedades: Verificación de Ubicaciones -->
+                <div class="faq-card" data-category="busqueda" id="faq-verificacion-ubicaciones">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                                </svg></span>
+                            ¿Cómo verifico ubicaciones en el mapa? (Nuevo en v2.8.1)
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Ahora puedes <strong>marcar ubicaciones como verificadas</strong> para distinguirlas
+                                visualmente en el mapa. Esta función es útil para confirmar la precisión de las
+                                coordenadas geocodificadas.</p>
+                            <ul>
+                                <li>En el <strong>visor de noticias</strong>, en la sección de ubicaciones, haz clic en
+                                    el <strong>ícono de círculo</strong> junto a cualquier ubicación.</li>
+                                <li>El ícono cambiará a un <strong>checkmark verde</strong> indicando que la ubicación
+                                    está verificada.</li>
+                                <li>El estado se <strong>guarda automáticamente</strong> en la base de datos y persiste
+                                    entre sesiones.</li>
+                                <li>Haz clic en <strong>"Actualizar"</strong> en el mapa para ver los marcadores
+                                    verificados en <strong>color verde</strong> en lugar de naranja.</li>
+                                <li>Para desverificar, simplemente haz clic nuevamente en el checkmark verde.</li>
+                            </ul>
+                            <p><strong>Beneficio:</strong> Identifica rápidamente qué ubicaciones han sido revisadas y
+                                confirmadas manualmente, mejorando la calidad de tus datos geográficos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Novedades: Mejoras Modo Claro -->
+                <div class="faq-card" data-category="primeros-pasos" id="faq-modo-claro">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z" />
+                                </svg></span>
+                            ¿Qué mejoras hay en el modo claro? (Nuevo en v2.8.1)
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Hemos mejorado significativamente la <strong>experiencia visual en modo claro</strong>
+                                con los siguientes ajustes:</p>
+                            <ul>
+                                <li><strong>Formularios de Edición/Nueva Noticia:</strong>
+                                    <ul>
+                                        <li>Las secciones "Material Adjunto" y "Generador de Citas" ahora muestran
+                                            encabezados con fondo azul (#294a60) y texto blanco en modo claro.</li>
+                                        <li>Mejor contraste y legibilidad en ambos temas.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Generador de Citas:</strong>
+                                    <ul>
+                                        <li>Colores correctos en el desplegable de formato de cita para ambos modos.
+                                        </li>
+                                        <li>Eliminada la flecha naranja no deseada del selector.</li>
+                                        <li>Flechas adaptativas: gris en modo claro, naranja al hacer foco en modo
+                                            oscuro.</li>
+                                        <li>Todos los elementos (contenedor, etiquetas, botones) se adaptan
+                                            correctamente al tema activo.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <p><strong>Cómo cambiar de tema:</strong> Usa el botón de sol/luna en la barra de navegación
+                                superior para alternar entre modo claro y oscuro.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Primeros Pasos -->
+                <div class="faq-card" data-category="primeros-pasos" id="faq-primeros-pasos">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                                    <path
+                                        d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z" />
+                                </svg></span>
+                            ¿Cómo creo mi primer proyecto?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <ol>
+                                <li>Haz clic en <strong>Proyectos → Crear Proyecto</strong> en la barra de navegación
+                                </li>
+                                <li>Completa los campos: <strong>Nombre</strong>, <strong>Descripción</strong>
+                                    (opcional), <strong>Tipo</strong></li>
+                                <li>Haz clic en <strong>Crear Proyecto</strong></li>
+                            </ol>
+                            <p>El proyecto se activará automáticamente y podrás empezar a agregar noticias.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card" data-category="primeros-pasos">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm4.5 0a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5h-7z" />
+                                </svg></span>
+                            ¿Puedo tener varios proyectos simultáneamente?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Sí, hesiOX soporta <strong>múltiples proyectos independientes</strong>. Solo puedes tener
+                                un proyecto activo a la vez. Para cambiar, ve a <strong>Proyectos → Ver
+                                    Proyectos</strong> y haz clic en <strong>Abrir Proyecto</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card" data-category="primeros-pasos">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.5 6.027a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm2.5-.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm-1.5 1.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm-2-1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm-.5 2a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                                    <path
+                                        d="M3.5 1.5A1.5 1.5 0 0 0 2 3v11a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5V3a1.5 1.5 0 0 0-1.5-1.5h-9zM3 3a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V3z" />
+                                    <path
+                                        d="M8 3.5a.5.5 0 0 0-1 0V5H5.5a.5.5 0 0 0 0 1H7v1.5a.5.5 0 0 0 1 0V6h1.5a.5.5 0 0 0 0-1H8V3.5z" />
+                                </svg></span>
+                            ¿Por qué el sistema ya selecciona "Libro" o "Prensa"?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>hesiOX incluye <strong>Inteligencia Contextual</strong>. Si estás en un proyecto de tipo
+                                <strong>Libros</strong>, el sistema preselecciona "Libro" para ahorrarte tiempo. Si es
+                                de <strong>Hemerografía</strong>, preselecciona "Prensa".
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Novedades: Nuevo Modo Lector -->
+                <div class="faq-card" data-category="articulos" id="faq-modo-lector-v28">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                                </svg></span>
+                            ¿Qué novedades trae el nuevo "Modo Lector" (v2.8.1)?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>El Explorador de Textos ha sido rediseñado para una investigación más fluida:</p>
+                            <ul>
+                                <li><strong>Interfaz Inteligente:</strong> El selector de noticias se ha movido al
+                                    <strong>header</strong> para dejar más espacio al texto.
+                                </li>
+                                <li><strong>Visor de Imagen Profesional:</strong> Ahora puedes ajustar el tamaño del
+                                    panel de imagen arrastrando la divisoria central (Split-Pane).</li>
+                                <li><strong>Navegación Táctil:</strong> Arrastra la imagen con el clic izquierdo y usa
+                                    la rueda del ratón para hacer zoom con total suavidad.</li>
+                                <li><strong>Resumen con IA:</strong> Obtén síntesis automáticas de cualquier noticia
+                                    directamente desde la cabecera.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Noticias -->
+                <div class="faq-card" data-category="articulos" id="faq-articulos">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z" />
+                                    <path
+                                        d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z" />
+                                </svg></span>
+                            ¿Qué campos son obligatorios al crear una noticia?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Campos <strong>obligatorios</strong>: <strong>Título</strong>, <strong>Medio</strong> y
+                                <strong>Fecha</strong>. Los demás son opcionales pero recomendados para mejor
+                                catalogación.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card" data-category="articulos">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5z" />
+                                </svg></span>
+                            ¿Puedo eliminar varias noticias a la vez?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Sí, marca los <strong>checkboxes</strong>, haz clic en <strong>Lotes (N)</strong> y
+                                selecciona <strong>Borrar seleccionados</strong>. ⚠️ Esta acción es irreversible.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OCR -->
+                <div class="faq-card" data-category="ocr" id="faq-ocr">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z" />
+                                </svg></span>
+                            ¿Qué es el OCR y cómo funciona?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p><strong>OCR</strong> (Reconocimiento Óptico de Caracteres) convierte imágenes de texto en
+                                texto editable. hesiOX utiliza un ecosistema híbrido:</p>
+                            <ul>
+                                <li><strong>Tesseract 5:</strong> Motor local para velocidad y privacidad.</li>
+                                <li><strong>OCR.space:</strong> Motor en la nube para máxima precisión en documentos
+                                    difíciles.</li>
+                                <li><strong>Gemini Vision:</strong> IA Multimodal que corrige el texto analizando
+                                    simultáneamente la imagen original.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card" data-category="ocr">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                                    <path
+                                        d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
+                                </svg></span>
+                            ¿Qué formatos de imagen soporta?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Soporta <strong>JPG</strong>, <strong>PNG</strong>, <strong>TIFF</strong>,
+                                <strong>PDF</strong> y también <strong>TXT</strong> para transcripciones externas.
+                            </p>
+                            <p>💡 <strong>Tip:</strong> Al subir un <code>.txt</code>, puedes activar la
+                                <strong>Limpieza Automática</strong> para eliminar cabeceras y errores comunes de OCR
+                                previo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Búsqueda -->
+                <div class="faq-card" data-category="busqueda">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                                </svg></span>
+                            ¿Diferencia entre búsqueda normal y semántica?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p><strong>Normal</strong>: Busca palabras exactas, rápida. <strong>Semántica</strong>: Usa
+                                IA para entender el significado, encuentra contenido relacionado aunque no tenga las
+                                palabras exactas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nuevas Funcionalidades Mapa -->
+                <div class="faq-card" data-category="busqueda">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zM7 6.5C7 5.672 7.672 5 8.5 5s1.5.672 1.5 1.5S9.328 8 8.5 8 7 7.328 7 6.5z" />
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z" />
+                                </svg></span>
+                            ¿Qué es la Elipse SDE y la Topografía Híbrida del mapa?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Son herramientas de análisis espacial avanzado:</p>
+                            <ul>
+                                <li><strong>SDE (Standard Deviational Ellipse)</strong>: Muestra la dispersión y
+                                    orientación centro-oriental de tus datos en el mapa.</li>
+                                <li><strong>Topografía Híbrida</strong>: Combina relieve 3D con curvas de nivel para
+                                    visualizar la "densidad discursiva" de forma profesional.</li>
+                                <li><strong>IA ADVANCED</strong>: Activa algoritmos spaCy + Gemini para detectar lugares
+                                    automáticamente en el texto.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edición Masiva -->
+                <div class="faq-card" data-category="gestion">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z" />
+                                </svg></span>
+                            ¿Cómo funciona la Edición Masiva (Lote)?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Selecciona varios documentos y haz clic en <strong>LOTE > EDITAR</strong>. Ahora puedes:
+                            </p>
+                            <ul>
+                                <li><strong>Sincronización Inteligente</strong>: Al cambiar el <em>Tipo de Recurso</em>,
+                                    el sistema carga automáticamente las <em>Ediciones</em> válidas desde la base de
+                                    datos.</li>
+                                <li><strong>Campos Flexibles</strong>: Actualiza temas, autores, ciudades o licencias
+                                    para cientos de registros a la vez.</li>
+                                <li><strong>Validación</strong>: Los campos con formato (como fechas de consulta) se
+                                    validan en tiempo real dentro del modal.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exportación -->
+                <div class="faq-card" data-category="exportacion" id="faq-exportacion">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z" />
+                                    <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0z" />
+                                </svg></span>
+                            ¿Qué formato de cita debo usar?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p><strong>ISO 690</strong> (universal), <strong>APA 7</strong> (Psicología), <strong>MLA
+                                    9</strong> (Literatura), <strong>Chicago 17</strong> (Historia),
+                                <strong>Hemerográfico</strong> (prensa). Consulta la guía de tu universidad.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-card" data-category="exportacion">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <h4>
+                            <span class="faq-icon"><svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z" />
+                                    <path
+                                        d="M7.646 15.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 14.293V5.5a.5.5 0 0 0-1 0v8.793l-2.146-2.147a.5.5 0 0 0-.708.708l3 3z" />
+                                </svg></span>
+                            ¿Cómo exporto a Zotero o Mendeley?
+                        </h4>
+                        <span class="faq-toggle"><svg viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                            </svg></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            <p>Usa <strong>RIS</strong> o <strong>BibTeX</strong> desde <strong>Acciones →
+                                    Exportar</strong>. Importa el archivo en Zotero (<strong>Archivo →
+                                    Importar</strong>) o arrastra a Mendeley.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Shortcuts Section -->
+<section class="shortcuts-section">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">⌨️ Atajos de Teclado</h2>
+            <p class="section-subtitle">Acelera tu flujo de trabajo</p>
+        </div>
+        <div class="shortcut-grid">
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">S</span></div>
+                <span class="shortcut-desc">Guardar cambios</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">F</span></div>
+                <span class="shortcut-desc">Buscar en página</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">Shift</span><span
+                        class="key">R</span></div>
+                <span class="shortcut-desc">Recargar sin caché</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">F</span></div>
+                <span class="shortcut-desc">Modo Foco (Lector)</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Arrows</span></div>
+                <span class="shortcut-desc">Navegar Noticias</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">A</span></div>
+                <span class="shortcut-desc">Ajustes de Lectura (Top Bar)</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">E</span></div>
+                <span class="shortcut-desc">Modo Edición</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">L</span></div>
+                <span class="shortcut-desc">Lupa Investigador</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">S</span></div>
+                <span class="shortcut-desc">Resumen IA</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Esc</span></div>
+                <span class="shortcut-desc">Cerrar modal / Foco</span>
+            </div>
+            <div class="shortcut-card">
+                <div class="shortcut-keys"><span class="key">Enter</span></div>
+                <span class="shortcut-desc">Confirmar / Buscar</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resources Section -->
+<section class="resources-section">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="section-title">📚 Recursos Adicionales</h2>
+            <p class="section-subtitle">Documentación y tutoriales</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="resource-card">
+                    <div class="resource-icon"><svg viewBox="0 0 16 16">
+                            <path
+                                d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687z" />
+                        </svg></div>
+                    <h5>Manual de Usuario</h5>
+                    <p>Guía completa paso a paso con todas las funcionalidades.</p>
+                    <a href="{{ url_for('manual_usuario') }}" class="resource-link">Leer manual <svg
+                            viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="resource-card">
+                    <div class="resource-icon"><svg viewBox="0 0 16 16">
+                            <path
+                                d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6z" />
+                        </svg></div>
+                    <h5>Tips y Trucos</h5>
+                    <p>Consejos avanzados para herramientas de análisis.</p>
+                    <a href="#faq" class="resource-link">Ver consejos <svg viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="resource-card">
+                    <div class="resource-icon"><svg viewBox="0 0 16 16">
+                            <path
+                                d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Z" />
+                        </svg></div>
+                    <h5>Soporte Técnico</h5>
+                    <p>¿Bug o sugerencia? Contacta con el equipo.</p>
+                    <a href="mailto:soporte@hesiox.es" class="resource-link">Contactar <svg viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="contact-card">
+                    <h4>¿No encontraste lo que buscabas?</h4>
+                    <p>Estamos aquí para ayudarte</p>
+                    <div class="contact-methods">
+                        <a href="mailto:info@hesiox.es" class="contact-btn"><svg viewBox="0 0 16 16">
+                                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Z" />
+                            </svg> info@hesiox.es</a>
+                        <a href="https://github.com/hesiox/hesiox" target="_blank" class="contact-btn"><svg
+                                viewBox="0 0 16 16">
+                                <path
+                                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                            </svg> GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating Back Button -->
+<a href="{{ url_for('noticias.listar') }}" class="back-btn-float">
+    <svg viewBox="0 0 16 16">
+        <path fill-rule="evenodd"
+            d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
+    </svg>
+    Volver
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleFaq(element) {
+        const card = element.closest('.faq-card');
+        const wasOpen = card.classList.contains('open');
+        document.querySelectorAll('.faq-card.open').forEach(c => c.classList.remove('open'));
+        if (!wasOpen) card.classList.add('open');
+    }
+
+    document.querySelectorAll('.category-pill').forEach(pill => {
+        pill.addEventListener('click', function () {
+            const category = this.dataset.category;
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.faq-card').forEach(card => {
+                card.style.display = (category === 'all' || card.dataset.category === category) ? 'block' : 'none';
+            });
+        });
+    });
+
+    document.getElementById('globalSearch').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.faq-card').forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(query)) {
+                card.style.display = 'block';
+                if (query.length > 2) card.classList.add('open');
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        if (query.length > 0) {
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        } else {
+            document.querySelector('.category-pill[data-category="all"]').classList.add('active');
+            document.querySelectorAll('.faq-card').forEach(card => { card.style.display = 'block'; card.classList.remove('open'); });
+        }
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { if (target.classList.contains('faq-card')) target.classList.add('open'); }, 500);
+            }
+        });
+    });
+</script>
+{% endblock %}

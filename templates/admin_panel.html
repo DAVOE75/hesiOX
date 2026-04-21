@@ -1,0 +1,1021 @@
+{% extends "base_desktop.html" %}
+
+{% block extra_css %}
+<style>
+    /* Botones pequeños para tablas */
+    .btn-sirio-admin {
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+        border-radius: 4px !important;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        min-height: 24px;
+        transition: all 0.2s ease;
+        border-width: 1px !important;
+    }
+
+    .btn-sirio-admin:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-sirio-admin i {
+        font-size: 0.9rem;
+    }
+
+    /* Ajuste para tablas densas en el panel admin */
+    .table-sirio td {
+        vertical-align: middle;
+        padding: 0.4rem 0.4rem !important;
+    }
+
+    /* Botones Blog Admin — Refined Sirio Style */
+    .btn-admin-blog-sirio {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700 !important;
+        font-size: 0.72rem !important;
+        padding: 0.6rem 1.25rem !important;
+        border-radius: 6px !important;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-admin-blog-primary {
+        background: #ff9800 !important;
+        border: none !important;
+        color: #000 !important;
+    }
+    .btn-admin-blog-primary:hover {
+        background: #e68a00 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255,152,0, 0.3);
+    }
+
+    .btn-admin-blog-outline {
+        background: transparent !important;
+        border: 1px solid #ff9800 !important;
+        color: #ff9800 !important;
+    }
+    .btn-admin-blog-outline:hover {
+        background: rgba(255,152,0, 0.1) !important;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block title %}Panel de Administración — Proyecto Sirio{% endblock %}
+{% block page_title %}Panel de Administración{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión del Sistema</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('dashboard') }}" class="btn-sirio btn-sirio-primary">
+    <i class="fa-solid fa-chart-pie me-2"></i>Dashboard
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="container w-max-100">
+
+        <!-- Advertencia de Privacidad -->
+        <div class="alert alert-danger mb-4 alert-access-denied">
+            <strong>⚠️ Modo Mantenimiento:</strong> Este panel NO permite acceder a contenidos académicos (artículos,
+            publicaciones, PDFs).
+            Solo estadísticas técnicas anónimas para gestión del sistema.
+        </div>
+
+        <!-- Estadísticas Globales (Sirio Dashboard Grid) -->
+        <div class="dashboard-grid mb-4">
+            <div class="dashboard-stat-card">
+                <div>
+                    <div class="stat-label">Usuarios</div>
+                    <div class="stat-value text-accent">{{ total_usuarios }}</div>
+                </div>
+                <i class="fa-solid fa-users fa-2x text-muted opacity-25"></i>
+            </div>
+            <div class="dashboard-stat-card">
+                <div>
+                    <div class="stat-label">Proyectos</div>
+                    <div class="stat-value text-accent">{{ total_proyectos }}</div>
+                </div>
+                <i class="fa-solid fa-folder fa-2x text-muted opacity-25"></i>
+            </div>
+            <div class="dashboard-stat-card">
+                <div>
+                    <div class="stat-label">Registros</div>
+                    <div class="stat-value text-accent">{{ total_articulos + total_publicaciones }}</div>
+                </div>
+                <i class="fa-solid fa-database fa-2x text-muted opacity-25"></i>
+            </div>
+            <div class="dashboard-stat-card">
+                <div>
+                    <div class="stat-label">Hemerotecas</div>
+                    <div class="stat-value text-accent">{{ total_hemerotecas }}</div>
+                </div>
+                <i class="fa-solid fa-newspaper fa-2x text-muted opacity-25"></i>
+            </div>
+        </div>
+
+        <!-- Layout de 2 columnas -->
+        <div class="row g-4 mb-4">
+            <!-- Columna Izquierda: Monitoreo y Mantenimiento -->
+            <div class="col-lg-5">
+                <!-- Monitoreo del Sistema -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-microchip me-2"></i> Monitoreo del Sistema</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="monitor-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold small"><i class="fa-solid fa-hard-drive me-1"></i> Disco
+                                    Total</span>
+                                <span class="small">{{ disk_usado_gb }} GB / {{ disk_total_gb }} GB</span>
+                            </div>
+                            <div class="progress progress-dark" style="height: 6px;">
+                                <div class="progress-bar {% if disk_porcentaje > 80 %}bg-danger{% elif disk_porcentaje > 60 %}bg-warning{% else %}bg-success{% endif %}"
+                                    id="disk-bar" role="progressbar" data-width="{{ disk_porcentaje }}"></div>
+                            </div>
+                        </div>
+
+                        <div class="monitor-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold small"><i class="fa-solid fa-memory me-1"></i> Memoria
+                                    RAM</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small" id="ram-text">{{ ram_usado_gb }} GB / {{ ram_total_gb }}
+                                        GB</span>
+                                    <button id="btn-free-ram" class="btn btn-xs btn-outline-warning p-0 px-1"
+                                        title="Liberar RAM" style="margin-left: 10px">
+                                        <i class="fa-solid fa-broom" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="progress progress-dark" style="height: 6px;">
+                                <div class="progress-bar {% if ram_porcentaje > 80 %}bg-danger{% elif ram_porcentaje > 60 %}bg-warning{% else %}bg-accent{% endif %}"
+                                    id="ram-bar" role="progressbar" data-width="{{ ram_porcentaje }}">{{ ram_porcentaje
+                                    }}%</div>
+                            </div>
+                        </div>
+
+                        <div class="monitor-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold small"><i class="fa-solid fa-microchip me-1"></i> CPU</span>
+                                <span class="small">{{ cpu_porcentaje }}%</span>
+                            </div>
+                            <div class="progress progress-dark" style="height: 6px;">
+                                <div class="progress-bar {% if cpu_porcentaje > 80 %}bg-danger{% elif cpu_porcentaje > 60 %}bg-warning{% else %}bg-accent{% endif %}"
+                                    id="cpu-bar" role="progressbar" data-width="{{ cpu_porcentaje }}"></div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary">
+                            <span class="small text-muted">Archivos Subidos</span>
+                            <span class="badge bg-accent text-dark">{{ uploads_size_mb }} MB</span>
+                        </div>
+
+                        <div class="mt-3 p-2 rounded bg-black-opacity small border border-secondary">
+                            <div class="d-flex justify-content-between"><span class="text-muted">OS:</span><span
+                                    class="text-light">{{ sistema_info.os }}</span></div>
+                            <div class="d-flex justify-content-between"><span class="text-muted">Python:</span><span
+                                    class="text-light">{{ sistema_info.python }}</span></div>
+                            <div class="d-flex justify-content-between"><span class="text-muted">Uptime:</span><span
+                                    class="text-light">{{ uptime }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas Globales de DB -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-table me-2"></i> Base de Datos (Global)</span>
+                    </div>
+                    <div class="p-3">
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-warning">{{ db_stats.articulos }}</div>
+                                    <small class="text-muted font-size-xs">Artículos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-warning">{{ db_stats.publicaciones }}</div>
+                                    <small class="text-muted font-size-xs">Publicaciones</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-warning">{{ db_stats.proyectos }}</div>
+                                    <small class="text-muted font-size-xs">Proyectos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-warning">{{ db_stats.hemerotecas }}</div>
+                                    <small class="text-muted font-size-xs">Hemerotecas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mantenimiento -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-broom me-2"></i> Mantenimiento del Sistema</span>
+                    </div>
+                    <div class="p-3">
+                        <div class="d-grid gap-2">
+                            <form id="form-reiniciar-servidor" method="POST" action="/api/admin/restart">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sirio btn-sirio-primary w-100">
+                                    <i class="fa-solid fa-rotate me-2"></i> Reiniciar y Limpiar Caché
+                                </button>
+                            </form>
+
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <form method="POST" action="/admin/db-clean-html">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sirio w-100">
+                                            <i class="fa-solid fa-eraser me-2"></i> Limpiar HTML
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-sirio btn-sirio w-100" data-bs-toggle="modal"
+                                        data-bs-target="#modalGenerarEmbeddings">
+                                        <i class="fa-solid fa-brain me-2"></i> Generar Embeddings (IA)
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <form id="form-db-backup" method="POST" action="/admin/db-backup">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sirio w-100">
+                                            <i class="fa-solid fa-database me-1"></i> Backup
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-6">
+                                    <form id="form-project-zip" method="POST" action="/admin/project-download">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sirio w-100">
+                                            <i class="fa-solid fa-file-zipper me-1"></i> ZIP
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capas IDE -->
+                <div class="card-panel">
+                    <div class="card-header-panel d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-layer-group me-2"></i> Gestor IDE ({{ ide_servicios|length
+                            }})</span>
+                        <button class="btn-sirio btn-xs" data-bs-toggle="modal" data-bs-target="#modalAddIDE"
+                            style="width: auto !important;">
+                            <i class="fa-solid fa-plus me-1"></i> Añadir IDE
+                        </button>
+                    </div>
+                    <div class="p-0">
+                        <div class="max-h-400-scroll" style="width: 100%; overflow-x: auto;">
+                            {% if ide_servicios %}
+                            <table class="table table-sirio table-hover mb-0 font-size-xs">
+                                <tbody>
+                                    {% for srv in ide_servicios %}
+                                    <tr>
+                                        <td>
+                                            <strong class="text-light">{{ srv.nombre }}</strong>
+                                            <br><small class="text-muted">{{ srv.tipo }} - {{ srv.pais or '-' }}</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-flex gap-1 justify-content-end">
+                                                <button class="btn btn-sirio-admin btn-outline-warning"
+                                                    data-bs-toggle="modal" data-bs-target="#modalEditIDE{{ srv.id }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <form method="POST"
+                                                    action="{{ url_for('admin_ide_delete', ide_id=srv.id) }}"
+                                                    class="d-inline" onsubmit="return confirm('¿Eliminar?');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit"
+                                                        class="btn btn-sirio-admin btn-outline-danger">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="p-4 text-center text-secondary small">Catálogo vacío</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Gestión de Entidades -->
+            <div class="col-lg-7">
+                <!-- Gestión de Usuarios -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-users-gear me-2"></i> Gestión de Usuarios ({{ total_usuarios
+                            }})</span>
+                    </div>
+                    <div class="p-0">
+                        <div>
+                            <table class="table table-sirio table-hover mb-0 font-size-sm">
+                                <thead class="sticky-thead">
+                                    <tr class="text-warning">
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in usuarios %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ user.nombre }}</strong>
+                                            <br><small class="text-muted">{{ user.num_proyectos }} proy.</small>
+                                        </td>
+                                        <td><small>{{ user.email }}</small></td>
+                                        <td>
+                                            <span
+                                                class="badge {% if user.rol == 'admin' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ user.rol|upper }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if user.activo %}
+                                            <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Susp.</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.id != current_user.id %}
+                                            <div class="d-flex gap-1">
+                                                <!-- Cambiar Rol -->
+                                                <div class="dropdown d-inline">
+                                                    <button
+                                                        class="btn btn-sirio-admin btn-outline-warning dropdown-toggle"
+                                                        type="button" id="dropdownRol{{ user.id }}"
+                                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                                        title="Cambiar rol">
+                                                        <i class="fa-solid fa-user-shield"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-dark"
+                                                        aria-labelledby="dropdownRol{{ user.id }}">
+                                                        <li>
+                                                            <form method="POST"
+                                                                action="{{ url_for('admin_cambiar_rol', user_id=user.id) }}"
+                                                                class="m-0">
+                                                                <input type="hidden" name="csrf_token"
+                                                                    value="{{ csrf_token() }}">
+                                                                <input type="hidden" name="rol" value="admin">
+                                                                <button type="submit"
+                                                                    class="dropdown-item {% if user.rol == 'admin' %}active{% endif %}">
+                                                                    <i class="fa-solid fa-crown me-2"></i>Admin
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form method="POST"
+                                                                action="{{ url_for('admin_cambiar_rol', user_id=user.id) }}"
+                                                                class="m-0">
+                                                                <input type="hidden" name="csrf_token"
+                                                                    value="{{ csrf_token() }}">
+                                                                <input type="hidden" name="rol" value="user">
+                                                                <button type="submit"
+                                                                    class="dropdown-item {% if user.rol == 'user' %}active{% endif %}">
+                                                                    <i class="fa-solid fa-user me-2"></i>Usuario
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <!-- Suspender/Activar -->
+                                                <form method="POST"
+                                                    action="{{ url_for('admin_toggle_usuario', user_id=user.id) }}"
+                                                    class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sirio-admin btn-outline-info"
+                                                        title="Suspender/Activar">
+                                                        <i
+                                                            class="fa-solid {% if user.activo %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                                    </button>
+                                                </form>
+
+                                                <!-- Eliminar -->
+                                                <form method="POST"
+                                                    action="{{ url_for('admin_delete_usuario', user_id=user.id) }}"
+                                                    class="d-inline" onsubmit="return confirm('¿Eliminar usuario?');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sirio-admin btn-outline-danger"
+                                                        title="Eliminar">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            {% else %}
+                                            <small class="text-muted">Personal</small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Proyectos -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-folder-tree me-2"></i> Gestión de Proyectos ({{
+                            proyectos_lista|length }})</span>
+                    </div>
+                    <div class="p-0">
+                        <div>
+                            {% if proyectos_lista %}
+                            <table class="table table-sirio table-hover mb-0 font-size-sm">
+                                <thead class="sticky-thead">
+                                    <tr class="text-warning">
+                                        <th>Nombre</th>
+                                        <th>Propietario</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for p in proyectos_lista %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ p.nombre }}</strong>
+                                            <br><small class="text-muted">{{ p.articulos|length if p.articulos else 0
+                                                }} artículos</small>
+                                        </td>
+                                        <td><small>{{ p.usuario.nombre if p.usuario else 'Huérfano' }}</small>
+                                        </td>
+                                        <td><small>{{ p.creado_en.strftime('%d/%m/%y') }}</small></td>
+                                        <td>
+                                            <form method="POST"
+                                                action="{{ url_for('admin_delete_proyecto', proyecto_id=p.id) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm('¿Eliminar proyecto y sus datos?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sirio-admin btn-outline-danger"
+                                                    title="Eliminar proyecto">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="p-4 text-center text-secondary">No hay proyectos</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ubicaciones Pendientes -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-map-location-dot me-2"></i> Ubicaciones Pendientes ({{
+                            geo_pendientes|length }})</span>
+                    </div>
+                    <div class="p-0">
+                        <div>
+                            {% if geo_pendientes %}
+                            <table class="table table-sirio table-hover mb-0 font-size-xs">
+                                <thead class="sticky-thead">
+                                    <tr class="text-warning">
+                                        <th>Lugar</th>
+                                        <th style="width: 80px;">Lat</th>
+                                        <th style="width: 80px;">Lon</th>
+                                        <th style="width: 50px;">Ok</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for g in geo_pendientes %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ g.place_raw }}</strong>
+                                            <br><small class="text-muted">{{ g.pais or 'Desconocido' }}</small>
+                                        </td>
+                                        <form method="POST" action="{{ url_for('admin_geo_update', geo_id=g.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <td><input name="lat"
+                                                    class="form-control form-control-xs bg-dark text-light border-secondary"
+                                                    value="{{ g.lat or '' }}" step="any" type="number"></td>
+                                            <td><input name="lon"
+                                                    class="form-control form-control-xs bg-dark text-light border-secondary"
+                                                    value="{{ g.lon or '' }}" step="any" type="number"></td>
+                                            <td><button type="submit" class="btn btn-sirio-admin btn-outline-success"><i
+                                                        class="fa-solid fa-check"></i></button></td>
+                                        </form>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class="p-4 text-center text-secondary">Todo geolocalizado</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOG — Gestión de Entradas -->
+                <div class="card-panel mb-4">
+                    <div class="card-header-panel d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-rss me-2 text-warning"></i> Blog del Proyecto</span>
+                        <a href="{{ url_for('blog.admin_lista') }}" class="btn btn-sirio">
+                            <i class="fa-solid fa-sliders"></i> <span class="btn-text">Gestionar Blog</span>
+                        </a>
+                    </div>
+                    <div class="p-3">
+                        {% set total_posts = blog_stats.total if blog_stats else 0 %}
+                        {% set publicados  = blog_stats.publicados if blog_stats else 0 %}
+                        {% set borradores  = blog_stats.borradores if blog_stats else 0 %}
+                        {% set total_vistas = blog_stats.vistas if blog_stats else 0 %}
+
+                        <!-- Mini-estadísticas del blog -->
+                        <div class="row g-2 text-center mb-3">
+                            <div class="col-3">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-accent">{{ total_posts }}</div>
+                                    <small class="text-muted font-size-xs">Total</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0" style="color:#22c55e;">{{ publicados }}</div>
+                                    <small class="text-muted font-size-xs">Publicadas</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-warning">{{ borradores }}</div>
+                                    <small class="text-muted font-size-xs">Borradores</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-2 bg-black rounded border border-secondary">
+                                    <div class="h5 mb-0 text-info">{{ total_vistas }}</div>
+                                    <small class="text-muted font-size-xs">Vistas</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción rápida -->
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('blog.admin_nueva') }}" 
+                               class="btn btn-sirio-primary w-100 justify-content-center py-2">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                <span class="btn-text">NUEVA ENTRADA</span>
+                            </a>
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <a href="{{ url_for('blog.admin_lista', filtro='publicados') }}"
+                                       class="btn btn-sirio w-100" style="font-size:0.75rem;">
+                                        <i class="fa-solid fa-circle-check me-1" style="color:#22c55e;"></i> Publicadas
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('blog.admin_lista', filtro='borradores') }}"
+                                       class="btn btn-sirio w-100" style="font-size:0.75rem;">
+                                        <i class="fa-solid fa-pen-nib me-1 text-warning"></i> Borradores
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actividad -->
+                <div class="card-panel">
+                    <div class="card-header-panel">
+                        <span><i class="fa-solid fa-list-check me-2"></i> Actividad Reciente</span>
+                    </div>
+                    <div class="p-0">
+                        <div>
+                            {% if actividad_sistema %}
+                            <div class="list-group list-group-flush bg-transparent">
+                                {% for item in actividad_sistema[:8] %}
+                                <div class="list-group-item bg-transparent border-secondary py-2">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-accent fw-bold">{{ item.icono }} {{ item.tipo }}</small>
+                                        <small class="text-muted">{{ item.fecha.strftime('%H:%M') }}</small>
+                                    </div>
+                                    <div class="text-light small">{{ item.descripcion }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="p-4 text-center text-muted small">Sin actividad</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set progress bar widths
+        ['disk-bar', 'ram-bar', 'cpu-bar'].forEach(id => {
+            const bar = document.getElementById(id);
+            if (bar && bar.dataset.width) {
+                bar.style.width = bar.dataset.width + '%';
+            }
+        });
+
+        // Libear RAM AJAX
+        const btnFreeRam = document.getElementById('btn-free-ram');
+        if (btnFreeRam) {
+            btnFreeRam.addEventListener('click', function () {
+                if (!confirm('¿Liberar RAM?')) return;
+
+                const icon = this.querySelector('i');
+                const btn = this;
+                btn.disabled = true;
+                icon.className = 'fa-solid fa-circle-notch fa-spin';
+
+                fetch('/api/admin/free-ram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' }
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            const ramBar = document.getElementById('ram-bar');
+                            const ramText = document.getElementById('ram-text');
+                            if (ramBar) {
+                                ramBar.style.width = data.ram_percent + '%';
+                                ramBar.className = 'progress-bar ' + (data.ram_percent > 80 ? 'bg-danger' :
+                                    data.ram_percent > 60 ? 'bg-warning' : 'bg-accent');
+                            }
+                            if (ramText) ramText.textContent = `${data.ram_used} GB / ${data.ram_total} GB`;
+                            alert('✅ ' + data.message);
+                        } else {
+                            alert('❌ Error: ' + data.error);
+                        }
+                    })
+                    .catch(e => alert('❌ Error de comunicación'))
+                    .finally(() => {
+                        btn.disabled = false;
+                        icon.className = 'fa-solid fa-broom';
+                    });
+            });
+        }
+
+        // Gestión de Confirmaciones con SweetAlert2
+        const setupConfirmation = (formId, title, text, icon = 'warning', confirmText = 'Sí, continuar') => {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff9800',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: confirmText,
+                        cancelButtonText: 'Cancelar',
+                        background: '#1e1e1e',
+                        color: '#ffffff',
+                        customClass: {
+                            popup: 'border border-secondary rounded-3'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            }
+        };
+
+        setupConfirmation('form-reiniciar-servidor', '¿Reiniciar servidor?', 'Esta acción limpiará la caché y reiniciará los procesos del sistema.', 'warning', 'Sí, reiniciar');
+        setupConfirmation('form-generar-embeddings', '¿Iniciar Generación?', 'Este proceso generará embeddings semánticos para los documentos pendientes. Puede tardar varios minutos.', 'info', 'Sí, iniciar generación');
+
+        // Handlers específicos con feedback de carga para Backup y ZIP
+        const setupDownloadConfirmation = (formId, title, text, loadingTitle) => {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff9800',
+                        confirmButtonText: 'Sí, generar descarga',
+                        cancelButtonText: 'Cancelar',
+                        background: '#1e1e1e',
+                        color: '#ffffff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: loadingTitle,
+                                text: 'Por favor, espera mientras se genera el archivo.',
+                                allowOutsideClick: false,
+                                background: '#1e1e1e',
+                                color: '#ffffff',
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Enviamos el formulario
+                            form.submit();
+
+                            // Cerramos el modal de carga tras unos segundos (asumiendo que la descarga inició)
+                            setTimeout(() => {
+                                Swal.close();
+                            }, 5000);
+                        }
+                    });
+                });
+            }
+        };
+
+        setupDownloadConfirmation('form-db-backup', '¿Generar Backup SQL?', 'Se creará un volcado completo de la base de datos PostgreSQL.', 'Generando Backup...');
+        setupDownloadConfirmation('form-project-zip', '¿Descargar Código Fuente?', 'Se comprimirá el proyecto (excluyendo la carpeta /uploads para mayor rapidez).', 'Comprimiendo Proyecto...');
+    });
+</script>
+{% endblock %}
+
+{% block modals %}
+<!-- Modales de Edición IDE (Generados dinámicamente) -->
+{% for srv in ide_servicios %}
+<div class="modal fade" id="modalEditIDE{{ srv.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-warning">Editar Servicio IDE</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_ide_update', ide_id=srv.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small text-secondary">Nombre</label>
+                            <input type="text" name="nombre" class="form-control form-control-sirio"
+                                value="{{ srv.nombre }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Tipo</label>
+                            <select name="tipo" class="form-select form-select-sirio">
+                                <option value="WMS" {% if srv.tipo=='WMS' %}selected{% endif %}>WMS</option>
+                                <option value="WMTS" {% if srv.tipo=='WMTS' %}selected{% endif %}>WMTS</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-secondary">URL</label>
+                            <input type="text" name="url" class="form-control form-control-sirio" value="{{ srv.url }}"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Capas (WMS)</label>
+                            <input type="text" name="capas" class="form-control form-control-sirio"
+                                value="{{ srv.capas or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">País</label>
+                            <input type="text" name="pais" class="form-control form-control-sirio"
+                                value="{{ srv.pais or '' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-warning btn-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modal Añadir IDE -->
+<div class="modal fade" id="modalAddIDE" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-success">Añadir Nueva Capa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_ide_add') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small text-secondary">Nombre del Servicio</label>
+                            <input type="text" name="nombre" class="form-control form-control-sirio"
+                                placeholder="Ej: Catastro" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Tipo</label>
+                            <select name="tipo" class="form-select form-select-sirio">
+                                <option value="WMS">WMS</option>
+                                <option value="WMTS">WMTS</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-secondary">URL</label>
+                            <input type="text" name="url" class="form-control form-control-sirio" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Capas (WMS)</label>
+                            <input type="text" name="capas" class="form-control form-control-sirio">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">País</label>
+                            <input type="text" name="pais" class="form-control form-control-sirio">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-sirio-success btn-sm">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Generar Embeddings -->
+<div class="modal fade" id="modalGenerarEmbeddings" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-warning">
+            <div class="modal-header border-warning bg-dark">
+                <h5 class="modal-title text-warning"><i class="fa-solid fa-brain me-2"></i>Generar Embeddings Semánticos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="form-generar-embeddings" method="POST" action="/admin/generar-embeddings">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <!-- Estado actual de embeddings en el sistema -->
+                    <div class="card bg-dark border-secondary mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="text-white-50 mb-3">
+                                <i class="fa-solid fa-database me-2"></i>Estado actual del sistema
+                            </h6>
+
+                            {% if docs_sin_embeddings_global == 0 and total_docs_global > 0 %}
+                            <div class="alert border-0 small mb-2">
+                                <i class="fa-solid fa-check-circle me-2"></i>
+                                <strong>Todos los documentos tienen embeddings generados</strong>.
+                                No hay documentos pendientes de procesamiento.
+                            </div>
+                            {% elif total_docs_global > 0 %}
+                            <div class="alert alert-info border-0 small mb-2">
+                                <i class="fa-solid fa-info-circle me-2"></i>
+                                Se generarán embeddings para <strong>{{ docs_sin_embeddings_global }}
+                                    documentos</strong> pendientes.
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning border-0 small mb-2">
+                                <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                                No hay documentos incluidos en el corpus de ningún proyecto.
+                            </div>
+                            {% endif %}
+
+                            <div class="row g-2 text-center">
+                                <div class="col-4">
+                                    <div class="p-2 rounded" style="background-color: rgba(108, 117, 125, 0.1);">
+                                        <div class="h4 mb-0 text-white">{{ total_docs_global }}</div>
+                                        <small class="text-white-50">Total docs</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 rounded" style="background-color: rgba(25, 135, 84, 0.1);">
+                                        <div class="h4 mb-0 text-success">{{ docs_con_embeddings_global }}</div>
+                                        <small class="text-white-50">Con embeddings</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 rounded" style="background-color: rgba(255, 193, 7, 0.1);">
+                                        <div class="h4 mb-0 text-warning">{{ docs_sin_embeddings_global }}</div>
+                                        <small class="text-white-50">Pendientes</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if total_docs_global > 0 %}
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-white-50">Progreso global</small>
+                                    <small class="text-white"><strong>{{ porcentaje_embeddings_global
+                                            }}%</strong></small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                        style="width: {{ porcentaje_embeddings_global }}%"
+                                        aria-valuenow="{{ porcentaje_embeddings_global }}" aria-valuemin="0"
+                                        aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 small mb-3">
+                        <i class="fa-solid fa-info-circle me-2"></i>
+                        Este proceso generará vectores semánticos para todas las noticias sin embeddings en
+                        <strong>TODOS los proyectos</strong>.
+                        Se ejecutará en segundo plano. <strong>Requiere API Keys configuradas</strong> (OpenAI o
+                        Google).
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Modelo de Embeddings</label>
+                            <select name="modelo" class="form-select form-select-sirio" required {% if
+                                docs_sin_embeddings_global==0 or total_docs_global==0 %}disabled{% endif %}>
+                                <option value="openai-small" selected>OpenAI Small (1536 dim, rápido)</option>
+                                <option value="openai-large">OpenAI Large (3072 dim, preciso)</option>
+                                <option value="google">Google Embedding-004 (768 dim)</option>
+                            </select>
+                            <small class="text-muted">Se recomienda openai-small para corpus grandes</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary">Batch Size</label>
+                            <input type="number" name="batch_size" class="form-control form-control-sirio" value="50"
+                                min="10" max="200" {% if docs_sin_embeddings_global==0 or total_docs_global==0
+                                %}disabled{% endif %}>
+                            <small class="text-muted">Docs por commit</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary">Límite (opcional)</label>
+                            <input type="number" name="limite" class="form-control form-control-sirio"
+                                placeholder="Sin límite" {% if docs_sin_embeddings_global==0 or total_docs_global==0
+                                %}disabled{% endif %}>
+                            <small class="text-muted">Max docs a procesar</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small mt-3 mb-0">
+                        <strong><i class="fa-solid fa-dollar-sign me-2"></i>Costos Estimados:</strong><br>
+                        - OpenAI Small: ~$0.02 por 1000 docs<br>
+                        - OpenAI Large: ~$0.13 por 1000 docs<br>
+                        - Google: ~$0.00 (primera vez gratis)
+                    </div>
+                </div>
+                <div class="modal-footer border-warning">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sirio-success btn-sm" {% if docs_sin_embeddings_global==0 or
+                        total_docs_global==0 %}disabled{% endif %}>
+                        <i class="fa-solid fa-rocket me-2"></i>
+                        {% if docs_sin_embeddings_global == 0 and total_docs_global > 0 %}
+                        Ya están completos
+                        {% elif total_docs_global == 0 %}
+                        Sin documentos
+                        {% else %}
+                        Iniciar Generación
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

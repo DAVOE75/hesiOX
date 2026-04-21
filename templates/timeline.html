@@ -1,0 +1,719 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Cronología — Proyecto Sirio{% endblock %}
+{% block page_title %}Cronología{% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Match new.html header height for standard button sizing */
+  .desktop-header {
+    height: 60px !important;
+    padding: 0 20px !important;
+  }
+
+  /* Ensure center alignment for buttons */
+  .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<button id="btn-todo" class="btn-sirio" title="Ver todo el corpus">
+  <i class="fa-solid fa-globe"></i>
+  <span class="btn-text">Ver Todo</span>
+</button>
+
+<button id="btn-export-png" class="btn-sirio" title="Exportar como imagen PNG">
+  <i class="fa-solid fa-download"></i>
+  <span class="btn-text">Exportar PNG</span>
+</button>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Header / Info -->
+<div class="container-fluid px-4 py-3">
+  <div class="row align-items-center">
+    <div class="col-md-12">
+      <div class="d-flex align-items-center gap-3 text-muted">
+        <i class="fa-solid fa-circle-info"></i>
+        <small>Visualiza la distribución temporal del corpus para identificar patrones, picos de actividad mediática y
+          silencios informativos. Esta herramienta es clave para comprender la secuencia cronológica y la densidad de
+          eventos a lo largo del periodo estudiado.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Controls Help Strip (TOP, debajo de botones) -->
+<div class="d-flex justify-content-center align-items-center w-100"
+  style="pointer-events: none; position: relative; z-index: 1200; margin-top: 0;">
+  <div class="context-help-pill px-3 py-1 rounded-pill d-flex gap-3 align-items-center"
+    style="pointer-events: auto; margin-top: 0;">
+    <span><i class="fa-solid fa-mouse me-1 text-accent"></i> <b>Click + Arrastrar</b> para mover</span>
+    <span class="opacity-50">|</span>
+    <span><i class="fa-solid fa-magnifying-glass me-1 text-accent"></i> <b>Ctrl + Rueda</b> para zoom</span>
+    <span class="opacity-50">|</span>
+    <span><i class="fa-solid fa-hand-pointer me-1 text-accent"></i> <b>Click</b> para detalles</span>
+    <span class="opacity-50">|</span>
+    <span><i class="fa-solid fa-arrows-up-down me-1 text-accent"></i> <b>Rueda</b> desplazam. vertical</span>
+  </div>
+</div>
+
+<!-- Timeline Container -->
+<div id="visualization" style="width: 100%; height: calc(100vh - 60px); min-height: 500px; padding-top: 76px;">
+  <div class="d-flex flex-column justify-content-center align-items-center h-100">
+    <div class="spinner-border text-accent mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+    <span class="text-muted" style="font-family: var(--ds-font-mono);">Cargando datos históricos...</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- INFO MODAL (Popup Resumen) -->
+<div class="modal fade" id="infoModal" tabindex="-1"  style="z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-panel border-0">
+      <div class="modal-header border-bottom border-light border-opacity-10">
+        <h5 class="modal-title text-truncate pe-3" id="modalTitle" style="font-family: var(--ds-font-headers);">Título
+        </h5>
+      </div>
+      <div class="modal-body custom-scrollbar" style="max-height: 70vh; overflow-y: auto;">
+        <!-- Metadata Grid -->
+        <div class="row g-2 mb-3 text-muted small font-monospace border-bottom border-secondary pb-3">
+          <div class="col-6">
+            <span class="d-block text-uppercase text-white-50" style="font-size: 0.7rem;">Fecha</span>
+            <span id="modalFecha" class="text-white"></span>
+          </div>
+          <div class="col-6">
+            <span class="d-block text-uppercase text-white-50" style="font-size: 0.7rem;">Publicación</span>
+            <span id="modalPub" class="text-accent"></span>
+          </div>
+          <div class="col-12 mt-2">
+            <span class="d-block text-uppercase text-white-50" style="font-size: 0.7rem;">Ciudad (Mapa)</span>
+            <span id="modalCiudad" class="text-white"></span>
+          </div>
+        </div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mb-3" id="modalTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-resumen" data-bs-toggle="tab" data-bs-target="#tabResumen"
+              type="button" role="tab" aria-controls="tabResumen" aria-selected="true"
+              style="width: auto;">Resumen</button>
+          </li>
+          <li class="nav-item" role="presentation" style="width: auto;">
+            <button class="nav-link" id="tab-texto-original" data-bs-toggle="tab" data-bs-target="#tabTextoOriginal"
+              type="button" role="tab" aria-controls="tabTextoOriginal" aria-selected="false" style="width: auto;">Texto
+              original</button>
+          </li>
+        </ul>
+        <div class="tab-content" id="modalTabContent">
+          <div class="tab-pane fade show active" id="tabResumen" role="tabpanel" aria-labelledby="tab-resumen">
+            <div id="modalResumen" class="modal-summary-block mb-4 p-3 rounded text-justify">
+              <em class="text-muted">Sin resumen disponible.</em>
+            </div>
+            <div id="modalContenido" class="small mb-3" style="display:none;"></div>
+          </div>
+          <div class="tab-pane fade" id="tabTextoOriginal" role="tabpanel" aria-labelledby="tab-texto-original">
+            <div id="modalTextoOriginal" class="small text-white-50 mb-3" style="white-space: pre-wrap;"></div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary gap-3">
+          <button type="button" class="btn-sirio btn-sirio-secondary" style="width: 20% !important;"
+            data-bs-dismiss="modal">
+            Cerrar
+          </button>
+          <a href="#" id="modalLink"
+            class="btn-sirio btn-sirio-primary text-decoration-none justify-content-center flex-grow-1" target="_blank">
+            Ver Ficha Completa <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* =========================================
+     SIRIO TIMELINE HIGH VISIBILITY THEME
+     ========================================= */
+
+  /* --- Glassmorphism Utils --- */
+  .glass-panel {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    color: #fff;
+  }
+
+  .text-header-premium {
+    font-family: var(--ds-font-headers);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --- Vis.js Customization --- */
+  .vis-timeline {
+    border: none;
+    font-family: var(--ds-font-mono);
+    font-size: 14px !important;
+    /* Slightly larger for readability */
+    background-color: transparent;
+  }
+
+  .context-help-pill {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.7rem;
+    font-family: var(--ds-font-ui);
+  }
+
+  .vis-time-axis .vis-text {
+    color: #ffffff;
+    font-weight: 700;
+    opacity: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+
+  .vis-time-axis .vis-text.vis-major {
+    font-weight: 800;
+    font-size: 1.1em;
+  }
+
+  .vis-time-axis .vis-grid.vis-minor {
+    border-color: rgba(255, 255, 255, 0.15);
+    /* Increased visibility */
+  }
+
+  .vis-time-axis .vis-grid.vis-major {
+    border-color: rgba(255, 255, 255, 0.3);
+    /* Increased visibility */
+  }
+
+  .vis-current-time {
+    background-color: #ff9800;
+    width: 2px;
+    z-index: 5;
+  }
+
+  /* Items Styling - REFINED RICH BOXES */
+  .vis-item {
+    background-color: transparent;
+    /* Container is transparent */
+    border-color: transparent;
+    /* No outer border */
+    border-left: none;
+    /* Handled by inner */
+    box-shadow: none;
+    /* Handled by inner */
+    transition: z-index 0.2s ease;
+  }
+
+  .vis-item.vis-box {
+    padding: 2px;
+    border: none;
+  }
+
+  /* Modal Buttons - Scoped to avoid global conflicts */
+  #infoModal .modal-btn-close {
+    width: 30% !important;
+    /* Fixed width for close */
+    font-size: 0.85rem;
+  }
+
+  #infoModal .modal-btn-view {
+    width: 68% !important;
+    /* Larger width for action */
+    font-size: 1rem;
+    font-weight: 600;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .modal-summary-block {
+    background: rgba(255, 152, 0, 0.1);
+    border-left: 3px solid #ff9800;
+    text-align: justify;
+  }
+
+  .modal-summary-block.auto-resumen {
+    background: rgba(255, 152, 0, 0.05);
+  }
+
+  /* Inner Content Structure */
+  .sirio-timeline-item {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(20, 20, 20, 0.98) 100%);
+    border-left: 4px solid #ff9800;
+    border-radius: 6px;
+    width: 320px;
+    /* Ancho fijo para uniformidad */
+    min-height: 100px;
+    /* Altura mínima uniforme */
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    text-align: left;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  /* Indicador de día de la semana */
+  .sirio-timeline-item::before {
+    content: attr(data-weekday);
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 152, 0, 0.4);
+    font-family: var(--ds-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .vis-item:hover .sirio-timeline-item {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(255, 152, 0, 0.3), 0 0 0 2px rgba(255, 152, 0, 0.2);
+    background: linear-gradient(135deg, rgba(40, 40, 40, 0.98) 0%, rgba(30, 30, 30, 0.98) 100%);
+    border-left-color: #ffa726;
+    z-index: 100;
+  }
+
+  .sirio-timeline-item .item-date {
+    font-size: 0.82rem;
+    color: #fff;
+    font-weight: 600;
+    font-family: var(--ds-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sirio-timeline-item .item-date::before {
+    content: '●';
+    font-size: 0.5rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .sirio-timeline-item .item-title {
+    .sirio-timeline-item .title-text {
+      flex: 1;
+      color: #ff9800;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sirio-timeline-item .timeline-icon {
+      margin-left: 8px;
+      cursor: pointer;
+      color: #ff9800;
+      font-size: 1.1em;
+      transition: color 0.2s;
+    }
+
+    .sirio-timeline-item .timeline-icon:hover {
+      color: #ffa726;
+    }
+
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #ff9800;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Selected State */
+  .vis-item.vis-selected .sirio-timeline-item {
+    background-color: #2a2a2a;
+    border-left-color: #ff3d00;
+    /* Redder accent when selected */
+    box-shadow: 0 0 0 1px rgba(255, 152, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.9);
+  }
+
+  .vis-item.vis-selected {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    z-index: 50;
+  }
+
+  /* Fix vertical lines (stems) if using 'box' type? 
+     Vis.js 'box' type doesn't usually have stems unless specifically styled or if type is 'point'.
+     Assuming standard box behavior. */
+
+  .vis-item .vis-item-content {
+    padding: 0 !important;
+  }
+
+  /* Modal Overlay - Fix Z-index to be visibly on top */
+  .modal-backdrop {
+    z-index: 2000 !important;
+  }
+
+  .modal {
+    z-index: 2050 !important;
+  }
+
+  .modal-backdrop.show {
+    opacity: 0.6 !important;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Custom Square Close Button - SIMPLIFIED */
+  .btn-close-custom {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    /* Square with slight radius */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s, border-color 0.2s;
+    /* No transform */
+    cursor: pointer;
+  }
+
+  .btn-close-custom:hover {
+    background: rgba(255, 255, 255, 0.25);
+    /* Subtle lighten */
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+    /* No rotation */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #222;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/vis-timeline@latest/styles/vis-timeline-graph2d.min.css">
+<script src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"></script>
+<script>
+  let timeline;
+  let allItems = [];
+  let currentItemIndex = -1;
+  let infoModal = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+
+    // Initialize Modal
+    infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
+
+    // Iniciar carga
+    fetch('/api/timeline-data?_t=' + new Date().getTime())
+      .then(res => res.json())
+      .then(data => {
+
+        allItems = data;
+        const container = document.getElementById('visualization');
+        container.innerHTML = "";
+        if (data.length === 0) {
+          container.innerHTML = `<div class="h-100 d-flex justify-content-center align-items-center flex-column">
+                <i class='fa-regular fa-calendar-xmark fa-3x text-muted mb-3'></i>
+                <h4 class='text-muted'>No hay datos temporales disponibles.</h4>
+            </div>`;
+          return;
+        }
+
+        // Función para parsear fechas de forma segura en Safari (YYYY-MM-DD)
+        function safeDate(dateStr) {
+          if (!dateStr) return null;
+          // Safari a veces falla con guiones si no es ISO perfecta, reemplazar por barras suele ser más compatible para fechas locales
+          // Pero Vis.js prefiere ISO. Intentamos constructor directo y si falla, parseo manual.
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) return d;
+
+          // Fallback manual para YYYY-MM-DD
+          if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = dateStr.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+          }
+          return null;
+        }
+
+        // Calcular rango de fechas dinámicamente
+        let minDate = null, maxDate = null;
+        data.forEach(item => {
+          const d = safeDate(item.start);
+          if (d) {
+            if (!minDate || d < minDate) minDate = d;
+            if (!maxDate || d > maxDate) maxDate = d;
+          }
+        });
+
+        // Añadir margen visual (1 mes antes/después)
+        let minDateStr, maxDateStr, startStr, endStr;
+
+        if (minDate && maxDate) {
+          minDateStr = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1).toISOString().slice(0, 10);
+          maxDateStr = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0).toISOString().slice(0, 10);
+          // Ventana inicial: cuatrimestre con datos (4 meses)
+          startStr = new Date(minDate.getFullYear(), minDate.getMonth(), 1).toISOString().slice(0, 10);
+          endStr = new Date(minDate.getFullYear(), minDate.getMonth() + 4, 0).toISOString().slice(0, 10);
+        }
+
+        const items = new vis.DataSet(data);
+        const options = {
+          height: '100%',
+          min: minDateStr,
+          max: maxDateStr,
+          start: startStr,
+          end: endStr,
+          zoomMin: 1000 * 60 * 60 * 24, // un día
+          verticalScroll: true,
+          zoomKey: 'ctrlKey',
+          orientation: 'top',
+          stack: true,
+          margin: { item: 5 },
+          format: {
+            minorLabels: {
+              millisecond: 'SSS',
+              second: 's',
+              minute: 'HH:mm',
+              hour: 'HH:mm',
+              weekday: 'ddd D',
+              day: 'D',
+              week: 'w',
+              month: 'MMM',
+              year: 'YYYY'
+            },
+            majorLabels: {
+              millisecond: 'HH:mm:ss',
+              second: 'D MMMM HH:mm',
+              minute: 'ddd D MMMM',
+              hour: 'ddd D MMMM',
+              weekday: 'MMMM YYYY',
+              day: 'MMMM YYYY',
+              week: 'MMMM YYYY',
+              month: 'YYYY',
+              year: ''
+            }
+          },
+          tooltip: {
+            followMouse: true,
+            overflowMethod: 'cap'
+          }
+        };
+        timeline = new vis.Timeline(container, items, options);
+
+        // Ajustar vista para mostrar todo por defecto
+        timeline.fit();
+
+        // Eventos Botones (solo si existen)
+        const btnAgosto = document.getElementById('btn-agosto');
+        if (btnAgosto) btnAgosto.onclick = () => timeline.setWindow('1906-08-03', '1906-09-01', { animation: true });
+        const btnJuicios = document.getElementById('btn-juicios');
+        if (btnJuicios) btnJuicios.onclick = () => timeline.setWindow('1908-01-01', '1911-01-01', { animation: true });
+        const btnTodo = document.getElementById('btn-todo');
+        if (btnTodo) btnTodo.onclick = () => timeline.fit({ animation: true });
+
+        // Exportar Timeline como PNG
+        const btnExportPng = document.getElementById('btn-export-png');
+        if (btnExportPng) btnExportPng.onclick = () => exportTimelineAsPNG();
+
+        // Clic en noticia
+        timeline.on('select', function (props) {
+          if (props.items.length > 0) {
+            const item = items.get(props.items[0]);
+            currentItemIndex = allItems.findIndex(i => i.id === item.id);
+            abrirModal(item);
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        document.getElementById('visualization').innerHTML = `<p class="text-danger text-center mt-5">Error cargando datos: ${err.message}</p>`;
+      });
+  });
+
+  function abrirModal(item) {
+    document.getElementById('modalTitle').innerText = item.titulo_completo || 'Sin título';
+    document.getElementById('modalFecha').innerText = item.start;
+
+    // Use explicit publication name
+    document.getElementById('modalPub').innerText = item.nombre_publicacion || 'Sin datos';
+
+    // Ciudad logic
+    const ciudad = item.ciudad || 'No especificada';
+    const modalCiudad = document.getElementById('modalCiudad');
+
+    // Si hay lat/lon, incluir en el enlace para centrar el mapa
+    if (ciudad && ciudad !== 'No especificada') {
+      let lat = item.lat_ciudad || null;
+      let lon = item.lon_ciudad || null;
+      let url = `/mapa?ciudad=${encodeURIComponent(ciudad)}`;
+      if (lat && lon) {
+        url += `&lat=${lat}&lon=${lon}`;
+      }
+      modalCiudad.innerHTML = `<a href="${url}" class="text-accent text-decoration-none fw-bold" target="_blank"><i class="fa-solid fa-map-location-dot me-1"></i> ${ciudad}</a>`;
+    } else {
+      modalCiudad.innerText = ciudad;
+    }
+
+    // Link
+    document.getElementById('modalLink').href = item.url_editar;
+
+    // Cargar contenido resumen AJAX
+    const resumenDiv = document.getElementById('modalResumen');
+    const contentDiv = document.getElementById('modalContenido');
+
+    resumenDiv.innerHTML = '<em>Cargando...</em>';
+    contentDiv.innerHTML = '';
+    contentDiv.style.display = 'none';
+
+    fetch(`/api/noticia/${item.id}`)
+      .then(r => r.json())
+      .then(data => {
+        // Reset classes
+        resumenDiv.classList.remove('auto-resumen');
+
+        if (data.resumen) {
+          resumenDiv.innerHTML = `<strong>RESUMEN:</strong><br>${data.resumen}`;
+        } else if (data.contenido && data.contenido.trim() !== '' && data.contenido !== '<em>Sin contenido disponible.</em>') {
+          // Fallback: Use truncated content
+          const truncated = data.contenido.replace(/<[^>]*>?/gm, '').substring(0, 300) + '...';
+          resumenDiv.innerHTML = `<strong>RESUMEN (Automático):</strong><br>${truncated}`;
+          resumenDiv.classList.add('auto-resumen');
+        } else {
+          resumenDiv.innerHTML = '<em>Sin resumen disponible. Ver ficha completa para más detalles.</em>';
+        }
+
+        if (data.contenido) {
+          contentDiv.innerHTML = data.contenido;
+        }
+      })
+      .catch(() => {
+        resumenDiv.innerHTML = '<em>Error al cargar datos.</em>';
+      });
+
+    infoModal.show();
+  }
+
+  // Exportar Timeline como imagen PNG de alta calidad
+  async function exportTimelineAsPNG() {
+    const container = document.getElementById('visualization');
+    // Forzar redibujado antes de exportar
+    timeline.redraw();
+
+    // Esperar un poco para asegurar render
+    setTimeout(() => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Dimensiones (4K para calidad profesional)
+      canvas.width = 3840;
+      canvas.height = 2160;
+
+      // Fondo oscuro diseño
+      ctx.fillStyle = '#0f0f0f'; // var(--ds-bg-app)
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const svgElements = container.querySelectorAll('svg');
+
+      if (svgElements.length > 0) {
+        const mainSVG = svgElements[0];
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(mainSVG);
+
+        const img = new Image();
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function () {
+          // Calcular escala para llenar pero mantener ratio
+          // Preferimos ver 'más' timeline, asi que ajustamos ancho o alto
+          // En este caso, hacemos 'contain'
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.9;
+          const w = img.width * scale;
+          const h = img.height * scale;
+          const x = (canvas.width - w) / 2;
+          const y = (canvas.height - h) / 2;
+
+          ctx.drawImage(img, x, y, w, h);
+
+          // Watermark
+          ctx.fillStyle = 'rgba(255, 152, 0, 0.5)';
+          ctx.font = 'bold 60px "JetBrains Mono"';
+          ctx.textAlign = 'right';
+          ctx.fillText('PROYECTO SIRIO — CRONOLOGÍA', canvas.width - 80, canvas.height - 80);
+
+          ctx.font = '30px "JetBrains Mono"';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.fillText(new Date().toLocaleDateString(), canvas.width - 80, canvas.height - 40);
+
+          canvas.toBlob(function (blob) {
+            const link = document.createElement('a');
+            link.download = `timeline_sirio_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(url);
+          });
+        };
+        img.src = url;
+      } else {
+        alert('No se pudo capturar el timeline.');
+      }
+    }, 500);
+  }
+</script>
+{% endblock %}

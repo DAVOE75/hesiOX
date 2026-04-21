@@ -1,0 +1,807 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Configurar Red — {{ proyecto.nombre }}{% endblock %}
+{% block page_title %}Configuración de Red{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Definición de Nodos</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="toolbar-header"
+  style="padding: 10px 16px; background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(18, 18, 18, 0.95)); border: none; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); width: 100%; display: flex; align-items: center; overflow-x: auto; scrollbar-width: none;">
+
+  <button class="btn-sirio" type="button" id="btn-add-tipo" title="Añadir Nuevo Tipo">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">Añadir Tipo</span>
+  </button>
+
+  <input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+
+  <button class="btn-sirio active" type="button" id="btn-save" title="Guardar Cambios">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">Guardar</span>
+  </button>
+
+  <div class="vr" style="background: rgba(255,255,255,0.15); height: 24px; width: 1px; margin: 0 8px;"></div>
+
+  <a href="{{ url_for('redes') }}" class="btn-sirio" title="Visualizar Red de Nodos">
+    <i class="fa-solid fa-share-nodes"></i>
+    <span class="btn-text">Ver Red</span>
+  </a>
+</div>
+{% endblock %}
+
+{% block body_class %}proyecto-style{% endblock %}
+
+{% block extra_css %}
+<!-- No extra styling needed, using design_system.css -->
+<style>
+  /* Page specific overrides for Config Red */
+  .tipo-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .tipo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .tipo-header {
+    border-bottom: 1px solid var(--ds-border-light);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .entidad-list {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--ds-border-light);
+    border-radius: var(--ds-radius-sm);
+    padding: 10px;
+    min-height: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .entidad-tag {
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.4);
+    color: #ffb74d;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: var(--ds-font-mono);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    transition: all 0.2s;
+  }
+
+  .entidad-tag:hover {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: #ff9800;
+    color: #fff;
+  }
+
+  .entidad-tag button {
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0;
+    line-height: 1;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  .entidad-tag button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .status-box {
+    display: none;
+    padding: 12px 16px;
+    border-radius: var(--ds-radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-box.visible {
+    display: flex;
+  }
+
+  .status-ok {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #a5d6a7;
+  }
+
+  .status-warn {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.5);
+    color: #ffcc80;
+  }
+
+  .status-err {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.5);
+    color: #ef9a9a;
+  }
+
+  /* Inline Edit */
+  .inline-edit-input {
+    background: var(--ds-bg-app);
+    border: 1px solid var(--ds-accent-primary);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--ds-font-mono);
+    font-size: 0.8rem;
+    min-width: 200px;
+  }
+
+  /* Scoped FIX for config dropdowns */
+  .tipo-card {
+    overflow: visible !important;
+  }
+
+  .tipo-card .card-panel {
+    overflow: visible !important;
+  }
+
+  .tipo-card .choices {
+    overflow: visible !important;
+  }
+
+  .tipo-card .choices__list--dropdown {
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10001 !important;
+  }
+
+  .tipo-card .choices__list--dropdown.is-flipped {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 2px !important;
+  }
+
+  /* Fixed buttons exception */
+  #btn-save,
+  #btn-add-tipo {
+    width: 150px !important;
+    justify-content: center;
+  }
+
+  #btn-save .btn-text,
+  #btn-add-tipo .btn-text {
+    max-width: none !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    margin-left: 6px !important;
+  }
+
+  /* Toolbar specific CSS to match analisis_avanzado */
+  .toolbar-header {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .toolbar-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .btn-sirio {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 23px !important;
+    font-size: 12px !important;
+    height: 32px;
+    transition: all 0.3s ease;
+    gap: 0 !important;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #bbb;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-sirio .btn-text {
+    max-width: 90px;
+    overflow: hidden;
+    opacity: 0.6;
+    color: #999;
+    display: inline-block;
+    transition: all 0.3s ease;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  .btn-sirio:hover .btn-text,
+  .btn-sirio.active .btn-text {
+    opacity: 1;
+    color: #fff;
+    margin-left: 6px;
+  }
+
+  .btn-sirio.active {
+    background: var(--ds-bg-hover);
+    border-color: var(--ds-accent-primary) !important;
+    color: var(--ds-accent-primary) !important;
+  }
+
+  .btn-sirio:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  .btn-sirio-dark {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .btn-sirio-icon {
+    width: 32px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+
+  <!-- Header / Info -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+      <div class="d-flex align-items-center gap-3 text-muted">
+        <i class="fa-solid fa-circle-info"></i>
+        <small>Define tipos de nodos y sus entidades. Usa "alias" para agrupar variantes (ej. OCR erróneo o apellidos).
+          La red usará el nombre canónico pero contará menciones de todos sus alias.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Feedback -->
+  <div id="statusBox" class="status-box">
+    <i class="fa-solid fa-info-circle"></i>
+    <span id="statusText"></span>
+  </div>
+
+  <!-- Tipes Grid -->
+  <div id="tiposContainer" class="row g-4">
+    <!-- JS will render cards here -->
+  </div>
+
+</div>
+
+<script>
+  // ========= Estado =========
+  let tipos = {}; // { tipoKey: {nombre,color,forma,entidades:[{nombre,alias:[]}]} }
+
+  function setStatus(msg, kind = "ok") {
+    const box = document.getElementById("statusBox");
+    const txt = document.getElementById("statusText");
+    const icon = box.querySelector("i");
+
+    box.className = "status-box visible";
+    box.classList.add(kind === "ok" ? "status-ok" : kind === "warn" ? "status-warn" : "status-err");
+
+    icon.className = kind === "ok" ? "fa-solid fa-check-circle" : kind === "warn" ? "fa-solid fa-exclamation-triangle" : "fa-solid fa-times-circle";
+    txt.textContent = msg;
+
+    // Auto hide after 5s if OK
+    if (kind === 'ok') {
+      setTimeout(() => {
+        box.classList.remove("visible");
+      }, 5000);
+    }
+  }
+
+  function norm(s) { return (s || "").toString().trim().replace(/\s+/g, " "); }
+  function slugTipoKey(i) { return "tipo" + i; }
+
+  function nextTipoKey() {
+    let i = 1;
+    while (tipos[slugTipoKey(i)]) i++;
+    return slugTipoKey(i);
+  }
+
+  function defaultTipo(tipoKey) {
+    return { nombre: tipoKey, color: "#ff9800", forma: "dot", entidades: [] };
+  }
+
+  // Helper safe HTML
+  function escapeHtml(s) {
+    return (s || "").toString()
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ========= Render =========
+  function render() {
+    const root = document.getElementById("tiposContainer");
+    root.innerHTML = "";
+
+    const keys = Object.keys(tipos);
+    if (!keys.length) {
+      root.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <div class="text-muted mb-3" style="font-size: 3rem; opacity: 0.2;"><i class="fa-solid fa-layer-group"></i></div>
+            <h5 class="text-secondary">No hay tipos definidos</h5>
+            <p class="text-muted small">Pulsa "Añadir Nuevo Tipo" para comenzar.</p>
+        </div>
+      `;
+      return;
+    }
+
+    keys.forEach((tipoKey) => {
+      const t = tipos[tipoKey];
+
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-6 col-xl-4 text-start"; // 3 cols on extra large
+
+      col.innerHTML = `
+        <div class="card-panel h-100 tipo-card p-0 overflow-hidden">
+            <!-- Header -->
+            <div class="card-header-panel d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-dark border border-secondary text-secondary font-monospace">${escapeHtml(tipoKey)}</span>
+                    <h6 style="color: #fff !important;">${escapeHtml(t.nombre || tipoKey)}</h6>
+                </div>
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn-sirio btn-sirio-icon btn-sirio-dark" data-detect="${escapeHtml(tipoKey)}" title="Auto-detectar con IA">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 
+                        <span class="btn-spinner d-none ms-1 spinner-border spinner-border-sm"></span>
+                    </button>
+                    <button class="btn-sirio btn-sirio-icon btn-sirio-dark text-danger" type="button" data-del-tipo="${escapeHtml(tipoKey)}" title="Eliminar Tipo">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-3">
+                <!-- Config Inputs -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small text-uppercase fw-bold mb-1">Nombre</label>
+                        <input type="text" class="form-control form-control-sirio" data-field="nombre" data-tipo="${escapeHtml(tipoKey)}" value="${escapeHtml(t.nombre || "")}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small text-uppercase fw-bold mb-1">Color</label>
+                        <div class="d-flex">
+                            <input type="color" class="form-control form-control-color w-100 p-0" style="height: 32px; border: 1px solid #444;" data-field="color" data-tipo="${escapeHtml(tipoKey)}" value="${escapeHtml(t.color || "#999")}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small text-uppercase fw-bold mb-1">Forma</label>
+                        <select class="form-select form-select-sirio" data-field="forma" data-tipo="${escapeHtml(tipoKey)}">
+                            <option value="dot" ${t.forma === "dot" ? "selected" : ""}>Círculo</option>
+                            <option value="square" ${t.forma === "square" ? "selected" : ""}>Cuadrado</option>
+                            <option value="diamond" ${t.forma === "diamond" ? "selected" : ""}>Rombo</option>
+                            <option value="triangle" ${t.forma === "triangle" ? "selected" : ""}>Triángulo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Entities List -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-end mb-1">
+                        <label class="form-label text-muted small text-uppercase fw-bold mb-0">Entidades Definidas</label>
+                        <small class="text-muted" style="font-size: 0.7rem;">Click para editar</small>
+                    </div>
+                    <div class="entidad-list" id="list_${escapeHtml(tipoKey)}">
+                        <!-- Entities injected here -->
+                    </div>
+                </div>
+
+                <!-- Add Entity Bar -->
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sirio" id="in_${escapeHtml(tipoKey)}" placeholder="Canónico | alias1, alias2...">
+                    <button class="btn-sirio btn-sirio-icon btn-sirio-primary" type="button" data-add-ent="${escapeHtml(tipoKey)}">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+      `;
+
+      root.appendChild(col);
+      paintEntidades(tipoKey);
+
+      // Initialize Choices.js for this card's select
+      const sel = col.querySelector("select.form-select");
+      if (sel && typeof Choices !== "undefined") {
+        new Choices(sel, {
+          searchEnabled: false,
+          itemSelectText: '',
+          shouldSort: false,
+          position: 'bottom'
+        });
+      }
+    });
+
+    // --- Wire up events ---
+
+    // Fields Input
+    root.querySelectorAll("[data-field]").forEach(el => {
+      el.addEventListener("input", () => {
+        const tipoKey = el.getAttribute("data-tipo");
+        const field = el.getAttribute("data-field");
+        if (tipos[tipoKey]) tipos[tipoKey][field] = el.value;
+      });
+    });
+
+    // Add Entity Button
+    root.querySelectorAll("[data-add-ent]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tipoKey = btn.getAttribute("data-add-ent");
+        addEntidadFromInput(tipoKey);
+      });
+    });
+
+    // Delete Tipo
+    root.querySelectorAll("[data-del-tipo]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (confirm("¿Seguro que quieres eliminar este tipo y todas sus entidades?")) {
+          const tipoKey = btn.getAttribute("data-del-tipo");
+          delete tipos[tipoKey];
+          render();
+        }
+      });
+    });
+
+    // Auto Detect
+    root.querySelectorAll("[data-detect]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const tipoKey = btn.getAttribute("data-detect");
+        await autodetectSoloTipo(tipoKey, btn);
+      });
+    });
+  }
+
+  // ========= Entidades (tags + edición inline) =========
+  function paintEntidades(tipoKey) {
+    const box = document.getElementById("list_" + tipoKey);
+    if (!box) return;
+
+    box.innerHTML = "";
+    const ents = (tipos[tipoKey] && tipos[tipoKey].entidades) ? tipos[tipoKey].entidades : [];
+
+    if (ents.length === 0) {
+      box.innerHTML = '<span class="text-muted small fst-italic">Sin entidades. Añade una abajo o usa "Auto-detectar".</span>';
+      return;
+    }
+
+    ents.forEach((e, idx) => {
+      const canonical = norm(e.nombre);
+      const alias = Array.isArray(e.alias) ? e.alias.map(norm).filter(Boolean) : [];
+      const label = alias.length ? `${canonical} + ${alias.length}` : canonical;
+      const tooltip = alias.length ? `Alias: ${alias.join(", ")}` : "Sin alias";
+
+      const tag = document.createElement("div");
+      tag.className = "entidad-tag";
+      tag.setAttribute("data-edit-ent", `${tipoKey}:${idx}`);
+      tag.setAttribute("title", tooltip);
+
+      tag.innerHTML = `
+        <span class="ent-text">${escapeHtml(label)}</span>
+        <button type="button" data-del-ent="${tipoKey}:${idx}">&times;</button>
+      `;
+      box.appendChild(tag);
+    });
+
+    // eliminar entidad
+    box.querySelectorAll("[data-del-ent]").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const [tKey, idx] = btn.getAttribute("data-del-ent").split(":");
+        if (!tipos[tKey]) return;
+        tipos[tKey].entidades.splice(parseInt(idx, 10), 1);
+        paintEntidades(tKey);
+      });
+    });
+
+    // editar inline
+    box.querySelectorAll("[data-edit-ent]").forEach(tag => {
+      tag.addEventListener("click", (ev) => {
+        if (ev.target && ev.target.matches("button")) return;
+        const key = tag.getAttribute("data-edit-ent");
+        startInlineEditEntidad(tag, key);
+      });
+    });
+  }
+
+  function entidadToEditableString(ent) {
+    const canonical = norm(ent?.nombre || "");
+    const alias = Array.isArray(ent?.alias) ? ent.alias.map(norm).filter(Boolean) : [];
+    return alias.length ? `${canonical} | ${alias.join(", ")}` : canonical;
+  }
+
+  function parseEditableEntidad(raw) {
+    const s = norm(raw);
+    if (!s) return null;
+    const parts = s.split("|").map(x => norm(x));
+    const canonical = parts[0];
+    const alias = parts[1] ? parts[1].split(",").map(x => norm(x)).filter(Boolean) : [];
+    if (!canonical) return null;
+    return { nombre: canonical, alias };
+  }
+
+  function startInlineEditEntidad(tagEl, key) {
+    if (tagEl.getAttribute("data-editing") === "1") return;
+    tagEl.setAttribute("data-editing", "1");
+
+    const [tipoKey, idxStr] = key.split(":");
+    const idx = parseInt(idxStr, 10);
+    const ent = (tipos[tipoKey]?.entidades || [])[idx];
+    if (!ent) { tagEl.removeAttribute("data-editing"); return; }
+
+    const original = entidadToEditableString(ent);
+
+    const textSpan = tagEl.querySelector(".ent-text");
+    const delBtn = tagEl.querySelector("button"); // generic button selector inside tag
+    if (textSpan) textSpan.style.display = "none";
+    if (delBtn) delBtn.style.display = "none";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = original;
+    input.className = "inline-edit-input";
+
+    tagEl.appendChild(input);
+    input.focus();
+    input.select();
+
+    const cleanup = (didSave) => {
+      input.remove();
+      if (textSpan) textSpan.style.display = "";
+      if (delBtn) delBtn.style.display = "";
+      tagEl.removeAttribute("data-editing");
+      if (didSave) paintEntidades(tipoKey);
+    };
+
+    const commit = () => {
+      const parsed = parseEditableEntidad(input.value);
+      if (!parsed) {
+        cleanup(false);
+        return;
+      }
+
+      const newCanonLower = norm(parsed.nombre).toLowerCase();
+      // Check dupes (excluding self)
+      const existsOther = (tipos[tipoKey].entidades || []).some((x, j) => {
+        if (j === idx) return false;
+        return norm(x.nombre).toLowerCase() === newCanonLower;
+      });
+
+      if (existsOther) {
+        setStatus(`Ya existe "${parsed.nombre}" en este tipo.`, "warn");
+        cleanup(false);
+        return;
+      }
+
+      tipos[tipoKey].entidades[idx] = parsed;
+      cleanup(true);
+    };
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commit();
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cleanup(false);
+      }
+    });
+
+    input.addEventListener("blur", () => {
+      commit();
+    }, { once: true });
+  }
+
+  // ========= Añadir entidad =========
+  function addEntidadFromInput(tipoKey) {
+    const input = document.getElementById("in_" + tipoKey);
+    if (!input) return;
+
+    const raw = norm(input.value);
+    if (!raw) return;
+
+    const parts = raw.split("|").map(s => norm(s));
+    const canonical = parts[0];
+    const alias = parts[1] ? parts[1].split(",").map(s => norm(s)).filter(Boolean) : [];
+
+    if (!canonical) return;
+    if (!tipos[tipoKey]) return;
+    if (!Array.isArray(tipos[tipoKey].entidades)) tipos[tipoKey].entidades = [];
+
+    const exists = tipos[tipoKey].entidades.some(x => norm(x.nombre).toLowerCase() === canonical.toLowerCase());
+    if (!exists) {
+      tipos[tipoKey].entidades.push({ nombre: canonical, alias });
+      paintEntidades(tipoKey);
+      setStatus(`Entidad añadida.`, "ok");
+    } else {
+      setStatus(`"${canonical}" ya existe.`, "warn");
+    }
+
+    input.value = "";
+    input.focus();
+  }
+
+  // ========= API =========
+  async function loadConfig() {
+    try {
+      const r = await fetch("/api/config-red", { cache: "no-store" });
+      const data = await r.json();
+      tipos = data.tipos || {};
+
+      if (!Object.keys(tipos).length) {
+        tipos = {
+          tipo1: { nombre: "Personas", color: "#ff9800", forma: "dot", entidades: [] },
+          tipo2: { nombre: "Lugares", color: "#4a7c2f", forma: "square", entidades: [] },
+        };
+      }
+
+      // Normalizar esquema
+      for (const [k, t] of Object.entries(tipos)) {
+        if (!t) continue;
+        if (!Array.isArray(t.entidades)) t.entidades = [];
+        t.entidades = t.entidades.map(x => {
+          if (typeof x === "string") return { nombre: norm(x), alias: [] };
+          return { nombre: norm(x?.nombre || ""), alias: Array.isArray(x?.alias) ? x.alias.map(norm).filter(Boolean) : [] };
+        }).filter(x => x.nombre);
+      }
+
+      render();
+      setStatus("Configuración cargada.", "ok");
+    } catch (e) {
+      console.error(e);
+      setStatus("Error cargando: " + (e.message || e), "err");
+    }
+  }
+
+  async function saveConfig() {
+    const btn = document.getElementById("btn-save");
+    const originalText = btn.innerHTML;
+    try {
+      console.log("Intentando guardar configuración...", tipos); // Debug log
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Guardando...`;
+
+      const csrfToken = document.getElementById("csrf_token").value;
+      const r = await fetch("/api/config-red", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify({ tipos })
+      });
+
+      console.log("Respuesta status:", r.status); // Debug log
+
+      let data = {};
+      try { data = await r.json(); } catch (e) { console.warn("No JSON returned from save"); }
+      console.log("Datos respuesta:", data); // Debug log
+
+      if (!r.ok || !data.success) throw new Error(data?.error || "Error al guardar");
+
+      setStatus("Configuración guardada correctamente.", "ok");
+    } catch (e) {
+      console.error(e);
+      setStatus("Error guardando: " + (e.message || e), "err");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  // Autodetect
+  async function autodetectSoloTipo(tipoKey, btnEl) {
+    const spinner = btnEl ? btnEl.querySelector(".btn-spinner") : null;
+
+    const setLoading = (on) => {
+      if (!btnEl) return;
+      btnEl.disabled = on;
+      if (spinner) spinner.classList.toggle("d-none", !on);
+    };
+
+    try {
+      setLoading(true);
+
+      const tipoNombre = norm(tipos[tipoKey]?.nombre || tipoKey);
+      setStatus(`Detectando entidades para ${tipoNombre} con IA...`, "ok");
+
+      const payload = {
+        tipos: { [tipoKey]: tipoNombre },
+        solo_tipo: tipoKey,
+        modo: "hybrid",
+        top_n: 20,
+        min_freq: 2,
+        limite_docs: 1000
+      };
+
+      const r = await fetch("/api/detectar-entidades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Error en detección");
+
+      const suger = (data.entidades || {})[tipoKey] || [];
+      if (!suger.length) {
+        setStatus("Sin sugerencias nuevas. Intenta relajar los filtros en el backend.", "warn");
+        return;
+      }
+
+      if (!Array.isArray(tipos[tipoKey].entidades)) tipos[tipoKey].entidades = [];
+
+      let addedCount = 0;
+      // merge sugerencias
+      suger.forEach(item => {
+        const canonical = norm(item.nombre);
+        if (!canonical) return;
+
+        const aliasSug = Array.isArray(item.alias_sugeridos) ? item.alias_sugeridos.map(norm).filter(Boolean) : [];
+        const existing = tipos[tipoKey].entidades.find(e => norm(e.nombre).toLowerCase() === canonical.toLowerCase());
+
+        if (existing) {
+          const set = new Map();
+          (existing.alias || []).forEach(a => set.set(norm(a).toLowerCase(), norm(a)));
+          aliasSug.forEach(a => { if (a && !set.has(a.toLowerCase())) set.set(a.toLowerCase(), a); });
+          existing.alias = Array.from(set.values());
+        } else {
+          tipos[tipoKey].entidades.push({ nombre: canonical, alias: aliasSug });
+          addedCount++;
+        }
+      });
+
+      paintEntidades(tipoKey);
+      setStatus(`Analisis completado. Se han añadido/actualizado sugerencias.`, "ok");
+    } catch (e) {
+      console.error(e);
+      setStatus("Error en detección IA: " + (e.message || e), "err");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ========= Eventos globales =========
+  document.getElementById("btn-add-tipo").addEventListener("click", () => {
+    const key = nextTipoKey();
+    tipos[key] = defaultTipo(key);
+    render();
+    setStatus("Nuevo tipo añadido. Configúralo abajo.", "ok");
+    // Scroll to bottom
+    setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
+  });
+
+  document.getElementById("btn-save").addEventListener("click", saveConfig);
+
+  // Enter en inputs de entidad
+  document.addEventListener("keydown", (e) => {
+    const el = e.target;
+    if (e.key === "Enter" && el && el.id && el.id.startsWith("in_")) {
+      e.preventDefault();
+      const tipoKey = el.id.replace("in_", "");
+      addEntidadFromInput(tipoKey);
+    }
+  });
+
+  // Init
+  loadConfig();
+</script>
+{% endblock %}

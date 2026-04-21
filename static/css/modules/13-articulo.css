@@ -1,0 +1,621 @@
+.quill-area {
+    padding: 0 !important;
+    margin-bottom: 20px !important;
+}
+
+.quill-area .ql-container {
+    min-height: 320px !important;
+    border-radius: 4px !important;
+    background: var(--editor-quill-bg, #181818) !important;
+    border: 1px solid var(--editor-border, #333) !important;
+    font-size: 1rem !important;
+    color: var(--editor-text, #bbb) !important;
+}
+
+.quill-area .ql-toolbar {
+    border-radius: 4px 4px 0 0 !important;
+    background: var(--editor-toolbar-bg, #232323) !important;
+    border: 1px solid var(--editor-border, #333) !important;
+    margin-bottom: 0 !important;
+}
+
+.quill-area .ql-editor {
+    min-height: 260px !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    color: var(--editor-text, #bbb) !important;
+    background: var(--editor-quill-bg, #181818) !important;
+    border-radius: 0 0 4px 4px !important;
+}
+
+/* Publicación/Medio: forzar 100% de ancho en input */
+.publicacion-medio-input {
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Fuente/Institución: forzar 100% de ancho en input y texto explicativo */
+.fuente-institucion-input {
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.fuente-institucion-text {
+    width: 100%;
+    display: block;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* Forzar menús desplegables por encima de todo */
+.editor-menu-herramientas .dropdown-menu {
+    z-index: 30000 !important;
+    position: fixed !important;
+}
+
+/* Menús superiores sticky */
+/* Menú unificado horizontal sticky */
+
+.editor-menu-estructura {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 110;
+    background: var(--editor-nav-bg, #181818);
+    border-radius: 4px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 54px;
+    flex-wrap: nowrap !important;
+    align-items: flex-end !important;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: visible;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-border, #333) var(--editor-nav-bg, #181818);
+}
+
+.editor-menu-estructura>* {
+    white-space: initial;
+}
+
+.editor-navbar-combined {
+    background: var(--editor-nav-bg, #181818);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+}
+
+.editor-navbar-combined .estructura-item {
+    background: var(--editor-toolbar-bg, #232323);
+    color: var(--editor-text, #bbb);
+    border: 1px solid var(--editor-border, #333);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.editor-navbar-combined .estructura-item.active {
+    background: var(--editor-accent, #ff9800);
+    color: #000;
+    border-color: var(--editor-accent, #ff9800);
+}
+
+.editor-navbar-combined .btn-editor-toolbar {
+    background: transparent !important;
+    border: none !important;
+    color: var(--editor-text, #bbb) !important;
+    font-size: 0.75rem !important;
+}
+
+.editor-navbar-combined .btn-editor-toolbar:hover {
+    color: var(--editor-accent, #ff9800) !important;
+}
+
+/* ============================================================
+   13-ARTICULO.CSS - Rediseño del Módulo de Artículos
+   ============================================================ */
+
+/* --- LAYOUT DEL EDITOR (articulo_editor.html) --- */
+
+.editor-layout {
+    display: block;
+    height: auto;
+    overflow: visible;
+    padding: 10px;
+
+    /* Barra horizontal de estructura */
+    /* Botones del menú unificado */
+    .editor-menu-unificado .btn {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border-radius: 3px;
+        margin-right: 2px;
+        padding: 7px 13px;
+        min-width: 90px;
+        margin-bottom: 4px;
+    }
+
+    .editor-menu-unificado .btn-dark {
+        background: var(--editor-toolbar-bg, #232323);
+        color: var(--editor-text, #fff);
+        border: 1px solid var(--editor-border, #333);
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .editor-menu-unificado .btn-dark.active,
+    .editor-menu-unificado .btn-dark:focus {
+        background: #ff9800;
+        color: #181818;
+        border-color: #ff9800;
+    }
+
+    .editor-menu-unificado .btn-outline-secondary {
+        border: 1px solid var(--editor-border, #888);
+        color: var(--editor-text, #bbb);
+    }
+}
+
+/* --- MODAL DE CITAS (Gestor Bibliográfico) --- */
+.modal-citas {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 3000;
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-citas.activo {
+    display: flex !important;
+}
+
+.modal-citas-contenido {
+    width: 100%;
+    max-width: 800px;
+    background: var(--editor-nav-bg, #181818);
+    border: 1px solid var(--editor-border, rgba(255, 152, 0, 0.3));
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.referencia-item {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.referencia-item:hover {
+    background: rgba(255, 152, 0, 0.05);
+    border-color: rgba(255, 152, 0, 0.2);
+}
+
+.referencia-titulo {
+    font-weight: 600;
+    color: var(--ds-accent-primary, #ff9800);
+}
+
+/* Paneles laterales */
+.panel-estructura,
+.panel-herramientas {
+    height: 100%;
+    overflow-y: auto;
+    padding: 15px;
+    background: var(--editor-nav-bg, #181818);
+    border: 1px solid var(--editor-border, rgba(255, 255, 255, 0.05));
+    border-radius: 4px;
+}
+
+.panel-estructura h3,
+.panel-herramientas h6 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    opacity: 0.8;
+    margin-bottom: 20px;
+}
+
+/* Área central de edición */
+.panel-editor {
+    min-height: 100vh;
+    overflow-y: auto;
+    background: var(--editor-bg, #0f0f0f);
+    border: none;
+    padding: 20px 0; /* Remove horizontal padding here, handled by container */
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-border, #333) transparent;
+    position: relative;
+    scroll-padding-top: 150px; /* Space for sticky navs */
+}
+
+.editor-content-container {
+    background: var(--editor-panel-bg, #151515);
+    border: 1px solid var(--editor-border, rgba(255, 255, 255, 0.05));
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    margin-top: 10px;
+    margin-bottom: 100px;
+    width: 96%; /* Casi pantalla completa */
+    max-width: 1600px; /* Pero con un límite razonable para legibilidad extrema */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 60px 80px;
+}
+
+.submenu-herramientas .btn-info {
+    background: #2196f3;
+    color: #fff;
+    border: none;
+}
+
+.submenu-herramientas .btn-dark {
+    background: var(--editor-toolbar-bg, #232323);
+    color: var(--editor-text, #fff);
+    border: 1px solid var(--editor-border, #333);
+}
+
+.submenu-herramientas .btn-secondary {
+    background: var(--ds-bg-element, #444);
+    color: #fff;
+    border: none;
+}
+
+.submenu-herramientas .dropdown-menu {
+    background: var(--editor-toolbar-bg, #232323);
+    color: var(--editor-text, #fff);
+    border: 1px solid var(--editor-border, #333);
+}
+
+.submenu-herramientas .dropdown-item,
+.submenu-herramientas select {
+    background: transparent;
+    color: var(--editor-text, #fff);
+    font-size: 0.78rem;
+}
+
+.submenu-herramientas .dropdown-item:active {
+    background: var(--editor-accent, #ff9800);
+    color: #fff;
+}
+
+/* --- PORTADA Y CABECERA --- */
+
+.articulo-portada {
+    max-width: 100%;
+    margin: 0 auto 60px;
+    text-align: center;
+}
+
+.portada-titulo {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--editor-title-text, #fff);
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+    outline: none;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.portada-titulo:focus {
+    border-bottom-color: var(--ds-accent-primary);
+}
+
+.portada-subtitulo {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--editor-text, #bbb);
+    opacity: 0.7;
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 40px;
+    outline: none;
+}
+
+.portada-autores {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.autor-item {
+    background: var(--editor-panel-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--editor-border, rgba(255, 255, 255, 0.08));
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.autor-nombre {
+    font-weight: 700;
+    color: var(--ds-accent-primary);
+    font-size: 0.9rem;
+}
+
+.autor-afiliacion {
+    font-size: 0.75rem;
+    color: var(--editor-text, #bbb);
+    opacity: 0.6;
+}
+
+/* --- ELEMENTOS DEL NAVEGADOR --- */
+
+.estructura-item {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #999;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.estructura-item:hover {
+    background: var(--editor-border, rgba(255, 255, 255, 0.03));
+    color: var(--editor-title-text, #fff);
+}
+
+.estructura-item.activo {
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--ds-accent-primary);
+    font-weight: 700;
+}
+
+/* --- RESUMEN Y ABSTRACT --- */
+
+.seccion-resumen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.resumen-bloque {
+    background: var(--editor-panel-bg, #151515);
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--editor-border, rgba(255, 255, 255, 0.05));
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Asegurar altura suficiente */
+}
+
+.resumen-bloque .quill-editor {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.resumen-bloque .ql-container {
+    flex-grow: 1;
+    min-height: 250px !important;
+}
+
+.resumen-titulo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ds-accent-primary);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+
+.resumen-texto,
+.seccion-texto {
+    width: 100%;
+    max-width: 100%;
+    background: var(--editor-quill-bg, #181818);
+    border: 1px solid var(--editor-border, #333);
+    color: var(--editor-text, #bbb);
+    font-size: 1rem;
+    line-height: 1.7;
+    border-radius: 4px;
+    outline: none;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    min-height: 320px;
+    padding: 1rem;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+}
+
+.resumen-texto:focus,
+.seccion-texto:focus {
+    border-color: #ff9800;
+}
+
+/* --- CUERPO DEL ARTÍCULO --- */
+
+.seccion-contenido {
+    margin-bottom: 30px;
+}
+
+.seccion-titulo-editable {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem;
+    color: var(--editor-title-text, #fff);
+    margin-bottom: 25px;
+    outline: none;
+    border-bottom: 1px solid var(--editor-border, #222);
+    padding-bottom: 10px;
+}
+
+/* --- LISTA DE ARTÍCULOS (articulos_lista.html) --- */
+
+.articulos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.filtros-articulos {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #222;
+}
+
+.filtro-btn {
+    padding: 6px 15px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #666;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-decoration: none !important;
+    transition: all 0.3s;
+}
+
+.filtro-btn:hover {
+    color: #999;
+}
+
+.filtro-btn.activo {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.3);
+    color: var(--ds-accent-primary);
+}
+
+/* --- GESTIÓN DE FIGURAS (articulo_figuras.html) --- */
+
+.figura-card-preview {
+    height: 180px;
+    background: var(--editor-bg, #0a0a0a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--editor-border, rgba(255, 255, 255, 0.05));
+}
+
+.figura-card-preview img {
+    max-height: 100%;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+
+.card:hover .figura-card-preview img {
+    transform: scale(1.05);
+}
+
+/* Modales Sirio */
+.modal-sirio-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 3000;
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-sirio-backdrop.activo {
+    display: flex !important;
+}
+
+/* --- COLABORADORES (articulo_colaboradores.html) --- */
+
+.avatar-sirio {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--ds-accent-primary), #ff6f00);
+    color: #000;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.2);
+}
+
+.comentario-item {
+    background: var(--editor-panel-bg, rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--editor-border, rgba(255, 255, 255, 0.05));
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+}
+
+.comentario-item:hover {
+    border-color: rgba(255, 152, 0, 0.2);
+}
+
+.resumen-texto,
+.seccion-texto,
+textarea {
+    min-height: 320px !important;
+    padding: 1rem !important;
+    border-radius: 4px !important;
+    font-size: 0.95rem !important;
+    line-height: 1.7 !important;
+    resize: vertical !important;
+}
+
+/* Menú de estructura superior */
+.estructura-barra .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    margin-right: 2px;
+    padding: 6px 12px;
+}
+
+/* Submenús de herramientas */
+.submenu-herramientas .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    margin-right: 6px;
+}
+
+.submenu-herramientas .dropdown-item,
+.submenu-herramientas select {
+    background: transparent;
+    color: var(--editor-text, #fff);
+    font-size: 0.88rem;
+}

@@ -1,0 +1,556 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Consistencia de Datos — Proyecto Sirio{% endblock %}
+{% block page_title %}Control de Calidad{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Revisión de Datos</span>
+{% endblock %}
+
+{% block top_actions %}
+<button type="button" class="btn btn-outline-info btn-sm me-2" id="btn-reload-consistency"
+    onclick="reloadConsistency()">
+    <i class="fa-solid fa-arrows-rotate me-1"></i> RECARGAR DETECCIÓN
+</button>
+<a href="{{ url_for('noticias.listar') }}" class="btn btn-outline-warning btn-sm">
+    <i class="fa-solid fa-arrow-left me-1"></i> Volver
+</a>
+{% endblock %}
+
+{% block body_class %}proyecto-style bg-dark text-light{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <!-- Header removed -->
+
+
+
+
+    <div class="alert alert-info mb-4"
+        style="background-color: rgba(30, 90, 154, 0.15); border-color: #1e5a9a; color: #e0e0e0;">
+        <svg width="16" height="16" fill="#1e5a9a" style="margin-right: 8px; vertical-align: middle;">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" fill="none" stroke-width="1.5" />
+            <text x="8" y="12" text-anchor="middle" fill="currentColor" font-size="10" font-weight="bold">i</text>
+        </svg>
+        Esta herramienta identifica problemas de calidad en tu base de datos. Sistema con <strong
+            class="text-warning">detección inteligente de duplicados</strong> usando similitud de títulos
+        (Levenshtein), fechas y publicaciones.
+    </div>
+
+    {% set problema_encontrado = registros_duplicados_contenido|length > 0 or
+    grupos_duplicados_inteligentes|length
+    > 0 or sin_anio|length > 0 or sin_publicacion_enlazada|length > 0 or prensa_sin_url|length > 0 or
+    fechas_invalidas|length > 0 %}
+
+    {% if not problema_encontrado %}
+    <div class="alert alert-success mt-4"
+        style="background-color: rgba(74, 124, 47, 0.15); border-color: #4a7c2f; color: #e0e0e0;">
+        <svg width="16" height="16" fill="#4a7c2f" style="margin-right:6px;vertical-align:middle">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" fill="none" />
+            <path d="M4,8 L7,11 L12,6" stroke="currentColor" fill="none" stroke-width="2" />
+        </svg>
+        ¡Felicitaciones! No se encontraron problemas de consistencia críticos en tu base de datos.
+    </div>
+    {% else %}
+
+    {# ----------------------------------------------------------- #}
+    {# 1. DUPLICADOS INTELIGENTES (Título + Fecha + Publicación) #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-danger" style="background-color: #1e1e1e;">
+        <div class="card-header border-danger" style="background-color: rgba(139, 0, 0, 0.15);">
+            <h5 class="mb-0 text-danger">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <circle cx="5" cy="8" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    <circle cx="11" cy="8" r="3" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    <line x1="8" y1="8" x2="8" y2="8" stroke="currentColor" stroke-width="2" />
+                </svg>
+                Duplicados Inteligentes ({{ total_grupos_inteligentes }} Grupos)
+            </h5>
+            <small class="text-muted">Registros con <strong>títulos similares (≥85%), fechas cercanas (±1 día)
+                    y/o
+                    misma publicación</strong>. Sistema con algoritmo de Levenshtein para detección
+                fuzzy.</small>
+        </div>
+        <div class="card-body" style="background-color: #252525;">
+            {% if grupos_duplicados_inteligentes|length > 0 %}
+            {% for grupo in grupos_duplicados_inteligentes %}
+            <div class="alert mb-3 border-danger duplicate-group" id="group-{{ loop.index }}"
+                data-ids='[{% for r in grupo %}{{ r.id }}{% if not loop.last %},{% endif %}{% endfor %}]'
+                style="background-color: rgba(139, 0, 0, 0.1); border-left: 4px solid #8b0000 !important;">
+                <h6 class="mb-2 d-flex justify-content-between align-items-center" style="color: #ffc107;">
+                    <span>
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"
+                            style="margin-right:4px;vertical-align:middle">
+                            <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="2" />
+                            <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        Grupo {{ loop.index }} — {{ grupo|length }} registros similares
+                    </span>
+                    <button class="btn btn-sm btn-outline-success" style="font-size: 0.75rem; padding: 2px 8px;"
+                        onclick='validarGrupo([{% for r in grupo %}{{ r.id }}{% if not loop.last %},{% endif %}{% endfor %}], this)'>
+                        <i class="fa-solid fa-check me-1"></i> Validar (No son duplicados)
+                    </button>
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered"
+                        style="background-color: rgba(0,0,0,0.3); table-layout: fixed; width: 100%;">
+                        <thead style="background-color: rgba(220, 53, 69, 0.2);">
+                            <tr>
+                                <th style="width: 50px; color: #ffc107;">ID</th>
+                                <th style="color: #ffc107;">Título</th>
+                                <th style="width: 90px; color: #ffc107;">Fecha</th>
+                                <th style="width: 130px; color: #ffc107;">Publicación</th>
+                                <th style="width: 80px; color: #ffc107;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in grupo %}
+                            <tr style="border-bottom: 1px solid rgba(255, 193, 7, 0.2);">
+                                <td class="text-center"><code
+                                        style="color: #ff9800; background-color: rgba(255, 152, 0, 0.1); padding: 2px 6px; border-radius: 3px;">{{ r.id }}</code>
+                                </td>
+                                <td style="color: #e0e0e0; word-wrap: break-word; white-space: normal;">
+                                    <small>{{
+                                        r.titulo or '(Sin título)' }}</small>
+                                </td>
+                                <td class="text-center" style="color: #b0b0b0;"><small>{% if r.fecha_original and
+                                        r.fecha_original|length == 10 and '-' in r.fecha_original %}{{
+                                        r.fecha_original[8:10] }}/{{ r.fecha_original[5:7] }}/{{ r.fecha_original[0:4]
+                                        }}{% else %}{{ r.fecha_original or '' }}{% endif %}
+                                        '—'
+                                        }}</small></td>
+                                <td style="color: #b0b0b0;"><small>{{ r.publicacion or '—' }}</small></td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-xs btn-outline-warning"
+                                        style="padding: 2px 8px; font-size: 0.75rem; border-color: #ffc107; color: #ffc107;">
+                                        Revisar
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2"
+                    style="font-size: 0.85rem; color: #90caf9; background-color: rgba(33, 150, 243, 0.1); padding: 8px 12px; border-radius: 4px; border-left: 3px solid #2196f3;">
+                    <strong>💡 Sugerencia:</strong> Revisa si son el mismo artículo y fusiona manualmente el más
+                    completo.
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div
+                style="color: #4a7c2f; background-color: rgba(74, 124, 47, 0.1); padding: 10px; border-radius: 4px; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> No se encontraron duplicados inteligentes.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ----------------------------------------------------------- #}
+    {# 2. Contenido Duplicado EXACTO (Sistema Original) #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-warning" style="background-color: #1e1e1e;">
+        <div class="card-header border-warning" style="background-color: rgba(255, 152, 0, 0.15);">
+            <h5 class="mb-0 text-warning">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" fill="currentColor" stroke-width="1.5" />
+                    <line x1="8" y1="4" x2="8" y2="9" stroke="#121212" stroke-width="1.5" />
+                    <circle cx="8" cy="11" r="0.8" fill="#121212" />
+                </svg>
+                Contenido Duplicado Exacto ({{ registros_duplicados_contenido|length }} Registros)
+            </h5>
+            <small class="text-muted">Artículos con el <strong>mismo texto exacto</strong> en el campo
+                'Contenido o
+                resumen'.</small>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for r in registros_duplicados_contenido %}
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                style="background-color: #252525; border-bottom: 1px solid #333; color: #e0e0e0;">
+                <div>
+                    <strong style="color: #ff9800;">ID: {{ r.id }}</strong> <span style="color: #757575;">|</span>
+                    <span style="color: #b0b0b0;">{{ r.publicacion or '(Publicación desconocida)' }}</span>
+                    <span style="color: #757575;">|</span> {{ r.titulo }}
+                </div>
+                <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-sm btn-outline-warning"
+                    style="border-color: #ffc107; color: #ffc107;">
+                    <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                        <path d="M2,6 L10,2 L12,10 L4,12 Z" stroke="currentColor" fill="none" />
+                        <line x1="7" y1="3" x2="9" y2="5" stroke="currentColor" />
+                    </svg> Revisar
+                </a>
+            </li>
+            {% endfor %}
+            {% if not registros_duplicados_contenido %}
+            <li class="list-group-item"
+                style="background-color: rgba(74, 124, 47, 0.1); color: #4a7c2f; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> Ningún contenido duplicado encontrado.
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {# ----------------------------------------------------------- #}
+    {# 3. Referencias sin Año #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-warning" style="background-color: #1e1e1e;">
+        <div class="card-header border-warning" style="background-color: rgba(255, 152, 0, 0.15);">
+            <h5 class="mb-0 text-warning">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <path d="M8,2 L14,14 L2,14 Z" stroke="currentColor" fill="none" stroke-width="1.5" />
+                    <line x1="8" y1="6" x2="8" y2="9" stroke="currentColor" stroke-width="1.5" />
+                    <circle cx="8" cy="11" r="0.6" fill="currentColor" />
+                </svg>
+                Registros sin Año ({{ sin_anio|length }} Registros)
+            </h5>
+            <small class="text-muted">Artículos a los que les falta el campo <strong>Año</strong>. Esto afecta
+                la
+                capacidad de citación y la cronología del análisis.</small>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for r in sin_anio %}
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                style="background-color: #252525; border-bottom: 1px solid #333; color: #e0e0e0;">
+                <div>
+                    <strong style="color: #ff9800;">ID: {{ r.id }}</strong> <span style="color: #757575;">|</span>
+                    <span style="color: #b0b0b0;">{{ r.publicacion or '(Publicación desconocida)' }}</span>
+                    <span style="color: #757575;">|</span> {{ r.titulo }}
+                </div>
+                <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-sm btn-outline-warning"
+                    style="border-color: #ffc107; color: #ffc107;">
+                    <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                        <path d="M2,6 L10,2 L12,10 L4,12 Z" stroke="currentColor" fill="none" />
+                        <line x1="7" y1="3" x2="9" y2="5" stroke="currentColor" />
+                    </svg> Revisar
+                </a>
+            </li>
+            {% endfor %}
+            {% if not sin_anio %}
+            <li class="list-group-item"
+                style="background-color: rgba(74, 124, 47, 0.1); color: #4a7c2f; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> Todos los registros tienen un año.
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {# ----------------------------------------------------------- #}
+    {# 3. Referencias de Prensa sin URL #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-info" style="background-color: #1e1e1e;">
+        <div class="card-header border-info" style="background-color: rgba(30, 90, 154, 0.15);">
+            <h5 class="mb-0 text-info">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" />
+                    <line x1="8" y1="2" x2="8" y2="5" stroke="currentColor" />
+                    <line x1="8" y1="11" x2="8" y2="14" stroke="currentColor" />
+                    <line x1="2" y1="8" x2="5" y2="8" stroke="currentColor" />
+                    <line x1="11" y1="8" x2="14" y2="8" stroke="currentColor" />
+                </svg>
+                Prensa sin Enlace ({{ prensa_sin_url|length }} Registros)
+            </h5>
+            <small class="text-muted">Artículos de 'Prensa' que no tienen una <strong>URL</strong> asociada a la
+                fuente digital. Ideal para asegurar la trazabilidad.</small>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for r in prensa_sin_url %}
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                style="background-color: #252525; border-bottom: 1px solid #333; color: #e0e0e0;">
+                <div>
+                    <strong style="color: #1e5a9a;">ID: {{ r.id }}</strong> <span style="color: #757575;">¦</span>
+                    <span style="color: #b0b0b0;">{{ r.publicacion or '(Publicación desconocida)' }}</span>
+                    <span style="color: #757575;">¦</span> {{ r.titulo }}
+                </div>
+                <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-sm btn-outline-info"
+                    style="border-color: #1e5a9a; color: #1e5a9a;">
+                    <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                        <path d="M2,6 L10,2 L12,10 L4,12 Z" stroke="currentColor" fill="none" />
+                        <line x1="7" y1="3" x2="9" y2="5" stroke="currentColor" />
+                    </svg> Revisar
+                </a>
+            </li>
+            {% endfor %}
+            {% if not prensa_sin_url %}
+            <li class="list-group-item"
+                style="background-color: rgba(74, 124, 47, 0.1); color: #4a7c2f; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> Todas las referencias de prensa tienen URL.
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {# ----------------------------------------------------------- #}
+    {# 4. Referencias sin Enlace de Publicación #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-secondary" style="background-color: #1e1e1e;">
+        <div class="card-header border-secondary" style="background-color: rgba(108, 117, 125, 0.15);">
+            <h5 class="mb-0" style="color: #9e9e9e;">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <path d="M4,8 L7,8 M9,8 L12,8" stroke="currentColor" stroke-width="1.5" />
+                    <circle cx="5" cy="8" r="3" stroke="currentColor" fill="none" />
+                    <circle cx="11" cy="8" r="3" stroke="currentColor" fill="none" />
+                </svg>
+                Registros sin Enlace de Publicación ({{ sin_publicacion_enlazada|length }} Registros)
+            </h5>
+            <small class="text-muted">Artículos que no se han podido vincular a un registro en la tabla de
+                publicaciones. Esto afecta a los filtros y al análisis.</small>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for r in sin_publicacion_enlazada %}
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                style="background-color: #252525; border-bottom: 1px solid #333; color: #e0e0e0;">
+                <div>
+                    <strong style="color: #b0b0b0;">ID: {{ r.id }}</strong> <span style="color: #757575;">|</span>
+                    <strong style="color: #9e9e9e;">Publicación: {{ r.publicacion or '(Campo vacío)' }}</strong>
+                    <span style="color: #757575;">|</span> {{ r.titulo }}
+                </div>
+                <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-sm btn-outline-secondary"
+                    style="border-color: #6c757d; color: #9e9e9e;">
+                    <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                        <path d="M2,6 L10,2 L12,10 L4,12 Z" stroke="currentColor" fill="none" />
+                        <line x1="7" y1="3" x2="9" y2="5" stroke="currentColor" />
+                    </svg> Revisar
+                </a>
+            </li>
+            {% endfor %}
+            {% if not sin_publicacion_enlazada %}
+            <li class="list-group-item"
+                style="background-color: rgba(74, 124, 47, 0.1); color: #4a7c2f; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> Todos los artículos están enlazados a una publicación.
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {# ----------------------------------------------------------- #}
+    {# 5. Fechas Inválidas #}
+    {# ----------------------------------------------------------- #}
+    <div class="card mb-4 border-danger" style="background-color: #1e1e1e;">
+        <div class="card-header border-danger" style="background-color: rgba(139, 0, 0, 0.15);">
+            <h5 class="mb-0 text-danger">
+                <svg width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:middle">
+                    <rect x="2" y="3" width="12" height="11" stroke="currentColor" fill="none" />
+                    <line x1="2" y1="6" x2="14" y2="6" stroke="currentColor" />
+                    <line x1="5" y1="2" x2="5" y2="5" stroke="currentColor" />
+                    <line x1="11" y1="2" x2="11" y2="5" stroke="currentColor" />
+                </svg>
+                Fechas Inválidas ({{ fechas_invalidas|length }} Registros)
+            </h5>
+            <small class="text-muted">Artículos con fechas que no cumplen el formato DD/MM/YYYY o con valores
+                imposibles (mes > 12, día > 31, años fuera de rango 1800-2100). <strong>Estas fechas corruptas
+                    causaban errores en PostgreSQL.</strong></small>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for r in fechas_invalidas %}
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+                style="background-color: #252525; border-bottom: 1px solid #333; color: #e0e0e0;">
+                <div>
+                    <strong style="color: #ff9800;">ID: {{ r.id }}</strong> <span style="color: #757575;">|</span>
+                    <span style="color: #b0b0b0;">{{ r.publicacion or '(Publicación desconocida)' }}</span>
+                    <span style="color: #757575;">|</span> {{ r.titulo }}
+                    <br><span
+                        style="font-size: 0.85rem; color: #ef5350; background-color: rgba(239, 83, 80, 0.15); padding: 2px 8px; border-radius: 3px; display: inline-block; margin-top: 4px;">⚠️
+                        Fecha incorrecta: <strong>{% if r.fecha_original and r.fecha_original|length == 10 and '-' in
+                            r.fecha_original %}{{ r.fecha_original[8:10] }}/{{ r.fecha_original[5:7] }}/{{
+                            r.fecha_original[0:4] }}{% else %}{{ r.fecha_original or '' }}{% endif %}</strong></span>
+                </div>
+                <a href="{{ url_for('editar', id=r.id) }}" class="btn btn-sm btn-outline-danger"
+                    style="border-color: #8b0000; color: #8b0000;">
+                    <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                        <path d="M10,2 L12,4 L5,11 L2,12 L3,9 Z" stroke="currentColor" fill="none" />
+                        <circle cx="11" cy="3" r="1" fill="currentColor" />
+                    </svg> Corregir
+                </a>
+            </li>
+            {% endfor %}
+            {% if not fechas_invalidas %}
+            <li class="list-group-item"
+                style="background-color: rgba(74, 124, 47, 0.1); color: #4a7c2f; border-left: 3px solid #4a7c2f;">
+                <svg width="12" height="12" fill="currentColor" style="margin-right:4px;vertical-align:middle">
+                    <circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" />
+                    <path d="M3,6 L5,8 L9,4" stroke="currentColor" fill="none" stroke-width="1.5" />
+                </svg> Todas las fechas son válidas.
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    {% endif %}
+
+    <div class="text-center my-4">
+        <a href="{{ url_for('noticias.listar') }}" class="btn btn-outline-light">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 5px;">
+                <polyline points="15,18 9,12 15,6" stroke="currentColor" stroke-width="2" fill="none" />
+            </svg>
+            Volver al listado
+        </a>
+    </div>
+
+
+</div>
+
+<!-- Fin container-fluid -->
+
+<!-- VALIDATION SCRIPT -->
+<script>
+    function reloadConsistency() {
+        const btn = document.getElementById('btn-reload-consistency');
+        const icon = btn.querySelector('i');
+
+        // Deshabilitar botón e iniciar animación
+        btn.disabled = true;
+        icon.classList.add('fa-spin');
+        btn.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin me-1"></i> RECARGANDO...';
+
+        // Simular un pequeño delay para feedback visual antes de recargar
+        setTimeout(() => {
+            window.location.reload();
+        }, 800);
+    }
+
+    function validarGrupo(ids, btn) {
+        if (!confirm('¿Confirmas que estos registros NO son duplicados? Se marcarán como validados y no volverán a aparecer.')) return;
+
+        // Deshabilitar botón
+        btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+        // Obtener CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        fetch("{{ url_for('quality.validar_duplicados') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Eliminar visualmente el grupo
+                    const alertDiv = btn.closest('.alert');
+                    if (alertDiv) {
+                        alertDiv.style.transition = "opacity 0.5s ease";
+                        alertDiv.style.opacity = 0;
+                        setTimeout(() => {
+                            alertDiv.remove();
+                            // Optional: Check if no more alerts, show "Clean" message
+                            const remaining = document.querySelectorAll('.alert.border-danger');
+                            if (remaining.length === 0) {
+                                location.reload(); // Reload to potentially show "No duplicates" state
+                            }
+                        }, 500);
+                    }
+                } else {
+                    alert("Error: " + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Ocurrió un error al procesar la solicitud.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+    }
+
+    // --- LOGICA DE FILTRADO CLIENT-SIDE ---
+    // Al cargar la página, ocultamos los grupos que ya fueron validados
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("Cargando validaciones...");
+
+        fetch("{{ url_for('quality.obtener_validaciones') }}")
+            .then(response => response.json())
+            .then(validatedPairs => {
+                // validatedPairs es array de [id1, id2]
+
+                // Crear un set de strings para búsqueda rápida "id1-id2"
+                // Ordenamos siempre id_min-id_max
+                const validSet = new Set();
+                validatedPairs.forEach(pair => {
+                    const p = pair.sort((a, b) => a - b);
+                    validSet.add(`${p[0]}-${p[1]}`);
+                });
+
+                const groups = document.querySelectorAll('.duplicate-group');
+                let hiddenCount = 0;
+
+                groups.forEach(group => {
+                    const ids = JSON.parse(group.getAttribute('data-ids') || '[]');
+                    if (ids.length < 2) return;
+
+                    // Generar todos los pares posibles del grupo
+                    // Si *todos* los pares posibles existen en validSet, ocultamos el grupo.
+                    // O alternativa más relajada: si *al menos un* par está validado, ocultamos.
+                    // Como el usuario valida el grupo entero, la lógica relajada suele ser la correcta
+                    // porque "rompe" la premisa de "todos son iguales".
+
+                    let matchesValidation = false;
+
+                    // Verificamos pares
+                    for (let i = 0; i < ids.length; i++) {
+                        for (let j = i + 1; j < ids.length; j++) {
+                            const p = [ids[i], ids[j]].sort((a, b) => a - b);
+                            const key = `${p[0]}-${p[1]}`;
+                            if (validSet.has(key)) {
+                                matchesValidation = true;
+                                break;
+                            }
+                        }
+                        if (matchesValidation) break;
+                    }
+
+                    if (matchesValidation) {
+                        console.log(`Ocultando grupo ${group.id} por validación previa.`);
+                        group.remove();
+                        hiddenCount++;
+                    }
+                });
+
+                if (hiddenCount > 0) {
+                    console.log(`Se ocultaron ${hiddenCount} grupos validados.`);
+                    // Verificar si quedan alertas
+                    const remaining = document.querySelectorAll('.duplicate-group');
+                    if (remaining.length === 0) {
+                        // Mostrar mensaje de limpieza si todo desapareció
+                        const container = document.querySelector('.card-body');
+                        if (container) {
+                            container.innerHTML += `
+                         <div class="text-center py-5">
+                             <h5 class="text-success"><i class="fa-solid fa-check-circle me-2"></i>Todo limpio</h5>
+                             <p class="text-muted">No se detectan duplicados pendientes de revisión.</p>
+                         </div>
+                         `;
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error("Error cargando validaciones:", err));
+    });
+</script>
+
+{% endblock %}

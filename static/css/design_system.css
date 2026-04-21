@@ -1,0 +1,2530 @@
+/* === OVERRIDE: Home right-side cards straight borders (fuerza todos los hijos) === */
+.home-right-col .card.hesi-floating-card,
+.home-right-col .card.hesi-floating-card *,
+.home-right-col .card.hesi-floating-card img,
+.home-right-col .card.hesi-floating-card .rounded,
+.home-right-col .card.hesi-floating-card .card-header,
+.home-right-col .card.hesi-floating-card .card-body {
+    border-radius: 0 !important;
+}
+
+.form-check-input.col-toggle {
+    width: 22px;
+    height: 12px;
+    min-width: 22px;
+    min-height: 12px;
+    font-size: 0.7em;
+    transition: background 0.2s, border 0.2s;
+}
+
+/* Switches de selección de columnas: relleno naranja cuando están activos */
+.form-check-input.col-toggle:checked {
+    background-color: #ff9800 !important;
+    border-color: #ff9800 !important;
+}
+
+.form-check-input.col-toggle {
+    transition: background 0.2s, border 0.2s;
+}
+
+/* === ESTILO PARA BOTONES DE ACCIONES EN EL HEADER (COMPACTO) === */
+.header-center .btn-sirio,
+.header-actions-wrapper .btn-sirio,
+.toolbar-header .btn-sirio,
+.header-center .btn,
+.toolbar-header .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 2px 12px !important;
+    font-size: 11.5px !important;
+    height: 32px !important;
+    transition: all 0.2s ease;
+    gap: 6px !important;
+    background: var(--ds-bg-element, #181818);
+    border: 1px solid var(--ds-border-light, #333);
+    color: #e0e0e0;
+    border-radius: var(--ds-radius-sm, 4px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none !important;
+    width: auto;
+    margin-right: 5px;
+    height: 32px !important;
+}
+
+/* === ESTILO ORIGINAL PARA BOTONES DEL SIDEBAR (COMO ESTABAN) === */
+.btn-sirio,
+.sidebar-menu .btn-sirio,
+.sidebar-menu .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    height: 32px;
+    transition: all 0.3s ease;
+    gap: 0 !important;
+    background: var(--ds-bg-element, #181818);
+    border: 1px solid var(--ds-border-light, #333);
+    color: #e0e0e0;
+    border-radius: var(--ds-radius-sm, 6px);
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    width: auto;
+    text-decoration: none !important;
+}
+
+/* Sidebar specifically needs fixed width for consistency when expanded */
+.desktop-wrapper:not(.sidebar-collapsed) .sidebar-nav .btn-sirio,
+.desktop-wrapper:not(.sidebar-collapsed) .sidebar-nav .nav-item {
+    width: 220px !important;
+}
+
+.btn-sirio-primary {
+    background: var(--ds-accent-primary) !important;
+    color: #fff !important;
+    border-color: var(--ds-accent-primary) !important;
+    font-weight: 700 !important;
+}
+
+.btn-sirio-primary:hover {
+    background: var(--ds-accent-hover) !important;
+}
+
+.btn-sirio-success {
+    background: #277729 !important;
+    color: #fff !important;
+    border-color: #277729 !important;
+    font-weight: 700 !important;
+}
+
+.btn-sirio-success:hover {
+    background: #2e8b31 !important;
+}
+
+.btn-sirio-warning {
+    background: #ff990031 !important;
+    color: #000 !important;
+    border-color: #ff9800 !important;
+    font-weight: 700 !important;
+}
+
+.btn-sirio-warning:hover {
+    background: #ff9800 !important;
+}
+
+/* El texto siempre visible, color placeholder por defecto */
+.btn-sirio .btn-text,
+.sidebar-menu .btn .btn-text,
+.header-center .btn .btn-text,
+.toolbar-header .btn .btn-text {
+    color: #e0e0e0;
+    opacity: 1;
+    margin-left: 6px;
+    display: inline-block;
+    transition: color 0.3s;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Al pasar el mouse o activo, texto blanco */
+.btn-sirio:hover .btn-text,
+.btn-sirio.active .btn-text,
+.header-center .btn:hover .btn-text,
+.toolbar-header .btn:hover .btn-text,
+.sidebar-menu .btn:hover .btn-text {
+    color: #fff;
+}
+
+/* Toolbar Header reset: ahora integrado en el header principal */
+.toolbar-header {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: var(--ds-spacing-sm, 8px);
+}
+
+/* Botones de análisis avanzado: color de texto personalizado */
+.btn-sirio[data-analisis="sentimiento"],
+.btn-sirio[data-analisis="topics"],
+.btn-sirio[data-analisis="entidades"],
+.btn-sirio[data-analisis="ngramas"],
+.btn-sirio[data-analisis="clustering"] {
+    color: #44444470 !important;
+}
+
+.btn-sirio[data-analisis="sentimiento"]:hover,
+.btn-sirio[data-analisis="topics"]:hover,
+.btn-sirio[data-analisis="entidades"]:hover,
+.btn-sirio[data-analisis="ngramas"]:hover,
+.btn-sirio[data-analisis="clustering"]:hover {
+    color: #fff !important;
+}
+
+/* Prevenir smooth scrolling que causa desplazamiento no deseado */
+html {
+    scroll-behavior: auto !important;
+}
+
+/* Personalización del switch para que el punto (thumb) sea naranja siempre */
+.form-switch .form-check-input {
+    position: relative;
+    background-color: #181818;
+    border: 2px solid var(--ds-accent-primary);
+    box-shadow: none;
+    width: 2.5em;
+    height: 0.85em;
+}
+
+.form-switch .form-check-label {
+    margin-left: 0.8rem !important;
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-switch .form-check-input:focus {
+    box-shadow: 0 0 0 2px var(--ds-accent-alpha);
+    border-color: var(--ds-accent-primary);
+    background-image: none;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #181818;
+    border: 2px solid var(--ds-accent-primary);
+    background-image: none;
+}
+
+.form-switch .form-check-input::before {
+    content: '';
+    display: block;
+    width: 0.85em;
+    height: 0.85em;
+    background: var(--ds-accent-primary);
+    border-radius: 50%;
+    position: absolute;
+    left: 0.15em;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: left 0.2s ease-in-out;
+}
+
+.form-switch .form-check-input:checked::before {
+    left: calc(100% - 1em);
+    background: var(--ds-accent-primary);
+}
+
+.form-switch .form-check-input::-webkit-slider-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+.form-switch .form-check-input:checked::-webkit-slider-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+.form-switch .form-check-input::-moz-range-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+.form-switch .form-check-input:checked::-moz-range-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+.form-switch .form-check-input::-ms-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+.form-switch .form-check-input:checked::-ms-thumb {
+    background: var(--ds-accent-primary) !important;
+}
+
+/* Punto naranja decorativo para labels de referencia */
+/* ============================================================
+   DESIGN_SYSTEM.CSS - Core Desktop Theme
+   Project: hesiOX Desktop
+   Description: Overrides and standardizes the application look
+   to resemble a native desktop software (VS Code, Adobe, etc.)
+   ============================================================ */
+
+/* === 1. TOKENS & VARIABLES === */
+:root {
+    /* --- COLOR PALETTE (Dark Professional) - MODO OSCURO POR DEFECTO --- */
+    --ds-bg-app: #0f0f0f;
+    /* Main background (deepest) */
+    --ds-bg-sidebar: #181818;
+    /* Sidebar/Panels */
+    --ds-bg-panel: #1e1e1e;
+    /* Cards/Containers */
+    --ds-bg-element: #2b2b2b;
+    /* Inputs/Buttons default */
+    --ds-bg-hover: #333333;
+    /* Hover state */
+
+    --ds-text-main: #e0e0e0;
+    --ds-text-muted: #a0a0a0;
+
+    --ds-border-color: #333333;
+    /* Subtle borders */
+    --ds-border-light: #444444;
+    /* Slightly clearer borders */
+
+    --ds-scrollbar-thumb: #444444;
+    --ds-scrollbar-hover: #555555;
+
+    /* --- ACCENT COLORS (Sirio Orange + Productivity Blue) --- */
+    --ds-accent-primary: #ff9800;
+    --ds-accent-rgb: 255, 152, 0;
+    --ds-accent-hover: #ffa726;
+    --ds-accent-alpha: rgba(255, 152, 0, 0.15);
+
+    --ds-info: #ff9800;
+    --ds-success: #277729;
+    --ds-danger: #a72b22;
+    --ds-warning: #ffd207;
+
+    /* --- TYPOGRAPHY --- */
+    /* --- TYPOGRAPHY --- */
+    --ds-font-ui: 'JetBrains Mono', 'Courier New', Consolas, monospace;
+    /* Typewriter preference */
+    --ds-font-mono: 'JetBrains Mono', Consolas, monospace;
+    --ds-font-headers: 'Roboto Condensed', sans-serif;
+
+    /* --- DIMENSIONS & SHAPES --- */
+    --ds-radius-sm: 0px;
+    /* Sharp corners for professional look */
+    --ds-radius-md: 2px;
+    /* Micro-rounding for softness if needed */
+    --ds-radius-lg: 4px;
+
+    --ds-spacing-xs: 4px;
+    --ds-spacing-sm: 8px;
+    --ds-spacing-md: 16px;
+
+    --ds-header-height: 60px;
+    --ds-sidebar-width: 260px;
+    --ds-sidebar-width-collapsed: 55px;
+    --ds-footer-height: 28px;
+
+    /* --- SHADOWS --- */
+    --ds-shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --ds-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --ds-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* === MODO CLARO (Light Theme) === */
+[data-theme="light"] {
+    /* --- COLOR PALETTE (Light Professional) --- */
+    --ds-bg-app: #ffffff;
+    /* Main background (white) */
+    --ds-bg-sidebar: #f5f5f5;
+    /* Sidebar/Panels */
+    --ds-bg-panel: #fafafa;
+    /* Cards/Containers */
+    --ds-bg-element: #e8e8e8;
+    /* Inputs/Buttons default */
+    --ds-bg-hover: #d0d0d0;
+    /* Hover state */
+
+    --ds-text-main: #212121;
+    --ds-text-muted: #666666;
+
+    --ds-border-color: #d0d0d0;
+    /* Subtle borders */
+    --ds-border-light: #b0b0b0;
+    /* Slightly darker borders */
+
+    --ds-scrollbar-thumb: #cccccc;
+    --ds-scrollbar-hover: #aaaaaa;
+
+    /* --- ACCENT COLORS (Blue Theme) --- */
+    --ds-accent-primary: #294a60;
+    --ds-accent-rgb: 41, 74, 96;
+    --ds-accent-hover: #1e3a4d;
+    --ds-accent-alpha: rgba(41, 74, 96, 0.15);
+
+    --ds-info: #294a60;
+    --ds-success: #2e7d32;
+    --ds-danger: #c62828;
+    --ds-warning: #f57c00;
+
+    /* --- SHADOWS (Lighter) --- */
+    --ds-shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --ds-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --ds-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* === LIGHT THEME COMPONENT OVERRIDES === */
+[data-theme="light"] {
+
+    /* Tables */
+    .table-sirio thead th {
+        background: #1e3a4d !important;
+        color: #ffffff !important;
+    }
+
+    .card-header-panel {
+        background: #294a60 !important;
+    }
+
+    /* Sidebar toggle button */
+    #sidebarToggle {
+        background-color: #294a60 !important;
+        border-color: #1e3a4d !important;
+    }
+
+
+    /* Text colors for light backgrounds */
+    .form-control-sirio {
+        color: #212121 !important;
+    }
+
+    .nav-item {
+        color: #666;
+    }
+
+    .nav-item:hover {
+        color: #212121;
+    }
+
+    .nav-item.active {
+        background-color: #e8e8e8;
+        color: #212121;
+    }
+
+    /* Status bar */
+    .desktop-footer {
+        background: #f5f5f5 !important;
+        border-top-color: rgba(0, 0, 0, 0.1) !important;
+        color: #666;
+    }
+
+    .desktop-footer strong {
+        color: #294a60;
+    }
+
+    /* User avatar */
+    .user-avatar {
+        background: #294a60;
+        color: #fff;
+    }
+
+    /* Sidebar logo text */
+    .sidebar-logo .text-accent {
+        color: #294a60 !important;
+    }
+
+    /* Sidebar links */
+    .sidebar-logo-links a {
+        color: #294a60 !important;
+    }
+}
+
+/* === SIDEBAR TOGGLE BUTTON BASE STYLES === */
+#sidebarToggle {
+    background-color: #ff9800;
+    color: #000;
+    border: 1px solid #e68900;
+    width: 100%;
+    height: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#sidebarToggle i {
+    color: #000;
+    font-size: 10px;
+}
+
+#sidebarToggle:hover {
+    background-color: #ffa726;
+}
+
+/* === 2. RESET & BASE === */
+body.desktop-body {
+    background-color: var(--ds-bg-app);
+    color: #e0e0e0;
+    font-family: var(--ds-font-ui);
+    overflow: hidden;
+    /* App-like behavior */
+    height: 100vh;
+    font-size: 12px;
+    /* Smaller, dense text */
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth theme transitions */
+body.theme-transitioning,
+body.theme-transitioning * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* Light theme text color override */
+[data-theme="light"] body.desktop-body {
+    color: #212121;
+}
+
+/* Reset scrollbars to look like IDE */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: var(--ds-bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ds-scrollbar-thumb);
+    border: 2px solid var(--ds-bg-app);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ds-scrollbar-hover);
+    border-color: var(--ds-bg-app);
+}
+
+/* === MANUAL STYLES === */
+.manual-hero-title {
+    color: var(--ds-accent-primary) !important;
+}
+
+/* === UTILITIES === */
+.bg-accent {
+    background-color: var(--ds-accent-primary) !important;
+}
+
+/* === 3. LAYOUT STRUCTURE === */
+.desktop-wrapper {
+    display: flex !important;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* SIDEBAR */
+.desktop-sidebar {
+    width: var(--ds-sidebar-width);
+    background: var(--ds-bg-sidebar);
+    border-right: 1px solid var(--ds-border-color);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 40000 !important;
+    position: relative !important;
+    transition: width 0.2s ease-in-out;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .desktop-sidebar,
+.sidebar-collapsed .sidebar-nav {
+    width: var(--ds-sidebar-width-collapsed, 55px);
+    overflow: visible !important;
+}
+
+.sidebar-logo {
+    height: 165px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--ds-border-color);
+    background: #111;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar-logo:hover {
+    background: #1a1a1a;
+}
+
+.sidebar-logo img.img-sidebar-logo {
+    height: 120px;
+    width: auto;
+    transition: all 0.3s ease;
+}
+
+/* COMPONENTES EN ESTADO COLAPSADO (40px) */
+.sidebar-collapsed .nav-label,
+.sidebar-collapsed .sidebar-nav .fa-chevron-down {
+    display: none !important;
+}
+
+/* Hide open submenus when collapsed to avoid visual artifacts */
+.sidebar-collapsed .desktop-sidebar .collapse.show {
+    display: none !important;
+}
+
+/* POP-OUT SUBMENU ON HOVER (Premium VS Code style) */
+.sidebar-collapsed .nav-group-item:hover>.collapse,
+.sidebar-collapsed .nav-group-item .collapse:hover {
+    display: block !important;
+    position: absolute;
+    left: 100% !important;
+    top: 0 !important;
+    background: var(--ds-bg-sidebar, #181818);
+    width: auto !important;
+    min-width: 220px !important;
+    max-width: 450px !important;
+    z-index: 100000 !important;
+    /* Above everything */
+    border: 1px solid var(--ds-accent-primary, #ff9800);
+    border-left: none;
+    box-shadow: 15px 0 30px rgba(0, 0, 0, 0.7);
+    border-radius: 0 4px 4px 0;
+    padding: 2px 0;
+    margin-top: 0 !important;
+}
+
+/* Submenu items styling and hover */
+.sidebar-collapsed .collapse .nav-item {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.sidebar-collapsed .collapse .nav-item:hover {
+    background-color: var(--ds-accent-alpha, rgba(255, 152, 0, 0.15)) !important;
+    color: var(--ds-accent-primary, #ff9800) !important;
+}
+
+[data-theme="light"] .sidebar-collapsed .nav-group-item:hover>.collapse,
+[data-theme="light"] .sidebar-collapsed .nav-group-item .collapse:hover {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-left: none !important;
+    box-shadow: 10px 0 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .sidebar-collapsed .collapse .nav-item {
+    color: #444 !important;
+    /* Ensure text is visible on light bg */
+    border-bottom-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .sidebar-collapsed .collapse .nav-item .nav-label {
+    color: #444 !important;
+    /* Force label color in light mode */
+}
+
+[data-theme="light"] .sidebar-collapsed .collapse .nav-item:hover {
+    background-color: rgba(41, 74, 96, 0.1) !important;
+    color: var(--ds-accent-primary, #294a60) !important;
+    /* Sirio Blue */
+}
+
+[data-theme="light"] .sidebar-collapsed .collapse .nav-item:hover .nav-label {
+    color: var(--ds-accent-primary, #294a60) !important;
+}
+
+/* Hover Bridge: Invisible pseudo-element to wider the hit area */
+.sidebar-collapsed .desktop-sidebar .collapse::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -20px;
+    /* Covers the gap between icon and fixed menu */
+    width: 20px;
+    height: 100%;
+    background: transparent;
+}
+
+/* Ensure labels inside the floating popout are visible */
+.sidebar-collapsed .desktop-sidebar .collapse .nav-label {
+    display: block !important;
+    opacity: 1 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.3px;
+    color: #a7a7a7;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+/* Remove indent for floating menu items */
+.sidebar-collapsed .desktop-sidebar .nav-item:hover+.collapse .ms-3,
+.sidebar-collapsed .desktop-sidebar .collapse:hover .ms-3 {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    border-left: none !important;
+}
+
+/* Ensure items INSIDE the pop-out are NOT compressed */
+.sidebar-collapsed .collapse .nav-item {
+    width: auto !important;
+    min-width: 100% !important;
+    display: flex !important;
+    padding: 6px 15px !important;
+    justify-content: flex-start !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-collapsed .collapse .nav-item:last-child {
+    border-bottom: none;
+}
+
+.sidebar-logo-links {
+    margin-top: auto;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-top: 1px solid var(--ds-border-color);
+    padding-top: 15px;
+}
+
+.sidebar-collapsed .sidebar-logo-links {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding-bottom: 15px;
+    margin-bottom: 10px;
+}
+
+.sidebar-collapsed .sidebar-logo-links a i {
+    font-size: 12px !important;
+    margin: 0 !important;
+}
+
+.sidebar-collapsed .sidebar-logo img.img-sidebar-logo {
+    height: 40px !important;
+    opacity: 1;
+    display: block !important;
+}
+
+.sidebar-collapsed .sidebar-logo {
+    height: 60px;
+    padding: 0;
+    justify-content: center !important;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item {
+    position: relative;
+    width: 100%;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item > .nav-item,
+.sidebar-collapsed .sidebar-nav > .nav-item {
+    justify-content: center;
+    padding: 10px 0 !important;
+    width: 100% !important;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item > .nav-item i,
+.sidebar-collapsed .sidebar-nav > .nav-item i {
+    margin: 0 !important;
+    font-size: 1.2rem !important;
+}
+
+/* Submenu Pop-out positioning (redundant cleanup) */
+.sidebar-collapsed .sidebar-nav .nav-group-item>.collapse {
+    position: absolute !important;
+    left: 100% !important;
+    width: auto !important;
+    min-width: 250px !important;
+    max-width: 450px !important;
+    z-index: 100000 !important;
+    background: #333 !important;
+    border: 1px solid #ff9800 !important;
+    box-shadow: 10px 0 20px rgba(0, 0, 0, 0.5) !important;
+    padding: 2px 0 !important;
+    display: none !important;
+    overflow: visible !important;
+}
+
+/* Vertical line that "goes up" to connect with the hover border top of the item */
+.sidebar-collapsed .sidebar-nav .nav-group-item>.collapse::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    background-color: #ff9800;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item:hover>.collapse,
+.sidebar-collapsed .sidebar-nav .nav-group-item .collapse:hover {
+    display: block !important;
+}
+
+/* Reset items inside pop-outs to ensure full text and no compression */
+.sidebar-collapsed .sidebar-nav .nav-group-item .collapse .nav-item {
+    width: auto !important;
+    min-width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    padding: 6px 15px !important;
+    white-space: nowrap !important;
+    border: none !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* Thin separator */
+    text-transform: uppercase !important;
+    /* Match screenshot style */
+    letter-spacing: 0.5px !important;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item .collapse .nav-item:last-child {
+    border-bottom: none !important;
+}
+
+.sidebar-collapsed .sidebar-nav .nav-group-item .collapse .nav-label {
+    display: inline !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    margin-left: 0 !important;
+    font-size: 0.72rem !important;
+    /* Smaller text */
+    color: #b4b4b4 !important;
+    width: auto !important;
+    overflow: visible !important;
+}
+
+/* Hide chevron in collapsed mode pop-out triggers */
+.sidebar-collapsed .sidebar-nav .nav-group-item>.nav-item .fa-chevron-down {
+    display: none !important;
+}
+
+.sidebar-collapsed .nav-separator {
+    margin: 5px 5px;
+}
+
+.sidebar-logo-links a {
+    color: #ff9800 !important;
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    transition: none !important;
+    font-size: 10px !important;
+    padding: 2px 5px !important;
+}
+
+.sidebar-logo-links a:hover,
+.sidebar-logo-links a:focus {
+    color: #ff9800 !important;
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.sidebar-logo-links a .fa-terminal,
+.sidebar-logo-links a .fa-circle-question,
+.sidebar-logo-links a .fa-power-off {
+    cursor: default;
+    transition: cursor 0.2s;
+}
+
+.sidebar-logo-links a:hover .fa-terminal,
+.sidebar-logo-links a:hover .fa-circle-question,
+.sidebar-logo-links a:hover .fa-power-off {
+    cursor: pointer;
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+    min-height: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 2px 10px;
+    color: #a0a0a0;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+    cursor: default;
+    /* Desktop feel */
+}
+
+.nav-item:hover {
+    background-color: #33333300 !important;
+    color: #ff9800 !important;
+}
+
+.nav-item.active {
+    background-color: #252526;
+    color: #fff;
+    border-left-color: var(--ds-accent-primary);
+}
+
+.nav-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+    opacity: 0.8;
+}
+
+.nav-separator {
+    height: 1px;
+    width: 100%;
+    background-color: #ffffff2c !important;
+    margin: 12px auto;
+    opacity: 0.8;
+}
+
+.nav-label {
+    flex: 1;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+/* SUBMENU */
+.collapse .nav-label {
+    font-size: 11px !important;
+    font-weight: 500;
+    /* Compensa la reducción de tamaño */
+    opacity: 0.9;
+}
+
+/*.collapse.show {
+    background: #111;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}*/
+
+.nav-item.active-sub {
+    color: var(--ds-accent-primary);
+    font-weight: 600;
+}
+
+/* MAIN AREA */
+.desktop-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Prevent overflow */
+    background: var(--ds-bg-app);
+    position: relative;
+    /* Added for absolute overlays */
+}
+
+/* HEADER */
+.desktop-header {
+    height: var(--ds-header-height);
+    background: var(--ds-bg-sidebar);
+    border-bottom: 1px solid var(--ds-border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 11000;
+    /*    margin-top: 10px; */
+    height: 60px !important;
+}
+
+.header-actions-wrapper {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+}
+
+.page-title {
+    font-family: var(--ds-font-headers);
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* CONTENT AREA */
+.desktop-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    /* Padding is handled by specific views or inner containers */
+    padding: 0;
+}
+
+/* STATUS BAR */
+.desktop-footer {
+    height: var(--ds-footer-height);
+    background: #0a0a0a !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px !important;
+    font-size: 11px;
+    color: #888;
+    font-family: var(--ds-font-ui);
+    user-select: none;
+    z-index: 1000;
+    width: 100%;
+    max-width: 100%;
+    position: static !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.desktop-footer strong {
+    color: var(--ds-accent-primary);
+    opacity: 0.9;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+    transition: max-width 0.3s ease, background 0.2s;
+    cursor: help;
+}
+
+.desktop-footer strong:hover {
+    max-width: 400px;
+    background: rgba(255, 152, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    z-index: 9999;
+    position: relative;
+}
+
+.status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.status-item strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    white-space: nowrap;
+}
+
+.status-left,
+.status-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.status-left {
+    flex: 0 0 auto;
+    max-width: 35%;
+    overflow: hidden;
+}
+
+.status-right {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    max-width: 60%;
+    overflow: hidden;
+    margin-left: auto;
+}
+
+.status-separator {
+    height: 14px;
+    width: 1px;
+    background: var(--ds-border-light);
+    opacity: 0.5;
+    margin: 0 4px;
+}
+
+/* === 4. UI COMPONENTS === */
+
+/* CARDS */
+.card-panel {
+    background: var(--ds-bg-panel);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-float);
+    /* margin-bottom: 1.5rem; */
+    /* overflow: hidden;  REMOVED to allow dropdowns to spill out */
+    position: relative;
+    /* Ensure z-index context if needed */
+    display: flex;
+    flex-direction: column;
+}
+
+.max-h-370-scroll {
+    max-height: 370px;
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.max-h-400-scroll {
+    height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.card-header-panel {
+    padding: 0.75rem 1.25rem;
+    background: var(--ds-accent-primary, #ff9800);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+
+    /* Manually replicate radius since overflow is visible */
+    border-top-left-radius: var(--ds-radius-lg);
+    border-top-right-radius: var(--ds-radius-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.card-body-panel {
+    background: rgba(30, 30, 30, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: none;
+    color: var(--ds-text-main);
+    border-bottom-left-radius: var(--ds-radius-lg);
+    border-bottom-right-radius: var(--ds-radius-lg);
+}
+
+.card-panel-sirio-info {
+    border-left: 4px solid var(--ds-accent-primary);
+}
+
+.step-number-sirio {
+    width: 28px;
+    height: 28px;
+    background: rgba(var(--ds-accent-rgb), 0.2);
+    color: var(--ds-accent-primary);
+    border: 1px solid var(--ds-accent-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(var(--ds-accent-rgb), 0.1);
+}
+
+[data-theme="light"] .card-header-panel {
+    background: var(--ds-accent-primary, #294a60) !important;
+}
+
+[data-theme="light"] .card-body-panel {
+    background: #fdfdfd;
+}
+
+[data-theme="light"] .step-number-sirio {
+    background: var(--ds-accent-primary);
+    color: #fff;
+}
+
+
+/* BUTTONS */
+.btn-sirio {
+    background: var(--ds-bg-element);
+    border: 1px solid var(--ds-border-light);
+    color: #e0e0e0;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--ds-radius-sm);
+    transition: all 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.btn-sirio:hover {
+    background: var(--ds-bg-hover);
+    border-color: #666;
+    color: #fff;
+}
+
+.btn-sirio-primary {
+    background: #cd7b00;
+    /* Darker orange */
+    border-color: #ff9800;
+    color: #fff;
+}
+
+.btn-sirio-danger {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.4);
+    color: #ff4d5a;
+}
+
+.btn-sirio-danger:hover {
+    background: rgba(220, 53, 69, 0.3);
+    border-color: #ff4d5a;
+    color: #fff;
+}
+
+.btn-sirio-sm {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    min-height: 24px !important;
+    width: auto !important;
+}
+
+.btn-sirio-sm i {
+    font-size: 10px !important;
+}
+
+/* Botones de acción en tablas de administración (Minimalist Icons-only) */
+.btn-admin-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    color: #888;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 4px !important;
+}
+
+.btn-admin-action:hover {
+    transform: scale(1.15) !important;
+    background: transparent !important;
+    color: #fff;
+    box-shadow: none !important;
+}
+
+/* Variantes Minimalistas */
+.btn-admin-action-success:hover {
+    color: #4caf50 !important;
+}
+
+.btn-admin-action-warning:hover {
+    color: #ff9800 !important;
+}
+
+.btn-admin-action-danger:hover {
+    color: #f44336 !important;
+}
+
+/* === UTILS === */
+.btn-sirio-primary:hover {
+    background: #000000 !important;
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.3);
+}
+
+/* FORMS */
+.form-control-sirio {
+    background: var(--ds-bg-app) !important;
+    border: 1px solid var(--ds-border-color) !important;
+    color: #ddd !important;
+    font-size: 13px;
+    font-family: var(--ds-font-mono);
+    /* Monospace fit for data */
+    padding: 8px;
+    border-radius: var(--ds-radius-sm);
+    box-shadow: var(--ds-shadow-inset);
+    width: 100%;
+}
+
+.form-control-sirio:focus {
+    border-color: var(--ds-accent-primary) !important;
+    box-shadow: 0 0 0 1px var(--ds-accent-primary) !important;
+    outline: none;
+}
+
+label.form-label-sirio {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 4px;
+    display: block;
+    letter-spacing: 0.5px;
+}
+
+/* TABLES (Data Grid Look) */
+.table-sirio {
+    width: 100%;
+    border-collapse: separate;
+    /* Better for sticky headers */
+    border-spacing: 0;
+    font-size: 12px;
+}
+
+.table-sirio thead th {
+    background: #e68a00 !important;
+    /* Slightly darker to distinguish from card-header */
+    color: #000000;
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-clip: padding-box;
+}
+
+/* Fix for sticky headers inside responsive wrappers */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+    /* Crucial for position: sticky to work */
+}
+
+.sticky-thead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.table-sirio tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    color: #ccc;
+    vertical-align: middle;
+}
+
+.table-sirio tbody tr:hover {
+    background: rgba(255, 152, 0, 0.05);
+}
+
+.table-sirio td .badge {
+    border-radius: 2px;
+    /* Square badges */
+    padding: 2px 6px;
+    font-weight: 500;
+    font-size: 10px;
+}
+
+/* UTILS */
+.text-accent {
+    color: var(--ds-accent-primary) !important;
+}
+
+.bg-dark-panel {
+    background-color: var(--ds-bg-panel) !important;
+}
+
+.border-b {
+    border-bottom: 1px solid var(--ds-border-color);
+}
+
+.shadow-z2 {
+    box-shadow: var(--ds-shadow-float);
+}
+
+/* --- 5. PAGE SPECIFIC OVERRIDES --- */
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 16px;
+}
+
+.dashboard-stat-card {
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-color);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--ds-accent-primary);
+    opacity: 0.5;
+}
+
+.stat-value {
+    font-family: var(--ds-font-headers);
+    font-size: 28px;
+    color: #fff;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* === 6. DASHBOARD & WIDGETS === */
+
+/* METRICS STRIP */
+.metric-strip {
+    display: flex;
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-color);
+    border-radius: var(--ds-radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.metric-compact {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--ds-bg-panel);
+    border-right: 1px solid var(--ds-border-color);
+}
+
+.metric-compact:last-child {
+    border-right: none;
+}
+
+.metric-label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e0e0e0;
+    font-family: var(--ds-font-headers);
+    line-height: 1;
+}
+
+.metric-icon {
+    color: #333;
+    font-size: 20px;
+    transition: color 0.2s;
+}
+
+.metric-compact:hover .metric-icon {
+    color: var(--ds-accent-primary);
+}
+
+/* DENSE LISTS (Logs) */
+.list-group-dense {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-item-dense {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--ds-border-color);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    color: #bbb;
+    text-decoration: none;
+    transition: background 0.1s;
+}
+
+.list-item-dense:hover {
+    background: var(--ds-bg-hover);
+    color: #fff;
+}
+
+.list-item-dense:last-child {
+    border-bottom: none;
+}
+
+.list-item-time {
+    font-family: var(--ds-font-mono);
+    font-size: 10px;
+    color: #666;
+    margin-left: auto;
+}
+
+/* QUICK LINKS MENU */
+.quick-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    color: #bbb;
+    text-decoration: none;
+    font-size: 12px;
+    border-radius: var(--ds-radius-sm);
+    transition: all 0.1s;
+    border: 1px solid transparent;
+}
+
+.quick-link:hover {
+    background: var(--ds-bg-hover);
+    color: #fff;
+    border-color: #333;
+}
+
+.quick-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 8px;
+    color: #666;
+    font-size: 14px;
+}
+
+.quick-link:hover i {
+    color: var(--ds-accent-primary);
+}
+
+/* === 7. PROJECT CARDS (Studio Look) === */
+.project-card-hero {
+    background: linear-gradient(145deg, #1a1a1a 0%, #111 100%);
+    border: 1px solid var(--ds-border-color);
+    border-left: 4px solid var(--ds-accent-primary);
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--ds-radius-md);
+}
+
+.project-card-archive {
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-color);
+    transition: all 0.2s;
+    border-radius: var(--ds-radius-md);
+    position: relative;
+}
+
+.project-card-archive:hover {
+    border-color: var(--ds-accent-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+html:not([data-theme="light"]) .project-card-archive:hover {
+    border-color: #ff9800 !important;
+}
+
+.stat-pill {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #aaa;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--ds-radius-sm);
+}
+
+/* === 8. FORM OVERRIDES (Global) === */
+/* Force standard bootstrap forms to look like Sirio Desktop */
+.form-control,
+.form-select {
+    background-color: var(--ds-bg-app) !important;
+    border: 1px solid var(--ds-border-color) !important;
+    color: #e0e0e0 !important;
+    border-radius: var(--ds-radius-sm) !important;
+    font-size: 13px !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: none !important;
+    border-color: var(--ds-accent-primary) !important;
+}
+
+.input-group-text {
+    background-color: #222 !important;
+    border-color: #333 !important;
+    /* color: #888 !important; */
+}
+
+/* Choices.js Dropdown Highlight Fix */
+.choices__list--dropdown .choices__item--selectable.is-highlighted,
+.choices__list[aria-expanded] .choices__item--selectable.is-highlighted {
+    background-color: var(--ds-accent-primary) !important;
+    color: #000 !important;
+}
+
+/* KEYBOARD SHORTCUTS PANEL */
+.shortcuts-help {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-light);
+    border-radius: var(--ds-radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    overflow: hidden;
+    animation: slideInUp 0.3s ease;
+}
+
+.shortcuts-header {
+    background: var(--ds-bg-element);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ds-border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ds-accent-primary);
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.shortcuts-header button {
+    background: none;
+    border: none;
+    color: var(--ds-text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.shortcuts-header button:hover {
+    color: #fff;
+}
+
+.shortcuts-list {
+    padding: 10px 0;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.shortcut-item:last-child {
+    border-bottom: none;
+}
+
+.shortcut-item kbd {
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #fff;
+    font-family: var(--ds-font-mono);
+    font-size: 11px;
+    min-width: 24px;
+    text-align: center;
+    display: inline-block;
+}
+
+.shortcut-item span {
+    color: var(--ds-text-secondary);
+    font-size: 12px;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* === 9. NOTIFICATIONS & ALERTS === */
+
+/* Draft Notification (Borrador recuperado) */
+.draft-notification {
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-accent-primary);
+    border-left: 4px solid var(--ds-accent-primary);
+    color: inherit;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: var(--ds-radius-md);
+    box-shadow: var(--ds-shadow-float);
+    animation: slideInUp 0.3s ease;
+}
+
+.draft-notification strong {
+    color: var(--ds-accent-primary);
+    font-family: var(--ds-font-headers);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Close Button for Draft Notification */
+.btn-close-draft {
+    background: transparent;
+    border: 1px solid var(--ds-border-light);
+    color: var(--ds-accent-primary);
+    padding: 0 10px;
+    height: 24px;
+    font-size: 18px;
+    line-height: normal;
+    border-radius: var(--ds-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    width: auto !important;
+    /* Forces width auto as requested */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+}
+
+.btn-close-draft:hover {
+    background: var(--ds-bg-hover);
+    border-color: var(--ds-accent-primary);
+    color: #fff;
+}
+
+[data-theme="light"] .btn-close-draft {
+    border-color: var(--ds-border-color);
+}
+
+[data-theme="light"] .btn-close-draft:hover {
+    background: var(--ds-bg-element);
+    color: var(--ds-accent-primary);
+}
+
+/* Autosave Indicator */
+.autosave-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--ds-border-color);
+    color: #888;
+    padding: 6px 12px;
+    border-radius: var(--ds-radius-sm);
+    font-size: 11px;
+    z-index: 2000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    /* pointer-events: none;  Eliminado para no bloquear clicks en el mapa */
+    display: flex;
+    align-items: center;
+}
+
+.autosave-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* OCR and Material Dropzone Styles */
+.ocr-dropzone {
+    background: rgba(255, 152, 0, 0.05);
+    border: 2px dashed rgba(255, 152, 0, 0.2) !important;
+    border-radius: var(--ds-radius-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ocr-dropzone:hover {
+    background: rgba(var(--ds-accent-rgb, 255, 152, 0), 0.05);
+    border-color: var(--ds-accent-primary, #ff9800) !important;
+    box-shadow: 0 0 15px rgba(var(--ds-accent-rgb, 255, 152, 0), 0.1);
+}
+
+.dropzone-text-primary {
+    color: var(--ds-accent-primary, #ff9800);
+    font-weight: 700;
+}
+
+.dropzone-text-secondary {
+    color: #888;
+}
+
+[data-theme="light"] .ocr-dropzone {
+    background: rgba(41, 74, 96, 0.05) !important;
+    border-color: rgba(41, 74, 96, 0.2) !important;
+}
+
+[data-theme="light"] .ocr-dropzone i {
+    color: rgba(41, 74, 96, 0.5) !important;
+}
+
+[data-theme="light"] .ocr-dropzone:hover {
+    background: rgba(var(--ds-accent-rgb, 41, 74, 96), 0.08) !important;
+    border-color: var(--ds-accent-primary, #294a60) !important;
+}
+
+.ocr-dropzone:hover i,
+.ocr-dropzone:hover .dropzone-text-primary,
+.ocr-dropzone:hover .dropzone-text-secondary {
+    color: var(--ds-accent-primary) !important;
+}
+
+[data-theme="light"] .dropzone-text-secondary {
+    color: #6c757d;
+}
+
+.form-control-highlight {
+    background: #000 !important;
+    color: var(--ds-accent-primary) !important;
+    border-color: var(--ds-accent-primary) !important;
+}
+
+.text-preview-box {
+    background: #000 !important;
+    color: #eee !important;
+    border: 1px solid var(--ds-border-light) !important;
+}
+
+[data-theme="light"] .form-control-highlight {
+    background: var(--ds-bg-app) !important;
+    color: var(--ds-accent-primary) !important;
+}
+
+[data-theme="light"] .text-preview-box {
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    border-color: #ddd !important;
+}
+
+[data-theme="light"] .metric-label {
+    color: #555;
+}
+
+[data-theme="light"] .metric-value {
+    color: #294a60;
+    /* Darker blue for contrast */
+}
+
+[data-theme="light"] .metric-compact {
+    background: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+}
+
+/* Bootstrap Alert Overrides */
+.alert {
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-color);
+    color: #ccc;
+    border-radius: var(--ds-radius-md);
+    box-shadow: var(--ds-shadow-panel);
+    font-size: 13px;
+}
+
+.alert-success {
+    border-left: 4px solid var(--ds-success);
+    background: linear-gradient(to right, rgba(76, 175, 80, 0.1), transparent);
+}
+
+.alert-success .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.alert-warning {
+    border-left: 4px solid var(--ds-warning);
+    background: linear-gradient(to right, rgba(255, 193, 7, 0.1), transparent);
+}
+
+.alert-warning .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.alert-danger {
+    border-left: 4px solid var(--ds-danger);
+    background: linear-gradient(to right, rgba(244, 67, 54, 0.1), transparent);
+}
+
+.alert-danger .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.alert-info {
+    border-left: 4px solid var(--ds-info);
+    background: linear-gradient(to right, rgba(33, 150, 243, 0.1), transparent);
+}
+
+.alert-info .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* === 10. IMMERSIVE VISUALIZATION LAYOUT === */
+/* Used for Maps and Networks where content should fill the screen */
+
+.immersive-layout .desktop-header {
+    background: rgba(18, 18, 18, 0.92) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    z-index: 11000 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    padding-right: 16px !important;
+    position: relative;
+}
+
+.immersive-layout.desktop-main {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.immersive-layout .header-left {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.immersive-layout .page-title {
+    margin: 0 !important;
+    padding-left: 10px !important;
+    /* Balanced with panel offset */
+}
+
+.immersive-layout .desktop-footer {
+    position: absolute !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 10, 0.85) !important;
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding-left: 20px !important;
+    /* Más padding para alejar del borde */
+}
+
+.immersive-layout .desktop-content {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Ensure the wrapper doesn't limit the absolute content */
+.immersive-layout {
+    height: 100%;
+}
+
+/* === 11. TOOLTIPS & PREVIEWS (Sirio Aesthetic) === */
+
+/* Standard Bootstrap Tooltips */
+.tooltip {
+    z-index: 12000;
+}
+
+.tooltip-inner {
+    background-color: #0c0c0c !important;
+    color: #e0e0e0 !important;
+    border: 1px solid var(--ds-accent-primary) !important;
+    border-radius: 2px !important;
+    padding: 6px 10px !important;
+    font-family: var(--ds-font-mono) !important;
+    font-size: 11px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--ds-accent-primary) !important;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--ds-accent-primary) !important;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: var(--ds-accent-primary) !important;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--ds-accent-primary) !important;
+}
+
+/* Custom Article Preview (The Authority) */
+.tooltip-preview {
+    position: fixed;
+    background: #111;
+    border: 1px solid var(--ds-accent-primary);
+    border-left: 5px solid var(--ds-accent-primary);
+    padding: 16px;
+    width: 480px;
+    max-width: 90vw;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+    z-index: 12005;
+    color: #ccc;
+    font-family: var(--ds-font-ui);
+    opacity: 0;
+    transform: translateY(5px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    border-radius: 2px;
+}
+
+.tooltip-preview.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip-preview.fijo {
+    border-color: var(--ds-warning);
+    border-left-color: var(--ds-warning);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-preview hr {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 12px 0;
+}
+
+.tooltip-preview strong {
+    color: #fff;
+    font-family: var(--ds-font-headers);
+    font-size: 15px;
+    text-transform: uppercase;
+}
+
+.tooltip-preview em {
+    color: var(--ds-accent-primary);
+    font-style: normal;
+    font-weight: bold;
+}
+
+.tooltip-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 12px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ds-text-muted);
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-accent-primary) rgba(255, 255, 255, 0.05);
+}
+
+/* Scrollbar personalizado para Webkit (Chrome, Safari) */
+.tooltip-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tooltip-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.tooltip-scroll::-webkit-scrollbar-thumb {
+    background: var(--ds-accent-primary);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.tooltip-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--ds-accent-hover);
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+}
+
+.tooltip-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+    justify-content: flex-end;
+}
+
+.copiar-btn {
+    background: var(--ds-bg-element);
+    border: 1px solid var(--ds-border-light);
+    color: #fff;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.copiar-btn:hover {
+    background: var(--ds-accent-primary);
+    color: #000;
+    border-color: var(--ds-accent-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.copiar-btn.leer-btn {
+    background: rgba(33, 150, 243, 0.15);
+    color: #64b5f6;
+    border-color: rgba(33, 150, 243, 0.4);
+}
+
+.copiar-btn.leer-btn:hover {
+    background: #0074d3;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(11, 82, 139, 0.4);
+}
+
+/* Scrollbar para el modal de vista completa */
+.modal-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-accent-primary) rgba(255, 255, 255, 0.05);
+}
+
+.modal-scroll::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+    background: var(--ds-accent-primary);
+    border-radius: 5px;
+    border: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+.modal-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--ds-accent-hover);
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+}
+
+/* Cambiar cursor a pointer en enlaces del menú lateral */
+.sidebar-nav a .fa-mouse-pointer {
+    cursor: default;
+    transition: cursor 0.2s;
+}
+
+.sidebar-nav a:hover .fa-mouse-pointer {
+    cursor: pointer;
+}
+
+/* === GLOBAL FIX FOR TAB OVERLAP (All Themes) === */
+.nav-tabs .nav-item {
+    background: transparent !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+}
+
+.nav-tabs .nav-link {
+    white-space: nowrap !important;
+    width: auto !important;
+    display: inline-block !important;
+}
+
+/* === POPOVERS (Global / Dark Mode) === */
+.popover {
+    z-index: 12000 !important;
+    background-color: rgba(20, 20, 20, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 152, 0, 0.3) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.popover-header {
+    background-color: rgba(30, 30, 30, 0.95) !important;
+    border-bottom: 1px solid rgba(255, 152, 0, 0.2) !important;
+    color: var(--ds-accent-primary) !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.popover-body {
+    color: var(--ds-text-main) !important;
+    padding: 12px !important;
+}
+
+.popover .text-warning {
+    color: #ffb74d !important;
+}
+
+.popover .text-info {
+    color: #64b5f6 !important;
+}
+
+.popover .border-secondary {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* === 12. GIS EXPERT TOOLS (MAGNIFIER & BLENDING) === */
+.magnifier-lens {
+    position: fixed;
+    width: 150px;
+    height: 150px;
+    border: 4px solid #e8961e;
+    border-radius: 50%;
+    /* pointer-events: none;  Eliminado para no bloquear clicks en el mapa */
+    z-index: 20000;
+    display: none;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5);
+    background: transparent;
+    overflow: visible;
+}
+
+/* Retícula de precisión integrada en Canvas - eliminadas líneas CSS redundantes */
+.magnifier-lens::before,
+.magnifier-lens::after {
+    display: none !important;
+}
+
+/* Punto central de mira */
+.magnifier-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--ds-accent-primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    box-shadow: 0 0 5px #000;
+}
+
+.blend-multiply {
+    mix-blend-mode: multiply;
+}
+
+.blend-screen {
+    mix-blend-mode: screen;
+}
+
+.blend-overlay {
+    mix-blend-mode: overlay;
+}
+
+.blend-difference {
+    mix-blend-mode: difference;
+}
+
+/* Pro controls styling */
+.btn-pro-gis {
+    background: rgba(var(--ds-accent-primary-rgb), 0.1);
+    border: 1px solid rgba(var(--ds-accent-primary-rgb), 0.3);
+    color: var(--ds-accent-primary);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-pro-gis:hover {
+    background: var(--ds-accent-primary);
+    color: #000;
+}
+
+.btn-pro-gis.active {
+    background: var(--ds-accent-primary);
+    color: #000;
+    box-shadow: 0 0 10px rgba(var(--ds-accent-primary-rgb), 0.5);
+}
+
+.cutline-vertex-dot {
+    width: 12px;
+    height: 12px;
+    background-color: var(--ds-accent-primary);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    cursor: move;
+}
+
+.cutline-path {
+    stroke: var(--ds-accent-primary);
+    stroke-width: 2;
+    stroke-dasharray: 4, 3;
+    fill: rgba(var(--ds-accent-primary-rgb), 0.1);
+}
+
+.drawing-mode,
+.drawing-mode * {
+    cursor: crosshair !important;
+}
+
+.cutline-grey-out {
+    fill: rgba(0, 0, 0, 0.4);
+    /* pointer-events: none;  Eliminado para no bloquear clicks en el mapa */
+    transition: all 0.3s ease;
+}
+
+.cutline-hole {
+    fill: black;
+}
+
+/* Fix for header buttons */
+/* Header Buttons Premium Styling */
+.panel-header .btn-pro-gis {
+    padding: 2px 10px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(var(--ds-accent-primary-rgb), 0.15);
+    border: 1px solid var(--ds-accent-primary);
+    color: var(--ds-accent-primary);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(var(--ds-accent-primary-rgb), 0.2);
+    transition: all 0.2s;
+}
+
+.panel-header .btn-pro-gis:hover {
+    background: var(--ds-accent-primary);
+    color: #000;
+    box-shadow: 0 0 15px rgba(var(--ds-accent-primary-rgb), 0.4);
+}
+
+/* Fix for dropdown visibility in sidebar */
+.gcp-list {
+    overflow: visible !important;
+}
+
+#points-container {
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: 80px;
+    /* Space for dropdowns at the bottom */
+}
+
+/* Lupa de Georreferenciación: estilo Rumsey (borde naranja) */
+.magnifier-lens {
+    background: transparent;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 4px solid #e8961e !important;
+    border-radius: 50%;
+    z-index: 99999;
+    pointer-events: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.magnifier-lens.fixed {
+    border-color: #ff4444 !important;
+    box-shadow: 0 0 0 1px rgba(255, 0, 0, 0.3), 0 0 20px rgba(255, 0, 0, 0.5) !important;
+}
+
+/* Pestañas de Herramientas GIS (Inspiradas en el diseño solicitado) */
+.magnifier-tab {
+    position: absolute;
+    background: var(--ds-accent-primary);
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: auto;
+    /* Las pestañas sí son interactivas */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.magnifier-tab:hover {
+    background: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--ds-accent-primary);
+}
+
+.tab-right {
+    right: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 35px;
+    height: 45px;
+    border-radius: 0 10px 10px 0;
+    clip-path: polygon(0% 0%, 100% 20%, 100% 80%, 0% 100%);
+    /* Forma de "pestaña" técnica */
+}
+
+.tab-bottom {
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 45px;
+    height: 35px;
+    border-radius: 0 0 10px 10px;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+/* Ocultar el cursor del sistema cuando la lupa está activa para no tapar la cruceta */
+.magnifier-active * {
+    cursor: none !important;
+}
+
+/* Fix para que los desplegables no queden por debajo de la barra inferior */
+.georef-container .georef-sidebar {
+    z-index: 1000 !important;
+    /* Asegurar que el sidebar está sobre el footer */
+}
+
+#algo-mode,
+#blendMode {
+    position: relative;
+    z-index: 1001;
+}
+
+.link-views-active {
+    color: var(--ds-accent-primary) !important;
+    text-shadow: 0 0 8px rgba(var(--ds-accent-primary-rgb), 0.5);
+}
+
+/* --- MODALS & OVERLAYS FIXES --- */
+/* Ensure modals and SweetAlert2 stay above sidebar pop-outs (100000+) */
+.modal {
+    z-index: 110000 !important;
+}
+.modal-backdrop {
+    z-index: 109999 !important;
+}
+.swal2-container {
+    z-index: 120000 !important;
+}
+
+/* === SIRIO SWEETALERT2 THEME === */
+.swal2-sirio-popup {
+    background-color: var(--ds-bg-panel, #1e1e1e) !important;
+    border: 1px solid var(--ds-border-light, #444) !important;
+    border-radius: var(--ds-radius-lg, 4px) !important;
+    font-family: var(--ds-font-ui, 'JetBrains Mono', monospace) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+}
+
+.swal2-sirio-title {
+    color: var(--ds-accent-primary, #ff9800) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+}
+
+.swal2-sirio-html {
+    color: var(--ds-text-main, #e0e0e0) !important;
+    font-size: 0.95rem !important;
+}
+
+.swal2-sirio-input {
+    background: var(--ds-bg-element, #2b2b2b) !important;
+    border: 1px solid var(--ds-border-color, #333) !important;
+    border-radius: var(--ds-radius-sm, 0px) !important;
+    color: var(--ds-text-main, #e0e0e0) !important;
+    font-family: var(--ds-font-mono, 'JetBrains Mono', monospace) !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s ease !important;
+    caret-color: var(--ds-accent-primary, #ff9800) !important;
+}
+
+.swal2-sirio-input:focus {
+    border-color: var(--ds-accent-primary, #ff9800) !important;
+    box-shadow: 0 0 0 2px var(--ds-accent-alpha, rgba(255,152,0,0.15)) !important;
+}
+
+/* Inline Sirio Input */
+.form-control-sirio-sm,
+.form-control-sirio,
+.form-control-sirio-lg {
+    caret-color: var(--ds-accent-primary, #ff9800) !important;
+}
+
+.form-control-sirio-sm {
+    background: var(--ds-bg-element, #2b2b2b) !important;
+    border: 1px solid var(--ds-border-color, #444) !important;
+    border-radius: 2px !important;
+    color: var(--ds-text-main, #fff) !important;
+    font-family: var(--ds-font-mono, 'JetBrains Mono', monospace) !important;
+    font-size: 0.85rem !important;
+    padding: 0.25rem 0.5rem !important;
+    caret-color: var(--ds-accent-primary, #ff9800) !important;
+    width: 100%;
+}
+
+.form-control-sirio-sm:focus {
+    border-color: var(--ds-accent-primary, #ff9800) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px var(--ds-accent-alpha, rgba(255,152,0,0.15)) !important;
+}
+
+.swal2-sirio-confirm {
+    background-color: var(--ds-accent-primary, #ff9800) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    border-radius: var(--ds-radius-sm, 0px) !important;
+    padding: 0.6rem 1.5rem !important;
+    transition: all 0.2s !important;
+}
+
+.swal2-sirio-confirm:hover {
+    background-color: var(--ds-accent-hover, #ffa726) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(var(--ds-accent-rgb, 255, 152, 0), 0.3) !important;
+}
+
+.swal2-sirio-cancel {
+    background-color: var(--ds-bg-element, #2b2b2b) !important;
+    color: var(--ds-text-main, #e0e0e0) !important;
+    border-radius: var(--ds-radius-sm, 0px) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 0.6rem 1.5rem !important;
+}
+
+.swal2-sirio-actions {
+    gap: 12px !important;
+}
+
+/* Light Mode Overrides for Sirio Swal */
+[data-theme="light"] .swal2-sirio-popup {
+    background-color: #ffffff !important;
+    border-color: #dddddd !important;
+}
+[data-theme="light"] .swal2-sirio-title {
+    color: #1a1a1a !important;
+}
+[data-theme="light"] .swal2-sirio-html {
+    color: #444444 !important;
+}
+[data-theme="light"] .swal2-sirio-input {
+    background-color: #f5f5f5 !important;
+    color: #1a1a1a !important;
+    border-color: #cccccc !important;
+}
+[data-theme="light"] .swal2-sirio-cancel {
+    background-color: #eeeeee !important;
+    color: #333333 !important;
+}
+

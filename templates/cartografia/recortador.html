@@ -1,0 +1,643 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Recortar: {{ mapa.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Full height layout minus header/footer if any */
+    .crop-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%; 
+        width: 100%;
+        position: relative;
+        background: #121212;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    /* .crop-header removed */
+
+    .crop-workspace {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        background: #000;
+    }
+    
+    .crop-footer {
+        background: #181818;
+        border-top: 1px solid #333;
+        padding: 0.5rem 1rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        z-index: 10;
+    }
+
+    .ghost-crosshair {
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        pointer-events: none; 
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.3;
+    }
+    .ghost-crosshair::before {
+        content: '';
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+    .ghost-crosshair::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+    
+    .text-purple { color: #9c27b0 !important; }
+
+    /* Light Theme Overrides */
+    [data-theme="light"] .crop-container {
+        background: #f8f9fa;
+        color: #212529;
+    }
+    
+    [data-theme="light"] .crop-workspace {
+        background: #ffffff;
+    }
+
+    [data-theme="light"] .ghost-crosshair::before,
+    [data-theme="light"] .ghost-crosshair::after {
+        background-color: rgba(0, 0, 0, 0.15);
+        box-shadow: none;
+    }
+
+    /* Overlay Panels (Instructions & Tools) */
+    .crop-overlay-panel {
+        background: rgba(30, 30, 30, 0.85);
+        backdrop-filter: blur(8px);
+        color: #f8f9fa;
+        border-color: #6c757d !important;
+    }
+
+    [data-theme="light"] .crop-overlay-panel {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: #dee2e6 !important;
+        color: #212529 !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    [data-theme="light"] #cropInstructionText {
+        color: #212529 !important;
+    }
+
+    /* Helper for muted text inside panels */
+    .crop-overlay-panel .text-muted {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    [data-theme="light"] .crop-overlay-panel .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}
+Recortar: <span class="text-warning small text-truncate" style="max-width: 400px; font-size: 0.8em; margin-left: 0.5rem; vertical-align: middle;">{{ mapa.nombre }}</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center gap-2 flex-wrap">
+    <!-- Grupo de herramientas de edición -->
+    <div class="btn-group shadow-sm" role="group">
+        <button class="btn btn-sm btn-outline-secondary text-light px-3" id="btnRotate90" title="Girar 90°">
+            <i class="fa-solid fa-arrow-rotate-right me-1"></i>Rotar
+        </button>
+        <input type="checkbox" class="btn-check" id="btnToggleRotate" autocomplete="off">
+        <label class="btn btn-sm btn-outline-secondary text-light px-3" for="btnToggleRotate" title="Ajuste Fino (Rueda)">
+            <i class="fa-solid fa-compass-drafting me-1"></i>Rueda
+        </label>
+        <input type="checkbox" class="btn-check" id="btnTogglePan" autocomplete="off">
+        <label class="btn btn-sm btn-outline-secondary text-light px-3" for="btnTogglePan" title="Mover Mapa (Pan)">
+            <i class="fa-solid fa-hand me-1"></i>Mover
+        </label>
+    </div>
+
+    <!-- Herramientas de limpieza -->
+    <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" id="btnClearCrop" title="Borrar Selección">
+        <i class="fa-solid fa-trash-can me-1"></i>Borrar
+    </button>
+    
+    <div class="vr bg-secondary mx-1 opacity-25" style="height: 24px;"></div>
+
+    <!-- Grupo de acciones finales -->
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('mapas_historicos.gestor_mapas') }}" class="btn btn-sm btn-outline-secondary px-3 d-flex align-items-center">
+            <i class="fa-solid fa-arrow-left me-2"></i>Volver
+        </a>
+        <button type="button" class="btn btn-sm btn-sirio-success px-4 shadow d-flex align-items-center" id="btnSaveCrop">
+            <i class="fa-solid fa-save me-2"></i>Guardar y Procesar
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="crop-container" id="cropContainer">
+
+    <!-- Workspace: Canvas & Overlays -->
+    <div class="crop-workspace" id="cropCanvasContainer">
+        <!-- Ghost Crosshair -->
+        <div class="ghost-crosshair"></div>
+        
+        <!-- Status Bar (Top Center) -->
+        <div class="position-absolute top-0 start-50 translate-middle-x mt-3" style="z-index: 1050;">
+            <div class="px-3 py-2 rounded-pill shadow-lg border border-secondary d-flex align-items-center gap-2 crop-overlay-panel">
+                <i class="fa-solid fa-circle-info text-info"></i>
+                <span id="cropInstructionText" class="small fw-bold">Modo Edición: Clic para añadir puntos</span>
+            </div>
+        </div>
+
+        <!-- Rotation Slider (Bottom Center) -->
+        <div id="rotationControls" class="position-absolute bottom-0 start-50 translate-middle-x mb-2 p-3 rounded-pill shadow-lg border border-secondary d-none crop-overlay-panel" 
+             style="z-index: 1050; min-width: 350px;">
+             <div class="d-flex align-items-center gap-3">
+                 <span class="small"><i class="fa-solid fa-rotate text-info"></i></span>
+                 <input type="range" class="form-range" id="rotationRange" min="-180" max="180" step="0.01" value="0">
+                 <span class="text-warning fw-bold small text-end font-monospace" style="min-width: 60px" id="rotationValue">0.00°</span>
+                 <button class="btn btn-sm btn-outline-secondary border-0 py-0 rounded-circle" id="btnResetRotation" title="Reset Ajuste Fino" style="width: 24px; height: 24px;">
+                    <i class="fa-solid fa-xmark small"></i>
+                 </button>
+             </div>
+             <div class="text-center mt-1">
+                <span class="text-muted ms-1" style="font-size: 10px;">Arrastra la imagen o usa el deslizador para enderezar</span>
+             </div>
+        </div>
+
+        <!-- Zoom Controls (Bottom Right) -->
+        <div class="position-absolute bottom-0 end-0 mb-3 me-3 d-flex flex-column gap-1" style="z-index: 1050;">
+            <button class="btn btn-light shadow fw-bold p-0 border-0" id="btnZoomIn" style="width: 32px; height: 32px;" title="Zoom In">
+                <i class="fa-solid fa-plus small"></i>
+            </button>
+            <button class="btn btn-light shadow fw-bold p-0 border-0" id="btnZoomOut" style="width: 32px; height: 32px;" title="Zoom Out">
+                <i class="fa-solid fa-minus small"></i>
+            </button>
+            <button class="btn btn-secondary shadow fw-bold p-0 border-0 mt-1" id="btnZoomReset" style="width: 32px; height: 32px;" title="Reset Vista">
+                <i class="fa-solid fa-compress small"></i>
+            </button>
+            <div class="badge bg-dark mt-1 shadow border border-secondary" id="zoomLevel" style="font-size: 10px; opacity: 0.9;">100%</div>
+        </div>
+        
+        <!-- Helper Text (Bottom Left) -->
+        <div class="position-absolute bottom-0 start-0 mb-3 ms-3 text-white-50 small pe-none" style="z-index: 1000;">
+            <i class="fa-solid fa-mouse me-1"></i> Rueda: Zoom | Arrastrar: Pan
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="cropCanvas" style="display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair;"></canvas>
+    </div>
+
+
+    <!-- Footer removed -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables de configuración inicial
+    const DATA_MAPA_ID = {{ mapa.id }};
+    const DATA_FILENAME = "{{ mapa.filename }}";
+    const DATA_PROYECTO_ID = "{{ proyecto.id if proyecto else '' }}";
+    
+    // Variables globales del editor
+    let cropCanvas, cropCtx, cropImage;
+    let cropPoints = [];
+    let cropClosed = false;
+    let draggedPointIndex = -1;
+    let isDragging = false;
+    let isPanMode = false;
+    let isRotateMode = false;
+    let currentRotation = 0.0;
+    
+    // Zoom / Viewport
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isPanning = false;
+    let isRotating = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    
+    const MIN_SCALE = 0.05;
+    const MAX_SCALE = 20;
+    const ZOOM_STEP = 0.05;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initCropTool();
+    });
+
+    function initCropTool() {
+        const container = document.getElementById('cropCanvasContainer');
+        cropCanvas = document.getElementById('cropCanvas');
+        cropCtx = cropCanvas.getContext('2d');
+        
+        // Ajustar canvas al contenedor
+        function resizeCanvas() {
+            cropCanvas.width = container.clientWidth;
+            cropCanvas.height = container.clientHeight;
+            if (cropImage) renderCropCanvas();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Cargar Imagen
+        const imagePath = `/static/uploads/mapas_historicos/${DATA_PROYECTO_ID}/${DATA_FILENAME}`;
+        cropImage = new Image();
+        cropImage.onload = function() {
+            // Ajustar escala inicial para que quepa (Fit)
+            const scaleX = cropCanvas.width / cropImage.width;
+            const scaleY = cropCanvas.height / cropImage.height;
+            scale = Math.min(scaleX, scaleY) * 0.9;
+            
+            // Centrar
+            offsetX = (cropCanvas.width - cropImage.width * scale) / 2;
+            offsetY = (cropCanvas.height - cropImage.height * scale) / 2;
+            
+            updateZoomDisplay();
+            renderCropCanvas();
+        };
+        cropImage.onerror = () => alert('Error cargando imagen: ' + imagePath);
+        cropImage.src = imagePath;
+
+        // Inicializar listeners
+        initializeEventListeners();
+        updateCropInstructions();
+    }
+
+    // ==========================================
+    // LÓGICA COPIADA Y ADAPTADA DE GESTOR_MAPAS
+    // ==========================================
+
+    function screenToImage(screenX, screenY) {
+        const rect = cropCanvas.getBoundingClientRect();
+        const canvasX = screenX - rect.left;
+        const canvasY = screenY - rect.top;
+        
+        // Coordenadas en el espacio del canvas transformado
+        let imgX = (canvasX - offsetX) / scale;
+        let imgY = (canvasY - offsetY) / scale;
+        
+        return { x: Math.round(imgX), y: Math.round(imgY) };
+    }
+
+    function setRotation(angle, resetZoom = false) {
+        if (!cropImage) return;
+        currentRotation = parseFloat(angle);
+        
+        // Update UI
+        const range = document.getElementById('rotationRange');
+        const val = document.getElementById('rotationValue');
+        if (range) range.value = currentRotation;
+        if (val) val.textContent = currentRotation.toFixed(2) + '°';
+        
+        if (resetZoom) {
+            const rads = currentRotation * Math.PI / 180;
+            const sin = Math.abs(Math.sin(rads));
+            const cos = Math.abs(Math.cos(rads));
+            
+            const rWidth = cropImage.width * cos + cropImage.height * sin;
+            const rHeight = cropImage.width * sin + cropImage.height * cos;
+            
+            const scaleX = cropCanvas.width / rWidth;
+            const scaleY = cropCanvas.height / rHeight;
+            scale = Math.min(scaleX, scaleY) * 0.9;
+            
+            offsetX = (cropCanvas.width - rWidth * scale) / 2;
+            offsetY = (cropCanvas.height - rHeight * scale) / 2;
+            updateZoomDisplay();
+        }
+        renderCropCanvas();
+    }
+
+    function rotateImage90() {
+        if (!cropImage) return;
+        let newRot = currentRotation + 90;
+        if (newRot > 180) newRot -= 360;
+        setRotation(newRot, true);
+        cropPoints = [];
+        cropClosed = false;
+        renderCropCanvas();
+    }
+
+    function updateZoomDisplay() {
+        const zoomPercent = Math.round(scale * 100);
+        const zoomEl = document.getElementById('zoomLevel');
+        if(zoomEl) zoomEl.textContent = zoomPercent + '%';
+    }
+
+    function setZoom(newScale, centerX = null, centerY = null) {
+        const oldScale = scale;
+        scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+        
+        if (centerX !== null && centerY !== null) {
+            const rect = cropCanvas.getBoundingClientRect();
+            const canvasX = centerX - rect.left;
+            const canvasY = centerY - rect.top;
+            
+            offsetX = canvasX - (canvasX - offsetX) * (scale / oldScale);
+            offsetY = canvasY - (canvasY - offsetY) * (scale / oldScale);
+        } else {
+             const cx = cropCanvas.width / 2;
+             const cy = cropCanvas.height / 2;
+             offsetX = cx - (cx - offsetX) * (scale / oldScale);
+             offsetY = cy - (cy - offsetY) * (scale / oldScale);
+        }
+        updateZoomDisplay();
+        renderCropCanvas();
+    }
+
+    function updateCropInstructions() {
+        const text = document.getElementById('cropInstructionText');
+        if (!text) return;
+        
+        if (isPanMode) text.innerHTML = '<i class="fa-solid fa-arrows-up-down-left-right text-warning me-1"></i>Modo Pan: Arrastra para mover';
+        else if (isRotateMode) text.innerHTML = '<i class="fa-solid fa-rotate text-info me-1"></i>Modo Rotación: Arrastra horizontalmente para ajustar';
+        else if (cropClosed) text.innerHTML = '<i class="fa-solid fa-pen-nib text-info me-1"></i>Edición: Ajusta los puntos';
+        else text.innerHTML = '<i class="fa-solid fa-crosshairs text-success me-1"></i>Selección: Clic para marcar puntos (doble clic para cerrar)';
+    }
+
+    function findNearPoint(imageX, imageY, threshold = 10) {
+        const adjustedThreshold = threshold / scale;
+        for (let i = 0; i < cropPoints.length; i++) {
+            const dx = cropPoints[i][0] - imageX;
+            const dy = cropPoints[i][1] - imageY;
+            if (Math.sqrt(dx * dx + dy * dy) <= adjustedThreshold) return i;
+        }
+        return -1;
+    }
+
+    function renderCropCanvas() {
+        if (!cropImage || !cropCtx) return;
+        
+        cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+        cropCtx.save();
+        
+        // 1. Viewport Transform
+        cropCtx.translate(offsetX, offsetY);
+        cropCtx.scale(scale, scale);
+        
+        // 2. Rotation transform around image center
+        const rads = currentRotation * Math.PI / 180;
+        const sin = Math.abs(Math.sin(rads));
+        const cos = Math.abs(Math.cos(rads));
+        const rotatedWidth = cropImage.width * cos + cropImage.height * sin;
+        const rotatedHeight = cropImage.width * sin + cropImage.height * cos;
+        
+        cropCtx.translate(rotatedWidth / 2, rotatedHeight / 2);
+        cropCtx.rotate(rads);
+        cropCtx.drawImage(cropImage, -cropImage.width / 2, -cropImage.height / 2);
+        
+        // Undo rotation for drawing points (points are in Visual space)
+        cropCtx.rotate(-rads);
+        cropCtx.translate(-rotatedWidth / 2, -rotatedHeight / 2);
+
+        // Draw Crop Polygon
+        if (cropPoints.length > 0) {
+            const lineWidth = Math.max(2, 3 / scale);
+            const pointRadius = Math.max(5, 8 / scale);
+            
+            cropCtx.beginPath();
+            cropCtx.strokeStyle = '#9c27b0';
+            cropCtx.lineWidth = lineWidth;
+            cropCtx.fillStyle = 'rgba(156, 39, 176, 0.2)';
+            
+            cropCtx.moveTo(cropPoints[0][0], cropPoints[0][1]);
+            for (let i = 1; i < cropPoints.length; i++) {
+                cropCtx.lineTo(cropPoints[i][0], cropPoints[i][1]);
+            }
+            if (cropClosed) {
+                cropCtx.closePath();
+                cropCtx.fill();
+            }
+            cropCtx.stroke();
+            
+            cropPoints.forEach((point, i) => {
+                cropCtx.beginPath();
+                cropCtx.arc(point[0], point[1], pointRadius, 0, 2 * Math.PI);
+                cropCtx.fillStyle = '#ff00ff';
+                cropCtx.fill();
+                cropCtx.strokeStyle = '#ffffff';
+                cropCtx.lineWidth = lineWidth;
+                cropCtx.stroke();
+                
+                const fontSize = Math.max(10, 14 / scale);
+                cropCtx.fillStyle = '#ffffff';
+                cropCtx.font = `bold ${fontSize}px Arial`;
+                cropCtx.fillText(i + 1, point[0] + pointRadius + 2, point[1] - pointRadius - 2);
+            });
+        }
+        cropCtx.restore();
+    }
+
+    function initializeEventListeners() {
+        // Controls
+        document.getElementById('btnRotate90').addEventListener('click', rotateImage90);
+        
+        const rotationRange = document.getElementById('rotationRange');
+        rotationRange.addEventListener('input', function() { setRotation(this.value); });
+        
+        document.getElementById('btnResetRotation').addEventListener('click', () => setRotation(0, true));
+        
+        document.getElementById('btnZoomIn').addEventListener('click', () => setZoom(scale + ZOOM_STEP));
+        document.getElementById('btnZoomOut').addEventListener('click', () => setZoom(scale - ZOOM_STEP));
+        
+        document.getElementById('btnZoomReset').addEventListener('click', () => {
+             const scaleX = cropCanvas.width / cropImage.width;
+             const scaleY = cropCanvas.height / cropImage.height;
+             scale = Math.min(scaleX, scaleY) * 0.9;
+             offsetX = (cropCanvas.width - cropImage.width * scale) / 2;
+             offsetY = (cropCanvas.height - cropImage.height * scale) / 2;
+             updateZoomDisplay();
+             renderCropCanvas();
+        });
+
+        // Toggle Modes
+        const btnToggleRotate = document.getElementById('btnToggleRotate');
+        const btnTogglePan = document.getElementById('btnTogglePan');
+        const rotationControls = document.getElementById('rotationControls');
+
+        btnToggleRotate.addEventListener('change', function() {
+             isRotateMode = this.checked;
+             if (isRotateMode) {
+                 rotationControls.classList.remove('d-none');
+                 if (btnTogglePan.checked) { btnTogglePan.checked = false; isPanMode = false; }
+                 cropCanvas.style.cursor = 'ew-resize';
+             } else {
+                 rotationControls.classList.add('d-none');
+                 cropCanvas.style.cursor = cropClosed ? 'default' : 'crosshair';
+             }
+             updateCropInstructions();
+        });
+
+        btnTogglePan.addEventListener('change', function() {
+            isPanMode = this.checked;
+            if (isPanMode) {
+                cropCanvas.style.cursor = 'grab';
+                if (btnToggleRotate.checked) { 
+                    btnToggleRotate.checked = false; 
+                    isRotateMode = false; 
+                    rotationControls.classList.add('d-none'); 
+                }
+            } else {
+                cropCanvas.style.cursor = cropClosed ? 'default' : 'crosshair';
+            }
+            updateCropInstructions();
+        });
+
+        document.getElementById('btnClearCrop').addEventListener('click', () => {
+            cropPoints = [];
+            cropClosed = false;
+            if(!isPanMode && !isRotateMode) cropCanvas.style.cursor = 'crosshair';
+            renderCropCanvas();
+            updateCropInstructions();
+        });
+
+        // Mouse Events on Canvas
+        cropCanvas.addEventListener('mousedown', function(e) {
+            isMouseDown = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            if (isPanMode) {
+                isPanning = true;
+                cropCanvas.style.cursor = 'grabbing';
+                return;
+            }
+            if (isRotateMode) {
+                isRotating = true;
+                return;
+            }
+            if (cropClosed) {
+                const coords = screenToImage(e.clientX, e.clientY);
+                const pointIdx = findNearPoint(coords.x, coords.y);
+                if (pointIdx !== -1) {
+                    isDragging = true;
+                    draggedPointIndex = pointIdx;
+                    cropCanvas.style.cursor = 'grabbing';
+                }
+            }
+        });
+
+        cropCanvas.addEventListener('mousemove', function(e) {
+            if (isPanning) {
+                offsetX += e.clientX - lastMouseX;
+                offsetY += e.clientY - lastMouseY;
+                lastMouseX = e.clientX; 
+                lastMouseY = e.clientY;
+                renderCropCanvas();
+            } else if (isRotating) {
+                const deltaX = e.clientX - lastMouseX;
+                let newVal = parseFloat(rotationRange.value) + deltaX * 0.02; // Precision sensitivity
+                if (newVal > 180) newVal -= 360; 
+                if (newVal < -180) newVal += 360;
+                setRotation(newVal);
+                lastMouseX = e.clientX; 
+                lastMouseY = e.clientY;
+            } else if (isDragging) {
+                const coords = screenToImage(e.clientX, e.clientY);
+                cropPoints[draggedPointIndex] = [coords.x, coords.y];
+                renderCropCanvas();
+            } else if (cropClosed && !isPanMode && !isRotateMode) {
+                const coords = screenToImage(e.clientX, e.clientY);
+                cropCanvas.style.cursor = (findNearPoint(coords.x, coords.y) !== -1) ? 'grab' : 'default';
+            }
+        });
+
+        window.addEventListener('mouseup', function() {
+            isMouseDown = isPanning = isRotating = isDragging = false;
+            draggedPointIndex = -1;
+            if (isPanMode) cropCanvas.style.cursor = 'grab';
+            else if (isRotateMode) cropCanvas.style.cursor = 'ew-resize';
+            else if (cropClosed) cropCanvas.style.cursor = 'default';
+            else cropCanvas.style.cursor = 'crosshair';
+        });
+
+        cropCanvas.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+            setZoom(scale + delta, e.clientX, e.clientY);
+        }, { passive: false });
+
+        cropCanvas.addEventListener('click', function(e) {
+            if (isPanMode || isPanning || isRotating || isDragging || cropClosed || isRotateMode) return;
+            const coords = screenToImage(e.clientX, e.clientY);
+            cropPoints.push([coords.x, coords.y]);
+            renderCropCanvas();
+        });
+
+        cropCanvas.addEventListener('dblclick', function() {
+            if (isPanMode || isRotateMode || cropClosed) return;
+            if (cropPoints.length >= 3) {
+                cropClosed = true;
+                updateCropInstructions();
+                renderCropCanvas();
+            }
+        });
+
+        // Save
+        document.getElementById('btnSaveCrop').addEventListener('click', function() {
+            if (cropPoints.length < 3) {
+                alert('Debes marcar al menos 3 puntos para definir el área de recorte');
+                return;
+            }
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Procesando...';
+            
+            const cropData = {
+                id: DATA_MAPA_ID,
+                crop_polygon: JSON.stringify(cropPoints),
+                rotation: currentRotation
+            };
+            
+            fetch('/api/mapas_historicos/crop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(cropData)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Recorte guardado y procesado exitosamente.');
+                    window.location.href = "{{ url_for('mapas_historicos.gestor_mapas') }}";
+                } else {
+                    alert('❌ Error: ' + (data.error || 'Desconocido'));
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            })
+            .catch(err => {
+                alert('❌ Error de conexión');
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+pandas
+numpy
+matplotlib
+plotly
+kaleido
+pyvis
+folium
+branca
+selenium
+webdriver-manager
+streamlit
+streamlit-folium
+openpyxl
+python-pptx
+setuptools
+geopy
+geopandas

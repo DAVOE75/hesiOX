@@ -1,0 +1,109 @@
+<!-- Choices.js includes y script de inicialización compartido -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+  (function () {
+    // Inicializar objeto global para guardar instancias
+    if (!window.choicesInstances) {
+      window.choicesInstances = {};
+    }
+
+    function shouldEnableSearch(el) {
+      const ds = el.dataset.search;
+      if (ds === 'true') return true;
+      if (ds === 'false') return false;
+      // 'auto' or unspecified: enable search when muchas opciones o es múltiple
+      if (el.multiple) return true;
+      const opts = el.querySelectorAll('option').length;
+      return opts > 10; // Bajamos el umbral a 10 para mayor utilidad
+    }
+
+    function initChoicesFor(el) {
+      // Evitar doble inicialización mediante dataset o clases generadas por Choices
+      if (!el || el.dataset.choicesInitialized || el.classList.contains('choices__input') || el.closest('.choices')) return;
+      
+      try {
+        const searchEnabled = shouldEnableSearch(el);
+        const isMultiple = !!el.multiple;
+        const placeholder = el.dataset.placeholder || el.getAttribute('placeholder') || '';
+        const maxItemsAttr = el.dataset.maxItems;
+        const hasMaxItems = typeof maxItemsAttr !== 'undefined' && maxItemsAttr !== null && maxItemsAttr !== '';
+        const maxItemCount = hasMaxItems ? parseInt(maxItemsAttr, 10) : (isMultiple ? 50 : undefined);
+        const allowAdd = el.getAttribute('data-add-items') === 'true' || el.dataset.addItems === 'true';
+
+        // Build options object
+        const choicesOpts = {
+          searchEnabled: searchEnabled,
+          searchResultLimit: 50,
+          shouldSort: false,
+          removeItemButton: isMultiple, // X solo para múltiples por defecto
+          position: 'auto',
+          placeholderValue: placeholder,
+          allowHTML: true, // Habilitar HTML para etiquetas enriquecidas
+          addItems: allowAdd,
+          duplicateItemsAllowed: false,
+          noResultsText: allowAdd ? 'Presiona Enter para añadir nuevo' : 'No hay resultados',
+          noChoicesText: 'No hay opciones disponibles',
+          itemSelectText: '',
+          addItemFilter: (value) => {
+            return !!value && value.trim() !== '';
+          },
+          addItemText: (value) => {
+            return `Presiona Enter para añadir "<b>${value}</b>"`;
+          },
+        };
+
+        if (typeof maxItemCount !== 'undefined' && !isNaN(maxItemCount)) {
+          choicesOpts.maxItemCount = maxItemCount;
+        }
+
+        const instance = new Choices(el, choicesOpts);
+        el.dataset.choicesInitialized = '1';
+        el.dataset.choiceInit = 'true'; // Compatibilidad con base_desktop.html
+
+        // IMPORTANTE: Guardar la instancia en el objeto global
+        if (el.id) {
+          window.choicesInstances[el.id] = instance;
+        }
+      } catch (e) { 
+        console.warn('Choices init failed for', el, e); 
+      }
+    }
+
+    // Exportar función global para reinicialización manual si es necesario
+    window.reinitChoices = function(root = document) {
+      const baseSelector = 'select.form-select, select.form-control:not(#formatoCita), select[data-role="filter"], select.filter-select, select[data-add-items="true"], .filters select';
+      root.querySelectorAll(baseSelector).forEach(el => {
+        if (el.id === 'formatoCita') return;
+        initChoicesFor(el);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      window.reinitChoices();
+ 
+      const mo = new MutationObserver(function (mutations) {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            
+            // Si el nodo es un select elegible
+            const baseSelector = 'select.form-select, select.form-control, select[data-role="filter"], select[data-add-items="true"]';
+            if (node.matches && node.id !== 'formatoCita' && node.matches(baseSelector)) {
+              initChoicesFor(node);
+            }
+            // Buscar selects dentro del nodo añadido
+            if (node.querySelectorAll) {
+              node.querySelectorAll(baseSelector).forEach(el => {
+                if (el.id !== 'formatoCita') initChoicesFor(el);
+              });
+            }
+          }
+        }
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    });
+  })();
+</script>

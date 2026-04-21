@@ -1,0 +1,716 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Laboratorio REGEX — Proyecto Sirio{% endblock %}
+{% block page_title %}Laboratorio REGEX{% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+<div class="header-actions-wrapper">
+    <a href="{{ url_for('dashboard') }}" class="btn-sirio" title="Ir al Dashboard">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="btn-text">Dashboard</span>
+    </a>
+
+    <div class="vr mx-1 opacity-25"></div>
+
+    <button id="btn-filtros" class="btn-sirio" title="Filtros adicionales" data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasFiltros">
+        <i class="fa-solid fa-filter"></i>
+        <span class="btn-text">Filtros</span>
+    </button>
+
+    <div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Tecnología Regex</strong><br>Motor basado en el módulo estándar <code>re</code> de Python.<br>Soporta grupos de captura, lookaheads y flags estándar.">
+        <i class="fa-solid fa-circle-question text-secondary" style="cursor: help; font-size: 1.2rem;"></i>
+    </div>
+</div>
+
+{% block content %}
+<div id="regex-container"
+    style="width: 100%; height: 100%; padding: 40px 40px 40px 40px; overflow-y: auto; position: relative;">
+
+    <!-- Area de Herramientas / Ayuda Rápida -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-panel p-3 d-flex gap-4 align-items-center overflow-x-auto no-scrollbar">
+                <div class="small text-muted text-uppercase fw-bold letter-spacing-1" style="white-space: nowrap;">
+                    Buscando en:</div>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input check-campo" type="checkbox" id="check-contenido" value="contenido"
+                        checked>
+                    <label class="form-check-label check-label small" for="check-contenido">Contenido</label>
+                </div>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input check-campo" type="checkbox" id="check-titulo" value="titulo"
+                        checked>
+                    <label class="form-check-label check-label small" for="check-titulo">Título</label>
+                </div>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input check-campo" type="checkbox" id="check-notas" value="notas">
+                    <label class="form-check-label check-label small" for="check-notas">Notas</label>
+                </div>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-regex-help px-3 py-1 d-flex align-items-center text-nowrap"
+                        title="Tutorial REGEX" style="cursor: pointer; font-size: 0.85rem; width: auto;"
+                        data-bs-toggle="modal" data-bs-target="#modalAyudaRegex">
+                        <i class="fa-solid fa-book-open me-2"></i> Ayuda REGEX
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area de Búsqueda Principal -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-12 col-xl-8">
+            <div class="glass-panel p-3 mb-3">
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="flex-grow-1 position-relative">
+                        <i class="fa-solid fa-code position-absolute text-accent"
+                            style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem;"></i>
+                        <input type="text" id="regex-input" class="form-control-sirio ps-5"
+                            placeholder="Escribe tu expresión regular aquí (ej. [Pp]ueblo|Ciudad)..."
+                            style="height: 38px; font-family: var(--ds-font-mono); font-size: 0.9rem;">
+                    </div>
+                    <button id="btn-buscar" class="btn-sirio-primary px-4" style="height: 38px; font-size: 0.85rem;">
+                        <i class="fa-solid fa-flask-vial me-2"></i>EJECUTAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Introducción y Contexto -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="accordion" id="accordionInfoRegex">
+                <div class="accordion-item bg-transparent border-0">
+                    <h2 class="accordion-header">
+                        <button
+                            class="accordion-button bg-dark text-white-50 border border-secondary border-opacity-25 rounded-top"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseInfo" aria-expanded="true"
+                            aria-controls="collapseInfo" style="font-size: 0.9rem; padding: 10px 15px; width: auto;">
+                            <i class="fa-solid fa-circle-info me-2 text-accent"></i> ¿Qué es Regex y por qué es vital en
+                            Humanidades Digitales e IA?
+                        </button>
+                    </h2>
+                    <div id="collapseInfo" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionInfoRegex">
+                        <div
+                            class="accordion-body glass-panel mt-0 p-4 text-light rounded-bottom border border-secondary border-opacity-25 border-top-0">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 class="text-accent text-uppercase small fw-bold mb-3">En Humanidades Digitales
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        Las <strong>Expresiones Regulares (Regex)</strong> son la herramienta
+                                        fundamental para el "minado" de patrones en grandes corpus textuales. A
+                                        diferencia de una búsqueda simple, Regex permite localizar estructuras
+                                        lingüísticas complejas, variaciones ortográficas históricas (ej.
+                                        <em>throno/trono</em>), y patrones de fechas o citas.
+                                    </p>
+                                    <p class="small text-muted mb-0">
+                                        Permiten transformar texto no estructurado en datos cuantificables, esencial
+                                        para el análisis estilométrico y la curación de datos históricos.
+                                    </p>
+                                </div>
+                                <div class="col-md-6 border-start border-secondary border-opacity-25">
+                                    <h6 class="text-warning text-uppercase small fw-bold mb-3"><i
+                                            class="fa-solid fa-microchip me-2"></i>Sinergia con Inteligencia Artificial
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        Regex actúa como el <strong>"bisturí"</strong> que complementa la fuerza bruta
+                                        de los LLems (Modelos de Lenguaje). Se utiliza para:
+                                    </p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Pre-procesamiento:</strong> Limpieza y normalización de texto antes
+                                            de entrenar modelos.</li>
+                                        <li><strong>Validación:</strong> Verificar que las salidas de la IA cumplan
+                                            formatos estrictos.</li>
+                                        <li><strong>Extracción Híbrida:</strong> Usar Regex para patrones rígidos y IA
+                                            para el contexto semántico.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="results-area">
+        <div id="results-placeholder" class="text-center py-5">
+            <i class="fa-solid fa-terminal fa-3x text-white-50 mb-3 opacity-25"></i>
+            <h4 class="text-white-50">Esperando ejecución de búsqueda...</h4>
+            <p class="text-muted">Introduce un patrón REGEX arriba para empezar a explorar.</p>
+        </div>
+
+        <div id="results-loading" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-accent mb-3" role="status"></div>
+            <div class="text-accent font-mono">Procesando consulta en el corpus...</div>
+        </div>
+
+        <div id="results-list" class="row g-3" style="display: none;">
+            <!-- Se llenará dinámicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas de Filtros (Reemplaza al Modal) -->
+<div class="offcanvas offcanvas-end bg-dark text-light border-start border-warning" tabindex="-1" id="offcanvasFiltros"
+    aria-labelledby="offcanvasFiltrosLabel" style="width: 400px; --bs-offcanvas-border-width: 2px; margin-top: 60px;">
+    <div class="offcanvas-header border-bottom border-secondary py-3"
+        style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.05));">
+        <h5 class="offcanvas-title text-warning fw-bold d-flex align-items-center" id="offcanvasFiltrosLabel"
+            style="font-size: 1.1rem; letter-spacing: 1px;">
+            <i class="fa-solid fa-filter me-2"></i> FILTROS DE BÚSQUEDA
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
+            style="width: 60px;"></button>
+    </div>
+    <div class="offcanvas-body p-4 custom-scrollbar">
+        <form id="form-filtros">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+            <div class="mb-4">
+                <label
+                    class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Publicación</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-publicacion">
+                    <option value="">(Todas las publicaciones)</option>
+                    {% for pub in publicaciones %}
+                    <option value="{{ pub.id }}">{{ pub.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">País</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-pais">
+                    <option value="">(Todos los países)</option>
+                    {% for pais in paises %}
+                    <option value="{{ pais }}">{{ pais }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-6 mb-4">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Desde</label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-desde">
+                </div>
+                <div class="col-6 mb-4">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Hasta</label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-hasta">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Límite de
+                    Documentos</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-limite">
+                    <option value="100">100 documentos (Rápido)</option>
+                    <option value="300">300 documentos (Equilibrado)</option>
+                    <option value="500" selected>500 documentos (Extenso)</option>
+                    <option value="1000">1000 documentos (Muy extenso)</option>
+                    <option value="2000">2000 documentos (Big Data)</option>
+                </select>
+            </div>
+
+            <!-- SECCIÓN IA GENERATIVA -->
+            <div class="mt-4 pt-4 border-top border-info border-opacity-25">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="text-info fw-bold mb-0 d-flex align-items-center">
+                        <i class="fa-solid fa-brain me-2"></i> ANALIZADOR IA
+                    </h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="switch-ia" style="cursor: pointer;">
+                        <label class="form-check-label small text-muted ms-1" for="switch-ia">Activar</label>
+                    </div>
+                </div>
+                
+                <div id="ia-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Modelo IA</label>
+                        <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-modelo-ia">
+                            <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Sugerido)</option>
+                            <option value="gemini-2.0-pro-exp">Gemini 2.0 Pro (Avanzado)</option>
+                            <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-key me-1"></i> Usa tus API keys personales
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                            Temperatura 
+                            <span class="text-warning" id="temp-value">0.3</span>
+                        </label>
+                        <input type="range" class="form-range" id="filtro-temperatura" 
+                               min="0" max="1" step="0.1" value="0.3"
+                               style="cursor: pointer;">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted" style="font-size: 0.65rem;">Preciso</small>
+                            <small class="text-muted" style="font-size: 0.65rem;">Creativo</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 py-2 px-3 mb-0" style="font-size: 0.75rem; background: rgba(13, 202, 240, 0.1);">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>
+                        <strong>Análisis inteligente:</strong> La IA categorizará y resumirá patrones comunes en los resultados encontrados.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-top border-secondary d-grid gap-3">
+                <button type="button"
+                    class="btn btn-sirio active w-100 py-3 d-flex justify-content-center align-items-center"
+                    id="btn-aplicar-filtros">
+                    <i class="fa-solid fa-check me-2"></i>APLICAR FILTROS
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="offcanvas">
+                    <i class="fa-solid fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal de Ayuda Regex -->
+<div class="modal fade" id="modalAyudaRegex" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-secondary" style="background-color: #1a1a1a;">
+            <div class="modal-header border-bottom border-secondary" style="margin-top: 30px;">
+                <h5 class="modal-title text-accent"><i class="fa-solid fa-code me-2"></i>Guía Rápida de
+                    Expresiones
+                    Regulares</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase text-muted small mb-3">Básicos</h6>
+                        <ul class="list-group list-group-flush bg-transparent">
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">.</code>
+                                <span class="small ms-2">Cualquier carácter (excepto nueva línea)</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">^</code>
+                                <span class="small ms-2">Inicio de línea</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">$</code>
+                                <span class="small ms-2">Fin de línea</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">[abc]</code>
+                                <span class="small ms-2">Cualquiera de los caracteres a, b, o c</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">[^abc]</code>
+                                <span class="small ms-2">Cualquier carácter MENOS a, b, o c</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase text-muted small mb-3">Cuantificadores</h6>
+                        <ul class="list-group list-group-flush bg-transparent">
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">*</code>
+                                <span class="small ms-2">0 o más veces</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">+</code>
+                                <span class="small ms-2">1 o más veces</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">?</code>
+                                <span class="small ms-2">0 o 1 vez (opcional)</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25">
+                                <code class="text-warning">{3}</code>
+                                <span class="small ms-2">Exactamente 3 veces</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-uppercase text-muted small mb-3">Ejemplos Prácticos</h6>
+                        <div class="p-3 rounded border border-secondary border-opacity-25"
+                            style="background-color: #121212;">
+                            <div class="mb-2">
+                                <code class="text-accent">Ciudad|Pueblo</code>
+                                <span class="small text-light opacity-75 ms-2">Busca "Ciudad" O "Pueblo"</span>
+                            </div>
+                            <div class="mb-2">
+                                <code class="text-accent">\b(el|la)\b</code>
+                                <span class="small text-light opacity-75 ms-2">Busca la palabra exacta "el" o
+                                    "la"</span>
+                            </div>
+                            <div>
+                                <code class="text-accent">\d{4}</code>
+                                <span class="small text-light opacity-75 ms-2">Busca 4 dígitos consecutivos (ej. años:
+                                    1995)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-regex-help px-4" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .immersive-layout {
+        background: radial-gradient(circle at top right, #1a1a1a, #0a0a0a);
+    }
+
+    /* Header Alignment and Normalization */
+    .header-actions-wrapper {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        gap: 8px;
+        padding: 0 16px;
+    }
+
+    .header-actions-wrapper .btn-sirio {
+        height: 32px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .header-actions-wrapper .btn-sirio i {
+        font-size: 14px;
+        margin-right: 6px;
+    }
+
+    .header-actions-wrapper .vr {
+        height: 30px;
+        align-self: center;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+    }
+
+    .result-card {
+        transition: transform 0.2s, background 0.2s;
+        cursor: pointer;
+    }
+
+    .result-card:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .snippet-text {
+        font-family: var(--ds-font-mono);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #aaa;
+    }
+
+    .snippet-text mark {
+        background: rgba(255, 152, 0, 0.3);
+        color: #ff9800;
+        border-bottom: 1px solid #ff9800;
+        padding: 0 2px;
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: 1px;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .form-check-input:checked {
+        background-color: #ff9800 !important;
+        border-color: #ff9800 !important;
+    }
+
+    /* Botón Ayuda Regex Custom */
+    .btn-regex-help {
+        background-color: #1a1a1a;
+        /* Carbon Black */
+        color: #ff9800;
+        /* Orange */
+        border: 1px solid #ff9800;
+        transition: all 0.2s ease;
+    }
+
+    .btn-regex-help:hover {
+        background-color: #ff9800;
+        color: #1a1a1a;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+    }
+
+    /* === DARK MODE DEFAULTS (Explicit overrides) === */
+    /* Input - Dark Mode */
+    #regex-input {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+    }
+
+    #regex-input::placeholder {
+        color: #666;
+    }
+
+    /* Accordion - Dark Mode Fixes */
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-button {
+        background-color: #1a1a1a !important;
+        color: #ff9800 !important;
+        border: 1px solid rgba(255, 152, 0, 0.4) !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-button:not(.collapsed) {
+        background-color: #1a1a1a !important;
+        color: #ff9800 !important;
+        box-shadow: none !important;
+        border-color: rgba(255, 152, 0, 0.6) !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-button i {
+        color: #ff9800 !important;
+    }
+
+    /* Accordion - Modo Claro */
+    body[data-bs-theme="light"] .accordion-button,
+    body.light-mode .accordion-button {
+        background-color: #f5f5f5 !important;
+        color: #2196f3 !important;
+        border: 1px solid rgba(33, 150, 243, 0.4) !important;
+    }
+
+    body[data-bs-theme="light"] .accordion-button:not(.collapsed),
+    body.light-mode .accordion-button:not(.collapsed) {
+        background-color: #e3f2fd !important;
+        color: #1976d2 !important;
+        border-color: rgba(33, 150, 243, 0.6) !important;
+        box-shadow: none !important;
+    }
+
+    body[data-bs-theme="light"] .accordion-button i,
+    body.light-mode .accordion-button i {
+        color: #2196f3 !important;
+    }
+
+    /* Chevron - Modo Oscuro (naranja) - YA FUNCIONA BIEN */
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-button::after {
+        margin-left: 15px !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ff9800'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ff9800'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    /* Chevron - Modo Claro (azul) */
+    body[data-bs-theme="light"] .accordion-button::after,
+    body.light-mode .accordion-button::after {
+        margin-left: 15px !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232196f3'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    body[data-bs-theme="light"] .accordion-button:not(.collapsed)::after,
+    body.light-mode .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232196f3'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    /* Body - Modo Oscuro */
+    body:not([data-bs-theme="light"]):not(.light-mode) .accordion-body {
+        background-color: #121212 !important;
+        color: #ccc !important;
+        border: 1px solid rgba(255, 152, 0, 0.3) !important;
+        border-top: none !important;
+    }
+
+    /* Body - Modo Claro */
+    body[data-bs-theme="light"] .accordion-body,
+    .light-mode .accordion-body {
+        background-color: #ffffff !important;
+        color: #333 !important;
+        border: 1px solid rgba(33, 150, 243, 0.2) !important;
+        border-top: none !important;
+    }
+
+    .accordion-body .text-muted {
+        color: #999 !important;
+    }
+
+    .accordion-body .text-warning {
+        color: #ff9800 !important;
+    }
+
+    /* Result Cards - Dark Mode */
+    .result-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        /* Re-assert glass effect default */
+    }
+
+    .result-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: #ff9800;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnBuscar = document.getElementById('btn-buscar');
+        const btnFiltros = document.getElementById('btn-filtros');
+        const regexInput = document.getElementById('regex-input');
+        const resultsArea = document.getElementById('results-area');
+        const resultsList = document.getElementById('results-list');
+        const placeholder = document.getElementById('results-placeholder');
+        const loading = document.getElementById('results-loading');
+        // El Offcanvas se maneja via data-bs-toggle, no necesitamos inicializarlo aquí salvo para ocultarlo
+
+
+        function buscar() {
+            const pattern = regexInput.value.trim();
+            if (!pattern) return;
+
+            // Limpiar interfaz
+            placeholder.style.display = 'none';
+            resultsList.style.display = 'none';
+            loading.style.display = 'block';
+            resultsList.innerHTML = '';
+
+            // Recoger filtros
+            const campos = Array.from(document.querySelectorAll('.check-campo:checked')).map(c => c.value);
+            const filtros = {
+                pattern: pattern,
+                campos: campos,
+                publicacion_id: document.getElementById('filtro-publicacion').value,
+                pais: document.getElementById('filtro-pais').value,
+                fecha_desde: document.getElementById('filtro-fecha-desde').value,
+                fecha_hasta: document.getElementById('filtro-fecha-hasta').value,
+                limite: document.getElementById('filtro-limite')?.value || '500',
+                usar_ia: document.getElementById('switch-ia')?.checked ? true : false,
+                modelo_ia: document.getElementById('filtro-modelo-ia')?.value || '',
+                temperatura: parseFloat(document.getElementById('filtro-temperatura')?.value || '0.3')
+            };
+
+            fetch('/api/analisis/regex-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(filtros)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    if (!data.exito) {
+                        alert('Error: ' + data.error);
+                        placeholder.style.display = 'block';
+                        return;
+                    }
+
+                    if (data.total === 0) {
+                        resultsList.innerHTML = '<div class="col-12 text-center py-5 text-muted">No se encontraron coincidencias.</div>';
+                        resultsList.style.display = 'flex';
+                        return;
+                    }
+
+                    // Mostrar análisis de IA si está disponible
+                    if (data.analisis_ia) {
+                        const analisisCol = document.createElement('div');
+                        analisisCol.className = 'col-12';
+                        analisisCol.innerHTML = `
+                            <div class="glass-panel p-4 mb-3" style="border-left: 4px solid #0dcaf0;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fa-solid fa-brain text-info me-2" style="font-size: 1.3rem;"></i>
+                                    <h5 class="text-info m-0">Análisis Inteligente</h5>
+                                </div>
+                                <p class="text-light mb-0" style="line-height: 1.6;">${data.analisis_ia}</p>
+                            </div>
+                        `;
+                        resultsList.appendChild(analisisCol);
+                    }
+
+                    data.resultados.forEach(res => {
+                        const col = document.createElement('div');
+                        col.className = 'col-12';
+
+                        // Resaltar el patrón en el snippet
+                        const regex = new RegExp(`(${pattern})`, 'gi');
+                        const highlightedSnippet = res.snippet.replace(regex, '<mark>$1</mark>');
+
+                        col.innerHTML = `
+                    <div class="glass-panel p-4 result-card" onclick="window.location.href='${res.url}'" style="cursor: pointer;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="text-accent m-0">${res.titulo}</h5>
+                            <span class="badge bg-dark text-muted font-mono small">${res.fecha || 'Sin fecha'}</span>
+                        </div>
+                        <div class="text-white-50 small mb-3"><i class="fa-solid fa-newspaper me-1"></i> ${res.publicacion || 'Desconocida'}</div>
+                        <div class="snippet-text">
+                            ${highlightedSnippet}
+                        </div>
+                    </div>
+                `;
+                        resultsList.appendChild(col);
+                    });
+                    resultsList.style.display = 'flex';
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    alert('Error crítico de red: ' + err);
+                    placeholder.style.display = 'block';
+                });
+        }
+
+        btnBuscar.addEventListener('click', buscar);
+        regexInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscar();
+        });
+
+        // Control del switch de IA
+        const switchIA = document.getElementById('switch-ia');
+        const iaControls = document.getElementById('ia-controls');
+        const temperaturaSlider = document.getElementById('filtro-temperatura');
+        const tempValue = document.getElementById('temp-value');
+
+        switchIA.addEventListener('change', (e) => {
+            iaControls.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        temperaturaSlider.addEventListener('input', (e) => {
+            tempValue.textContent = e.target.value;
+        });
+
+        document.getElementById('btn-aplicar-filtros').addEventListener('click', () => {
+            const offcanvasEl = document.getElementById('offcanvasFiltros');
+            const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+            offcanvasInstance.hide();
+            buscar();
+        });
+    });
+</script>
+{% endblock %}

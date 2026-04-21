@@ -1,0 +1,8 @@
+/* Fondo decorativo exclusivo para el select de palabras clave */
+.sirio-select-bg {
+  background: linear-gradient(90deg,#181818 60%,#232526 100%);
+  border: 2px solid #ff9800;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px 0 #ff980033;
+  padding: 6px 10px;
+}

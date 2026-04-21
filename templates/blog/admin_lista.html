@@ -1,0 +1,418 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Gestión del Blog · HesiOX{% endblock %}
+{% block page_title %}BLOG — PANEL DE ADMINISTRACIÓN{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">
+    / <a href="{{ url_for('admin_panel') }}" class="text-muted text-decoration-none">Administración</a>
+    / <a href="{{ url_for('blog.lista') }}" class="text-muted text-decoration-none">Blog</a>
+    / Gestión
+</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('blog.admin_nueva') }}" class="btn-sirio active" title="Nueva entrada">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">Nueva Entrada</span>
+</a>
+<a href="{{ url_for('blog.lista') }}" class="btn-sirio" title="Ver blog público" target="_blank">
+    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    <span class="btn-text">Ver Blog</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========= BLOG ADMIN PANEL ========= */
+.admin-blog-container {
+    padding: 1.5rem 2rem;
+}
+
+/* Filtros tipo tabs */
+.admin-blog-filters {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 0.75rem;
+}
+.admin-filter-tab {
+    padding: 0.4rem 1rem;
+    border-radius: 6px 6px 0 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-decoration: none;
+    color: var(--ds-text-muted, #777);
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.2s;
+}
+.admin-filter-tab:hover {
+    color: var(--ds-text-primary, #ddd);
+    background: rgba(255,255,255,0.03);
+}
+.admin-filter-tab.active {
+    color: var(--ds-accent-primary, #ff9800);
+    background: rgba(var(--ds-accent-rgb,255,152,0),0.08);
+    border-color: rgba(var(--ds-accent-rgb,255,152,0),0.2);
+}
+
+/* Tabla de entradas */
+.admin-blog-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+}
+.admin-blog-table thead th {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ds-text-muted, #666);
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.admin-blog-row {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.2s;
+}
+.admin-blog-row:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(var(--ds-accent-rgb,255,152,0),0.12);
+}
+.admin-blog-row td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+}
+.admin-blog-row td:first-child { border-radius: 8px 0 0 8px; }
+.admin-blog-row td:last-child  { border-radius: 0 8px 8px 0; }
+
+.entry-title-link {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ds-text-primary, #ddd);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.2rem;
+    transition: color 0.2s;
+}
+.entry-title-link:hover { color: var(--ds-accent-primary, #ff9800); }
+.entry-slug {
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ds-text-muted, #666);
+}
+
+/* Badges de estado */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+}
+.status-badge.publicado {
+    background: rgba(34,197,94,0.1);
+    color: #22c55e;
+    border-color: rgba(34,197,94,0.3);
+}
+.status-badge.borrador {
+    background: rgba(255,255,255,0.05);
+    color: var(--ds-text-muted, #777);
+    border-color: rgba(255,255,255,0.1);
+}
+.status-badge:hover { transform: scale(1.05); }
+
+/* Botones de acción */
+.action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: transparent;
+    color: var(--ds-text-muted, #777);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.action-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--ds-text-primary, #ddd);
+    border-color: rgba(255,255,255,0.15);
+}
+.action-btn.danger:hover {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    border-color: rgba(239,68,68,0.3);
+}
+
+/* Estadísticas resumen */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.stat-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+}
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ds-accent-primary, #ff9800);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+}
+.stat-card .stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ds-text-muted, #666);
+}
+
+/* Empty state */
+.empty-admin {
+    text-align: center;
+    padding: 4rem 2rem;
+    opacity: 0.5;
+}
+
+/* Light mode */
+[data-theme="light"] .admin-blog-row {
+    background: #fff;
+    border-color: rgba(0,0,0,0.06);
+}
+[data-theme="light"] .admin-blog-row:hover {
+    background: #f8f8f8;
+}
+[data-theme="light"] .stat-card {
+    background: #fff;
+    border-color: rgba(0,0,0,0.07);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-blog-container" style="overflow-y: auto; height: 100%;">
+
+    <!-- Estadísticas rápidas -->
+    {% set total = entradas|length %}
+    {% set publicados = entradas|selectattr('publicado','equalto',true)|list|length %}
+    {% set borradores = total - publicados %}
+    {% set total_vistas = entradas|sum(attribute='vistas') %}
+
+    <div class="admin-stats">
+        <div class="stat-card">
+            <div class="stat-value">{{ total }}</div>
+            <div class="stat-label">Entradas total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#22c55e;">{{ publicados }}</div>
+            <div class="stat-label">Publicadas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:#888;">{{ borradores }}</div>
+            <div class="stat-label">Borradores</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_vistas }}</div>
+            <div class="stat-label">Vistas totales</div>
+        </div>
+        {% if current_user.rol == 'admin' %}
+        <a href="{{ url_for('blog.admin_subscriptores') }}" class="stat-card text-decoration-none">
+            <div class="stat-value" style="color: #00bcd4;">{{ total_suscriptores }}</div>
+            <div class="stat-label">Suscriptores</div>
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filtros -->
+    <div class="admin-blog-filters">
+        <a href="{{ url_for('blog.admin_lista') }}"
+           class="admin-filter-tab {% if filtro == 'todos' %}active{% endif %}">
+            <i class="fa-solid fa-layer-group me-1"></i>Todas ({{ total }})
+        </a>
+        <a href="{{ url_for('blog.admin_lista', filtro='publicados') }}"
+           class="admin-filter-tab {% if filtro == 'publicados' %}active{% endif %}">
+            <i class="fa-solid fa-circle-check me-1"></i>Publicadas ({{ publicados }})
+        </a>
+        <a href="{{ url_for('blog.admin_lista', filtro='borradores') }}"
+           class="admin-filter-tab {% if filtro == 'borradores' %}active{% endif %}">
+            <i class="fa-solid fa-pen-nib me-1"></i>Borradores ({{ borradores }})
+        </a>
+        {% if current_user.rol == 'admin' %}
+        <a href="{{ url_for('blog.admin_subscriptores') }}" class="admin-filter-tab">
+            <i class="fa-solid fa-users me-1"></i>Suscriptores ({{ total_suscriptores }})
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Tabla -->
+    {% if entradas %}
+    <div style="overflow-x: auto;">
+        <table class="admin-blog-table">
+            <thead>
+                <tr>
+                    <th>Título / Slug</th>
+                    <th>Categoría</th>
+                    <th>Autor</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th style="text-align:center;">Vistas</th>
+                    <th style="text-align:center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entrada in entradas %}
+                <tr class="admin-blog-row" id="row-{{ entrada.id }}">
+                    <td>
+                        <a href="{{ url_for('blog.admin_editar', entrada_id=entrada.id) }}" class="entry-title-link">
+                            {% if entrada.destacado %}<i class="fa-solid fa-star text-warning me-1" style="font-size:0.7rem;"></i>{% endif %}
+                            {{ entrada.titulo | truncate(65) }}
+                        </a>
+                        <span class="entry-slug">/blog/{{ entrada.slug }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size:0.75rem; color: var(--ds-text-secondary);">
+                            {{ entrada.categoria or '—' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-size:0.75rem; color: var(--ds-text-muted);">
+                            {{ entrada.autor.nombre }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="status-badge {{ 'publicado' if entrada.publicado else 'borrador' }}"
+                                onclick="togglePublicar({{ entrada.id }}, this)"
+                                title="Clic para {{ 'despublicar' if entrada.publicado else 'publicar' }}">
+                            <i class="fa-solid {{ 'fa-circle-check' if entrada.publicado else 'fa-circle' }}"></i>
+                            {{ 'Publicada' if entrada.publicado else 'Borrador' }}
+                        </button>
+                    </td>
+                    <td style="font-size:0.75rem; color: var(--ds-text-muted);">
+                        {% if entrada.publicado_en %}
+                            {{ entrada.publicado_en.strftime('%d/%m/%Y') }}
+                        {% else %}
+                            <span style="opacity:0.5;">No publicada</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center; font-size:0.8rem; color: var(--ds-text-muted);">
+                        <i class="fa-regular fa-eye me-1"></i>{{ entrada.vistas }}
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-1">
+                            {% if entrada.publicado %}
+                            <a href="{{ url_for('blog.detalle', slug=entrada.slug) }}" target="_blank"
+                               class="action-btn" title="Ver entrada pública">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('blog.admin_editar', entrada_id=entrada.id) }}"
+                               class="action-btn" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <button class="action-btn danger" title="Eliminar"
+                                    onclick="eliminarEntrada({{ entrada.id }})">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-admin">
+        <i class="fa-solid fa-feather-pointed fa-3x mb-3 text-secondary"></i>
+        <h5 class="text-muted">Sin entradas</h5>
+        <p class="text-muted small">{{ 'No hay entradas en este filtro.' if filtro != 'todos' else 'Comienza escribiendo tu primera entrada del blog.' }}</p>
+        {% if filtro == 'todos' %}
+        <a href="{{ url_for('blog.admin_nueva') }}" class="btn btn-warning mt-2">
+            <i class="fa-solid fa-plus me-2"></i>Nueva entrada
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+async function togglePublicar(entradaId, badge) {
+    try {
+        const resp = await fetch(`/blog/admin/${entradaId}/publicar`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const isPublicado = data.publicado;
+            badge.className = `status-badge ${isPublicado ? 'publicado' : 'borrador'}`;
+            badge.innerHTML = `<i class="fa-solid ${isPublicado ? 'fa-circle-check' : 'fa-circle'}"></i> ${data.label}`;
+            badge.title = isPublicado ? 'Clic para despublicar' : 'Clic para publicar';
+        }
+    } catch(e) {
+        console.error('Error al cambiar estado:', e);
+    }
+}
+
+async function eliminarEntrada(entradaId) {
+    const confirmed = await Swal.fire({
+        title: '¿Eliminar esta entrada?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: 'var(--ds-bg-card, #1a1a1a)',
+        color: 'var(--ds-text-primary, #fff)',
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    try {
+        const resp = await fetch(`/blog/admin/${entradaId}/eliminar`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const row = document.getElementById(`row-${entradaId}`);
+            if (row) {
+                row.style.transition = 'opacity 0.3s, transform 0.3s';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                setTimeout(() => row.remove(), 300);
+            }
+        }
+    } catch(e) {
+        Swal.fire('Error', 'No se pudo eliminar la entrada.', 'error');
+    }
+}
+</script>
+{% endblock %}

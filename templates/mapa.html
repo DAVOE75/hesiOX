@@ -1,0 +1,1076 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Mapa Geográfico — Proyecto Sirio{% endblock %}
+{% block page_title %}Geografía de la Noticia{% endblock %}
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Distribución Espacial de Publicaciones y Noticias</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="header-actions-wrapper">
+    <!-- Basemap Selector -->
+    <div class="dropdown">
+        <button class="btn-sirio dropdown-toggle" type="button" id="dropdownBasemap" data-bs-toggle="dropdown"
+            aria-expanded="false" title="Cambiar Mapa Base">
+            <i class="fa-solid fa-map"></i>
+            <span class="btn-text">MAPA BASE</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-sirio border-info shadow-lg" aria-labelledby="dropdownBasemap">
+            <li><a class="dropdown-item active" href="#" onclick="setBaseMap('auto', this)">
+                    <i class="fa-solid fa-sync me-2"></i> AUTOMÁTICO
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('osm', this)">
+                    <i class="fa-solid fa-road me-2"></i> OPENSTREETMAP
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('voyager', this)">
+                    <i class="fa-solid fa-compass me-2"></i> HÍBRIDO (VOYAGER)
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('satellite', this)">
+                    <i class="fa-solid fa-satellite me-2"></i> SATÉLITE (PURO)
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('satellite_hybrid', this)">
+                    <i class="fa-solid fa-globe me-2"></i> SATÉLITE HÍBRIDO
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('topo', this)">
+                    <i class="fa-solid fa-mountain me-2"></i> TOPOGRÁFICO
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('terrain', this)">
+                    <i class="fa-solid fa-layer-group me-2"></i> TERRENO (ESRI)
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('osm_hot', this)">
+                    <i class="fa-solid fa-fire-flame-curved me-2"></i> OSM HUMANITARIO
+                </a></li>
+            <hr class="dropdown-divider opacity-25">
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('light', this)">
+                    <i class="fa-regular fa-sun me-2"></i> CARTO LIGHT (CLARO)
+                </a></li>
+            <li><a class="dropdown-item" href="#" onclick="setBaseMap('dark', this)">
+                    <i class="fa-solid fa-moon me-2"></i> CARTO DARK (OSCURO)
+                </a></li>
+        </ul>
+    </div>
+
+    <div class="vr mx-1 opacity-25"></div>
+
+    <a href="{{ url_for('noticias.listar') }}" class="btn-sirio">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="btn-text">Ir a Biblioteca</span>
+    </a>
+
+    <div class="ms-1 ps-1" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Mapa de Publicaciones</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>Tecnología</strong>: Motor cartográfico Leaflet con integración de capas multifuente (OSM, ESRI, Carto).</li><li><strong>Funcionalidades</strong>: Filtrado dinámico por fecha y publicación, visualización de puntos de interés y estadísticas de corpus en tiempo real.</li></ul>">
+        <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
+{# Visualización CSS modular #}
+<link href="{{ url_for('static', filename='css/modules/11-visualizations.css') }}" rel="stylesheet">
+
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important; 
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .header-actions-wrapper > * {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+    
+    .header-actions-wrapper .btn-sirio,
+    .header-actions-wrapper .dropdown {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .header-actions-wrapper .dropdown-toggle::after {
+        vertical-align: middle !important;
+    }
+    /* --- SIRIO THEME ADAPTATION --- */
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+        z-index: 99999 !important;
+        background: var(--ds-bg-sidebar, #181818) !important;
+        color: var(--ds-bg-app, #fff) !important;
+        border: 1px solid var(--ds-accent-primary, #ff9800) !important;
+        box-shadow: var(--ds-shadow-float) !important;
+        font-family: var(--ds-font-mono, monospace) !important;
+        font-size: 0.8rem !important;
+        padding: 0 !important;
+    }
+
+    .choices__item {
+        background: var(--ds-bg-sidebar, #181818) !important;
+        color: var(--ds-bg-app, #fff) !important;
+        border-bottom: 1px solid var(--ds-border-color, #222) !important;
+        font-family: inherit !important;
+        font-size: 0.95em !important;
+        padding: 2px 4px !important;
+    }
+
+    .choices__item--selectable.is-highlighted {
+        background: var(--ds-accent-primary, #ff9800) !important;
+        color: #000 !important;
+    }
+
+    .choices__inner {
+        background-color: var(--ds-bg-app, #000) !important;
+        color: var(--ds-bg-app, #fff) !important;
+        border: 1px solid var(--ds-accent-primary, #ff9800) !important;
+        font-family: inherit !important;
+        font-size: 0.95em !important;
+    }
+
+    [data-theme="light"] .choices__inner,
+    [data-theme="light"] .choices__item,
+    [data-theme="light"] .choices__list--dropdown {
+        color: #212121 !important;
+    }
+
+    /* --- LAYOUT FIXES --- */
+    .desktop-main.immersive-layout .desktop-content {
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    html,
+    body,
+    .desktop-main,
+    .desktop-content,
+    .map-container {
+        height: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .map-container {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* --- SIRIO THEME ADAPTATION --- */
+    #map {
+        width: 100%;
+        height: 100%;
+        background: var(--ds-bg-app, #0f0f0f);
+    }
+
+    .map-floating-panel {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 320px;
+        z-index: 1000;
+        background: var(--ds-bg-sidebar, #1e1e1e);
+        border: 1px solid var(--ds-border-color, #444);
+        border-left: none;
+        border-radius: 0 4px 4px 0;
+        box-shadow: var(--ds-shadow-float);
+        transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        max-height: calc(100vh - 40px);
+        overflow: visible !important;
+    }
+
+    .map-floating-panel.collapsed {
+        left: -320px;
+    }
+
+    .btn-panel-collapse {
+        position: absolute;
+        top: 50px;
+        right: -30px;
+        width: 30px;
+        height: 70px;
+        background: var(--ds-bg-sidebar, #1e1e1e);
+        border: 1px solid var(--ds-border-color, #444);
+        border-left: none;
+        border-radius: 0 20px 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: -1;
+        color: var(--ds-accent-primary, #ff9800);
+        transition: all 0.3s ease;
+        box-shadow: 6px 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="light"] .btn-panel-collapse {
+        background: #ffffff;
+        border-color: #ddd;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-panel-collapse:hover {
+        background: var(--ds-accent-primary, #ff9800);
+        color: #000;
+        width: 34px;
+        right: -34px;
+    }
+
+    .btn-panel-collapse i {
+        font-size: 0.9rem;
+        transition: transform 0.4s ease;
+    }
+
+    .map-floating-panel.collapsed .btn-panel-collapse i {
+        transform: rotate(180deg);
+    }
+
+    .panel-header {
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 152, 0, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .panel-title {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--ds-accent-primary, #ff9800);
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* Custom Dropdown Styling for Map Views */
+    .dropdown-menu-sirio {
+        background: rgba(26, 26, 26, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 4px;
+        min-width: 180px;
+    }
+
+    .dropdown-menu-sirio .dropdown-item {
+        color: #e0e0e0;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 4px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .dropdown-menu-sirio .dropdown-item:hover,
+    .dropdown-menu-sirio .dropdown-item.active {
+        background: rgba(255, 152, 0, 0.15);
+        color: #ff9800;
+    }
+
+    [data-theme="light"] .dropdown-menu-sirio {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: #ddd;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .dropdown-menu-sirio .dropdown-item {
+        color: #444;
+    }
+
+    [data-theme="light"] .dropdown-menu-sirio .dropdown-item:hover,
+    [data-theme="light"] .dropdown-menu-sirio .dropdown-item.active {
+        background: rgba(255, 152, 0, 0.1);
+        color: #e65100;
+    }
+
+    .panel-content {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: visible !important;
+    }
+
+    .label-sirio {
+        display: block;
+        color: var(--ds-accent-primary, #ff9800);
+        font-weight: 700;
+        margin-bottom: 6px;
+        font-size: 0.75em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .input-date-sirio {
+        background: var(--ds-bg-app, #181818);
+        border: 1px solid #444;
+        border-radius: 4px;
+        color: inherit;
+        font-size: 0.85rem;
+        padding: 5px 10px;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+    .input-date-sirio:focus {
+        border-color: var(--ds-accent-primary, #ff9800);
+        outline: none;
+    }
+
+    .map-stats-panel {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 900;
+        background: var(--ds-bg-sidebar, #ffffff);
+        border: 1px solid var(--ds-border-color, #e0e0e0);
+        border-radius: 50px;
+        padding: 10px 30px;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        width: auto;
+        min-width: unset;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        padding: 25px;
+    }
+
+    [data-theme="dark"] .map-stats-panel {
+        background: #1a1a1a;
+        border-color: #333;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 80px;
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+        color: var(--ds-fg-primary, #000);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.5px;
+    }
+
+    [data-theme="dark"] .stat-value {
+        color: #fff;
+    }
+
+    .stat-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        color: #888;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        margin-top: 2px;
+    }
+
+    .stat-divider {
+        width: 1px;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .stat-divider {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- Marker Cluster Custom Styles (Sirio Black) --- */
+    .marker-cluster-small div,
+    .marker-cluster-medium div,
+    .marker-cluster-large div {
+        background-color: rgba(255, 152, 0, 0.8) !important;
+        color: #000 !important;
+        font-weight: bold !important;
+        font-family: var(--ds-font-mono, monospace) !important;
+    }
+
+    [data-theme="light"] .marker-cluster-small div,
+    [data-theme="light"] .marker-cluster-medium div,
+    [data-theme="light"] .marker-cluster-large div {
+        background-color: #294a60 !important;
+        color: #fff !important;
+    }
+
+    .collapsed .panel-content {
+        display: none;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    /* Estilos Botón Sirio (Copiado de analisis_avanzado) */
+    .btn-sirio {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 6px 20px !important;
+        font-size: 12px !important;
+        height: 32px;
+        transition: all 0.3s ease;
+        gap: 8px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ddd;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-sirio:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border-color: #fff;
+    }
+
+    .btn-sirio-primary {
+        background: var(--ds-accent-primary, #ff9800);
+        color: #000;
+        border: none;
+        font-weight: bold;
+    }
+
+    .btn-sirio-primary:hover {
+        background: #ffa726;
+        color: #000;
+    }
+
+    .btn-sirio .btn-text {
+        font-weight: 600;
+    }
+
+    /* --- CUSTOM ZOOM CONTROLS --- */
+    .ctrl-group {
+        background: var(--ds-bg-panel, #1a1a1a);
+        border: 1px solid var(--ds-border-color, #444);
+        border-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: row;
+        pointer-events: auto;
+        overflow: hidden;
+    }
+
+    .custom-zoom-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: var(--ds-accent-primary, #ff9800) !important;
+        text-decoration: none !important;
+        font-size: 1rem;
+        transition: all 0.2s;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .custom-zoom-btn i {
+        color: inherit !important;
+    }
+
+    .custom-zoom-btn:last-child {
+        border-right: none;
+    }
+
+    .custom-zoom-btn:hover {
+        background: var(--ds-accent-primary, #ff9800);
+        color: #000;
+    }
+
+    [data-theme="light"] .ctrl-group {
+        background: #fff;
+        border-color: #ddd;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="light"] .custom-zoom-btn {
+        color: var(--ds-accent-primary, #294a60) !important;
+        border-color: #eee;
+    }
+
+    [data-theme="light"] .custom-zoom-btn:hover {
+        background: #294a60;
+        color: #fff;
+    }
+
+    /* --- CUSTOM POPUP STYLE (SIRIO DARK) --- */
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+        border-radius: 12px !important;
+        border: 2px solid #ff9800 !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8) !important;
+    }
+
+    .leaflet-popup-content {
+        color: #fff !important;
+        font-family: var(--ds-font-main, sans-serif) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-container">
+    <div id="map"></div>
+
+
+
+    <div class="map-floating-panel" id="filterPanel">
+        <div class="btn-panel-collapse" id="btnCollapsePanel">
+            <i class="fa-solid fa-chevron-left"></i>
+        </div>
+
+        <div class="panel-header">
+            <h6 class="panel-title">
+                <i class="fa-solid fa-filter me-2"></i> Filtros de Corpus
+            </h6>
+        </div>
+
+        <div class="panel-content custom-scrollbar">
+            <div>
+                <label class="label-sirio">Rango de Fechas</label>
+                <div class="d-flex flex-row gap-2 align-items-end">
+                    <input type="date" id="date-start" class="input-date-sirio" style="max-width: 48%;">
+                    <input type="date" id="date-end" class="input-date-sirio" style="max-width: 48%;">
+                </div>
+                <div class="mt-2">
+                    <button id="btn-aplicar-fechas" class="btn-sirio btn-sirio-primary btn-sm w-100" type="button"
+                        style="white-space: nowrap;">Aplicar</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="label-sirio">Publicación</label>
+                <select id="publicacion-select" name="publicacion" multiple></select>
+            </div>
+
+            <div>
+                <label class="label-sirio">Ciudad</label>
+                <select id="ciudad-select" name="ciudad" multiple></select>
+            </div>
+
+            <hr class="border-secondary opacity-25 my-1">
+
+            <div class="form-check form-switch cursor-pointer">
+                <input class="form-check-input" type="checkbox" id="toggle-heatmap">
+                <label class="form-check-label small text-muted text-uppercase fw-bold" for="toggle-heatmap">Mapa de
+                    Calor</label>
+            </div>
+
+            <div class="form-check form-switch cursor-pointer">
+                <input class="form-check-input" type="checkbox" id="toggle-choropleth">
+                <label class="form-check-label small text-muted text-uppercase fw-bold"
+                    for="toggle-choropleth">Coropletas - (En desarrollo)
+            </div>
+
+            <div class="d-flex gap-2 mt-2">
+                <button id="btn-reset-map" class="btn-sirio btn-sirio-outline btn-sm" style="width:48%">RESET</button>
+                <button id="btn-export-map" class="btn-sirio btn-sirio-primary btn-sm" style="width:48%">PNG</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-stats-panel" id="statsPanel">
+        <div class="stat-block">
+            <span class="stat-value" id="stat-ciudades">0</span>
+            <span class="stat-label">Puntos</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-block">
+            <span class="stat-value" id="stat-noticias">0</span>
+            <span class="stat-label">Noticias</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-block">
+            <span class="stat-value" id="stat-top-region">-</span>
+            <span class="stat-label">Top Región</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Inicialización de Mapa
+        let _currentBaseMap = 'auto';
+
+        const getTileUrl = (type, isDarkMode) => {
+            switch (type) {
+                case 'osm': return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                case 'osm_hot': return 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+                case 'satellite':
+                case 'satellite_hybrid':
+                    return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+                case 'topo': return 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+                case 'terrain': return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}';
+                case 'voyager': return 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+                case 'light': return 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                case 'dark': return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                case 'auto':
+                default:
+                    return isDarkMode
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            }
+        };
+
+        const getAttribution = (type) => {
+            switch (type) {
+                case 'osm':
+                case 'osm_hot':
+                    return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+                case 'satellite':
+                case 'terrain':
+                case 'satellite_hybrid':
+                    return 'Tiles &copy; Esri';
+                case 'topo':
+                    return 'Map data: &copy; OSM contributors';
+                default:
+                    return '&copy; OSM &copy; CARTO';
+            }
+        };
+
+        const updateTiles = (isDarkMode) => {
+            const newUrl = getTileUrl(_currentBaseMap, isDarkMode);
+            const attribution = getAttribution(_currentBaseMap);
+            if (window.mapaTileLayer) {
+                map.removeLayer(window.mapaTileLayer);
+            }
+            window.mapaTileLayer = L.tileLayer(newUrl, {
+                maxZoom: 19,
+                attribution: attribution,
+                subdomains: (_currentBaseMap === 'osm' || _currentBaseMap === 'satellite' || _currentBaseMap === 'topo') ? 'abc' : 'abcd'
+            }).addTo(map);
+            window.mapaTileLayer.setZIndex(0);
+        };
+
+        window.setBaseMap = function (type, element) {
+            _currentBaseMap = type;
+            const dropdown = document.getElementById('dropdownBasemap');
+            const items = dropdown.nextElementSibling.querySelectorAll('.dropdown-item');
+            items.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            updateTiles(document.documentElement.getAttribute('data-theme') !== 'light');
+        };
+
+        // Panel Toggle Logic
+        document.getElementById('btnCollapsePanel').addEventListener('click', function () {
+            document.getElementById('filterPanel').classList.toggle('collapsed');
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        let lat = parseFloat(params.get('lat'));
+        let lon = parseFloat(params.get('lon'));
+        let ciudad = params.get('ciudad');
+
+        // Si hay parámetro ciudad en la URL, seleccionarlo en el filtro de Choices.js
+        function seleccionarCiudadEnFiltro(ciudad) {
+            if (!ciudad) return;
+            // Esperar a que Choices.js esté inicializado y las opciones cargadas
+            setTimeout(() => {
+                const select = document.getElementById('ciudad-select');
+                let found = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === ciudad) {
+                        select.options[i].selected = true;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found && choicesInstances['ciudad']) {
+                    choicesInstances['ciudad'].setChoiceByValue(ciudad);
+                    // Disparar el evento de cambio para recargar y centrar
+                    select.dispatchEvent(new Event('change'));
+                }
+            }, 800);
+        }
+
+        let initialView = [40.4168, -3.7038], initialZoom = 6;
+        if (!isNaN(lat) && !isNaN(lon)) {
+            initialView = [lat, lon];
+            initialZoom = 11;
+        }
+
+        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(initialView, initialZoom);
+
+        // --- CUSTOM ZOOM CONTROL ---
+        const CustomZoomControl = L.Control.extend({
+            onAdd: function (map) {
+                const container = L.DomUtil.create('div', 'ctrl-group');
+                L.DomEvent.disableClickPropagation(container);
+
+                const zoomInBtn = L.DomUtil.create('a', 'custom-zoom-btn zoom-in', container);
+                zoomInBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                zoomInBtn.href = '#';
+                zoomInBtn.title = 'Zoom In';
+                zoomInBtn.onclick = function (e) { e.preventDefault(); map.zoomIn(); };
+
+                const zoomOutBtn = L.DomUtil.create('a', 'custom-zoom-btn zoom-out', container);
+                zoomOutBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
+                zoomOutBtn.href = '#';
+                zoomOutBtn.title = 'Zoom Out';
+                zoomOutBtn.onclick = function (e) { e.preventDefault(); map.zoomOut(); };
+
+                return container;
+            }
+        });
+        new CustomZoomControl({ position: 'bottomright' }).addTo(map);
+
+        window.mapaTileLayer = null;
+        updateTiles(document.documentElement.getAttribute('data-theme') !== 'light');
+
+        // Observer for theme changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'data-theme') {
+                    updateTiles(document.documentElement.getAttribute('data-theme') !== 'light');
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+
+        // 2. Variables Globales
+        const clusters = L.markerClusterGroup();
+        let heatLayer = null, choroplethLayer = null, spainGeoJSON = null, provinceData = {};
+        const noticiasListUrl = "{{ url_for('noticias.listar') }}";
+
+        // 3. Choices.js
+        const choicesInstances = {};
+        const initChoices = (id) => new Choices(document.getElementById(id), {
+            removeItemButton: true, searchEnabled: true, placeholderValue: 'Todas', itemSelectText: '', shouldSort: false
+        });
+        choicesInstances['publicacion'] = initChoices('publicacion-select');
+        choicesInstances['ciudad'] = initChoices('ciudad-select');
+
+        // 4. Parámetros y Carga
+        function getParams() {
+            const params = new URLSearchParams();
+            choicesInstances['publicacion'].getValue(true).forEach(p => params.append('publicacion', p));
+            choicesInstances['ciudad'].getValue(true).forEach(c => params.append('ciudad', c));
+            const start = document.getElementById('date-start').value;
+            const end = document.getElementById('date-end').value;
+            if (start) params.append('fecha_inicio', start);
+            if (end) params.append('fecha_fin', end);
+            return params;
+        }
+
+        function recargarMapa() {
+            if (document.getElementById('toggle-choropleth').checked) { loadChoropleth(); return; }
+
+            fetch(`/api/map-data?${getParams().toString()}&_t=${Date.now()}`)
+                .then(r => r.json())
+                .then(data => {
+                    clusters.clearLayers();
+                    if (heatLayer) map.removeLayer(heatLayer);
+                    let total = 0, top = { name: '-', count: 0 }, hData = [];
+
+
+                    data.forEach(c => {
+                        total += c.count;
+                        if (c.count > top.count) top = { name: c.name, count: c.count };
+                        if (c.lat && c.lon) {
+                            const m = L.circleMarker([c.lat, c.lon], { radius: Math.min(c.count / 5 + 6, 25), color: '#ff9800', fillOpacity: 0.8 });
+                            // Mostrar publicaciones de la ciudad en el popup
+                            let pubsHTML = '';
+                            if (c.publicaciones && Object.keys(c.publicaciones).length > 0) {
+                                pubsHTML = '<div style="margin-top:8px; padding-top:8px; border-top:1px solid #444; text-align:left; max-height:120px; overflow-y:auto;">';
+                                for (const [pub, count] of Object.entries(c.publicaciones)) {
+                                    const linkUrl = `${noticiasListUrl}?publicacion=${encodeURIComponent(pub)}`;
+                                    pubsHTML += `<div style="font-size:0.75rem; color:#ccc; margin:3px 0;">• <a href="${linkUrl}" class="text-decoration-none hover-link" style="color:#ff9800;">${pub}</a>: <b>${count}</b></div>`;
+                                }
+                                pubsHTML += '</div>';
+                            }
+                            m.bindPopup(`
+                            <div style="text-align:center; min-width: 180px;">
+                                <h5 style="margin:0; color:#ff9800; font-weight:bold; text-transform:uppercase; letter-spacing:1px; font-size: 1.1rem;">${c.name || ''}</h5>
+                                <hr style="margin:8px 0; border-color:#555;">
+                                <div style="font-family: 'JetBrains Mono', monospace;">
+                                    <span style="font-size:1.8rem; font-weight:bold; color:#fff;">${c.count || 0}</span>
+                                    <br><span style="font-size:0.75rem; color:#aaa;">NOTICIAS</span>
+                                </div>
+                                <div style="max-height: 120px; overflow-y: auto;">
+                                    ${pubsHTML}
+                                </div>
+                            </div>
+                        `);
+                            clusters.addLayer(m);
+                            hData.push([c.lat, c.lon, c.count / 10]);
+                        }
+                    });
+
+                    if (document.getElementById('toggle-heatmap').checked) {
+                        heatLayer = L.heatLayer(hData, { radius: 30, blur: 20 }).addTo(map);
+                    } else { map.addLayer(clusters); }
+
+                    document.getElementById('stat-ciudades').textContent = data.length;
+                    document.getElementById('stat-noticias').textContent = total;
+                    document.getElementById('stat-top-region').textContent = top.name;
+                });
+        }
+
+        function loadChoropleth() {
+            fetch(`/api/map-distribution?${getParams().toString()}`)
+                .then(r => r.json())
+                .then(data => {
+                    provinceData = data;
+                    if (!spainGeoJSON) {
+                        fetch('https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/spain-provinces.geojson')
+                            .then(r => r.json()).then(geo => { spainGeoJSON = geo; renderChoro(); });
+                    } else renderChoro();
+                });
+        }
+
+        // Escala de colores para coropletas (igual que el original)
+        function getColorChoropleth(d) {
+            return d > 1000 ? '#800026'
+                : d > 500 ? '#BD0026'
+                    : d > 200 ? '#E31A1C'
+                        : d > 100 ? '#FC4E2A'
+                            : d > 50 ? '#FD8D3C'
+                                : d > 20 ? '#FEB24C'
+                                    : d > 10 ? '#FED976'
+                                        : '#FFEDA0';
+        }
+
+        function renderChoro() {
+            if (choroplethLayer) map.removeLayer(choroplethLayer);
+            // Normaliza nombres: minúsculas, sin tildes, sin espacios extras
+            function normalizeName(str) {
+                return (str || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            }
+            function getProvinciaCount(name) {
+                let count = 0;
+                const normName = normalizeName(name);
+                // Debug: mostrar claves y clave buscada
+                if (window && window.console) {
+                    console.log('[DEBUG] Buscando provincia:', name, 'Normalizada:', normName);
+                    console.log('[DEBUG] Claves provinceData:', Object.keys(provinceData).map(normalizeName));
+                }
+                for (const key of Object.keys(provinceData)) {
+                    if (normalizeName(key) === normName) {
+                        count = provinceData[key];
+                        break;
+                    }
+                }
+                return count;
+            }
+            choroplethLayer = L.geoJSON(spainGeoJSON, {
+                style: function (f) {
+                    const name = f.properties.name || f.properties.provincia || "";
+                    let count = getProvinciaCount(name);
+                    return {
+                        fillColor: getColorChoropleth(count),
+                        weight: 2,
+                        opacity: 1,
+                        color: 'white',
+                        dashArray: '3',
+                        fillOpacity: 0.7
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    function getCountForTooltip() {
+                        const name = feature.properties.name || feature.properties.provincia || "Provincia";
+                        return { name, count: getProvinciaCount(name) };
+                    }
+                    let { name, count } = getCountForTooltip();
+                    layer.bindTooltip(`
+                    <div style="text-align:center;">
+                      <strong>${name}</strong><br>
+                      <span style="font-size:1.2em; color:#ff9800;">${count}</span> noticias
+                    </div>
+                `, { sticky: true });
+                    layer.on({
+                        mouseover: function (e) {
+                            var lyr = e.target;
+                            lyr.setStyle({
+                                weight: 3,
+                                color: '#666',
+                                dashArray: '',
+                                fillOpacity: 0.9
+                            });
+                            lyr.bringToFront();
+                            // Actualizar tooltip con valor correcto (incluyendo filtro de fecha)
+                            let { name: n, count: c } = getCountForTooltip();
+                            lyr.setTooltipContent(`
+                            <div style="text-align:center;">
+                              <strong>${n}</strong><br>
+                              <span style="font-size:1.2em; color:#ff9800;">${c}</span> noticias
+                            </div>
+                        `);
+                        },
+                        mouseout: function (e) {
+                            choroplethLayer.resetStyle(e.target);
+                        },
+                        click: function (e) {
+                            map.fitBounds(e.target.getBounds());
+                        }
+                    });
+                }
+            });
+            if (document.getElementById('toggle-choropleth').checked) choroplethLayer.addTo(map);
+        }
+
+        // 5. Filtros Dinámicos
+        ['publicacion', 'ciudad'].forEach(col => {
+            fetch(`/api/valores_filtrados?columna=${col}`).then(r => r.json()).then(data => {
+                choicesInstances[col].setChoices(data.map(x => ({ value: x, label: x })), 'value', 'label', true);
+            });
+        });
+
+        // 6. Eventos
+
+        // Filtros automáticos para publicación y ciudad
+        document.getElementById('publicacion-select').onchange = recargarMapa;
+        document.getElementById('ciudad-select').onchange = function () {
+            // Guardar selección antes de recargar
+            const ciudades = choicesInstances['ciudad'].getValue(true);
+            recargarMapa();
+            // Si hay parámetro ?ciudad= en la URL, centrar y mostrar popup
+            if (ciudad) {
+                fetch(`/api/ciudad_coords?nombre=${encodeURIComponent(ciudad)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.lat && data.lon) {
+                            map.setView([data.lat, data.lon], 11);
+                            // Buscar el marker y abrir el popup
+                            setTimeout(() => {
+                                clusters.eachLayer(function (layer) {
+                                    if (layer.getLatLng && layer.getPopup && layer.getPopup()) {
+                                        const popupContent = layer.getPopup().getContent();
+                                        if (popupContent && popupContent.includes(ciudad)) {
+                                            map.setView(layer.getLatLng(), 11);
+                                            layer.openPopup();
+                                        }
+                                    }
+                                });
+                            }, 800);
+                        }
+                    });
+            }
+            // Zoom a la ciudad seleccionada si solo hay una
+            if (ciudades.length === 1) {
+                // Esperar a que los datos del mapa estén listos
+                setTimeout(() => {
+                    // Buscar el marker correspondiente en clusters
+                    let found = false;
+                    clusters.eachLayer(function (layer) {
+                        if (layer.getLatLng && layer.getPopup && layer.getPopup()) {
+                            const popupContent = layer.getPopup().getContent();
+                            if (popupContent && popupContent.includes(ciudades[0])) {
+                                map.setView(layer.getLatLng(), 11);
+                                found = true;
+                            }
+                        }
+                    });
+                }, 400);
+            }
+        };
+        // Filtro de fechas solo con botón aplicar
+        document.getElementById('btn-aplicar-fechas').onclick = function () {
+            // Limpiar selección de ciudad para evitar zoom automático al aplicar fechas
+            this.blur();
+            recargarMapa();
+        };
+        document.getElementById('toggle-heatmap').onchange = function () { if (this.checked) document.getElementById('toggle-choropleth').checked = false; recargarMapa(); };
+        document.getElementById('toggle-choropleth').onchange = function () {
+            if (this.checked) {
+                document.getElementById('toggle-heatmap').checked = false;
+                clusters.remove();
+                recargarMapa();
+            } else {
+                // Si se apaga el switch, quitar la capa de coropletas si existe
+                if (choroplethLayer && map.hasLayer(choroplethLayer)) {
+                    map.removeLayer(choroplethLayer);
+                }
+                recargarMapa();
+            }
+        };
+        document.getElementById('btn-reset-map').onclick = () => { location.reload(); };
+
+        document.getElementById('btn-export-map').onclick = async () => {
+            const els = document.querySelectorAll('.map-floating-panel, .map-stats-panel, .leaflet-control-zoom');
+            els.forEach(el => el.style.display = 'none');
+            const canvas = await html2canvas(document.getElementById('map'), { useCORS: true });
+            const link = document.createElement('a');
+            link.download = 'mapa_sirio.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            els.forEach(el => el.style.display = '');
+        };
+
+        // Si hay parámetro ?ciudad= en la URL, centrar y mostrar popup tras cargar el mapa
+        function centrarCiudadDesdeURL() {
+            if (ciudad) {
+                fetch(`/api/ciudad_coords?nombre=${encodeURIComponent(ciudad)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.lat && data.lon) {
+                            // Esperar a que los marcadores estén en el mapa
+                            setTimeout(() => {
+                                let marker = null;
+                                clusters.eachLayer(function (layer) {
+                                    if (layer.getLatLng && layer.getPopup && layer.getPopup()) {
+                                        const popupContent = layer.getPopup().getContent();
+                                        if (popupContent && popupContent.includes(ciudad)) {
+                                            marker = layer;
+                                        }
+                                    }
+                                });
+                                if (marker) {
+                                    map.fitBounds(marker.getBounds ? marker.getBounds() : marker.getLatLng().toBounds(5000), { maxZoom: 14, animate: true });
+                                    setTimeout(() => marker.openPopup(), 400);
+                                } else {
+                                    map.setView([data.lat, data.lon], 13, { animate: true });
+                                }
+                            }, 1200);
+                        }
+                    });
+            }
+        }
+        if (ciudad) {
+            // Selecciona la ciudad en el filtro y deja que el filtro haga el centrado
+            seleccionarCiudadEnFiltro(ciudad);
+        } else {
+            recargarMapa();
+        }
+    });
+</script>
+{% endblock %}

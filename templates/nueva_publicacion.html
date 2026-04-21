@@ -1,0 +1,337 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Nueva Publicación — Proyecto Sirio{% endblock %}
+{% block page_title %}Nueva Publicación{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión de Medios</span>
+{% endblock %}
+
+
+
+{% block top_actions %}
+<button type="submit" form="form-publicacion" class="btn-sirio active" title="Crear Publicación">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">GUARDAR</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('hemerotecas.lista_publicaciones') }}" class="btn-sirio" title="Volver al listado">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">VOLVER</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important; 
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .header-actions-wrapper > * {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+    
+    .header-actions-wrapper .btn-sirio {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+    <div class="container" style="max-width: 90%;">
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show border-0 rounded-0" role="alert"
+            style="background: rgba(255,255,255,0.05);">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form id="form-publicacion" method="POST"
+            action="{{ url_for('hemerotecas.nueva_publicacion', proyecto_id=proyecto_activo.id if proyecto_activo else 0) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+            <!-- DATOS PRINCIPALES -->
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-newspaper me-2"></i> Datos de la Publicación
+                </div>
+                <div class="p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-sirio">Nombre de la Publicación *</label>
+                            <input type="text" class="form-control form-control-sirio border-warning fw-bold"
+                                id="nombre" name="nombre" required placeholder="Ej: El Heraldo de Madrid">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label-sirio">URL de la publicación</label>
+                            <input type="url" class="form-control form-control-sirio" id="url_publi" name="url_publi"
+                                placeholder="https://ejemplo.com">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Tipo de Publicación</label>
+                            <select class="form-select form-select-sirio" id="tipo_recurso_select" name="tipo_recurso">
+                                <option value="diario">Diario</option>
+                                <option value="revista">Revista</option>
+                                <option value="semanario">Semanario</option>
+                                <option value="boletin">Boletín</option>
+                                <option value="obra_teatral">Obra Teatral</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Frecuencia</label>
+                            <select class="form-select form-control-sirio" id="frecuencia" name="frecuencia">
+                                <option value="">-- Selecciona frecuencia --</option>
+                                <option value="diaria">Diaria</option>
+                                <option value="semanal">Semanal</option>
+                                <option value="quincenal">Quincenal</option>
+                                <option value="mensual">Mensual</option>
+                                <option value="bimestral">Bimestral</option>
+                                <option value="trimestral">Trimestral</option>
+                                <option value="semestral">Semestral</option>
+                                <option value="anual">Anual</option>
+                                <option value="bianual">Bianual</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOCALIZACIÓN Y FUENTE -->
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-location-dot me-2"></i> Localización e Institución
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <label class="form-label-sirio text-info">Hemeroteca de Origen (Repositorio Digital)</label>
+                        <select class="form-select form-select-sirio border-info" id="hemeroteca_id"
+                            name="hemeroteca_id">
+                            <option value="">-- Sin vincular / Desconocida --</option>
+                            {% for h in hemerotecas %}
+                            <option value="{{ h.id }}">
+                                {{ h.nombre }} ({{ h.ciudad or 'Sin ciudad' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text-sirio mt-1">Seleccionar una hemeroteca autocompletará datos de ubicación.
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">País</label>
+                            <select class="form-select form-select-sirio" id="pais" name="pais_publicacion">
+                                <option value="">-- Selecciona un país --</option>
+                                <option value="España">España</option>
+                                <option value="Argentina">Argentina</option>
+                                <option value="Brasil">Brasil</option>
+                                <option value="Chile">Chile</option>
+                                <option value="Colombia">Colombia</option>
+                                <option value="Cuba">Cuba</option>
+                                <option value="Estados Unidos">Estados Unidos</option>
+                                <option value="Francia">Francia</option>
+                                <option value="Italia">Italia</option>
+                                <option value="México">México</option>
+                                <option value="Perú">Perú</option>
+                                <option value="Portugal">Portugal</option>
+                                <option value="Uruguay">Uruguay</option>
+                                <option value="Reino Unido">Reino Unido</option>
+                                <option value="Otro">Otro país</option>
+                            </select>
+                            <div id="flag-preview" class="mt-2 text-warning d-flex align-items-center"
+                                style="min-height: 20px;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Ciudad</label>
+                            <input type="text" class="form-control form-control-sirio" id="ciudad" name="ciudad"
+                                placeholder="Ej: Madrid">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Provincia / Región</label>
+                            <input type="text" class="form-control form-control-sirio" id="provincia" name="provincia"
+                                placeholder="Ej: Comunidad de Madrid">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label-sirio">Coordenadas (Lat, Long)</label>
+                            <input type="text" class="form-control form-control-sirio font-monospace" id="coordenadas"
+                                name="coordenadas" placeholder="Ej: 40.4168, -3.7038">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETALLES TÉCNICOS -->
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-gears me-2"></i> Detalles y Formato
+                </div>
+                <div class="p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label-sirio text-info">Fuente / Institución (Archivo)</label>
+                            <input type="text" class="form-control form-control-sirio border-info" id="fuente"
+                                name="fuente" placeholder="Ej: Biblioteca Nacional de España">
+                            <div class="form-text-sirio">Puedes introducir manualmente la fuente o seleccionar una
+                                hemeroteca para autocompletar.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">Formato Habitual</label>
+                            <select class="form-select form-select-sirio border-warning" id="formato_fuente"
+                                name="formato_fuente">
+                                <option value="Digital" selected>Digital (PDF/Web)</option>
+                                <option value="Impreso">Impreso / Físico</option>
+                                <option value="Microfilm">Microfilm</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Editorial / Imprenta</label>
+                            <input type="text" class="form-control form-control-sirio" id="editorial" name="editorial">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Tema / Género</label>
+                            <input type="text" class="form-control form-control-sirio" id="tema" name="tema" placeholder="Ej: Generalista, Regional...">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="form-label-sirio">Descripción Histórica / Notas</label>
+                        <textarea class="form-control form-control-sirio" id="descripcion" name="descripcion" rows="8"
+                            placeholder="Historia del periódico, ideología, fechas de publicación..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Idioma Predeterminado</label>
+                            <input type="text" class="form-control form-control-sirio" id="idioma" name="idioma"
+                                value="Español">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Licencia por defecto</label>
+                            <input type="text" class="form-control form-control-sirio" id="licencia" name="licencia"
+                                value="CC BY 4.0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="height: 100px;"></div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/form-editor.js') }}"></script>
+<script>
+    // Datos de hemerotecas para autocompletado via backend JSON serialization
+    window.HEMEROTECAS_DATA = {{ hemerotecas_data | default ({}) | tojson | safe }};
+    console.log("DEBUG: Hemerotecas Data Loaded", window.HEMEROTECAS_DATA);
+</script>
+
+
+<script>
+
+    // Lógica de autocompletado del Editor - Robustecida para Choices.js
+    document.addEventListener('DOMContentLoaded', function () {
+
+        function updateHemerotecaFields(targetSelect, specificValue = null) {
+            const id = specificValue || targetSelect.value;
+            const fuenteInput = document.getElementById('fuente');
+            const ciudadInput = document.getElementById('ciudad');
+            const paisInput = document.getElementById('pais');
+            const provinciaInput = document.getElementById('provincia');
+
+            if (id && window.HEMEROTECAS_DATA && window.HEMEROTECAS_DATA[id]) {
+                const data = window.HEMEROTECAS_DATA[id];
+                console.log("DEBUG: Autocompleting for", data);
+
+                if (data.ciudad) ciudadInput.value = data.ciudad;
+                if (data.provincia) provinciaInput.value = data.provincia || '';
+                if (data.pais) paisInput.value = data.pais;
+
+                // Lógica de Fuente / Institución
+                // Prioridad: Institución -> Nombre
+                const institucionValue = data.institucion || data.nombre;
+
+                if (institucionValue) {
+                    fuenteInput.value = institucionValue;
+                    fuenteInput.setAttribute('readonly', true);
+                    fuenteInput.setAttribute('tabindex', '-1');
+                    fuenteInput.classList.add('bg-dark', 'text-secondary');
+                } else {
+                    // Fallback de seguridad
+                    fuenteInput.removeAttribute('readonly');
+                    fuenteInput.removeAttribute('tabindex');
+                    fuenteInput.classList.remove('bg-dark', 'text-secondary');
+                }
+            } else {
+                console.log("DEBUG: No data for id", id);
+                // Sin hemeroteca: permitir edición manual si no hay ID
+                if (!id) {
+                    fuenteInput.removeAttribute('readonly');
+                    fuenteInput.removeAttribute('tabindex');
+                    fuenteInput.classList.remove('bg-dark', 'text-secondary');
+                }
+            }
+        }
+
+        // Delegación de eventos para soportar recreación del DOM por Choices.js
+        document.addEventListener('change', function (e) {
+            console.log("Global change event:", e.target.id, e.target.value);
+            if (e.target && e.target.id === 'hemeroteca_id') {
+                console.log("Hemeroteca changed via change event");
+                updateHemerotecaFields(e.target);
+            }
+        });
+
+        document.addEventListener('addItem', function (e) {
+            console.log("Global addItem event:", e.target.id, e.detail);
+            if (e.target && e.target.id === 'hemeroteca_id') {
+                // En addItem, usamos el valor del evento si está disponible
+                const val = e.detail ? e.detail.value : e.target.value;
+                console.log("Hemeroteca selected via addItem:", val);
+                updateHemerotecaFields(e.target, val);
+            }
+        }, true); // Capture phase might help if events are stopped
+
+        // Verificación inicial (si el navegador recuerda el valor o es edición)
+        const initialSelect = document.getElementById('hemeroteca_id');
+        if (initialSelect && initialSelect.value) {
+            // updateHemerotecaFields(initialSelect); 
+            // Nota: En edición, evitamos sobreescribir al cargar para respetar lo guardado,
+            // pero si es nueva y hay preselección, podría ser útil. 
+            // Por prudencia, requerimos interacción del usuario.
+        }
+    });
+</script>
+{% endblock %}

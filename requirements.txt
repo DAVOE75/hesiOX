@@ -1,0 +1,137 @@
+# --- NLP Y GEOLOCALIZACIÓN ---
+spacy>=3.0.0
+requests>=2.0.0
+# Para el modelo español de spaCy ejecutar:
+#   python -m spacy download es_core_news_md
+scikit-learn
+flask-login
+python-dotenv
+networkx
+# --- IA Y MODELOS DE TRANSFORMERS ---
+# PyTorch: Requerido por HuggingFace
+torch==2.2.0
+# =========================================================
+# hesiOX v1.5.0 - Dependencias del Proyecto
+# Sistema de Gestión de Referencias Bibliográficas
+# 
+# Instalación completa:
+#   1. Crear entorno virtual: python -m venv venv
+#   2. Activar entorno: venv\Scripts\activate (Windows)
+#   3. Instalar dependencias: pip install -r requirements.txt
+#   4. Instalar modelo spaCy: python -m spacy download es_core_news_md
+# =========================================================
+
+# --- FRAMEWORK WEB ---
+# Flask: Framework web principal (routing, templates, sessions)
+Flask==3.0.0
+# Flask-SQLAlchemy: ORM para gestión de base de datos
+Flask-SQLAlchemy==3.1.1
+# Flask-Login: Sistema de autenticación de usuarios
+flask-login==0.6.3
+# Flask-WTF: Protección CSRF y validación de formularios
+Flask-WTF==1.2.1
+# Flask-Limiter: Rate limiting para prevenir abuso
+Flask-Limiter==3.5.0
+# marshmallow: Validación y serialización de datos
+marshmallow==3.20.1
+# Flask-Caching: Sistema de caché para optimizar queries
+Flask-Caching==2.1.0
+
+# --- BASE DE DATOS ---
+# SQLAlchemy: ORM avanzado con soporte para relaciones complejas
+SQLAlchemy==2.0.23
+# psycopg2-binary: Driver PostgreSQL (sin compilación requerida)
+psycopg2-binary==2.9.9
+
+# --- NLP Y BÚSQUEDA SEMÁNTICA ---
+# spaCy: Procesamiento de lenguaje natural (entidades, lematización)
+# IMPORTANTE: Después de instalar, ejecutar: python -m spacy download es_core_news_lg
+spacy==3.8.2
+# scikit-learn: TF-IDF para búsqueda semántica (659 docs indexados) + Clustering + Topic Modeling
+scikit-learn==1.3.2
+numpy<2
+
+
+# --- PROCESAMIENTO DE IMÁGENES Y OCR ---
+# OpenCV: Preprocesamiento avanzado para imágenes
+opencv-python==4.9.0.80
+# pandas: Manipulación de datos para exportación y análisis temporal
+pandas==2.1.4
+# textblob: Análisis de sentimiento multilingüe
+textblob==0.17.1
+# gensim: Topic modeling con LDA (análisis de tópicos latentes)
+gensim==4.3.2
+
+# --- VISUALIZACIÓN Y ANÁLISIS ---
+# wordcloud: Generación de nubes de palabras (análisis de frecuencias)
+wordcloud==1.9.3
+# pillow: Procesamiento de imágenes para wordcloud y otros
+pillow
+# networkx: Análisis de redes (grafo de entidades NLP)
+networkx==3.2.1
+
+# --- GENERACIÓN DE PDFs ---
+# reportlab: Creación de PDFs (exportación de bibliografías)
+reportlab==4.0.7
+
+# --- INTELIGENCIA ARTIFICIAL ---
+# anthropic: Claude API para corrección OCR, resúmenes, chatbot
+anthropic==0.39.0
+google-generativeai
+
+# --- CONFIGURACIÓN Y SEGURIDAD ---
+# python-dotenv: Cargar variables de entorno desde .env
+python-dotenv==1.0.0
+# Werkzeug: Utilidades de seguridad (hashing de contraseñas)
+Werkzeug==3.0.1
+
+# --- MONITOREO DEL SISTEMA (Panel Admin) ---
+# psutil: Monitoreo de recursos del sistema (CPU, RAM, disco, uptime)
+# Usado en /admin para estadísticas técnicas sin acceder a contenidos académicos
+psutil==5.9.6
+
+# --- GEOLOCALIZACIÓN ---
+# geopy: Geocodificación de ciudades (Nominatim)
+geopy==2.4.1
+
+# --- ANÁLISIS AVANZADO Y TOPIC MODELING ---
+# gensim: Topic modeling con LDA (Latent Dirichlet Allocation)
+gensim==4.3.2
+# pyLDAvis: Visualización interactiva de modelos LDA
+pyLDAvis==3.4.1
+
+# --- VISUALIZACIÓN Y GRÁFICOS ---
+# matplotlib: Generación de gráficos estáticos (exportación de visualizaciones)
+matplotlib==3.8.2
+altair>=5.0.0
+
+# =========================================================
+# FRONTEND (incluido localmente, no en pip)
+# =========================================================
+# - Bootstrap 5.3.3 (232KB local en static/)
+# - Choices.js v9+ (selects avanzados con búsqueda)
+# - TinyMCE 6 (editor WYSIWYG)
+# - Chart.js 4.0 (gráficos estadísticos)
+# - Leaflet.js (mapas geográficos)
+# - D3.js v7 (redes de entidades)
+# - Tesseract.js 4.1.1 (OCR en navegador)
+# =========================================================
+
+# NOTAS DE INSTALACIÓN:
+# - Python 3.10 o superior requerido
+# - PostgreSQL 15 o superior recomendado
+# - Espacio en disco: ~500 MB (dependencias + modelo spaCy)
+# - Tiempo de instalación estimado: 3-5 minutos
+# 
+# Ver INSTALACION.md para guía completa paso a paso
+
+
+# OCR en backend
+pytesseract
+
+# Modelo spaCy para español
+#es_core_news_md
+
+Flask-Migrate
+pymysql
+

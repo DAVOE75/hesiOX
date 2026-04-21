@@ -1,0 +1,144 @@
+/usr/local/lib/python3.12/dist-packages/pandas/core/arrays/masked.py:56: UserWarning: Pandas requires version '1.4.2' or newer of 'bottleneck' (version '1.3.5' currently installed).
+  from pandas.core import (
+[DEBUG] GEMINI_API_KEY cargada correctamente.
+[OCR CONFIG] Tesseract encontrado y configurado en: /usr/bin/tesseract
+[spaCy API] Módulo spacy_api_test.py importado
+[DEBUG] Blueprint registrado: auth (url_prefix=None)
+[DEBUG] Blueprint registrado: proyectos (url_prefix=/proyectos)
+[DEBUG] Blueprint registrado: articulos (url_prefix=None)
+[DEBUG] Blueprint registrado: noticias (url_prefix=None)
+[DEBUG] Blueprint registrado: hemerotecas (url_prefix=None)
+[DEBUG] Blueprint registrado: analisis_avanzado (url_prefix=/api/analisis)
+[DEBUG] Blueprint registrado: maintenance (url_prefix=None)
+[DEBUG] Blueprint registrado: ocr (url_prefix=None)
+[DEBUG] Blueprint registrado: spacy (url_prefix=None)
+[DEBUG] Blueprint registrado: gemini (url_prefix=None)
+[DEBUG] Blueprint registrado: noticias_api (url_prefix=)
+[DEBUG] Blueprint registrado: visualizaciones (url_prefix=None)
+[DEBUG] Blueprint registrado: quality (url_prefix=/api/quality)
+[DEBUG] Blueprint registrado: distribucion (url_prefix=None)
+[OK] Blueprints registrados: ['auth', 'proyectos', 'articulos', 'noticias', 'hemerotecas', 'analisis_avanzado', 'maintenance', 'ocr', 'spacy', 'gemini', 'noticias_api', 'visualizaciones', 'quality', 'distribucion']
+[DEBUG] Rutas registradas:
+  {'OPTIONS', 'GET', 'HEAD'} /static/<path:filename>
+  {'OPTIONS', 'GET', 'HEAD'} /listados
+  {'OPTIONS', 'GET', 'HEAD'} /api/keywords/top100
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /login
+  {'OPTIONS', 'GET', 'HEAD'} /logout
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /registro
+  {'OPTIONS', 'GET', 'HEAD'} /proyectos/
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /proyectos/nuevo
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /proyectos/<int:proyecto_id>/activar
+  {'POST', 'OPTIONS'} /proyectos/<int:proyecto_id>/eliminar
+  {'POST', 'OPTIONS'} /proyectos/<int:proyecto_id>/editar
+  {'OPTIONS', 'GET', 'HEAD'} /proyectos/<int:proyecto_id>/desactivar
+  {'POST', 'OPTIONS'} /api/articulos/<int:id>/eliminar
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_noticia_lugares_autocomplete
+  {'POST', 'OPTIONS'} /api/spacy/clean2
+  {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>/editar
+  {'OPTIONS', 'GET', 'HEAD'} /api/ciudad_coords
+  {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>/borrar
+  {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>
+  {'POST', 'OPTIONS'} /api/cartografia_noticia_edit_location/<int:id>
+  {'POST', 'OPTIONS'} /api/cartografia_noticia_delete_location/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /mapa_corpus
+  {'OPTIONS', 'GET', 'HEAD'} /api/noticias_por_publicacion
+  {'POST', 'OPTIONS'} /api/batch_geocoding
+  {'POST', 'OPTIONS'} /api/cartografia/gestion/borrar
+  {'POST', 'OPTIONS'} /api/cartografia/gestion/borrar_batch
+  {'POST', 'OPTIONS'} /api/cartografia/gestion/editar
+  {'POST', 'OPTIONS'} /api/cartografia/gestion/crear
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_corpus
+  {'OPTIONS', 'GET', 'HEAD'} /cartografia/topografia-semantica
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/semantica
+  {'POST', 'OPTIONS'} /api/cartografia/semantica/interpretar
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/semantica/detalles
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_corpus/export
+  {'OPTIONS', 'GET', 'HEAD'} /noticias/detalle/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_noticia/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /api/valores_filtrados
+  {'OPTIONS', 'GET', 'HEAD'} /api/map-data
+  {'OPTIONS', 'GET', 'HEAD'} /api/map-distribution
+  {'OPTIONS', 'GET', 'HEAD'} /filtrar
+  {'POST', 'OPTIONS'} /actualizar_nota/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /listar
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /nueva
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /editar/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /duplicar/<int:noticia_id>
+  {'POST', 'OPTIONS'} /eliminar/<int:noticia_id>
+  {'OPTIONS', 'GET', 'HEAD'} /api/ediciones/<tipo_recurso>
+  {'OPTIONS', 'GET', 'HEAD'} /hemerotecas
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/nueva
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/editar/<int:id>
+  {'POST', 'OPTIONS'} /hemeroteca/borrar/<int:id>
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/migrar/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /hemerotecas/repositorio
+  {'POST', 'OPTIONS'} /hemeroteca/importar/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /publicaciones
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /publicacion/nueva
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /publicacion/editar/<int:id>
+  {'POST', 'OPTIONS'} /publicacion/borrar/<int:id>
+  {'OPTIONS', 'GET', 'HEAD'} /api/hemeroteca/<int:id>/datos
+  {'OPTIONS', 'GET', 'HEAD'} /api/publicacion/<int:id>
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /migrar_publicacion
+  {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/copiar/<int:id>
+  {'POST', 'OPTIONS'} /api/analisis/recargar_cache
+  {'POST', 'OPTIONS'} /api/analisis/reuso-detalle
+  {'OPTIONS', 'GET', 'HEAD'} /api/analisis/analitica-hd
+  {'POST', 'OPTIONS'} /api/analisis/lista-documentos
+  {'POST', 'OPTIONS'} /api/analisis/sentimiento-temporal
+  {'POST', 'OPTIONS'} /api/analisis/topic-modeling
+  {'POST', 'OPTIONS'} /api/analisis/coocurrencia-entidades
+  {'POST', 'OPTIONS'} /api/analisis/estilometrico
+  {'POST', 'OPTIONS'} /api/analisis/ngramas
+  {'POST', 'OPTIONS'} /api/analisis/clustering
+  {'POST', 'OPTIONS'} /api/analisis/regex-search
+  {'POST', 'OPTIONS'} /api/analisis/similares/<int:id_documento>
+  {'POST', 'OPTIONS'} /api/analisis/dashboard
+  {'OPTIONS', 'GET', 'HEAD'} /api/analisis/distribucion-temporal
+  {'POST', 'OPTIONS'} /api/analisis/keyness
+  {'POST', 'OPTIONS'} /api/analisis/reuso-textual
+  {'OPTIONS', 'GET', 'HEAD'} /api/analisis/conceptos
+  {'POST', 'OPTIONS'} /api/analisis/conceptos
+  {'PUT', 'OPTIONS'} /api/analisis/conceptos/<int:id>
+  {'DELETE', 'OPTIONS'} /api/analisis/conceptos/<int:id>
+  {'POST', 'OPTIONS'} /api/analisis/geosemantica
+  {'POST', 'OPTIONS'} /api/analisis/ngramas
+  {'POST', 'OPTIONS'} /api/analisis/semantic-shift
+  {'POST', 'OPTIONS'} /api/analisis/comunidades
+  {'POST', 'OPTIONS'} /api/analisis/retorica
+  {'POST', 'OPTIONS'} /api/analisis/periodistico
+  {'POST', 'OPTIONS'} /api/analisis/innovador/semantico
+  {'POST', 'OPTIONS'} /api/analisis/innovador/intertextualidad
+  {'POST', 'OPTIONS'} /api/analisis/innovador/emociones
+  {'POST', 'OPTIONS'} /api/analisis/innovador/sirio_chat
+  {'POST', 'OPTIONS'} /api/analisis/innovador/sesgos
+  {'POST', 'OPTIONS'} /api/admin/restart
+  {'POST', 'OPTIONS'} /admin/db-clean-html
+  {'POST', 'OPTIONS'} /admin/db-backup
+  {'POST', 'OPTIONS'} /admin/project-download
+  {'POST', 'OPTIONS'} /api/ocr/advanced
+  {'POST', 'OPTIONS'} /api/ocr/corregir
+  {'POST', 'OPTIONS'} /api/spacy/clean2
+  {'POST', 'OPTIONS'} /api/gemini/correct
+  {'POST', 'OPTIONS'} /api/gemini/extract_locations
+  {'OPTIONS', 'GET', 'HEAD'} /timeline
+  {'OPTIONS', 'GET', 'HEAD'} /api/timeline-data
+  {'OPTIONS', 'GET', 'HEAD'} /api/noticia/<int:id>
+  {'POST', 'OPTIONS'} /api/quality/validar
+  {'OPTIONS', 'GET', 'HEAD'} /api/quality/validado
+  {'OPTIONS', 'GET', 'HEAD'} /distribucion
+--- DEBUGGING SCOPE FOR ID 1063 ---
+TITLE: VIAJE POR ESPAÑA Y PORTUGAL EN LOS AÑOS 1493 Y 1495
+DB COUNT: 153
+DB SAMPLES: ['Segura', 'Tenerife', 'Albaicín', 'Alhama', 'Barcelona', 'Alicante', 'Lyon', 'San Agustín', 'Europa', 'Narbona', 'Vino de Alicante', 'Ginestar', 'Hesse', 'Alpes', 'África', 'Santa Cruz', 'Orihuela', 'Hierro', 'Camino de Granada', 'Ratisbona']
+Intentando cargar modelo spaCy: es_core_news_lg...
+⚠️ Modelo es_core_news_lg no encontrado.
+Intentando cargar modelo spaCy: es_core_news_md...
+✅ Modelo es_core_news_md cargado correctamente.
+NLP ERROR: name 'locs' is not defined
+CONTENT LENGTH: 259215
+--- CHECKING INDICES ---
+'Tenerife' index: 33447
+'Albaicín' index: 83616
+'África' index: 51467
+TOTAL LOCATIONS IN PROJECT: 562

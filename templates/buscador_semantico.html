@@ -1,0 +1,758 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Buscador Semántico — Proyecto Sirio{% endblock %}
+{% block page_title %}Buscador Semántico{% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+<div class="header-actions-wrapper">
+    <a href="{{ url_for('dashboard') }}" class="btn-sirio" title="Ir al Dashboard">
+        <i class="fa-solid fa-chart-line"></i>
+        <span class="btn-text">Dashboard</span>
+    </a>
+
+    <div class="vr mx-1 opacity-25"></div>
+
+    <button id="btn-filtros" class="btn-sirio" title="Filtros adicionales" data-bs-toggle="offcanvas"
+        data-bs-target="#offcanvasFiltros">
+        <i class="fa-solid fa-filter"></i>
+        <span class="btn-text">Filtros</span>
+    </button>
+
+    <div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Tecnología Semántica</strong><br>Motor basado en Embeddings vectoriales (NLP).<br>Busca coincidencias por significado y contexto, no solo léxicas.">
+        <i class="fa-solid fa-circle-question text-secondary" style="cursor: help; font-size: 1.2rem;"></i>
+    </div>
+</div>
+
+{% block content %}
+<div id="semantic-container"
+    style="width: 100%; height: 100%; padding: 40px 40px 40px 40px; overflow-y: auto; position: relative;">
+
+    <!-- Area de Herramientas / Ayuda Rápida -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-panel p-3 d-flex gap-4 align-items-center overflow-x-auto no-scrollbar">
+                <div class="small text-muted text-uppercase fw-bold letter-spacing-1" style="white-space: nowrap;">
+                    Búsqueda por Conceptos</div>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-semantic-help px-3 py-1 d-flex align-items-center text-nowrap"
+                        title="Tutorial Semántico" style="cursor: pointer; font-size: 0.85rem; width: auto;"
+                        data-bs-toggle="modal" data-bs-target="#modalAyudaSemantica">
+                        <i class="fa-solid fa-book-open me-2"></i> Ayuda Semántica
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area de Búsqueda Principal -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-12 col-xl-8">
+            <div class="glass-panel p-3 mb-3">
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="flex-grow-1 position-relative">
+                        <i class="fa-solid fa-brain position-absolute text-accent"
+                            style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem;"></i>
+                        <input type="text" id="semantic-input" class="form-control-sirio ps-5"
+                            placeholder="Describe un concepto o escribe una frase (ej. conflictos por la tierra)..."
+                            style="height: 38px; font-family: var(--ds-font-ui); font-size: 0.9rem;" autofocus>
+                    </div>
+                    <button id="btn-buscar" class="btn-sirio-primary px-4" style="height: 38px; font-size: 0.85rem;">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i>EJECUTAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Introducción y Contexto -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="accordion" id="accordionInfoSemantic">
+                <div class="accordion-item bg-transparent border-0">
+                    <h2 class="accordion-header">
+                        <button
+                            class="accordion-button rounded-top"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseInfo" aria-expanded="true"
+                            aria-controls="collapseInfo" style="font-size: 0.9rem; padding: 10px 15px; width: auto;">
+                            <i class="fa-solid fa-circle-info me-2"></i> ¿Qué es la Búsqueda Semántica y
+                            cómo revoluciona la Geohistoria?
+                        </button>
+                    </h2>
+                    <div id="collapseInfo" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionInfoSemantic">
+                        <div
+                            class="accordion-body glass-panel mt-0 p-4 rounded-bottom border border-secondary border-opacity-25 border-top-0">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 class="text-accent text-uppercase small fw-bold mb-3">Más allá de las palabras
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        A diferencia del buscador tradicional, el <strong>Buscador Semántico</strong> no
+                                        busca letras exactas. Utiliza modelos de <strong>Deep Learning</strong> para
+                                        entender la intención detrás de tu consulta. Si buscas <em>"escasez de
+                                            alimentos"</em>, el motor podrá encontrar noticias sobre <em>"hambruna"</em>
+                                        o <em>"desabastecimiento"</em> aunque no usen la misma palabra.
+                                    </p>
+                                    <p class="small text-muted mb-0">
+                                        Es ideal para investigadores que exploran temas transversales en el tiempo,
+                                        donde el lenguaje evoluciona pero el concepto permanece.
+                                    </p>
+                                </div>
+                                <div class="col-md-6 border-start border-secondary border-opacity-25">
+                                    <h6 class="text-warning text-uppercase small fw-bold mb-3"><i
+                                            class="fa-solid fa-microchip me-2"></i>Vectores y Geohumanidades
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        Cada noticia en hesiOX ha sido convertida en un <strong>vector
+                                            matemático</strong> en un espacio de cientos de dimensiones.
+                                    </p>
+                                    <ul class="small text-muted mb-0 ps-3">
+                                        <li><strong>Cercanía Conceptual:</strong> Las noticias similares "viven" cerca
+                                            en este espacio digital.</li>
+                                        <li><strong>Contexto Histórico:</strong> Permite agrupar sucesos por su
+                                            naturaleza semántica de forma automática.</li>
+                                        <li><strong>Descubrimiento Serendipia:</strong> Encuentra conexiones inesperadas
+                                            que una búsqueda manual omitiría.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info / Estadísticas -->
+    <div id="stats-area" class="mb-4" style="display: none;">
+        <!-- Se llenará dinámicamente -->
+    </div>
+
+    <!-- Resultados -->
+    <div id="results-area">
+        <div id="results-placeholder" class="text-center py-5">
+            <i class="fa-solid fa-brain fa-3x text-white-50 mb-3 opacity-25"></i>
+            <h4 class="text-white-50">Esperando consulta semántica...</h4>
+            <p class="text-muted">Escribe un concepto o frase arriba para que la IA explore el corpus.</p>
+        </div>
+
+        <div id="results-loading" class="text-center py-5" style="display: none;">
+            <div class="spinner-border text-accent mb-3" role="status"></div>
+            <div class="text-accent font-mono">Navegando el espacio vectorial...</div>
+        </div>
+
+        <div id="results-list" class="row g-3" style="display: none;">
+            <!-- Se llenará dinámicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Offcanvas de Filtros -->
+<div class="offcanvas offcanvas-end bg-dark text-light border-start border-warning" tabindex="-1" id="offcanvasFiltros"
+    aria-labelledby="offcanvasFiltrosLabel" style="width: 400px; --bs-offcanvas-border-width: 2px; margin-top: 60px;">
+    <div class="offcanvas-header border-bottom border-secondary py-3"
+        style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.05));">
+        <h5 class="offcanvas-title text-warning fw-bold d-flex align-items-center" id="offcanvasFiltrosLabel"
+            style="font-size: 1.1rem; letter-spacing: 1px;">
+            <i class="fa-solid fa-filter me-2"></i> FILTROS SEMÁNTICOS
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
+            style="width: 60px;"></button>
+    </div>
+    <div class="offcanvas-body p-4 custom-scrollbar">
+        <form id="form-filtros">
+            <div class="mb-4">
+                <label
+                    class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Publicación</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-publicacion" data-search="true">
+                    <option value="">(Todas las publicaciones)</option>
+                    {% for pub in publicaciones %}
+                    <option value="{{ pub.id_publicacion }}">{{ pub.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">País</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-pais" data-search="true">
+                    <option value="">(Todos los países)</option>
+                    {% for pais in paises %}
+                    <option value="{{ pais }}">{{ pais }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-6 mb-4">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Desde</label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-desde">
+                </div>
+                <div class="col-6 mb-4">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Hasta</label>
+                    <input type="date" class="form-control form-control-sm form-control-sirio" id="filtro-fecha-hasta">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Límite de
+                    Documentos</label>
+                <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-limite">
+                    <option value="50" selected>50 documentos (Rápido)</option>
+                    <option value="100">100 documentos (Equilibrado)</option>
+                    <option value="200">200 documentos (Extenso)</option>
+                    <option value="500">500 documentos (Muy extenso)</option>
+                    <option value="1000">1000 documentos (Big Data)</option>
+                </select>
+            </div>
+
+            <!-- SECCIÓN IA GENERATIVA -->
+            <div class="mt-4 pt-4 border-top border-info border-opacity-25">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="text-info fw-bold mb-0 d-flex align-items-center">
+                        <i class="fa-solid fa-brain me-2"></i> POTENCIADOR IA 
+                        <span class="badge bg-success ms-2" style="font-size: 0.65rem;">EMBEDDINGS</span>
+                    </h6>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="switch-ia" style="cursor: pointer;">
+                        <label class="form-check-label small text-muted ms-1" for="switch-ia">
+                            <strong>Activar</strong> <i class="fa-solid fa-toggle-off"></i>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning border-0 py-2 px-3 mb-3" style="font-size: 0.75rem; background: rgba(255, 193, 7, 0.15);">
+                    <i class="fa-solid fa-lightbulb me-1"></i>
+                    <strong>Activa este switch para usar búsqueda por embeddings vectoriales.</strong> Sin activarlo, se usa el buscador tradicional TF-IDF.
+                </div>
+                
+                <div id="ia-controls" style="display: none;">
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                            Modelo IA Generativa (Opcional)
+                        </label>
+                        <select class="form-select form-select-sm form-control-sirio sirio-select" id="filtro-modelo-ia">
+                            <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Sugerido)</option>
+                            <option value="gemini-2.0-pro-exp">Gemini 2.0 Pro (Avanzado)</option>
+                            <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-info-circle me-1"></i> Para análisis adicional solamente
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">
+                            Temperatura 
+                            <span class="text-warning" id="temp-value">0.3</span>
+                        </label>
+                        <input type="range" class="form-range" id="filtro-temperatura" 
+                               min="0" max="1" step="0.1" value="0.3"
+                               style="cursor: pointer;">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted" style="font-size: 0.65rem;">Preciso</small>
+                            <small class="text-muted" style="font-size: 0.65rem;">Creativo</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 py-2 px-3 mb-0" style="font-size: 0.75rem; background: rgba(13, 202, 240, 0.1);">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>
+                        <strong>Deep Learning real:</strong> Búsqueda con embeddings vectoriales Google Gemini (3072 dimensiones). El modelo de IA arriba es opcional para análisis adicional.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-top border-secondary d-grid gap-3">
+                <button type="button"
+                    class="btn btn-sirio active w-100 py-3 d-flex justify-content-center align-items-center"
+                    id="btn-aplicar-filtros">
+                    <i class="fa-solid fa-check me-2"></i>APLICAR FILTROS
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="offcanvas">
+                    <i class="fa-solid fa-times me-2"></i>Cerrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Ayuda Semántica -->
+<div class="modal fade" id="modalAyudaSemantica" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-secondary" style="background-color: #1a1a1a;">
+            <div class="modal-header border-bottom border-secondary" style="margin-top: 30px;">
+                <h5 class="modal-title text-accent"><i class="fa-solid fa-brain me-2"></i>Guía de Búsqueda Conceptual
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-light">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase text-muted small mb-3">Consejos de Uso</h6>
+                        <ul class="list-group list-group-flush bg-transparent">
+                            <li
+                                class="list-group-item bg-transparent text-light border-secondary border-opacity-25 pb-3">
+                                <i class="fa-solid fa-quote-left text-warning me-2"></i>
+                                <span class="small">Usa frases cortas pero descriptivas. Evita palabras sueltas
+                                    demasiado genéricas.</span>
+                            </li>
+                            <li
+                                class="list-group-item bg-transparent text-light border-secondary border-opacity-25 pb-3">
+                                <i class="fa-solid fa-language text-warning me-2"></i>
+                                <span class="small">El motor entiende sinónimos. Si buscas "revolución", encontrará
+                                    "revuelta", "insurrección", etc.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase text-muted small mb-3">Ejemplos Efectivos</h6>
+                        <div class="p-3 rounded border border-secondary border-opacity-25"
+                            style="background-color: #121212;">
+                            <div class="mb-2">
+                                <code class="text-accent">Crisis económica y paro</code>
+                                <div class="small text-light opacity-50 mt-1">Encontrará noticias sobre desempleo,
+                                    inflación y bancos.</div>
+                            </div>
+                            <div class="mb-2">
+                                <code class="text-accent">Conflictos fronterizos</code>
+                                <div class="small text-light opacity-50 mt-1">Localizará tensiones diplomáticas y
+                                    movimientos de tropas.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-semantic-help px-4" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .immersive-layout {
+        background: radial-gradient(circle at top right, #1a1a1a, #0a0a0a);
+    }
+
+    /* Header Alignment and Normalization */
+    .header-actions-wrapper {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        gap: 8px;
+        padding: 0 16px;
+    }
+
+    .header-actions-wrapper .btn-sirio {
+        height: 32px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .header-actions-wrapper .btn-sirio i {
+        font-size: 14px;
+        margin-right: 6px;
+    }
+
+    .header-actions-wrapper .vr {
+        height: 30px;
+        align-self: center;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+    }
+
+    .result-card {
+        transition: transform 0.2s, background 0.2s;
+        cursor: pointer;
+    }
+
+    .result-card:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: #ff9800;
+    }
+
+    .score-badge {
+        background: transparent;
+        color: #ff9800;
+        border: 1px solid rgba(255, 152, 0, 0.5);
+        font-family: var(--ds-font-mono);
+        font-weight: bold;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .snippet-text {
+        font-family: var(--ds-font-title);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #aaa;
+    }
+
+    .snippet-container {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .snippet-text mark {
+        background: rgba(255, 152, 0, 0.3);
+        color: #ff9800;
+        border-bottom: 1px solid #ff9800;
+        padding: 0 2px;
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: 1px;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Botón Ayuda Semántica Custom */
+    .btn-semantic-help {
+        background-color: #1a1a1a;
+        color: #ff9800;
+        border: 1px solid #ff9800;
+        transition: all 0.2s ease;
+    }
+
+    .btn-semantic-help:hover {
+        background-color: #ff9800;
+        color: #1a1a1a;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+    }
+
+    /* === DARK MODE DEFAULTS === */
+    #semantic-input {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+    }
+
+    #semantic-input::placeholder {
+        color: #666;
+    }
+
+    /* === ACCORDION STYLES === */
+    
+    /* Modo Oscuro (default) - Naranja Sirio */
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-button {
+        background-color: #1a1a1a !important;
+        color: #ff9800 !important;
+        border: 1px solid rgba(255, 152, 0, 0.4) !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-button:not(.collapsed) {
+        background-color: #1a1a1a !important;
+        color: #ff9800 !important;
+        box-shadow: none !important;
+        border-color: rgba(255, 152, 0, 0.6) !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-button i {
+        color: #ff9800 !important;
+    }
+
+    /* Modo Claro - Azul Sirio */
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-button,
+    body.light-mode #accordionInfoSemantic .accordion-button {
+        background-color: #f5f5f5 !important;
+        color: #294a60 !important;
+        border: 1px solid rgba(33, 150, 243, 0.4) !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-button:not(.collapsed),
+    body.light-mode #accordionInfoSemantic .accordion-button:not(.collapsed) {
+        background-color: #e3f2fd !important;
+        color: #294a60 !important;
+        border-color: rgba(33, 150, 243, 0.6) !important;
+        box-shadow: none !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-button i,
+    body.light-mode #accordionInfoSemantic .accordion-button i {
+        color: #294a60!important;
+    }
+
+    /* Chevron - Modo Oscuro (naranja) */
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-button::after {
+        margin-left: 15px !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ff9800'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ff9800'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    /* Chevron - Modo Claro (azul) */
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-button::after,
+    body.light-mode #accordionInfoSemantic .accordion-button::after {
+        margin-left: 15px !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232196f3'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-button:not(.collapsed)::after,
+    body.light-mode #accordionInfoSemantic .accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232196f3'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    }
+
+    /* Body - Modo Oscuro */
+    body:not([data-bs-theme="light"]):not(.light-mode) #accordionInfoSemantic .accordion-body {
+        background-color: #121212;
+        color: #ccc !important;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        border-top: none !important;
+    }
+
+    /* Body - Modo Claro */
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-body,
+    body.light-mode #accordionInfoSemantic .accordion-body {
+        background-color: #ffffff;
+        color: #333 !important;
+        border: 1px solid rgba(33, 150, 243, 0.3) !important;
+        border-top: none !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-body .text-muted,
+    body.light-mode #accordionInfoSemantic .accordion-body .text-muted {
+        color: #666 !important;
+    }
+
+    /* Glass panel - Modo Claro */
+    body[data-bs-theme="light"] .glass-panel,
+    body.light-mode .glass-panel {
+        background: rgba(33, 150, 243, 0.05) !important;
+        border: 1px solid rgba(33, 150, 243, 0.15) !important;
+    }
+
+    /* Text colors - Modo Claro */
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-body .text-accent,
+    body.light-mode #accordionInfoSemantic .accordion-body .text-accent {
+        color: #294a60 !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-body .text-warning,
+    body.light-mode #accordionInfoSemantic .accordion-body .text-warning {
+        color: #ff9800 !important;
+    }
+
+    body[data-bs-theme="light"] #accordionInfoSemantic .accordion-body strong,
+    body.light-mode #accordionInfoSemantic .accordion-body strong {
+        color: #000 !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('semantic-input');
+        const resultsArea = document.getElementById('results-area');
+        const resultsList = document.getElementById('results-list');
+        const statsArea = document.getElementById('stats-area');
+        const placeholder = document.getElementById('results-placeholder');
+        const loading = document.getElementById('results-loading');
+        const btnBuscar = document.getElementById('btn-buscar');
+        let debounceTimer;
+
+        function buscar() {
+            const query = input.value.trim();
+            console.log('[BUSCADOR] Función buscar() ejecutada, query:', query, 'length:', query.length);
+            
+            if (query.length < 3) {
+                console.log('[BUSCADOR] Query muy corta, abortando');
+                return;
+            }
+
+            console.log('[BUSCADOR] Iniciando búsqueda para:', query);
+
+            // Limpiar interfaz
+            placeholder.style.display = 'none';
+            resultsList.style.display = 'none';
+            statsArea.style.display = 'none';
+            loading.style.display = 'block';
+            resultsList.innerHTML = '';
+
+            // Parámetros de filtro
+            const params = new URLSearchParams({
+                q: query,
+                publicacion_id: document.getElementById('filtro-publicacion')?.value || '',
+                pais: document.getElementById('filtro-pais')?.value || '',
+                fecha_desde: document.getElementById('filtro-fecha-desde')?.value || '',
+                fecha_hasta: document.getElementById('filtro-fecha-hasta')?.value || '',
+                limite: document.getElementById('filtro-limite')?.value || '50',
+                usar_ia: document.getElementById('switch-ia')?.checked ? '1' : '0',
+                modelo_ia: document.getElementById('filtro-modelo-ia')?.value || '',
+                temperatura: document.getElementById('filtro-temperatura')?.value || '0.3'
+            });
+
+            const url = `/api/buscar_semantico?${params.toString()}`;
+            console.log('[BUSCADOR] URL completa:', url);
+
+            fetch(`/api/buscar_semantico?${params.toString()}`)
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(err => {
+                            throw new Error(err.error || `Error del servidor: ${res.status}`);
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('[BUSCADOR] Resultados recibidos:', data.length);
+                    loading.style.display = 'none';
+
+                    if (data.length === 0) {
+                        resultsList.innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <div class="glass-panel p-5 d-inline-block">
+                                    <h4 class="text-warning mb-3">Sin resultados</h4>
+                                    <p class="text-muted">No encontré nada conceptualmente cercano a "<em>${query}</em>" con los filtros aplicados.</p>
+                                </div>
+                            </div>`;
+                        resultsList.style.display = 'flex';
+                        return;
+                    }
+
+                    // Mostrar estadísticas
+                    const matchPromedio = Math.round(data.reduce((sum, item) => sum + item.score, 0) / data.length);
+                    statsArea.innerHTML = `
+                        <div class="glass-panel p-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-accent fw-bold"><i class="fa-solid fa-chart-simple me-2"></i> ${data.length} coincidencias</span>
+                                <span class="text-muted ms-3">| Concepto: "<em>${query}</em>"</span>
+                            </div>
+                            <div class="font-mono small text-white-50">Match promedio: ${matchPromedio}%</div>
+                        </div>
+                    `;
+                    statsArea.style.display = 'block';
+
+                    data.forEach(item => {
+                        const col = document.createElement('div');
+                        col.className = 'col-12';
+
+                        col.innerHTML = `
+                            <div class="glass-panel p-4 result-card" onclick="window.location.href='${item.url_editar}'" style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="mb-2">
+                                        <span class="score-badge">${item.score}% CONTEXT MATCH</span>
+                                    </div>
+                                    <span class="badge bg-dark text-muted font-mono small">${item.fecha || 'Sin fecha'}</span>
+                                </div>
+                                <h5 class="text-accent mb-1">${item.titulo || '[Sin Título]'}</h5>
+                                <div class="text-white-50 small mb-3">
+                                    <i class="fa-solid fa-newspaper me-1"></i> ${item.publicacion || 'Desconocida'}
+                                    ${item.ciudad ? ` | <i class="fa-solid fa-location-dot me-1"></i> ${item.ciudad}` : ''}
+                                </div>
+                                <div class="p-3 rounded snippet-container">
+                                    <p class="mb-0 snippet-text">
+                                        ${resaltarTerminos(item.fragmento || item.contenido_limpio, query)}
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                        resultsList.appendChild(col);
+                    });
+                    resultsList.style.display = 'flex';
+                })
+                .catch(err => {
+                    console.error('[BUSCADOR] Error:', err);
+                    loading.style.display = 'none';
+                    const errorMsg = err.message || err;
+                    
+                    // Mensaje personalizado si no hay proyecto activo
+                    if (errorMsg.includes('proyecto activo')) {
+                        resultsList.innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <div class="glass-panel p-5 d-inline-block">
+                                    <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                                    <h4 class="text-warning mb-3">Proyecto no seleccionado</h4>
+                                    <p class="text-muted">Debes tener un proyecto activo para usar el buscador semántico.</p>
+                                    <a href="/proyectos" class="btn btn-sirio-primary mt-3">
+                                        <i class="fa-solid fa-folder-open me-2"></i>Ir a Proyectos
+                                    </a>
+                                </div>
+                            </div>`;
+                        resultsList.style.display = 'flex';
+                    } else {
+                        alert('Error en búsqueda semántica: ' + errorMsg);
+                        placeholder.style.display = 'block';
+                    }
+                });
+        }
+
+        function resaltarTerminos(texto, query) {
+            if (!texto || !query) return texto;
+            const palabras = query.toLowerCase().split(/\s+/).filter(p => p.length > 2);
+            let resultado = texto;
+            palabras.forEach(palabra => {
+                const regex = new RegExp(`(${palabra})`, 'gi');
+                resultado = resultado.replace(regex, '<mark>$1</mark>');
+            });
+            return resultado;
+        }
+
+        btnBuscar.addEventListener('click', buscar);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscar();
+        });
+
+        // Debounce para búsqueda automática
+        input.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
+            if (query.length < 4) { // Umbral un poco más alto para no disparar en cada tecla
+                if (query.length === 0) {
+                    placeholder.style.display = 'block';
+                    resultsList.style.display = 'none';
+                    statsArea.style.display = 'none';
+                }
+                return;
+            }
+            debounceTimer = setTimeout(buscar, 1000);
+        });
+
+        // Control del switch de IA
+        const switchIA = document.getElementById('switch-ia');
+        const iaControls = document.getElementById('ia-controls');
+        const temperaturaSlider = document.getElementById('filtro-temperatura');
+        const tempValue = document.getElementById('temp-value');
+
+        switchIA.addEventListener('change', (e) => {
+            iaControls.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        temperaturaSlider.addEventListener('input', (e) => {
+            tempValue.textContent = e.target.value;
+        });
+
+        // Botón aplicar filtros
+        document.getElementById('btn-aplicar-filtros').addEventListener('click', () => {
+            const offcanvasEl = document.getElementById('offcanvasFiltros');
+            const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+            offcanvasInstance.hide();
+            buscar();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Humanidades Digitales (HD) — Proyecto Sirio{% endblock %}
+{% block page_title %}Humanidades Digitales (HD){% endblock %}
+
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block top_actions %}
+<button class="btn-sirio active" data-analisis="communities" title="Redes de Comunidades">
+    <i class="fa-solid fa-people-group"></i>
+    <span class="btn-text">Comunidades</span>
+</button>
+
+<button class="btn-sirio" data-analisis="keyness" title="Análisis de Keyness (Contrastivo)">
+    <i class="fa-solid fa-key"></i>
+    <span class="btn-text">Keyness</span>
+</button>
+
+<button class="btn-sirio" data-analisis="reuse" title="Detección de Reuso Textual">
+    <i class="fa-solid fa-copy"></i>
+    <span class="btn-text">Reuso Textual</span>
+</button>
+
+<button class="btn-sirio" data-analisis="geosemantics" title="Mapas Geosemánticos">
+    <i class="fa-solid fa-earth-americas"></i>
+    <span class="btn-text">Geosemántica</span>
+</button>
+
+<button class="btn-sirio" data-analisis="shift" title="Cambio Semántico (Embeddings)">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <span class="btn-text">Semantic Shift</span>
+</button>
+
+
+<div class="vr mx-1 opacity-25"></div>
+
+<button id="btn-filtros" class="btn-sirio" title="Configurar filtros de análisis">
+    <i class="fa-solid fa-filter"></i>
+    <span class="btn-text">Filtros</span>
+</button>
+
+<button id="btn-exportar" class="btn-sirio" title="Exportar resultados">
+    <i class="fa-solid fa-download"></i>
+    <span class="btn-text">Exportar</span>
+</button>
+{% endblock %}
+
+{% block content %}
+<div id="analisis-container" style="width: 100%; height: 100%; padding: 40px; overflow-y: auto; position: relative;"
+    class="custom-scrollbar">
+
+    <!-- Loading inicial -->
+    <div id="loading-state"
+        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 10, 10, 0.95); z-index: 1000;">
+        <div class="spinner-border text-accent mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+        <span class="text-muted"
+            style="font-family: var(--ds-font-mono); font-size: 13px; letter-spacing: 1px; font-weight: 500;">INICIALIZANDO
+            MOTORES HD...</span>
+    </div>
+
+    <!-- Vistas de análisis (se llenarán vía AJAX) -->
+    <div id="dh-views-container">
+        <!-- Las demás vistas se inyectarán dinámicamente -->
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal para Comparación de Reuso Textual -->
+<div class="modal fade" id="modalReuso" tabindex="-1"  data-bs-backdrop="false">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark border-0 shadow-lg"
+            style="border-left: 1px solid rgba(255,152,0,0.2) !important;">
+            <div class="modal-header border-bottom border-warning border-opacity-25 py-3">
+                <h5 class="modal-title text-warning fw-bold d-flex align-items-center">
+                    <i class="fa-solid fa-clone me-2"></i> COMPARATIVA DE REUSO TEXTUAL
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 d-flex overflow-hidden" style="flex: 1; min-height: 0;">
+                <div class="container-fluid h-100">
+                    <div class="row h-100">
+                        <!-- Documento 1 -->
+                        <div
+                            class="col-md-6 h-100 border-end border-secondary border-opacity-10 d-flex flex-column p-4">
+                            <div id="reuso-doc1-meta" class="mb-3">
+                                <div class="hd-metric-label" id="doc1-pub">PUBLICACIÓN 1</div>
+                                <h4 class="text-white fw-bold mb-0" id="doc1-title" style="font-size: 1.1rem;">
+                                    Título del Documento 1</h4>
+                            </div>
+                            <div id="reuso-doc1-content" class="custom-scrollbar overflow-auto flex-grow-1 p-3 rounded"
+                                style="background: rgba(0,0,0,0.2); line-height: 1.8; color: #ccc; font-size: 0.95rem;">
+                                Cargando contenido...
+                            </div>
+                        </div>
+                        <!-- Documento 2 -->
+                        <div class="col-md-6 h-100 d-flex flex-column p-4">
+                            <div id="reuso-doc2-meta" class="mb-3">
+                                <div class="hd-metric-label" id="doc2-pub">PUBLICACIÓN 2</div>
+                                <h4 class="text-white fw-bold mb-0" id="doc2-title" style="font-size: 1.1rem;">
+                                    Título del Documento 2</h4>
+                            </div>
+                            <div id="reuso-doc2-content" class="custom-scrollbar overflow-auto flex-grow-1 p-3 rounded"
+                                style="background: rgba(0,0,0,0.2); line-height: 1.8; color: #ccc; font-size: 0.95rem;">
+                                Cargando contenido...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilo Sirio para el contenedor de DH */
+    .btn-sirio {
+        width: auto !important;
+        padding: 6px 16px !important;
+    }
+
+    .btn-sirio .btn-text {
+        max-width: none !important;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Botones inactivos en Rojo (Filtros y Exportar) */
+    #btn-filtros,
+    #btn-exportar {
+        border-color: rgba(255, 68, 68, 0.4) !important;
+        color: #ff6666 !important;
+        cursor: not-allowed;
+    }
+
+    #btn-filtros:hover,
+    #btn-exportar:hover {
+        background: rgba(255, 68, 68, 0.1) !important;
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.2);
+    }
+
+    #btn-filtros .btn-text,
+    #btn-exportar .btn-text {
+        color: #ff6666 !important;
+    }
+
+    .glass-panel,
+    .card-panel-hd {
+        /*        background: var(--ds-bg-panel); */
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--ds-radius-lg);
+        box-shadow: var(--ds-shadow-float);
+    }
+
+    .bg-dark-sirio {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .section-title-hd {
+        font-family: var(--ds-font-headers);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--ds-accent-primary);
+        border-bottom: 2px solid rgba(255, 152, 0, 0.15);
+        padding-bottom: 12px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title-hd i {
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+
+    /* Estilos para badges de Keyness */
+    .badge-hd {
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-family: var(--ds-font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #e0e0e0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+    }
+
+    /* Red de vis.js */
+    #communities-network canvas {
+        cursor: grab;
+    }
+
+    #communities-network canvas:active {
+        cursor: grabbing;
+    }
+
+    .hd-metric-label {
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 600;
+        font-family: var(--ds-font-mono);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .hd-metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+        font-family: var(--ds-font-headers);
+    }
+
+    .table-sirio-hd {
+        width: 100%;
+        font-size: 13px;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-sirio-hd th {
+        font-family: var(--ds-font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #888;
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .table-sirio-hd td {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        vertical-align: middle;
+    }
+
+    .table-sirio-hd tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Resaltado de Reuso */
+    .reuso-highlight {
+        background: rgba(255, 152, 0, 0.3);
+        border-bottom: 2px solid var(--ds-accent-primary);
+        font-weight: 700;
+        color: #fff !important;
+        padding: 0 2px;
+        border-radius: 2px;
+        cursor: help;
+        transition: all 0.2s;
+    }
+
+    .reuso-highlight:hover {
+        background: rgba(255, 152, 0, 0.5);
+        box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+    }
+
+    body[data-theme="light"] .reuso-highlight {
+        background: rgba(255, 152, 0, 0.2);
+        color: #212121 !important;
+    }
+
+    body[data-theme="light"] #modalReuso .modal-content {
+        background: #fff !important;
+    }
+
+    body[data-theme="light"] #modalReuso .text-white {
+        color: #212121 !important;
+    }
+
+    body[data-theme="light"] #modalReuso .btn-close {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23294a60'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") !important;
+        filter: none !important;
+        opacity: 0.8;
+    }
+
+    body[data-theme="light"] #modalReuso .btn-close:hover {
+        opacity: 1;
+    }
+
+    body[data-theme="light"] #reuso-doc1-content,
+    body[data-theme="light"] #reuso-doc2-content {
+        background: rgba(0, 0, 0, 0.03) !important;
+        color: #444 !important;
+    }
+
+    /* FIX: Reuso Textual Adaptivo al Sidebar */
+    #modalReuso {
+        z-index: 950 !important;
+        /* Below sidebar (1000) */
+        pointer-events: none;
+        background: transparent !important;
+    }
+
+    #modalReuso .modal-dialog {
+        /* Default width for open sidebar */
+        left: var(--ds-sidebar-width, 260px);
+        width: calc(100% - var(--ds-sidebar-width, 260px)) !important;
+        max-width: none;
+        margin: 0;
+        position: fixed;
+        top: var(--ds-header-height, 60px);
+        bottom: var(--ds-footer-height, 30px);
+        height: auto !important;
+        /* Let top/bottom define height */
+        transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+            width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        flex-direction: column;
+    }
+
+    #modalReuso .modal-content {
+        pointer-events: auto;
+        /* Re-enable clicks for the actual content */
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 0;
+    }
+
+    /* Snapping when sidebar is collapsed */
+    .sidebar-collapsed #modalReuso .modal-dialog {
+        left: var(--ds-sidebar-width-collapsed, 60px);
+        width: calc(100% - var(--ds-sidebar-width-collapsed, 60px)) !important;
+    }
+
+    /* Responsive adjustments for the internal rows */
+    #modalReuso .modal-body {
+        max-width: 100vw;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+<script src="{{ url_for('static', filename='js/analisis_hd.js') }}?v={{ range(1000, 9999) | random }}"></script>
+<script src="{{ url_for('static', filename='js/reuso_comparative.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

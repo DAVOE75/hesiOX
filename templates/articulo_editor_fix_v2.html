@@ -1,0 +1,266 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}{{ 'Editar' if articulo else 'Nuevo' }} Artículo Científico - {{ proyecto.nombre }}{% endblock %}
+{% block page_title %}{{ 'EDITAR' if articulo else 'NUEVO' }} ARTÍCULO CIENTÍFICOS{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Editor Avanzado</span>
+{% endblock %}
+
+{% block top_actions %}
+<button onclick="guardarBorrador()" class="btn-sirio active">
+    <i class="fa-solid fa-floppy-disk"></i>
+    <span class="btn-text">Guardar</span>
+</button>
+
+<button onclick="previsualizarPDF()" class="btn-sirio">
+    <i class="fa-solid fa-eye"></i>
+    <span class="btn-text">Preview</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('articulos_lista', proyecto_id=proyecto.id) }}" class="btn-sirio">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">Volver</span>
+</a>
+{% endblock %}
+
+{% block body_class %}proyecto-style bg-dark text-light{% endblock %}
+
+{% block extra_css %}
+<!-- TinyMCE Editor de Texto Rico -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+<!-- Sirio TinyMCE & Article Overrides -->
+<link href="{{ url_for('static', filename='css/modules/12-tinymce-sirio.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/modules/13-articulo.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="editor-layout">
+    <!-- PANEL IZQUIERDO: Estructura del documento -->
+    <aside class="panel-estructura">
+        <h3 class="text-uppercase mb-3">
+            <i class="fa-solid fa-folder-tree me-2 text-warning"></i>Estructura
+        </h3>
+        <div id="navegacion-secciones">
+            <div class="estructura-item activo" data-seccion="portada">
+                <i class="fa-solid fa-file-invoice"></i> Portada
+            </div>
+            <div class="estructura-item" data-seccion="resumen">
+                <i class="fa-solid fa-align-center"></i> Resumen / Abstract
+            </div>
+            <div class="estructura-item" data-seccion="introduccion">
+                1. Introducción
+            </div>
+            <div class="estructura-item" data-seccion="metodologia">
+                2. Metodología
+            </div>
+            <div class="estructura-item" data-seccion="resultados">
+                3. Resultados
+            </div>
+            <div class="estructura-item" data-seccion="discusion">
+                4. Discusión
+            </div>
+            <div class="estructura-item" data-seccion="conclusiones">
+                5. Conclusiones
+            </div>
+            <div class="estructura-item" data-seccion="referencias">
+                <i class="fa-solid fa-book"></i> Referencias
+            </div>
+        </div>
+
+        <button class="btn btn-sm btn-dark w-100 mt-4 border-secondary text-muted" onclick="agregarSeccion()">
+            <i class="fa-solid fa-plus me-1"></i> Agregar Sección
+        </button>
+    </aside>
+
+    <!-- PANEL CENTRAL: Editor principal -->
+    <main class="panel-editor">
+        <!-- PORTADA -->
+        <section class="articulo-portada" id="seccion-portada">
+            <input type="text" class="portada-titulo" id="titulo-articulo" placeholder="TÍTULO DEL ARTÍCULO"
+                value="{{ articulo.titulo if articulo else '' }}">
+
+            <input type="text" class="portada-subtitulo" id="subtitulo-articulo"
+                placeholder="Subtítulo o descripción corta" value="{{ articulo.subtitulo if articulo else '' }}">
+
+            <div class="portada-autores" id="autores-lista">
+                <div class="autor-item d-flex align-items-center gap-3">
+                    <div class="icon-autor text-warning bg-warning bg-opacity-10 p-2 rounded">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div>
+                        <div class="autor-nombre" contenteditable="true">Nombre del Investigador</div>
+                        <div class="autor-afiliacion" contenteditable="true">Universidad / Institución</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-sm btn-outline-secondary mt-3" onclick="agregarAutor()">
+                <i class="fa-solid fa-plus me-1"></i> Autor
+            </button>
+        </section>
+
+        <!-- RESUMEN Y ABSTRACT -->
+        <section class="seccion-resumen" id="seccion-resumen">
+            <div class="resumen-bloque">
+                <div class="resumen-titulo">Resumen (ES)</div>
+                <textarea class="resumen-texto" id="resumen-es" rows="10"
+                    placeholder="Redacte el resumen en español...">{{ articulo.resumen_es if articulo else '' }}</textarea>
+                <div
+                    class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-10 pt-2 mt-2">
+                    <span class="text-muted smaller"><span id="contador-resumen">0</span> palabras</span>
+                    <i class="fa-solid fa-language text-secondary"></i>
+                </div>
+            </div>
+
+            <div class="resumen-bloque">
+                <div class="resumen-titulo">Abstract (EN)</div>
+                <textarea class="resumen-texto" id="abstract-en" rows="10"
+                    placeholder="Write the abstract in English...">{{ articulo.abstract_en if articulo else '' }}</textarea>
+                <div
+                    class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-10 pt-2 mt-2">
+                    <span class="text-muted smaller"><span id="contador-abstract">0</span> words</span>
+                    <i class="fa-solid fa-globe text-secondary"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIONES DEL CUERPO DEL ARTÍCULO -->
+        <div id="secciones-cuerpo">
+            <!-- Dinámico -->
+        </div>
+    </main>
+
+    <!-- PANEL DERECHO: Herramientas -->
+    <aside class="panel-herramientas d-flex flex-column gap-3">
+        <!-- Estadísticas -->
+        <div class="card card-sirio border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-2">
+                <h6 class="mb-0 text-warning text-uppercase small fw-bold"><i
+                        class="fa-solid fa-chart-line me-2"></i>Métricas</h6>
+            </div>
+            <div class="card-body p-3 small">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Palabras:</span>
+                    <span class="fw-bold text-light" id="total-palabras">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Páginas:</span>
+                    <span class="fw-bold text-light" id="total-paginas">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-0">
+                    <span class="text-muted">Referencias:</span>
+                    <span class="fw-bold text-light" id="total-referencias">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referenciación -->
+        <div class="card card-sirio border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-2">
+                <h6 class="mb-0 text-info text-uppercase small fw-bold"><i class="fa-solid fa-bookmark me-2"></i>Citas
+                </h6>
+            </div>
+            <div class="card-body p-3">
+                <button class="btn btn-sm btn-info w-100 mb-2 py-2 fw-bold text-dark" onclick="abrirModalCitas()">
+                    <i class="fa-solid fa-plus me-1"></i> Vincular Fuente
+                </button>
+                <div class="d-flex justify-content-between align-items-center smaller text-muted">
+                    <span>Total vinculadas:</span>
+                    <span id="total-citas">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulos adicionales -->
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('articulo_figuras', articulo_id=articulo.id if articulo else 0) }}"
+                class="btn btn-sm btn-dark border-secondary text-light py-2">
+                <i class="fa-solid fa-images me-2 text-warning"></i> Multimedia
+            </a>
+            <a href="{{ url_for('articulo_colaboradores', articulo_id=articulo.id if articulo else 0) }}"
+                class="btn btn-sm btn-dark border-secondary text-light py-2">
+                <i class="fa-solid fa-users me-2 text-success"></i> Equipo
+            </a>
+        </div>
+
+        <!-- Estilo de publicación -->
+        <div class="card card-sirio border-0 shadow-sm mt-auto">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-2">
+                <h6 class="mb-0 text-secondary text-uppercase small fw-bold"><i
+                        class="fa-solid fa-terminal me-2"></i>Estilo</h6>
+            </div>
+            <div class="card-body p-3">
+                <select id="estilo-citas" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="apa">APA 7th Ed.</option>
+                    <option value="chicago">Chicago</option>
+                    <option value="vancouver">Vancouver</option>
+                    <option value="mla">MLA 9th</option>
+                </select>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- BARRA DE ESTADO -->
+<div class="barra-estado">
+    <div class="estado-guardado" id="indicador-guardado">
+        <i class="fa-solid fa-check-double text-success"></i>
+        <span id="texto-guardado">Listo</span>
+    </div>
+
+    <div class="acciones-documento">
+        <button class="btn-accion" onclick="guardarBorrador()">Salvar</button>
+        <button class="btn-accion" onclick="previsualizarPDF()">Vista Previa</button>
+        <button class="btn-accion primario" onclick="guardarYPublicar()">Publicar</button>
+    </div>
+</div>
+
+<!-- MODAL DE CITAS -->
+<div class="modal-citas" id="modal-citas">
+    <div class="modal-citas-contenido shadow-lg border border-secondary border-opacity-25">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="m-0 h5 text-warning fw-bold text-uppercase">Buscador Bibliográfico</h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-light"
+                    onclick="insertarBibliografiaCompleta()">Bibliografía</button>
+                <button class="btn btn-sm btn-danger" onclick="cerrarModalCitas()"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <div class="buscador-referencias mb-3">
+            <input type="text" id="buscar-referencia" class="form-control bg-dark text-light border-secondary"
+                placeholder="Filtre por autor, título o fecha...">
+        </div>
+
+        <div class="lista-referencias" id="lista-referencias" style="max-height: 400px; overflow-y: auto;">
+            <!-- Dinámico -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Script del Editor de Artículos Científicos -->
+<script src="{{ url_for('static', filename='js/articulo-editor.js') }}"></script>
+<script>
+    // Inicialización del Editor de Artículos Sirio
+    (function () {
+        const ARTICULO_ID = {{ articulo.id if articulo else 'null' }
+    };
+    };
+    const PROYECTO_ID = '{{ proyecto.id }}';
+
+    if (typeof tinymce !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', function () {
+            window.articuloEditor = new ArticuloEditor(ARTICULO_ID, PROYECTO_ID);
+        });
+    } else {
+        console.error('TinyMCE no cargado. Verifique conexión a CDN.');
+    }
+    }) ();
+</script>
+{% endblock %}

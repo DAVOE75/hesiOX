@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-04-21T07:16:43.535264",
+  "tipo_analisis": "comunidades",
+  "filtros": {
+    "proyecto_id": 34,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "fecha",
+    "documentos_ids": []
+  },
+  "params": {
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "nodos": [],
+    "enlaces": [],
+    "total_coocurrencias": 0
+  }
+}

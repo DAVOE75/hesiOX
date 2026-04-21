@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión — hesiOX{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block body_class %}hesirox-style{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center auth-container">
+  <div class="row w-100 justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0 text-uppercase auth-title">
+            <svg width="18" height="18" fill="currentColor" class="auth-icon">
+              <circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.5" fill="none" />
+              <path d="M6 8 L9 11 L13 5" stroke="currentColor" stroke-width="1.5" fill="none" />
+            </svg>
+            Iniciar sesión
+          </h5>
+          <span class="badge bg-warning text-dark">hesiOX</span>
+        </div>
+        <div class="card-body">
+          <p class="small mb-3">
+            Accede a tus proyectos bibliográficos y hemerográficos con tu cuenta de usuario.
+          </p>
+
+          <form method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="mb-3">
+              <label for="email" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="email" name="email" required
+                placeholder="tu.correo@ejemplo.com">
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <small class="text-muted">Los proyectos y datos se vinculan a tu cuenta personal.</small>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-warning" style="width: auto;">
+                <svg width="14" height="14" fill="currentColor" class="auth-btn-icon">
+                  <path d="M2 8h7M6 4l3 4-3 4" stroke="currentColor" stroke-width="1.5" fill="none" />
+                  <rect x="10" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"
+                    fill="none" />
+                </svg>
+                Entrar
+              </button>
+              <a href="{{ url_for('registro') }}" class="btn btn-outline-warning btn-sm">
+                ¿No tienes cuenta? Crear nueva
+              </a>
+            </div>
+          </form>
+        </div>
+        <div class="card-footer text-center small">
+          <span class="text-muted">Proyecto de Humanidades Digitales — Sirio / hesiOX</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

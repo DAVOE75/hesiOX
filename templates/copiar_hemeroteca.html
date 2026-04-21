@@ -1,0 +1,110 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Copiar Hemeroteca — hesiOX{% endblock %}
+{% block page_title %}Copiar Hemeroteca{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column h-100">
+    <div class="p-3 pb-0">
+        <div class="metric-strip" style="max-width: 800px;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Proyectos Disponibles</span>
+                    <span class="metric-value">{{ proyectos|length }}</span>
+                </div>
+                <i class="fa-solid fa-diagram-project metric-icon"></i>
+            </div>
+            <div class="metric-compact">
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="text-muted small" style="line-height: 1.2;">
+                        <i class="fa-solid fa-circle-info text-accent me-1"></i>
+                        Herramienta para copiar hemerotecas entre proyectos
+                    </span>
+                    <span class="text-muted extra-small opacity-75">Puedes incluir o no las publicaciones</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form method="post" class="m-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card bg-dark border-warning mb-4">
+            <div class="card-header bg-transparent border-warning text-warning">
+                <svg width="16" height="16" fill="currentColor" class="me-2">
+                    <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.5" fill="none" />
+                </svg>
+                Hemeroteca a Copiar
+            </div>
+            <div class="card-body">
+                <h5 class="text-light mb-2">{{ hemeroteca.nombre }}</h5>
+                <div class="row text-light small">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Institución:</strong> {{ hemeroteca.institucion or '—' }}</p>
+                        <p class="mb-1"><strong>País:</strong> {{ hemeroteca.pais or '—' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Ciudad:</strong> {{ hemeroteca.ciudad or '—' }}</p>
+                        <p class="mb-1"><strong>URL:</strong>
+                            {% if hemeroteca.url %}
+                            <a href="{{ hemeroteca.url }}" target="_blank" class="text-info">{{ hemeroteca.url[:40] }}...</a>
+                            {% else %}—{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label for="proyecto_id" class="form-label text-warning fw-bold">
+                <svg width="16" height="16" fill="currentColor" class="me-2">
+                    <path d="M2 5h8v2H2z" />
+                    <path d="M8 3l3 3-3 3v-2H2V4h6V3z" />
+                </svg>
+                Selecciona el Proyecto Destino
+            </label>
+            <select name="proyecto_id" id="proyecto_id" class="form-select bg-dark text-light border-warning select-migrar" required>
+                <option value="">-- Selecciona un proyecto --</option>
+                {% for p in proyectos %}
+                <option value="{{ p.id }}">{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-check mb-4">
+        {% if publicaciones %}
+        <div class="mb-4">
+            <label class="form-label text-light fw-bold">Selecciona publicaciones a copiar:</label>
+            <div class="card bg-dark border-secondary">
+                <div class="card-body p-2">
+                    <div class="row">
+                        {% for pub in publicaciones %}
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="publicaciones" id="pub_{{ pub.id_publicacion }}" value="{{ pub.id_publicacion }}" checked>
+                                <label class="form-check-label text-light" for="pub_{{ pub.id_publicacion }}">
+                                    <strong>{{ pub.nombre }}</strong>
+                                    {% if pub.ciudad or pub.pais_publicacion %}
+                                        <span class="text-muted small"> ({{ pub.ciudad or '' }}{{ ', ' if pub.ciudad and pub.pais_publicacion else '' }}{{ pub.pais_publicacion or '' }})</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        </div>
+        <div class="d-flex gap-2 justify-content-end pt-3 border-top border-secondary">
+            <a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-warning text-dark fw-bold">
+                <svg width="14" height="14" fill="currentColor" class="me-1">
+                    <path d="M2 5h8v2H2z" />
+                    <path d="M8 3l3 3-3 3v-2H2V4h6V3z" />
+                </svg>
+                Copiar Hemeroteca
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

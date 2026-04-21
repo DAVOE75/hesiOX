@@ -1,0 +1,498 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}HesiOX - Plano Interactivo S.S. Sirio{% endblock %}
+
+{% block page_title %}Plano Interactivo{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center me-3 contenedor-filtro-barco" style="gap: 10px;">
+    <label for="categoria-filtro">Área del Barco:</label>
+    <div style="width: 200px;">
+        <select id="categoria-filtro" class="form-select form-select-sm shadow-sm">
+            <option value="all" selected>Todas las categorías</option>
+            <option value="Alojamiento">Alojamiento</option>
+            <option value="Salones">Salones</option>
+            <option value="Maquinaria">Maquinaria</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Carga">Carga</option>
+            <option value="Cubierta">Cubierta</option>
+            <option value="Sanidad">Sanidad</option>
+        </select>
+    </div>
+    <button id="reset-filtro" class="btn btn-sm btn-outline-secondary shadow-sm" title="Restablecer filtro">
+        <i class="fa-solid fa-rotate-left"></i>
+    </button>
+</div>
+<a href="{{ url_for('barco.ficha') }}" class="btn btn-sm btn-sirio">
+    <i class="fa-solid fa-file-contract me-1"></i> Ficha Técnica
+</a>
+<a href="{{ url_for('barco.admin') }}" class="btn btn-sm btn-outline-sirio">
+    <i class="fa-solid fa-gear me-1"></i> Administrar
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/barco.css') }}">
+<style>
+    /* Estilos solicitados para el filtro */
+    .contenedor-filtro-barco .choices__inner {
+        margin-top: 5px !important;
+    }
+
+    .contenedor-filtro-barco label {
+        margin-top: 5px !important;
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        margin-bottom: 0;
+    }
+
+    #map-container {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        background: #000;
+        overflow: hidden;
+        --br-accent: var(--app-accent, #294a60) !important;
+        /* Dinámico según el tema */
+    }
+
+
+    #map {
+        height: 100%;
+        width: 100%;
+        background: #ededed;
+    }
+
+    /* SPECIFIC GIS OVERRIDES */
+    .map-sidebar {
+        position: absolute;
+        left: 20px;
+        top: 20px;
+        width: 320px;
+        max-height: calc(100% - 40px);
+        background: var(--br-card-bg);
+        border: 1px solid var(--br-border);
+        border-radius: 12px;
+        z-index: 1000;
+        box-shadow: var(--ds-shadow-panel);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+
+
+
+    .sidebar-header {
+        padding: 1.25rem;
+        background: var(--br-accent);
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px 12px 0 0;
+    }
+
+
+    .legend-card {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: var(--br-card-bg);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        color: var(--br-text-muted);
+        font-size: 0.8rem;
+        border: 1px solid var(--br-border);
+        z-index: 1000;
+        box-shadow: var(--ds-shadow-panel);
+    }
+
+    .plan-selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .plan-btn {
+        background: var(--br-card-bg);
+        color: var(--br-text-main);
+        border: 1px solid var(--br-border);
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        backdrop-filter: blur(12px);
+        min-width: 200px;
+        text-align: left;
+        box-shadow: var(--ds-shadow-panel);
+    }
+
+    .plan-btn i {
+        font-size: 1rem;
+        color: var(--br-accent);
+    }
+
+    .plan-btn:hover {
+        border-color: var(--br-accent);
+        transform: scale(1.05);
+    }
+
+    .plan-btn.active {
+        background: var(--br-accent);
+        color: #fff;
+        border-color: var(--br-accent);
+        font-weight: 700;
+        box-shadow: 0 0 20px var(--br-accent-dim);
+    }
+
+    .plan-btn.active i {
+        color: #fff !important;
+    }
+
+    /* Forzar azul sirio en los iconos de acento del visor */
+    #map-container .text-accent,
+    #map-container .border-accent {
+        color: var(--br-accent) !important;
+        border-color: var(--br-accent) !important;
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="p-0 container-fluid flex-grow-1 d-flex flex-column" style="min-height: 0;">
+    <div id="map-container">
+        <div class="map-sidebar">
+            <div class="sidebar-header">
+                <h4 class="mb-1 fw-bold" style="color: #fff !important;">S.S. Sirio</h4>
+                <p class="mb-0 small opacity-75" style="color: #fff !important;">Planos de Construcción (1883)</p>
+            </div>
+
+            <div class="p-3 overflow-auto sidebar-content scrollbar-custom">
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="p-2 text-center rounded bg-dark border-accent" style="width: 50px;">
+                            <i class="fa-solid fa-ship text-accent"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-white d-block small fw-bold">Robert Napier & Sons</span>
+                        <span class="text-muted d-block" style="font-size: 0.7rem;">Govan, Glasgow</span>
+                    </div>
+                </div>
+
+                <p class="small text-blue-100 opacity-75 mb-0">
+                    Este visor permite explorar las diferentes secciones y cubiertas del S.S. Sirio según los planos
+                    originales de 1883. Haz clic en las áreas resaltadas para obtener detalles técnicos.
+                </p>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="plan-selector">
+            <button class="plan-btn active" onclick="switchPlan(1, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano.jpg') }}">
+                <i class="fas fa-layer-group"></i> Plano de Corte
+            </button>
+            <button class="plan-btn" onclick="switchPlan(2, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_2.jpg') }}">
+                <i class="fas fa-drafting-compass"></i> Plano de Construcción
+            </button>
+            <button class="plan-btn" onclick="switchPlan(3, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_3.jpg') }}">
+                <i class="fas fa-arrows-alt-h"></i> Sección Longitudinal
+            </button>
+            <button class="plan-btn" onclick="switchPlan(4, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_4.jpg') }}">
+                <i class="fas fa-arrows-alt-v"></i> Sección Media
+            </button>
+            <button class="plan-btn" onclick="switchPlan(5, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_5.jpg') }}">
+                <i class="fas fa-water"></i> Tanque de Lastre
+            </button>
+            <button class="plan-btn" onclick="switchPlan(6, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_6.jpg') }}">
+                <i class="fas fa-cogs"></i> Refuerzo Máquinas
+            </button>
+            <button class="plan-btn" onclick="switchPlan(7, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_7.jpg') }}">
+                <i class="fas fa-fire"></i> Plano de Calderas
+            </button>
+            <button class="plan-btn" onclick="switchPlan(8, this)"
+                data-img="{{ url_for('static', filename='img/barco/sirio_plano_8.jpg') }}">
+                <i class="fas fa-anchor"></i> Estructura de Popa
+            </button>
+        </div>
+
+        <div class="legend-card">
+            <i class="fa-solid fa-circle-info me-2 text-accent"></i>
+            Escala Original 1:300 • Coordenadas Relativas • Reconstrucción Histórica 1883
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const w = 4000, h = 2000;
+        const bounds = [[0, 0], [h, w]];
+
+        const map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: -2,
+            maxZoom: 2,
+            zoomSnap: 0.5,
+            zoomDelta: 0.5,
+            zoomControl: false,
+            attributionControl: false
+        });
+
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+        // Capa de Imagen principal
+        let imageOverlay = L.imageOverlay("{{ url_for('static', filename='img/barco/sirio_plano.jpg') }}", bounds).addTo(map);
+        map.fitBounds(bounds, {
+            paddingTopLeft: [20, 120],
+            paddingBottomRight: [20, 20]
+        });
+
+        // Grupo para puntos interactivos
+        const puntosLayer = L.layerGroup().addTo(map);
+
+        // Función para cambiar de plano
+        window.switchPlan = function (id, btn) {
+            const newImgUrl = btn.getAttribute('data-img');
+
+            // Si es el Plano de Corte (Plan 1), usamos las dimensiones fijas para mantener la alineación de puntos
+            if (id === 1) {
+                const corteBounds = [[0, 0], [2000, 4000]];
+                imageOverlay.setUrl(newImgUrl);
+                imageOverlay.setBounds(corteBounds);
+                map.fitBounds(corteBounds, {
+                    paddingTopLeft: [20, 120],
+                    paddingBottomRight: [20, 20]
+                });
+                puntosLayer.addTo(map);
+                updateUI(btn);
+                return;
+            }
+
+            // Para el resto de planos, calculamos el aspecto real para evitar deformaciones
+            const tempImg = new Image();
+            tempImg.onload = function () {
+                const w_orig = this.naturalWidth;
+                const h_orig = this.naturalHeight;
+
+                // Calculamos un tamaño de visualización razonable basado en el aspecto original
+                const displayW = 4000;
+                const displayH = (h_orig / w_orig) * displayW;
+                const newBounds = [[0, 0], [displayH, displayW]];
+
+                imageOverlay.setUrl(newImgUrl);
+                imageOverlay.setBounds(newBounds);
+                map.fitBounds(newBounds, {
+                    paddingTopLeft: [20, 120],
+                    paddingBottomRight: [20, 20]
+                });
+
+                // Ocultar puntos (no están calibrados para estas imágenes)
+                map.removeLayer(puntosLayer);
+                updateUI(btn);
+            };
+            tempImg.src = newImgUrl;
+        };
+
+        function updateUI(btn) {
+            document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const categoryColors = {
+            'Alojamiento': isDark ? '#ff9800' : '#294a60', // Adaptado: Naranja Sirio en Dark, Azul Sirio en Light
+            'Salones': '#eab308',
+            'Maquinaria': '#ef4444',
+            'Servicios': '#8b5cf6',
+            'Carga': isDark ? '#e65100' : '#f97316', // Oscurecer carga en dark para diferenciar de alojamiento
+            'Cubierta': '#10b981',
+            'Sanidad': '#ec4899'
+        };
+        const getCatColor = (cat) => categoryColors[cat] || (isDark ? '#e9ab00' : '#cdb263');
+
+        // Puntos cargados desde el backend
+        const puntosData = {{ puntos | tojson | safe if puntos else '[]'
+    }};
+    const allMarkers = [];
+
+    if (Array.isArray(puntosData)) {
+        puntosData.forEach(p => {
+
+            let layer;
+            const cColor = getCatColor(p.categoria);
+
+            // Shoelace logic for Area (Polygons) or Circle Area
+            let areaInfo = '';
+            let areaM2 = 0;
+
+            let coords = p.coordenadas;
+            if (typeof coords === 'string' && coords.length > 2) {
+                try { coords = JSON.parse(coords); } catch (e) { }
+            }
+
+            if (coords) {
+                if (coords.radius || coords.type === 'circle') {
+                    // Círculo
+                    const r = coords.radius || coords.r;
+                    areaM2 = (Math.PI * Math.pow(r, 2) * Math.pow(115.82 / 3600, 2)).toFixed(1);
+                } else if (Array.isArray(coords) && coords.length > 0) {
+                    // Polígono
+                    let areaPx2 = 0;
+                    const n = coords.length;
+                    for (let i = 0; i < n; i++) {
+                        let j = (i + 1) % n;
+                        let xi = coords[i][1]; let yi = coords[i][0];
+                        let xj = coords[j][1]; let yj = coords[j][0];
+                        areaPx2 += (xi * yj) - (xj * yi);
+                    }
+                    areaM2 = (Math.abs(areaPx2 / 2) * Math.pow(115.82 / 3600, 2)).toFixed(1);
+                }
+
+                if (areaM2 > 0) {
+                    // Ajustamos el multiplicador (manga/anchura) para estimar el volumen en una vista de perfil.
+                    let width_m = 9.0;
+                    if (p.nombre && p.nombre.toLowerCase().includes('pasillo')) {
+                        width_m = (areaM2 < 40) ? 11.4 : 9.5;
+                    } else if (p.nombre && p.nombre.toLowerCase().includes('bodega')) {
+                        width_m = 8.99;
+                    } else if (p.nombre && p.nombre.toLowerCase().includes('tanque')) {
+                        width_m = 3.1;
+                    }
+                    const volM3 = (areaM2 * width_m).toFixed(1);
+
+                    areaInfo = `<div class="mt-2 p-2 rounded border border-secondary text-center custom-popup-inner">
+                                <small class="d-block mb-1"><i class="fas fa-vector-square me-1"></i> Área central (est.): <b>${areaM2} m²</b></small>
+                                <small class="d-block" title="Calculo volumétrico transversal: Área perfil x Manga media est. en sección"><i class="fas fa-cube me-1"></i> Volumen: <b>${volM3} m³</b></small>
+                            </div>`;
+                }
+            }
+
+            const popupContent = `
+                        <div class="custom-popup">
+                            <h5 class="text-accent mb-2" style="color: ${cColor} !important;">${p.nombre}</h5>
+                            <p class="small mb-0" style="color: inherit;">${p.descripcion || 'Sin descripción detallada.'}</p>
+                            ${areaInfo}
+                            <hr class="my-2 border-secondary">
+                            <span class="badge text-dark fw-bold border border-secondary" style="background-color: ${cColor}">${p.categoria || 'Sección'}</span>
+                        </div>
+                    `;
+
+            if (coords) {
+                if (coords.radius || coords.type === 'circle') {
+                    // Renderizar como Círculo
+                    const r = coords.radius || coords.r;
+                    layer = L.circle([p.y, p.x], {
+                        radius: r,
+                        color: cColor,
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: cColor,
+                        fillOpacity: 0.2
+                    }).addTo(puntosLayer);
+                } else if (Array.isArray(coords) && coords.length > 0) {
+                    // Renderizar como Polígono
+                    layer = L.polygon(coords, {
+                        color: cColor,
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: cColor,
+                        fillOpacity: 0.2
+                    }).addTo(puntosLayer);
+                }
+
+                if (layer) {
+                    // Efectos de hover
+                    layer.on('mouseover', function (e) {
+                        this.setStyle({
+                            fillOpacity: 0.5,
+                            weight: 3
+                        });
+                    });
+                    layer.on('mouseout', function (e) {
+                        this.setStyle({
+                            fillOpacity: 0.2,
+                            weight: 2
+                        });
+                    });
+                }
+            } else if (p.y !== undefined && p.x !== undefined) {
+                // Renderizar como Marcador (fallback)
+                layer = L.marker([p.y, p.x], {
+                    icon: L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${cColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,1);"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    })
+                }).addTo(puntosLayer);
+            }
+
+            if (layer) {
+                layer.bindPopup(popupContent);
+                allMarkers.push({ layer: layer, category: p.categoria });
+            }
+        });
+    }
+
+    // Lógica de filtrado por categoría
+    const filterSelect = document.getElementById('categoria-filtro');
+    const btnReset = document.getElementById('reset-filtro');
+
+    function applyCategoryFilter() {
+        if (!filterSelect) return;
+        const selectedCat = filterSelect.value;
+        puntosLayer.clearLayers();
+        allMarkers.forEach(m => {
+            if (selectedCat === 'all' || m.category === selectedCat) {
+                puntosLayer.addLayer(m.layer);
+            }
+        });
+    }
+
+    if (filterSelect) {
+        filterSelect.addEventListener('change', applyCategoryFilter);
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            if (filterSelect) {
+                filterSelect.value = 'all';
+                applyCategoryFilter();
+            }
+        });
+    }
+
+    // Debug click para administración
+    map.on('click', function (e) {
+        console.log("Coordenadas click:", e.latlng.lng, e.latlng.lat);
+    });
+});
+
+</script>
+{% endblock %}

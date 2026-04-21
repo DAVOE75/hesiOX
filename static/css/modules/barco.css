@@ -1,0 +1,402 @@
+/* ============================================================
+   BARCO.CSS - Módulo "El Barco" (S.S. Sirio)
+   Bimodal Design (Light/Dark Support)
+   ============================================================ */
+
+:root {
+    --br-accent: var(--app-accent, #294a60);
+    --br-accent-dim: var(--app-accent-dim, rgba(41, 74, 96, 0.1));
+    --br-card-bg: var(--ds-bg-panel, #1e1e1e);
+    --br-hero-gradient: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+    --br-border: rgba(255, 255, 255, 0.1);
+    --br-text-muted: var(--ds-text-muted, #a0a0a0);
+    --br-text-main: var(--ds-text-main, #e0e0e0);
+}
+
+[data-theme="light"] {
+    --br-card-bg: #ffffff;
+    --br-hero-gradient: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%);
+    --br-border: rgba(0, 0, 0, 0.1);
+    --br-text-muted: #64748b;
+    --br-text-main: #1e293b;
+}
+
+[data-theme="dark"] {
+    --br-card-bg: #111827;
+    --br-hero-gradient: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    --br-border: rgba(255, 255, 255, 0.08);
+}
+
+
+/* === CONTAINERS === */
+.technical-container {
+    width: 90%;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+/* === HERO CARD === */
+.hero-technical-card {
+    background: var(--br-hero-gradient);
+    border: 1px solid var(--br-accent);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: var(--ds-shadow-panel);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-technical-card h1 {
+    color: var(--br-text-main) !important;
+}
+
+/* === ACCORDION === */
+.accordion-item {
+    background-color: var(--br-card-bg) !important;
+    border: 1px solid var(--br-border) !important;
+    margin-bottom: 1rem;
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: var(--ds-shadow-panel);
+}
+
+.accordion-button {
+    background-color: var(--br-card-bg) !important;
+    color: var(--br-text-main) !important;
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    transition: all 0.3s ease;
+}
+
+.accordion-button::after {
+    display: none !important;
+}
+
+
+.accordion-button:not(.collapsed) {
+    color: var(--br-accent) !important;
+    background-color: var(--br-accent-dim) !important;
+    border-bottom: 1px solid var(--br-border) !important;
+}
+
+.accordion-icon {
+    color: var(--br-text-muted);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+.accordion-button:not(.collapsed) .accordion-icon {
+    transform: rotate(180deg);
+    color: var(--br-accent);
+}
+
+/* === GRID & ITEMS === */
+.technical-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.technical-item {
+    border-bottom: 1px solid var(--br-border);
+    padding: 10px 0;
+    transition: all 0.3s ease;
+}
+
+.technical-item:hover {
+    background: var(--br-accent-dim);
+    padding-left: 5px;
+}
+
+.small-technical-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--br-text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.technical-value {
+    font-weight: 500;
+    color: var(--br-text-main);
+    font-family: 'Inter', sans-serif;
+}
+
+/* === AI BUTTONS & MODALS === */
+.btn-ai-analysis {
+    background: var(--br-accent-dim);
+    border: 1px solid var(--br-accent);
+    color: var(--br-accent);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-right: 1.5rem;
+}
+
+.btn-ai-analysis:hover {
+    background: var(--br-accent);
+    color: #fff !important;
+    box-shadow: 0 0 15px var(--br-accent-dim);
+    transform: translateY(-2px);
+}
+
+/* Modal Insights */
+.insight-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    align-items: center;
+    justify-content: center;
+}
+
+.insight-modal.active { display: flex; }
+
+.insight-modal-content {
+    background: var(--br-card-bg);
+    border: 1px solid var(--br-border);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 850px;
+    max-height: 85vh;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--ds-shadow-float);
+    display: flex;
+    flex-direction: column;
+}
+
+.insight-modal-header {
+    padding: 1.2rem 2rem;
+    background: var(--br-accent-dim);
+    border-bottom: 1px solid var(--br-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.insight-title {
+    color: var(--br-accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.insight-modal-body {
+    padding: 2.5rem;
+    overflow-y: auto;
+    color: var(--br-text-main);
+    line-height: 1.7;
+}
+
+.close-insight {
+    color: var(--br-accent);
+    cursor: pointer;
+    transition: 0.2s;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+}
+
+.close-insight:hover {
+    background: var(--br-accent-dim);
+    transform: rotate(90deg);
+}
+
+/* === ENGINE SPECIFIC === */
+.engine-accent-text { color: #e05a1e !important; }
+[data-theme="light"] .engine-accent-text { color: #294a60 !important; }
+
+.engine-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--br-accent-dim);
+    border: 1px solid var(--br-accent);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--br-accent);
+    font-weight: 600;
+}
+
+/* === BIMODAL UTILS === */
+.lang-sep { opacity: 0.3; margin: 0 4px; }
+.hide-en .lang-en, .hide-en .lang-sep { display: none !important; }
+.hide-es .lang-es, .hide-es .lang-sep { display: none !important; }
+
+/* === UI COMPONENTS === */
+.sirio-segmented-control {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--br-border);
+    border-radius: 4px;
+    padding: 2px;
+    height: 32px;
+}
+
+[data-theme="light"] .sirio-segmented-control {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+
+.sirio-segmented-control .btn {
+    border-radius: 2px;
+    border: none !important;
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--br-text-muted);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+
+.sirio-segmented-control .btn:hover {
+    color: var(--br-text-main);
+}
+
+.sirio-segmented-control .btn.active {
+    background: var(--br-accent);
+    color: #fff !important;
+    opacity: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Dropdown IA */
+.dropdown-ia .dropdown-toggle {
+    background: var(--br-accent-dim) !important;
+    border: 1px solid var(--br-accent) !important;
+    color: var(--br-accent) !important;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-ia .dropdown-toggle .btn-text,
+.dropdown-ia .dropdown-toggle i {
+    color: var(--br-accent) !important;
+}
+
+
+.dropdown-ia .dropdown-menu {
+    background: var(--br-card-bg) !important;
+    border: 1px solid var(--br-border) !important;
+    box-shadow: var(--ds-shadow-float);
+}
+
+.dropdown-ia .dropdown-item {
+    color: var(--br-text-main) !important;
+}
+
+.dropdown-ia .dropdown-item:hover {
+    background: var(--br-accent-dim) !important;
+    color: var(--br-accent) !important;
+}
+
+.dropdown-ia .dropdown-item.active {
+    background: var(--br-accent) !important;
+    color: #fff !important;
+}
+
+/* === SIRIO COMPREHENSIVE BUTTONS === */
+.btn-sirio {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+[data-theme="light"] .btn-sirio-secondary {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+[data-theme="light"] .btn-sirio-secondary:hover {
+    background: #e2e8f0 !important;
+    border-color: var(--br-accent) !important;
+    color: var(--br-accent) !important;
+}
+
+[data-theme="light"] .btn-sirio-warning {
+    background: rgba(41, 74, 96, 0.08) !important;
+    border: 1px solid var(--br-accent) !important;
+    color: var(--br-accent) !important;
+}
+
+[data-theme="light"] .btn-sirio-warning:hover {
+    background: var(--br-accent) !important;
+    color: #ffffff !important;
+}
+
+
+
+/* === TECHNICAL ILLUSTRATIONS (AI REPORTS) === */
+.tech-img {
+    display: block;
+    max-width: 500px;
+    width: 100%;
+    margin: 30px auto 10px auto;
+    border: 1px solid var(--br-border);
+    border-radius: 2px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease;
+    background: #f4f4f4; /* Subtle off-white for the historical paper feel */
+    padding: 6px;
+}
+
+[data-theme="light"] .tech-img {
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.tech-img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.tech-caption {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--br-accent);
+    margin-bottom: 35px;
+    font-style: italic;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}

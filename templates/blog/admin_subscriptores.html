@@ -1,0 +1,265 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Suscriptores del Blog · HesiOX{% endblock %}
+{% block page_title %}BLOG — GESTIÓN DE SUSCRIPTORES{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">
+    / <a href="{{ url_for('admin_panel') }}" class="text-muted text-decoration-none">Administración</a>
+    / <a href="{{ url_for('blog.admin_lista') }}" class="text-muted text-decoration-none">Blog</a>
+    / Suscriptores
+</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('blog.admin_lista') }}" class="btn-sirio active" title="Volver al panel">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">Volver al Panel</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========= SUBSCRIBERS ADMIN PANEL ========= */
+.admin-blog-container {
+    padding: 1.2rem 2rem;
+}
+
+/* Tabla de suscriptores */
+.admin-blog-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.4rem;
+    margin-top: 1rem;
+}
+.admin-blog-table thead th {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ds-text-muted, #666);
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.admin-blog-row {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.2s;
+}
+.admin-blog-row td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+.admin-blog-row td:first-child { border-radius: 8px 0 0 8px; }
+.admin-blog-row td:last-child  { border-radius: 0 8px 8px 0; }
+
+.sub-email {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--ds-text-primary, #ddd);
+}
+
+/* Badges de estado */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+}
+.status-badge.activo {
+    background: rgba(34,197,94,0.1);
+    color: #22c55e;
+    border-color: rgba(34,197,94,0.3);
+}
+.status-badge.inactivo {
+    background: rgba(255,255,255,0.05);
+    color: var(--ds-text-muted, #777);
+    border-color: rgba(255,255,255,0.1);
+}
+
+/* Search input */
+.search-container {
+    max-width: 400px;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+.search-input {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.2rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+}
+.search-icon {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ds-text-muted, #666);
+    font-size: 0.8rem;
+}
+
+[data-theme="light"] .admin-blog-row { background: #fff; border-color: rgba(0,0,0,0.05); }
+[data-theme="light"] .search-input { background: #fff; color: #333; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-blog-container" style="overflow-y: auto; height: 100%;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-1" style="font-weight: 700; color: var(--ds-text-primary);">Suscriptores a la Newsletter</h4>
+            <p class="text-muted small mb-0">Gestiona los correos electrónicos registrados para las novedades del blog.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge" style="background: rgba(var(--ds-accent-rgb,255,152,0),0.1); color: var(--ds-accent-primary); padding: 0.5rem 1rem; border: 1px solid rgba(var(--ds-accent-rgb,255,152,0),0.2);">
+                {{ subscriptores|length }} Total
+            </span>
+        </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="subSearch" class="search-input" placeholder="Buscar por email..." onkeyup="filterSubscribers()">
+    </div>
+
+    <!-- Tabla -->
+    {% if subscriptores %}
+    <div style="overflow-x: auto;">
+        <table class="admin-blog-table" id="subsTable">
+            <thead>
+                <tr>
+                    <th>Email del Suscriptor</th>
+                    <th>Estado</th>
+                    <th>Fecha de Registro</th>
+                    <th style="text-align:center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscriptores %}
+                <tr class="admin-blog-row" id="sub-{{ sub.id }}">
+                    <td>
+                        <span class="sub-email">{{ sub.email }}</span>
+                    </td>
+                    <td>
+                        <button class="status-badge {{ 'activo' if sub.activo else 'inactivo' }}"
+                                onclick="toggleSubStatus({{ sub.id }}, this)">
+                            <i class="fa-solid {{ 'fa-circle-check' if sub.activo else 'fa-circle' }}"></i>
+                            <span class="status-label">{{ 'Activo' if sub.activo else 'Inactivo' }}</span>
+                        </button>
+                    </td>
+                    <td style="font-size:0.75rem; color: var(--ds-text-muted);">
+                        {{ sub.creado_en.strftime('%d/%m/%Y %H:%M') }}
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-sm btn-outline-danger border-0" 
+                                    style="padding: 0.2rem 0.5rem;"
+                                    title="Eliminar"
+                                    onclick="eliminarSubscriptor({{ sub.id }}, '{{ sub.email }}')">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center p-5 opacity-50">
+        <i class="fa-solid fa-users-slash fa-3x mb-3 text-secondary"></i>
+        <h5 class="text-muted">Aún no hay suscriptores</h5>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+function filterSubscribers() {
+    let input = document.getElementById("subSearch");
+    let filter = input.value.toLowerCase();
+    let table = document.getElementById("subsTable");
+    if (!table) return;
+    let tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+        let emailTd = tr[i].getElementsByTagName("td")[0];
+        if (emailTd) {
+            let txtValue = emailTd.textContent || emailTd.innerText;
+            if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+
+async function toggleSubStatus(id, btn) {
+    try {
+        const resp = await fetch(`/blog/admin/subscriptores/${id}/toggle`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        });
+        const data = await resp.json();
+        if (data.success) {
+            btn.className = `status-badge ${data.activo ? 'activo' : 'inactivo'}`;
+            btn.querySelector('i').className = `fa-solid ${data.activo ? 'fa-circle-check' : 'fa-circle'}`;
+            btn.querySelector('.status-label').textContent = data.label;
+        }
+    } catch(e) {
+        console.error('Error al cambiar estado:', e);
+    }
+}
+
+async function eliminarSubscriptor(id, email) {
+    const confirmed = await Swal.fire({
+        title: '¿Eliminar suscriptor?',
+        text: `Se borrará a ${email} de la lista.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ef4444',
+        background: 'var(--ds-bg-card, #1a1a1a)',
+        color: 'var(--ds-text-primary, #fff)',
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    try {
+        const resp = await fetch(`/blog/admin/subscriptores/${id}/eliminar`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF }
+        });
+        const data = await resp.json();
+        if (data.success) {
+            const row = document.getElementById(`sub-${id}`);
+            if (row) {
+                row.style.transition = 'all 0.3s';
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(10px)';
+                setTimeout(() => row.remove(), 300);
+            }
+        }
+    } catch(e) {
+        Swal.fire('Error', 'No se pudo eliminar el suscriptor.', 'error');
+    }
+}
+</script>
+{% endblock %}

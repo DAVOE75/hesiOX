@@ -1,0 +1,230 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Repositorio Global — hesiOX{% endblock %}
+{% block page_title %}Repositorio de Hemerotecas{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ <a href="{{ url_for('hemerotecas.hemerotecas') }}"
+        class="text-muted text-decoration-none">Hemerotecas</a> / Repositorio Global</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling for Choices.js filter */
+    .choices__inner {
+        border: 1px solid #ff9800 !important;
+        font-size: 12px !important;
+        min-height: 30px !important;
+    }
+
+    .repository-info-alert {
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.08), rgba(255, 152, 0, 0.03));
+        border-left: 3px solid #ff9800 !important;
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex gap-2">
+    <a href="{{ url_for('hemerotecas.hemerotecas') }}" class="btn-sirio" style="width: 160px !important;">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="btn-text">Hemerotecas</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column h-100 overflow-hidden">
+
+    <!-- Header Strip -->
+    <div class="p-3 pb-0 flex-shrink-0">
+        <div class="metric-strip" style="max-width: 800px;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Total Disponibles</span>
+                    <span class="metric-value">{{ total_globales }}</span>
+                </div>
+                <i class="fa-solid fa-globe metric-icon"></i>
+            </div>
+            <div class="metric-compact">
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="text-muted small" style="line-height: 1.2;">
+                        <i class="fa-solid fa-cloud-arrow-down text-accent me-1"></i>
+                        Repositorio Global
+                    </span>
+                    <span class="text-muted extra-small opacity-75">Importa hemerotecas creadas por la comunidad</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explanatory Panel -->
+    <div class="px-3 mt-3 flex-shrink-0">
+        <div class="alert border-0 rounded-0 repository-info-alert" role="alert">
+            <div class="d-flex align-items-start gap-3">
+                <i class="fa-solid fa-circle-info fs-4 text-accent mt-1"></i>
+                <div class="flex-grow-1">
+                    <h6 class="text-accent fw-bold mb-2">
+                        <i class="fa-solid fa-globe me-2"></i>¿Qué es el Repositorio Global?
+                    </h6>
+                    <p class="mb-2 small text-light opacity-90" style="line-height: 1.6;">
+                        El <strong>Repositorio Global</strong> es una biblioteca colaborativa de hemerotecas digitales
+                        compartidas por la comunidad de usuarios de hesiOX.
+                        Aquí encontrarás hemerotecas creadas y compartidas por otros investigadores que puedes importar
+                        directamente a tu proyecto.
+                    </p>
+
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-6">
+                            <div class="p-2 rounded" style="background: rgba(0,0,0,0.2);">
+                                <h6 class="small text-warning mb-1">
+                                    <i class="fa-solid fa-download me-1"></i>Cómo importar
+                                </h6>
+                                <p class="extra-small text-muted mb-0" style="line-height: 1.5;">
+                                    Haz clic en el botón <strong class="text-accent">Importar</strong> de cualquier
+                                    hemeroteca.
+                                    Se creará una copia en tu proyecto con todas sus publicaciones asociadas.
+                                    Las hemerotecas importadas son <strong>privadas por defecto</strong> y no aparecerán
+                                    en este repositorio.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 rounded" style="background: rgba(0,0,0,0.2);">
+                                <h6 class="small text-warning mb-1">
+                                    <i class="fa-solid fa-share-nodes me-1"></i>Cómo compartir tus hemerotecas
+                                </h6>
+                                <p class="extra-small text-muted mb-0" style="line-height: 1.5;">
+                                    En el formulario de creación/edición de hemerotecas, marca la casilla
+                                    <strong class="text-accent">"Compartir en repositorio global"</strong>.
+                                    Solo las hemerotecas compartidas de otros proyectos aparecen aquí.
+                                    Las tuyas nunca se mostrarán en este listado.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div
+        class="px-3 py-2 border-bottom border-light bg-dark-panel d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2 flex-shrink-0">
+        <div class="position-relative" style="max-width: 400px; width: 100%;">
+            <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+                style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem;"></i>
+            <input type="text" id="buscador" class="form-control-sirio ps-4" placeholder="Buscar en el repositorio..."
+                onkeyup="filtrarTabla()">
+        </div>
+
+        <!-- Filtro por País -->
+        <div style="min-width: 200px;">
+            <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1"
+                style="font-size: 0.7rem;">País</label>
+            <form method="GET" action="{{ url_for('hemerotecas.repositorio_global') }}">
+                <select name="pais" class="form-select form-select-sm form-control-sirio" style="width: 200px;"
+                    onchange="this.form.submit()">
+                    <option value="">(Todos los países)</option>
+                    {% for p in paises %}
+                    <option value="{{ p }}" {% if pais_seleccionado==p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="content-scroll-area bg-dark flex-grow-1 overflow-auto p-0" style="position: relative;">
+        <div class="table-responsive" style="overflow: visible;">
+            <table class="table-sirio table-hover m-0" id="tablaRepositorio">
+                <thead style="position: sticky; top: 0; z-index: 100; background: var(--ds-bg-panel);">
+                    <tr>
+                        <th style="width: 50px;" class="text-center">ISO</th>
+                        <th style="width: 30%;">Hemeroteca / Corpus</th>
+                        <th style="width: 25%;">Institución Gestora</th>
+                        <th style="width: 20%;">Ubicación</th>
+                        <th style="width: 10%;" class="text-center">Publicaciones</th>
+                        <th style="width: 15%;" class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if hemerotecas %}
+                    {% for h in hemerotecas %}
+                    <tr>
+                        <td class="text-center">
+                            {% if h.pais %}
+                            {% set c_code = h.pais|country_flag %}
+                            <span class="fi fi-{{ c_code }}" title="{{ h.pais }}"></span>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if h.url %}
+                            <a href="{{ h.url }}" target="_blank" class="text-accent fw-bold text-decoration-none">
+                                <i class="fa-solid fa-external-link-alt fa-xs me-1 opacity-50"></i> {{ h.nombre }}
+                            </a>
+                            {% else %}
+                            <strong class="text-light">{{ h.nombre }}</strong>
+                            {% endif %}
+                            {% if h.resumen_corpus %}
+                            <div class="text-muted extra-small text-truncate" style="max-width: 300px;">
+                                {{ h.resumen_corpus }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-light small">{{ h.institucion or 'No registrada' }}</span>
+                        </td>
+                        <td>
+                            <div class="text-muted small">
+                                {% if h.ciudad %}{{ h.ciudad }}{% endif %}
+                                {% if h.provincia %}, {{ h.provincia }}{% endif %}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-dark border border-secondary text-muted">
+                                {{ h.publicaciones|length }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <form action="{{ url_for('hemerotecas.importar_hemeroteca', id=h.id) }}" method="POST"
+                                onsubmit="return confirm('¿Importar esta hemeroteca y sus publicaciones a tu proyecto?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-sirio btn-sirio-primary py-1 px-3"
+                                    style="height: 28px; width: 100px;">
+                                    <i class="fa-solid fa-download me-1"></i> Importar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <p class="text-muted">No se encontraron hemerotecas en el repositorio global.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filtrarTabla() {
+        const input = document.getElementById("buscador");
+        const filtro = input.value.toLowerCase();
+        const tabla = document.getElementById("tablaRepositorio");
+        const filas = tabla.getElementsByTagName("tr");
+
+        for (let i = 1; i < filas.length; i++) {
+            const fila = filas[i];
+            if (fila.cells.length > 1) {
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? "" : "none";
+            }
+        }
+    }
+</script>
+{% endblock %}

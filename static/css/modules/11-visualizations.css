@@ -1,0 +1,843 @@
+/* Quitar estilos de fondo, borde y border-radius en los items múltiples de Choices.js */
+.choices__list--multiple .choices__item {
+    background: #ff99003a !important;
+    border: 1px solid #ff9800 !important;
+    border-radius: 0 !important;
+    color: #ff9800 !important;
+    font-weight: bold;
+}
+
+/* ============================================================
+   11-VISUALIZATIONS.CSS - Styles for Maps and Networks
+   ============================================================ */
+
+/* SHARED IMMERSIVE OVERRIDES */
+.immersive-layout .desktop-content {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* --- NETWORK VISUALIZATION (redes.html) --- */
+
+.network-container {
+    position: absolute;
+    top: 0;
+    left: 0 !important;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    margin: 0 !important;
+}
+
+#mynetwork {
+    height: 100%;
+    width: 100%;
+    background: #0f0f0f;
+    position: relative;
+}
+
+/* Choices dropdown specificity */
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    z-index: 9999 !important;
+}
+
+/* SCOPED FIX: Ensure Choices works in Network View without breaking global forms */
+.network-container .choices {
+    overflow: visible !important;
+}
+
+.network-container .choices__list--dropdown {
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10001 !important;
+    /* Reset global aggressive overrides */
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    margin-top: 2px !important;
+    height: auto !important;
+    max-height: 500px !important;
+    transform: none !important;
+}
+
+.network-container .choices__list.is-active {
+    display: block !important;
+}
+
+.network-container .choices__list--dropdown.is-flipped {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 2px !important;
+}
+
+.hud {
+    position: absolute;
+    left: 20px;
+    top: 12px;
+    z-index: 1400;
+    background: rgba(18, 18, 18, .88);
+    border: 1px solid rgba(255, 152, 0, .70);
+    border-left: 4px solid #ff9800;
+    border-radius: 6px;
+    padding: 12px 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+    backdrop-filter: blur(8px);
+    max-width: min(560px, 92vw);
+}
+
+.hud h1 {
+    margin: 0;
+    color: var(--ds-accent-primary);
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+
+.hud p {
+    margin: .25rem 0 0;
+    color: rgba(255, 255, 255, .70);
+    font-size: .82rem;
+    font-family: var(--ds-font-mono);
+}
+
+.panel {
+    position: absolute;
+    left: 10px !important;
+    top: 15px;
+    z-index: 1500;
+    width: min(580px, 92vw);
+    background: rgba(26, 26, 26, .95);
+    border: 1px solid rgba(255, 152, 0, .4);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+}
+
+/* Collapsible behavior for Networks */
+.panel.collapsible {
+    padding: 0 15px;
+    max-height: 48px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    cursor: pointer;
+}
+
+.panel.collapsible:hover {
+    border-color: rgba(255, 152, 0, .7);
+}
+
+.panel.collapsible.expanded {
+    max-height: 800px;
+    border-color: rgba(255, 152, 0, .7);
+    cursor: default;
+    overflow: visible !important;
+    /* Allow dropdowns to spill out */
+}
+
+.panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    color: #ff9800;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: .85rem;
+    margin-bottom: 20px;
+}
+
+.panel-title>span {
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+.panel.collapsible .panel-title {
+    height: 48px;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Compact buttons inside panel headers */
+.panel-title .btn-sirio {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.panel-title .btn-sirio:hover {
+    background: rgba(255, 152, 0, 0.2);
+}
+
+.panel-toggle-icon {
+    display: none;
+    transition: transform 0.3s ease;
+    color: #ff9800;
+    font-size: 0.9rem;
+}
+
+.panel.collapsible .panel-toggle-icon {
+    display: block;
+}
+
+.panel.collapsible.expanded .panel-toggle-icon {
+    transform: rotate(180deg);
+    color: var(--ds-accent-primary);
+}
+
+.panel-content {
+    opacity: 1;
+}
+
+.panel.collapsible .panel-content {
+    padding-bottom: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.panel.collapsible.expanded .panel-content {
+    opacity: 1;
+    transition-delay: 0.1s;
+    pointer-events: all;
+    overflow: visible;
+}
+
+.panel label {
+    color: rgba(255, 255, 255, .72);
+    font-size: .75rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+@media (max-width: 640px) {
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.actions {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.mini-note {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, .50);
+    font-size: .72rem;
+}
+
+/* Expandable Side/Bottom Panels (Controls & Metrics) */
+.right-panel,
+.stats {
+    position: absolute;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #444;
+    padding: 0 15px;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    max-height: 42px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    cursor: pointer;
+    z-index: 1400;
+}
+
+.right-panel {
+    right: 20px;
+    bottom: 50px;
+    width: min(360px, 92vw);
+}
+
+.stats {
+    left: 10px;
+    bottom: 50px;
+    width: 240px;
+}
+
+.right-panel:hover,
+.stats:hover {
+    border-color: #666;
+}
+
+.right-panel.expanded,
+.stats.expanded {
+    border-color: var(--ds-accent-primary);
+}
+
+.right-panel.expanded {
+    max-height: 600px;
+}
+
+.stats.expanded {
+    max-height: 200px;
+}
+
+.controls-header,
+.stats-header {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.controls-toggle-icon,
+.stats-toggle-icon {
+    transition: transform 0.3s ease;
+    color: #888;
+}
+
+.expanded .controls-toggle-icon,
+.expanded .stats-toggle-icon {
+    transform: rotate(180deg);
+    color: var(--ds-accent-primary);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .10);
+    font-family: var(--ds-font-mono);
+    font-size: .78rem;
+}
+
+/* Node Detail Panel */
+.node-detail {
+    position: absolute;
+    right: 5px;
+    top: 58px;
+    z-index: 1600;
+    width: min(350px, 92vw);
+    max-height: calc(100vh - 140px);
+    overflow: auto;
+    background: rgba(15, 15, 15, .92);
+    border: 1px solid rgba(255, 152, 0, .55);
+    border-left: 4px solid #ff9800;
+    border-radius: 6px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .55);
+    backdrop-filter: blur(8px);
+    display: none;
+}
+
+.node-detail.show {
+    display: block;
+}
+
+.nd-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, .10);
+}
+
+.nd-title {
+    color: var(--ds-accent-primary);
+    font-weight: 900;
+    font-size: 1.02rem;
+    line-height: 1.15;
+}
+
+.nd-sub {
+    color: rgba(255, 255, 255, .55);
+    font-family: var(--ds-font-mono);
+    font-size: .74rem;
+    margin-top: 4px;
+}
+
+.nd-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .18);
+    color: #ddd;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nd-close:hover {
+    border-color: rgba(255, 255, 255, .35);
+    color: #fff;
+}
+
+.nd-body {
+    padding: 10px 12px;
+}
+
+.nd-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.nd-row:last-child {
+    border-bottom: none;
+}
+
+.nd-k {
+    color: rgba(255, 255, 255, .60);
+    font-family: var(--ds-font-mono);
+    font-size: .75rem;
+    min-width: 120px;
+}
+
+.nd-v {
+    color: #fff;
+    font-size: .82rem;
+    text-align: right;
+    word-break: break-word;
+}
+
+.nd-chip {
+    display: inline-block;
+    margin: 3px 0 0 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 152, 0, .12);
+    border: 1px solid rgba(255, 152, 0, .35);
+    color: #ffd39a;
+    font-family: var(--ds-font-mono);
+    font-size: .72rem;
+}
+
+/* Toast */
+.toast-mini {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 2000;
+    background: rgba(15, 15, 15, .92);
+    border: 1px solid rgba(255, 152, 0, .55);
+    border-left: 4px solid #ff9800;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #ddd;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .55);
+    display: none;
+    max-width: min(560px, 92vw);
+    font-size: .82rem;
+}
+
+
+/* --- MAP VISUALIZATION (mapa.html) --- */
+
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0 !important;
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    z-index: 1;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    background-color: #121212;
+}
+
+/* Leaflet Overrides */
+.leaflet-popup-content-wrapper {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-family: var(--ds-font-mono);
+}
+
+.leaflet-popup-tip {
+    background: #1e1e1e;
+    border: 1px solid #444;
+}
+
+/* Custom Clusters */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+    background-color: rgba(255, 152, 0, 0.3);
+    border: 3px solid #ff9800;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+    background-color: rgba(255, 152, 0, 0.6);
+    color: #000;
+    font-family: var(--ds-font-mono);
+}
+
+/* Filter Panel (Map Version) */
+.filter-panel {
+    position: absolute;
+    top: 70px;
+    left: 10px !important;
+    z-index: 2000;
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid #ff9800;
+    border-radius: 8px;
+    padding: 15px 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    max-width: 445px;
+}
+
+/* Collapsible behavior for Maps (selective) */
+.filter-panel.collapsible {
+    padding: 0 12px;
+    max-height: 48px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    cursor: pointer;
+}
+
+.filter-panel.collapsible:hover {
+    border-color: #ffb74d;
+}
+
+.filter-panel.collapsible.expanded {
+    max-height: 800px;
+    border-color: #ff9800;
+    cursor: default;
+    overflow: visible !important;
+}
+
+.filter-panel-header {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.filter-panel-toggle-icon {
+    display: none;
+    transition: transform 0.3s ease;
+    color: #888;
+}
+
+.filter-panel.collapsible .filter-panel-toggle-icon {
+    display: block;
+}
+
+.filter-panel.collapsible.expanded .filter-panel-toggle-icon {
+    transform: rotate(180deg);
+    color: #ff9800;
+}
+
+.filter-panel-content {
+    opacity: 1;
+}
+
+.filter-panel.collapsible .filter-panel-content {
+    padding-bottom: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.filter-panel.collapsible.expanded .filter-panel-content {
+    opacity: 1;
+    transition-delay: 0.1s;
+    pointer-events: all;
+}
+
+.filter-panel h6 {
+    color: #ff9800;
+    margin: 0 0 6px 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: var(--ds-font-mono);
+}
+
+.filter-panel select {
+    width: 100%;
+    background: #000000;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    font-family: var(--ds-font-mono);
+}
+
+.filter-panel input[type="checkbox"] {
+    accent-color: #ff9800;
+    margin-right: 6px;
+}
+
+.filter-panel label {
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-family: var(--ds-font-mono);
+}
+
+.filter-panel button {
+    width: 100%;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 6px;
+    margin-top: 4px;
+    font-family: var(--ds-font-mono);
+    transition: all 0.2s;
+}
+
+.filter-panel button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.map-stats-panel {
+    position: absolute;
+    bottom: 50px;
+    left: 10px;
+    background: rgba(20, 20, 20, 0.95);
+    border: 1px solid #444;
+    padding: 0 15px;
+    border-radius: 6px;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+    width: 240px;
+    max-height: 42px;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    cursor: pointer;
+}
+
+.map-stats-panel:hover {
+    border-color: #666;
+}
+
+.map-stats-panel.expanded {
+    max-height: 200px;
+    border-color: var(--ds-accent-primary);
+}
+
+.map-stats-header {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: var(--ds-font-mono);
+}
+
+.map-stats-header svg {
+    fill: var(--ds-accent-primary);
+}
+
+.map-stats-toggle-icon {
+    transition: transform 0.3s ease;
+    color: #888;
+}
+
+.map-stats-panel.expanded .map-stats-toggle-icon {
+    transform: rotate(180deg);
+    color: var(--ds-accent-primary);
+}
+
+.map-stats-content {
+    padding-bottom: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.map-stats-panel.expanded .map-stats-content {
+    opacity: 1;
+    transition-delay: 0.1s;
+}
+
+.map-stats-panel .stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #333;
+    font-family: var(--ds-font-mono);
+    font-size: 0.8rem;
+}
+
+.map-stats-panel .stat-item:last-child {
+    border-bottom: none;
+}
+
+.map-stats-panel .stat-label {
+    color: #888;
+}
+
+.map-stats-panel .stat-value {
+    color: var(--ds-accent-primary);
+    font-weight: bold;
+}
+
+/* Forzar fondo transparente en el input de Choices.js para mapa.html */
+.choices__inner {
+    background: transparent !important;
+    color: #fff !important;
+    border: 1px solid #ff9800 !important;
+}
+
+.choices__input {
+    background: transparent !important;
+    color: #fff !important;
+}
+
+/* Personalizar color de selección en inputs de fecha */
+input[type="date"]::selection {
+    background: #ff9800;
+    color: #181818;
+}
+
+input[type="date"]::-webkit-input-placeholder {
+    color: #fff;
+}
+
+input[type="date"]::-moz-placeholder {
+    color: #fff;
+}
+
+input[type="date"]:-ms-input-placeholder {
+    color: #fff;
+}
+
+input[type="date"]::placeholder {
+    color: #fff;
+}
+
+/* Forzar color de selección en todos los navegadores */
+input[type="date"]::selection,
+input[type="date"]::-moz-selection,
+input[type="date"]::-webkit-selection,
+input[type="date"]::-webkit-input-placeholder:focus,
+input[type="date"]:focus::selection,
+input[type="text"]::selection,
+input[type="text"]::-moz-selection,
+input[type="text"]::-webkit-selection {
+    background: #ff9800 !important;
+    color: #181818 !important;
+}
+
+/* Para navegadores modernos con ::highlight */
+input[type="date"]::highlight {
+    background: #ff9800 !important;
+    color: #181818 !important;
+}
+
+/* ===================== PAGINACIÓN ===================== */
+.pagination {
+    background: transparent;
+    padding: 0.5em 0;
+}
+
+.pagination .page-item {
+    background: none;
+}
+
+.pagination .page-link {
+    color: #ff9800;
+    background: #181818;
+    border: 1px solid #ff9800;
+    margin: 0 2px;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pagination .page-link:hover {
+    background: #ff9800;
+    color: #181818;
+}
+
+.pagination .page-item.active .page-link {
+    background: #ff9800 !important;
+    color: #181818 !important;
+    border-color: #ff9800 !important;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #888 !important;
+    background: #222 !important;
+    border-color: #444 !important;
+}
+
+/* Añadir margen izquierdo a las etiquetas de los interruptores para separar el texto del switch */
+.form-check-label {
+    margin-left: 12px !important;
+}
+
+.form-check-input:checked {
+    background-color: #ff9800 !important;
+    border-color: #ff9800 !important;
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.25);
+}
+
+/* Para switches tipo toggle (Bootstrap 5) */
+.form-check-input[type="checkbox"]:checked {
+    background-color: #ff9800 !important;
+    border-color: #ff9800 !important;
+}
+
+.form-check-input[type="checkbox"]:checked::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #ff9800;
+    border-radius: 1em;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+}
+
+.form-check-input[type="checkbox"] {
+    position: relative;
+    z-index: 2;
+    margin-top: 10px !important;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+}
+
+.leaflet-bottom .leaflet-control {
+    margin-bottom: 35px !important;
+}

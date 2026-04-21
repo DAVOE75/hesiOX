@@ -1,0 +1,879 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}{{ proyecto.nombre if proyecto else 'Proyecto' }} — Biblioteca{% endblock %}
+{% block top_actions %}
+
+<!-- Selector de Columnas -->
+<button class="btn-sirio" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasColumnas"
+    aria-controls="offcanvasColumnas" title="Selector de Columnas">
+    <i class="fa-solid fa-table-columns"></i>
+    <span class="btn-text">COLUMNAS</span>
+</button>
+
+<!-- Botón Nuevo -->
+<a href="{{ url_for('noticias.crear', next=request.full_path) }}" class="btn-sirio active" title="Crear nueva noticia">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">NUEVA</span>
+</a>
+
+<!-- Botón Temas -->
+<a href="{{ url_for('noticias.gestor_temas') }}" class="btn-sirio" title="Gestionar Temas / Etiquetas">
+    <i class="fa-solid fa-tags"></i>
+    <span class="btn-text">TEMAS</span>
+</a>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Filtro Fecha Rápido (Desde/Hasta) -->
+<div class="d-flex align-items-center gap-1 date-filter-pill px-2"
+    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; height: 32px !important; align-items: center !important;">
+    <i class="fa-solid fa-calendar-days text-muted small ms-1"></i>
+    <input type="date" id="inputFechaDesde" class="form-control-sirio-compact" 
+        style="width: 105px; border: none; background: transparent; font-size: 0.7rem; color: #fff; padding: 0 4px;"
+        value="{{ request.args.get('fecha_desde', '') }}" title="Fecha Desde">
+    <span class="text-muted small">-</span>
+    <input type="date" id="inputFechaHasta" class="form-control-sirio-compact" 
+        style="width: 105px; border: none; background: transparent; font-size: 0.7rem; color: #fff; padding: 0 4px;"
+        value="{{ request.args.get('fecha_hasta', '') }}" title="Fecha Hasta">
+    <button id="btnFiltrarFechas" type="button" class="btn-sirio" 
+        style="padding: 0 !important; width: 24px; height: 24px !important; min-width: 24px; border-radius: 50%; border: none; background: #ff9800 !important; color: #000 !important;"
+        onclick="if(typeof filtrarAjax === 'function') filtrarAjax(1, true);" title="Filtrar por fechas">
+        <i class="fa-solid fa-play" style="font-size: 0.6rem;"></i>
+    </button>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Dropdown Lote -->
+<div class="dropdown">
+    <button class="btn-sirio dropdown-toggle" type="button" id="btn-acciones-lote" data-bs-toggle="dropdown"
+        data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}' disabled title="Acciones por lote"
+        style="min-width: 80px !important;">
+        <i class="fa-solid fa-layer-group"></i>
+        <span class="btn-text">LOTE</span>
+        <span id="count-seleccionados" class="badge bg-warning text-dark ms-1" style="font-size: 0.7em;">0</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-sirio shadow">
+        <li><a class="dropdown-item text-warning" href="#" data-bs-toggle="modal" data-bs-target="#batchEditModal"><i
+                    class="fa-solid fa-pencil me-2"></i> EDITAR</a></li>
+        <li><a class="dropdown-item" href="#" id="batch-preparar-pdf"><i class="fa-solid fa-print me-2"></i>
+                PREPARAR PDF</a></li>
+        <li><a class="dropdown-item" href="#" id="batch-imprimir"><i class="fa-solid fa-file-pdf me-2"></i> PDF
+                RÁPIDO</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li><a class="dropdown-item text-danger" href="#" id="batch-borrar"><i class="fa-solid fa-trash me-2"></i>
+                BORRAR</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li class="dropdown-header text-uppercase small" style="font-size: 0.65rem; color: #777;">EXPORTAR SELECCIÓN
+        </li>
+        <li><a class="dropdown-item" href="#" id="batch-export-json"><i class="fa-solid fa-file-code me-2"></i> JSON
+            </a></li>
+        <li><a class="dropdown-item" href="#" id="batch-export-xml"><i class="fa-solid fa-file-lines me-2"></i> XML </a>
+        </li>
+        <li><a class="dropdown-item" href="#" id="batch-export-csv"><i class="fa-solid fa-file-csv me-2"></i> CSV </a>
+        </li>
+    </ul>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Importar -->
+<button class="btn-sirio" type="button" data-bs-toggle="modal" data-bs-target="#importModal" title="Importar datos">
+    <i class="fa-solid fa-upload"></i>
+    <span class="btn-text">IMPORTAR</span>
+</button>
+
+<!-- Exportar -->
+<div class="dropdown">
+    <button class="btn-sirio dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport"
+        data-bs-popper-config='{"strategy":"fixed"}' title="Exportar datos">
+        <i class="fa-solid fa-download"></i>
+        <span class="btn-text">EXPORTAR</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-sirio shadow">
+        <li class="dropdown-header text-uppercase small" style="font-size: 0.65rem; color: #777;">Fidelidad Total</li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('csv_sirio')"><i
+                    class="fa-solid fa-file-csv me-2 text-info"></i> CSV Sirio</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('json_sirio')"><i
+                    class="fa-solid fa-file-code me-2 text-info"></i> JSON Sirio</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('xml_sirio')"><i
+                    class="fa-solid fa-file-lines me-2 text-info"></i> XML Sirio</a></li>
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+        <li class="dropdown-header text-uppercase small" style="font-size: 0.65rem; color: #777;">Formatos Básicos
+        </li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('csv')">CSV Básico</a>
+        </li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('bib')">BibTeX</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('xml')">XML Básico</a>
+        </li>
+        <li><a class="dropdown-item" href="javascript:void(0)" onclick="exportarConFiltros('txt')">TXT</a></li>
+    </ul>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<div class="ms-1 ps-1" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+    title="<strong>Biblioteca de Noticias</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>Funcionalidad</strong>: Gestión centralizada de noticias, artículos y textos del corpus de investigación.</li><li><strong>Características</strong>: Filtrado avanzado por fecha, publicación, ciudad, tipo de recurso y más. Edición individual y masiva, exportación en múltiples formatos (CSV, JSON, XML, BibTeX), y visualización detallada con mapas geográficos.</li><li><strong>Acciones</strong>: Crear, editar, duplicar, eliminar, ver resumen, ver completo con mapa, exportar a PDF.</li></ul>">
+    <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+</div>
+{% endblock %}
+
+{% block page_title %}Biblioteca de Noticias / Textos <span class="text-muted ms-2"
+    style="font-size: 0.65em; font-weight: 400; letter-spacing: 0;">({{ total }} Registros)</span>{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important; 
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .header-actions-wrapper > * {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+    
+    .header-actions-wrapper .btn-sirio,
+    .header-actions-wrapper .dropdown {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .header-actions-wrapper .dropdown-toggle::after {
+        vertical-align: middle !important;
+    }
+
+    /* Ajuste para avatar en este contexto */
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50% !important;
+        background: var(--ds-accent-primary) !important;
+        color: #000 !important;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+</style>
+<style>
+    /* Fuerza el tema oscuro Sirio y z-index en los dropdowns de Choices.js solo en esta vista */
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+        z-index: 1000 !important;
+        background: #181818 !important;
+        color: #fff !important;
+        border: 1px solid #ff9800 !important;
+        box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.18), 0 2px 24px 0 rgba(0, 0, 0, 0.7) !important;
+        font-family: 'Fira Mono', 'JetBrains Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 0.8em !important;
+        padding: 0 !important;
+    }
+
+    .choices__item {
+        background: #181818 !important;
+        color: #fff !important;
+        border-bottom: 1px solid #222 !important;
+        font-family: inherit !important;
+        font-size: 0.95em !important;
+        padding: 2px 4px !important;
+        transition: background 0.15s;
+    }
+
+    .choices__item--selectable.is-highlighted {
+        background: #ff9800 !important;
+        color: #181818 !important;
+    }
+
+    .choices__inner {
+        background: #181818 !important;
+        color: #fff !important;
+        border: 1px solid #ff9800 !important;
+        font-family: inherit !important;
+        font-size: 0.9em !important;
+        min-height: 34px !important;
+        padding: 2px 8px !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .choices[data-type*=select-one] .choices__input {
+        background: #222 !important;
+        color: #fff !important;
+        border: 1px solid #333 !important;
+        font-size: 0.95em !important;
+        padding: 1px 4px !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable:hover {
+        background: #ff9800 !important;
+        color: #181818 !important;
+    }
+
+
+    .choices__list--dropdown .choices__item--selectable {
+        cursor: pointer;
+    }
+
+    /* Bootstrap Dropdowns z-index fix for Sticky Header */
+    .dropdown-menu {
+        z-index: 11000 !important;
+    }
+
+    .choices__list--dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: #ff9800 #181818;
+    }
+
+    .choices__list--dropdown::-webkit-scrollbar {
+        width: 8px;
+        background: #181818;
+    }
+
+    .choices__list--dropdown::-webkit-scrollbar-thumb {
+        background: #ff9800;
+        border-radius: 4px;
+    }
+
+    .choices:last-child {
+        margin-bottom: 10px;
+        padding-right: 5px;
+    }
+
+    /* Estilos para el Dropdown de Acciones Sirio */
+    .dropdown-menu-sirio {
+        border: 1px solid #ff9800 !important;
+        box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.25), 0 2px 24px 0 rgba(0, 0, 0, 0.8) !important;
+        background-color: #121212 !important;
+        z-index: 10001 !important;
+        border-radius: 6px !important;
+        overflow: hidden;
+    }
+
+    .dropdown-menu-sirio .dropdown-item {
+        transition: all 0.2s ease;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+        font-size: 0.70rem !important;
+    }
+
+    .dropdown-menu-sirio .dropdown-item:hover {
+        background-color: rgba(255, 152, 0, 0.15) !important;
+        color: #ff9800 !important;
+        padding-left: 1.25rem !important;
+    }
+
+    /* Backdrop para resaltar el dropdown */
+    #sirio-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(2px);
+        z-index: 10000;
+        display: none;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" style="height: 100%; display: flex; flex-direction: column;">
+    <!-- Backdrop para dropdowns -->
+    <div id="sirio-backdrop"></div>
+
+    <!-- Filtros Panel -->
+    <div id="filtrosPanel" class="filters-dropdown bg-dark-panel border-bottom border-light shadow-sm flex-shrink-0"
+        style="display: block; padding: 16px 24px; position: relative; z-index: 1000; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;">
+        <form id="filtros" class="d-flex flex-column gap-3 w-100">
+            {% set filter_style = "form-select form-select-sm form-control-sirio" %}
+
+            <!-- ROW 1: Categorical Filters -->
+            <div class="d-flex w-100 gap-4 flex-wrap" style="position: relative; z-index: 20;">
+                <!-- Autor -->
+                <div style="flex: 1 1 140px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Autor</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="autor" id="selectAutor" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todos)</option>
+                            {% for a in autores %}
+                            <option value="{{ a }}" {% if autor==a %}selected{% endif %}>{{ a }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- Publicación -->
+                <div style="flex: 1 1 280px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Publicación</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="publicacion" id="selectPublicacion" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todas)</option>
+                            {% for p in publicaciones %}
+                            <option value="{{ p }}" {% if publicacion==p %}selected{% endif %}>{{ p }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- Ciudad -->
+                <div style="flex: 1 1 150px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Ciudad</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="ciudad" id="selectCiudad" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todas)</option>
+                            {% for c in ciudades %}
+                            <option value="{{ c }}" {% if ciudad==c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- País -->
+                <div style="flex: 1 1 120px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">País</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="pais_publicacion" id="selectPais" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todos)</option>
+                            {% for p in paises %}
+                            <option value="{{ p }}" {% if pais_publicacion==p %}selected{% endif %}>{{ p }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- Fecha -->
+                <div style="flex: 1 1 120px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Fecha</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="fecha_original" id="selectFecha" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todas)</option>
+                            {% for f in fechas %}
+                            <option value="{{ f }}" {% if request.args.get('fecha_original')==f|string %}selected{%
+                                endif %}>{{ f }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: Contextual Filters & Search -->
+            <div class="d-flex w-100 gap-4 align-items-end flex-wrap" style="position: relative; z-index: 10;">
+                <!-- Temas -->
+                <div style="flex: 1 1 300px; min-width: 250px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Temas</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="temas" id="selectTemas" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todos)</option>
+                            {% for t in temas_list %}
+                            <option value="{{ t }}" {% if temas_filtro==t %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- Estado -->
+                <div style="flex: 0 1 150px; min-width: 120px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Estado</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="incluido" id="selectIncluido" class="{{ filter_style }} sirio-select">
+                            <option value="todos" {% if incluido=='todos' %}selected{% endif %}>Todos</option>
+                            <option value="si" {% if incluido=='si' %}selected{% endif %}>Incluidos</option>
+                            <option value="no" {% if incluido=='no' %}selected{% endif %}>No Incluidos</option>
+                        </select>
+
+                    </div>
+                </div>
+
+                <!-- Búsqueda -->
+                <div style="flex: 2 1 400px; min-width: 300px;">
+                    <label
+                        class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Búsqueda</label>
+                    <div class="position-relative">
+                        <i class="fa-solid fa-magnifying-glass position-absolute text-muted"
+                            style="left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem;"></i>
+                        <input type="text" name="busqueda"
+                            class="filter-input-search form-control form-control-sm form-control-sirio ps-4"
+                            style="height: 34px; font-size: 0.85rem;" placeholder="Buscar referencia, título o notas..."
+                            value="{{ request.args.get('busqueda', '') }}">
+                    </div>
+                </div>
+
+                <!-- Reset Button -->
+                <div style="flex: 0 0 auto;">
+                    <button id="borrarFiltros" type="button" class="btn-sirio"
+                        style="height: 34px; padding: 0 16px; font-size: 0.8rem; white-space: nowrap; width: auto !important;">
+                        <i class="fa-solid fa-upload" style="font-size: 0.75rem;"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Collapse Button (outside panel so it's always visible) -->
+    <button id="btnCollapseFiltros" type="button" class="btn-collapse-filtros" title="Ocultar filtros">
+        <span style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">FILTROS</span>
+        <i class="fa-solid fa-chevron-up" style="font-size: 0.8rem; transition: transform 0.4s ease;"></i>
+    </button>
+
+    <!-- Toolbar & Legend -->
+    <div
+        class="px-3 py-2 border-bottom border-light bg-dark-panel d-flex justify-content-between align-items-center flex-shrink-0">
+        <div class="d-flex align-items-center flex-wrap text-muted" style="font-size: 0.7rem;">
+            <span class="fw-bold opacity-75 me-3">
+                <i class="fa-solid fa-circle-info me-1 text-accent"></i>Leyenda Acciones:
+            </span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-pen text-primary"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Editar</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-copy text-secondary"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Duplicar</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-regular fa-file-lines text-success"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Resumen</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-pause text-warning"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Activar/Pausar</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-map-location-dot text-primary"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Ver Completo</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-file-pdf text-danger"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">PDF</span></span>
+            <span class="me-3 d-flex align-items-center"><i class="fa-solid fa-trash-can text-danger"
+                    style="font-size: 0.65rem;"></i><span class="ms-1">Eliminar</span></span>
+        </div>
+        <div class="text-muted small">
+            <i class="fa-solid fa-list-check me-1"></i> <strong>{{ total }}</strong> registros encontrados
+        </div>
+    </div>
+
+    <!-- Scrollable Table Area -->
+    <div class="content-scroll-area bg-dark" style="flex: 1; overflow-y: auto; overflow-x: hidden; width: 100%;">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show m-0 mb-3 rounded-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Table Container -->
+        <div id="tabla-container" class="pb-5">
+            {% if registros|length == 0 %}
+            <div class="alert alert-warning mt-4" role="alert">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                No se encontraron resultados para los filtros aplicados.
+            </div>
+            {% else %}
+            {% include '_tabla.html' %}
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Importar -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" >
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-warning" id="importModalLabel"><i class="fa-solid fa-upload me-2"></i>
+                    Importar Datos</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formImportar" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <p class="text-light small mb-3">Sube un archivo JSON, CSV o TXT para importar noticias,
+                        publicaciones e instituciones.</p>
+                    <div class="mb-3">
+                        <input type="file" class="form-control bg-dark text-light border-secondary" id="importFile"
+                            name="file" accept=".json,.csv,.txt" required>
+                    </div>
+                    <div id="importProgress" class="progress mb-3 d-none" style="height: 5px; background: #222;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="importMsg" class="alert d-none small"></div>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold" id="btnDoImport">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> COMENZAR IMPORTACIÓN
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'editar_lote_modal.html' %}
+
+<!-- Modal de Cita Bibliográfica -->
+<div class="modal fade" id="citaModal" tabindex="-1" aria-labelledby="citaModalLabel" >
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-body p-0">
+                <iframe id="citaIframe" style="width: 100%; height: 600px; border: none; border-radius: 6px;"
+                    title="Cita Bibliográfica"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Localización -->
+<div class="modal fade" id="modalEditarLocalizacion" tabindex="-1" aria-labelledby="modalEditarLocalizacionLabel"
+    >
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title text-warning" id="modalEditarLocalizacionLabel">Editar localización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarLocalizacion">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" id="editLocNoticiaId">
+                    <div class="mb-3">
+                        <label for="editLocLat" class="form-label">Latitud</label>
+                        <input type="number" step="any" class="form-control" id="editLocLat" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLocLon" class="form-label">Longitud</label>
+                        <input type="number" step="any" class="form-control" id="editLocLon" required>
+                    </div>
+                    <div id="editLocMsg" class="text-danger small mb-2" style="display:none;"></div>
+                    <button type="submit" class="btn btn-warning w-100">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/export-utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tabla.js') }}"></script>
+<script>
+    // Función para abrir modal de cita
+    function abrirCita(refId) {
+        const modal = new bootstrap.Modal(document.getElementById('citaModal'));
+        const iframe = document.getElementById('citaIframe');
+        iframe.src = '/cita/' + refId;
+        modal.show();
+    }
+
+    // --- Collapse/Expand Filters ---
+    (function () {
+        const filtrosPanel = document.getElementById('filtrosPanel');
+        const btnCollapse = document.getElementById('btnCollapseFiltros');
+        let isCollapsed = true; // Start collapsed
+        const headerHeight = 60;
+
+        if (filtrosPanel && btnCollapse) {
+            // Store original height
+            const originalHeight = filtrosPanel.scrollHeight;
+
+            // Function to update button position
+            function updateButtonPosition() {
+                const panelHeight = filtrosPanel.offsetHeight;
+                btnCollapse.style.top = (headerHeight + panelHeight) + 'px';
+            }
+
+            // Start collapsed - Force immediate state without transition lag affecting calculation
+            filtrosPanel.style.transition = 'none'; // Disable transition for setup
+            filtrosPanel.style.height = '0px';
+            filtrosPanel.style.padding = '0 24px';
+            filtrosPanel.style.opacity = '0';
+
+            // Force reflow
+            void filtrosPanel.offsetWidth;
+
+            // Re-enable transition after setup
+            setTimeout(() => {
+                filtrosPanel.style.transition = '';
+            }, 10);
+
+            btnCollapse.querySelector('i').style.transform = 'rotate(180deg)';
+            btnCollapse.title = 'Mostrar filtros';
+
+            // Explicitly set top to header height since we know it's collapsed
+            btnCollapse.style.top = headerHeight + 'px';
+
+            btnCollapse.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (isCollapsed) {
+                    // Expand
+                    filtrosPanel.style.height = originalHeight + 'px';
+                    filtrosPanel.style.padding = '16px 24px';
+                    filtrosPanel.style.opacity = '1';
+                    btnCollapse.querySelector('i').style.transform = 'rotate(0deg)';
+                    btnCollapse.title = 'Minimizar filtros';
+                    isCollapsed = false;
+
+                    // Move button immediately
+                    btnCollapse.style.top = (headerHeight + originalHeight) + 'px';
+                    setTimeout(updateButtonPosition, 400);
+
+                    // Allow dropdowns to overflow AFTER transition
+                    setTimeout(() => {
+                        if (!isCollapsed) filtrosPanel.style.overflow = 'visible';
+                    }, 400);
+                } else {
+                    // Collapse
+                    filtrosPanel.style.overflow = 'hidden'; // Hide immediately to prevent spill during shrink
+                    filtrosPanel.style.height = '0px';
+                    filtrosPanel.style.padding = '0 24px';
+                    filtrosPanel.style.opacity = '0';
+                    btnCollapse.querySelector('i').style.transform = 'rotate(180deg)';
+                    btnCollapse.title = 'Mostrar filtros';
+                    isCollapsed = true;
+
+                    // Move button immediately
+                    btnCollapse.style.top = headerHeight + 'px';
+                    setTimeout(updateButtonPosition, 400);
+                }
+            });
+        }
+    })();
+
+
+    // --- Editar Localización ---
+    let modalLoc = null;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Botón en menú acciones
+        document.querySelectorAll('.editar-localizacion-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const id = this.dataset.id;
+                const lat = this.dataset.lat || '';
+                const lon = this.dataset.lon || '';
+                document.getElementById('editLocNoticiaId').value = id;
+                document.getElementById('editLocLat').value = lat;
+                document.getElementById('editLocLon').value = lon;
+                document.getElementById('editLocMsg').style.display = 'none';
+                if (!modalLoc) modalLoc = new bootstrap.Modal(document.getElementById('modalEditarLocalizacion'));
+                modalLoc.show();
+            });
+        });
+
+        // Envío del formulario
+        document.getElementById('formEditarLocalizacion').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('editLocNoticiaId').value;
+            const lat = document.getElementById('editLocLat').value;
+            const lon = document.getElementById('editLocLon').value;
+            const msg = document.getElementById('editLocMsg');
+            msg.style.display = 'none';
+            try {
+                const resp = await fetch(`/api/cartografia_noticia_add_location/${id}/editar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitud: lat, longitud: lon })
+                });
+                if (!resp.ok) throw new Error('Error al guardar localización');
+                modalLoc.hide();
+                location.reload();
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.display = 'block';
+            }
+        });
+
+        // Escuchar mensaje del iframe para cerrar el modal
+        window.addEventListener('message', function (event) {
+            if (event.data === 'closeCitaModal') {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('citaModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            }
+        });
+
+        // Filtrar con Enter en búsqueda
+        document.querySelectorAll('.filter-input-search').forEach(item => {
+            item.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (typeof filtrarAjax === 'function') {
+                        filtrarAjax();
+                    }
+                }
+            });
+        });
+
+        // --- Lógica Backdrop para Dropdown de Acciones ---
+        const backdrop = document.getElementById('sirio-backdrop');
+        document.addEventListener('show.bs.dropdown', function (e) {
+            // Solo si el dropdown es del tipo acciones (dentro de la tabla)
+            if (e.target.closest('.table-actions-cell')) {
+                backdrop.style.display = 'block';
+                // Pequeño delay para la transición
+                setTimeout(() => backdrop.style.opacity = '1', 10);
+            }
+        });
+
+        document.addEventListener('hide.bs.dropdown', function (e) {
+            if (e.target.closest('.table-actions-cell')) {
+                backdrop.style.opacity = '0';
+                setTimeout(() => {
+                    if (backdrop.style.opacity === '0') backdrop.style.display = 'none';
+                }, 300);
+            }
+        });
+    });
+</script>
+
+<!-- Offcanvas de Selector de Columnas -->
+<div class="offcanvas offcanvas-end bg-dark text-light border-start border-warning" tabindex="-1" id="offcanvasColumnas"
+    aria-labelledby="offcanvasColumnasLabel"
+    style="width: 280px; --bs-offcanvas-border-width: 2px; height: auto; margin-top: 60px !important;">
+    <div class="offcanvas-header border-bottom border-secondary py-3">
+        <h5 class="offcanvas-title text-warning fw-bold d-flex align-items-center" id="offcanvasColumnasLabel"
+            style="font-size: 0.9rem; letter-spacing: 1px;">
+            <i class="fa-solid fa-table-columns me-2"></i> COLUMNAS VISIBLES
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
+            style="width: 50px;"></button>
+    </div>
+    <div class="offcanvas-body p-4" id="columnas-panel-container">
+        <p class="text-muted mb-4 small" style="text-align: justify;">Selecciona las columnas que deseas visualizar en
+            la tabla de noticias.</p>
+
+        <ul class="list-unstyled mb-0" id="columnas-panel">
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="check" checked disabled>
+                    <label class="form-check-label small text-muted ms-3">Selector (Fijo)</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="ref" checked>
+                    <label class="form-check-label small ms-3">Referencia</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="titulo" checked>
+                    <label class="form-check-label small ms-3">Título</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="publicacion" checked>
+                    <label class="form-check-label small ms-3">Publicación</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="autor">
+                    <label class="form-check-label small ms-3">Autor</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="fecha">
+                    <label class="form-check-label small ms-3">Fecha</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="num">
+                    <label class="form-check-label small ms-3">Número</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="pag">
+                    <label class="form-check-label small ms-3">Páginas</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="ciudad" checked>
+                    <label class="form-check-label small ms-3">Ciudad</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="pais" checked>
+                    <label class="form-check-label small ms-3">País</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="tipo">
+                    <label class="form-check-label small ms-3">Tipo</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="licencia" checked>
+                    <label class="form-check-label small ms-3">Licencia</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="temas" checked>
+                    <label class="form-check-label small ms-3">Temas</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="incl">
+                    <label class="form-check-label small ms-3">Incluido</label>
+                </div>
+            </li>
+            <li class="mb-3">
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input col-toggle" type="checkbox" data-col="acciones" checked>
+                    <label class="form-check-label small ms-3">Acciones</label>
+                </div>
+            </li>
+        </ul>
+
+        <div class="mt-4 pt-4 border-top border-secondary text-center">
+            <button class="btn btn-outline-warning btn-sm w-100 py-2" id="cols-reset" title="Mostrar todas las columnas"
+                style="font-size: 0.8rem;">
+                <i class="fa-solid fa-rotate-left me-2"></i> RESTABLECER VISTA
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

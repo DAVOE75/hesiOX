@@ -1,0 +1,1463 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Editar Referencia — Proyecto HESIOX{% endblock %}
+{% block page_title %}Editar Referencia: #{{ ref.id }}{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión de Datos</span>
+{% endblock %}
+{% block extra_css %}
+<style>
+    /* Estilos específicos para la cabecera del editor */
+    .desktop-header {
+        height: 60px !important;
+        border-bottom: 1px solid var(--ds-accent-primary);
+        background: #0a0a0a;
+        padding: 0 20px !important;
+    }
+
+    /* Hacer que el contenido se estire hasta el footer */
+    .container-fluid {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: calc(100vh - 120px);
+    }
+
+    .header-center {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Contenedor de progreso compacto en header */
+    .header-progress-container,
+    #header-progress-slot {
+        font-size: 10px;
+    }
+
+    #header-progress-slot .progress {
+        height: 4px;
+        width: 80px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+
+    .card-panel {
+        border-radius: 4px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Ambas columnas se estiran igual */
+    .col-lg-4,
+    .col-lg-8 {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Todos los card-panel se estiran */
+    .card-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .card-panel .p-3 {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow-y: visible;
+        min-height: 0;
+    }
+
+    /* Material Adjunto no se estira */
+    .col-lg-8 .card-panel:nth-child(2) {
+        flex: 0 0 auto;
+    }
+
+    .row.g-3 {
+        display: flex;
+        flex: 1;
+        margin: 0 -12px;
+        align-items: stretch;
+        min-height: 0;
+    }
+
+    /* Tab navigation - solo mostrar tab activo */
+    .tab-pane {
+        display: none !important;
+    }
+
+    .tab-pane.show.active {
+        display: flex !important;
+    }
+
+    /* Ocultar flechas del input número de referencia */
+    input[name="numero_referencia"]::-webkit-outer-spin-button,
+    input[name="numero_referencia"]::-webkit-inner-spin-button {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        margin: 0 !important;
+        display: none !important;
+    }
+
+    input[name="numero_referencia"],
+    input#numero_referencia {
+        -moz-appearance: textfield !important;
+        appearance: textfield !important;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none !important;
+        margin: 0 !important;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield !important;
+        appearance: textfield !important;
+    }
+
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important;
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .header-actions-wrapper>* {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+
+    .header-actions-wrapper .btn-sirio,
+    .header-actions-wrapper .dropdown,
+    .header-actions-wrapper .badge {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    .header-actions-wrapper .dropdown-toggle::after {
+        vertical-align: middle !important;
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<!-- Edit Status Badge -->
+<div class="d-flex align-items-center gap-2 me-1">
+    <span class="badge bg-warning text-dark fw-bold px-2 d-inline-flex align-items-center"
+        style="font-size: 10px; letter-spacing: 0.5px; height: 32px !important; border-radius: 4px;">
+        <i class="fa-solid fa-pen-to-square me-1"></i> EDITANDO
+    </span>
+    <span class="text-secondary small d-none d-xl-inline" style="font-size: 10px;">
+        ID: <span class="text-accent fw-bold">#{{ ref.id }}</span>
+    </span>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Actions Group -->
+<button type="submit" form="form-ficha" class="btn-sirio active" title="Guardar cambios">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">GUARDAR</span>
+</button>
+
+<button type="button" class="btn-sirio" onclick="location.href='{{ url_for('noticias.crear') }}';"
+    title="Nueva Referencia">
+    <i class="fa-solid fa-plus"></i>
+    <span class="btn-text">NUEVA</span>
+</button>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Secondary Tools -->
+<div class="d-flex align-items-center gap-1">
+    <a href="{{ url_for('noticias.detalle_noticia', id=ref.id) }}" class="btn-sirio" title="Ver noticia completa">
+        <i class="fa-solid fa-eye"></i>
+    </a>
+    <a href="{{ url_for('imprimir_pdf', id=ref.id) }}" target="_blank" class="btn-sirio" title="Vista PDF">
+        <i class="fa-solid fa-file-pdf"></i>
+    </a>
+    <a href="{{ url_for('articulo_duplicar', articulo_id=ref.id) }}" class="btn-sirio text-info"
+        title="Duplicar noticia">
+        <i class="fa-solid fa-copy"></i>
+    </a>
+    <form method="POST" action="{{ url_for('noticias.noticia_eliminar', noticia_id=ref.id) }}"
+        onsubmit="return confirm('¿ELIMINAR DEFINITIVAMENTE? Esta acción no se puede deshacer.');"
+        class="m-0 d-inline-block">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+        <button type="submit" class="btn-sirio text-danger" title="Eliminar Ficha">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    </form>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Navigation Group -->
+<a href="{{ next_url or url_for('noticias.listar') }}" class="btn-sirio" title="Volver al listado">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">VOLVER</span>
+</a>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Help Group -->
+<button type="button" id="btn-keyboard-help" class="btn-sirio d-flex align-items-center justify-content-center"
+    title="Atajos de teclado" style="width: 32px;">
+    <i class="fa-solid fa-keyboard"></i>
+</button>
+
+<div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+    title="<strong>Edición de Referencia</strong><br><small>Gestión y Curaduría</small><hr class='my-1'>Permite modificar metadatos, gestionar capítulos y validar la calidad de la información extraída.">
+    <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+</div>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<!-- Progress Slot -->
+<div id="header-progress-slot" class="d-flex align-items-center gap-2"></div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <div class="container" style="max-width: 100%;">
+
+        <div class="row justify-content-center mb-2">
+            <div class="col-12">
+                <div class="card-panel" id="ocrCard">
+                    <div class="card-header-panel d-flex justify-content-between cursor-pointer" id="toggleOCRSection">
+                        <span><i class="fa-solid fa-wand-magic-sparkles me-2"></i> OCR Automático</span>
+                        <i class="fa-solid fa-caret-up" id="ocrToggleIcon"></i>
+                    </div>
+                    <div class="p-3 border-top border-secondary" id="ocrSectionBody" style="display: block;">
+                        <div class="mb-3">
+                            <label class="form-label-sirio">Motor OCR</label>
+                            <div class="input-group flex-nowrap"
+                                title="Elija el motor OCR según la calidad y rapidez que necesite">
+                                <span class="input-group-text"><i class="fa-solid fa-robot"></i></span>
+                                <select name="ocr_engine" id="ocrEngineSelect" class="form-select form-select-sirio">
+                                    <option value="tesseract">Tesseract (local, rápido)</option>
+                                    <option value="ocrspace" selected
+                                        style="background-color:#e6f7ff;font-weight:bold;">OCR.space (web, máxima
+                                        calidad)</option>
+                                </select>
+                            </div>
+                            <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                <strong>Recomendado:</strong> Para documentos antiguos o de baja calidad, usa <span
+                                    style="color:#294a60;font-weight:bold;">OCR.space</span> y aprovecha la revisión con
+                                <span style="color:#8e44ad;font-weight:bold;">IA Gemini</span> utilizando el
+                                <strong>Arquetipo de Transcriptor Paleográfico</strong> (Textualidad absoluta, sin
+                                modernización).<br>
+                                <span class="text-muted">Tesseract es más rápido y funciona localmente, pero la
+                                    calidad puede ser inferior.</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="text-muted small flex-grow-1">
+                                Sube una imagen o PDF para extraer texto automáticamente con Tesseract OCR.
+                            </div>
+                            <input type="file" id="fileInputOCR" class="d-none" accept="image/*,application/pdf">
+                            <button class="btn btn-sirio" onclick="document.getElementById('fileInputOCR').click()"
+                                style="width: 30%;">
+                                <i class="fa-solid fa-upload me-2"></i> Seleccionar Archivo
+                            </button>
+                        </div>
+
+                        <div id="dropZoneOCR" class="ocr-dropzone text-center p-4 cursor-pointer">
+                            <i class="fa-solid fa-file-import fa-2x text-secondary mb-2"></i>
+                            <div class="small dropzone-text-secondary">Arrastra aquí (PDF, JPG, PNG)</div>
+                        </div>
+
+                        <!-- OCR preciso (solo backend) -->
+                        <div class="mb-3">
+                            <label class="form-label">OCR:</label>
+                            <span class="badge bg-warning text-dark">Preciso (Servidor)</span>
+                            <div class="form-text text-muted small mt-1">
+                                El OCR se procesará en el servidor para máxima calidad.
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="mt-3 d-flex gap-2 d-none" id="ocr-action-buttons">
+                            <button id="btn-process-ocr" class="btn btn-warning fw-bold">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Procesar Documento
+                            </button>
+                            <button id="btn-cancel-ocr" class="btn btn-outline-secondary">
+                                <i class="fa-solid fa-times me-1"></i> Cancelar
+                            </button>
+                        </div>
+
+                        <div id="ocr-progress-container" class="mt-3 d-none">
+                            <div class="progress" style="height: 4px;">
+                                <div id="ocr-progress-bar" class="progress-bar bg-warning" style="width: 0%"></div>
+                            </div>
+                            <small id="ocr-progress-text" class="text-warning mt-1 d-block">Procesando...</small>
+                        </div>
+
+                        <div id="ocr-result-container" class="mt-3 d-none">
+                            <div class="card bg-dark border-warning">
+                                <div
+                                    class="card-header bg-transparent border-warning d-flex justify-content-between align-items-center">
+                                    <h6 class="text-warning mb-0">
+                                        <i class="fa-solid fa-check-circle me-2"></i>Texto Extraído
+                                    </h6>
+                                    <button id="btn-discard-ocr" class="btn btn-sm"
+                                        style="background-color: #5b1b1c; border-color: #5b1b1c; color: white; width: auto;">
+                                        <i class="fa-solid fa-trash me-1"></i> Descartar
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="ocr-metadata-preview" class="mb-3"></div>
+
+                                    <div class="mb-3">
+                                        <label class="text-muted small mb-2">TEXTO COMPLETO:</label>
+                                        <div id="ocr-text-preview" class="p-3 text-preview-box font-monospace small"
+                                            style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
+                                    </div>
+
+                                    <div class="d-flex gap-2 align-items-center mb-3">
+                                        <label class="text-warning small mb-0">Copiar texto a:</label>
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-traduccion" value="traduccion" checked>
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-traduccion">
+                                                <i class="fa-solid fa-language me-1"></i> Español / Traducción
+                                            </label>
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-original" value="original">
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-original">
+                                                <i class="fa-solid fa-file-alt me-1"></i> Texto Original
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-warning small mb-1 d-block"><i
+                                                class="fa-solid fa-microchip me-1"></i> Modelo de Inteligencia</label>
+                                        <select id="sel-potencia-ocr"
+                                            class="form-select form-select-sm bg-dark text-warning border-warning"
+                                            title="Selecciona el motor de inteligencia para la revisión">
+                                            <optgroup label="GOOGLE (Nativo)">
+                                                <option value="gemini:flash" selected>Gemini 2.0 Flash (HesiOX Speed ⚡)
+                                                </option>
+                                                <option value="gemini:pro">Gemini 1.5 Pro (Paleográfico 🏛️)</option>
+                                            </optgroup>
+                                            <optgroup label="OPENAI (Estructuración)">
+                                                <option value="openai:gpt-4o">GPT-4o (Narrativa Plus 📝)</option>
+                                                <option value="openai:gpt-4o-mini">GPT-4o Mini (Eficiencia)</option>
+                                            </optgroup>
+                                            <optgroup label="ANTHROPIC (Cultural)">
+                                                <option value="anthropic:claude-3-5-sonnet-latest">Claude 3.5 Sonnet
+                                                    (Contexto 🎭)</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <div class="d-flex gap-2 mb-2">
+                                        <button id="btn-correct-gemini" class="btn btn-sirio flex-grow-1">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                            Seleccionada
+                                        </button>
+                                        <button id="btn-apply-ocr-text" class="btn btn-sirio flex-grow-1">
+                                            <i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="form-ficha">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <div class="card-panel">
+                        <div class="card-header-panel">
+                            <span><i class="fa-solid fa-book-bookmark me-2"></i> Datos Hemerográficos</span>
+                        </div>
+                        <div class="p-3">
+                            <div class="mb-3">
+                                <label class="form-label-sirio">Publicación / Medio <span
+                                        class="text-danger">*</span></label>
+                                <input list="lista_publicaciones" name="publicacion" id="input-publicacion"
+                                    autocomplete="off"
+                                    class="form-control form-control-sirio w-100 publicacion-medio-input"
+                                    value="{{ ref.publicacion or '' }}" required
+                                    placeholder="Nombre del periódico o revista">
+                                <datalist id="lista_publicaciones">
+                                    {% for p in publicaciones %}
+                                    <option value="{{ p }}">
+                                        {% endfor %}
+                                </datalist>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-5">
+                                    <label class="form-label-sirio">Fecha Publicación <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="fecha_original"
+                                        class="form-control form-control-sirio validate-date"
+                                        value="{% if ref.fecha_original and ref.fecha_original|length == 10 and '-' in ref.fecha_original %}{{ ref.fecha_original[8:10] }}/{{ ref.fecha_original[5:7] }}/{{ ref.fecha_original[0:4] }}{% else %}{{ ref.fecha_original or '' }}{% endif %}"
+                                        placeholder="DD/MM/AAAA" onkeyup="autoformatearFecha(event)" required>
+                                </div>
+                                <div class="col-3">
+                                    <label class="form-label-sirio">Año</label>
+                                    <input type="number" name="anio" class="form-control form-control-sirio"
+                                        value="{{ ref.anio or '' }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label-sirio">Núm/Vol</label>
+                                    <input type="text" name="numero" class="form-control form-control-sirio"
+                                        value="{{ ref.numero or '' }}" placeholder="Número de edición">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-sirio">Edición</label>
+                                <select name="edicion" id="selectEdicion" class="form-select form-control-sirio"
+                                    data-value="{{ ref.edicion or '' }}">
+                                    <option value="">Cargando ediciones...</option>
+                                </select>
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label-sirio">Autor(es)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="text" name="nombre_autor" class="form-control form-control-sirio"
+                                            placeholder="Nombre" value="{{ nombre_autor_val or '' }}" id="inpNombre">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="text" name="apellido_autor" class="form-control form-control-sirio"
+                                            placeholder="Apellido" value="{{ apellido_autor_val or '' }}"
+                                            id="inpApellido">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="anonimo" id="anonimo" {{ 'checked'
+                                    if not nombre_autor_val and not apellido_autor_val else '' }}>
+                                <label class="form-check-label text-secondary small" for="anonimo">Es anónimo</label>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <label class="form-label-sirio">Ciudad</label>
+                                    <input type="text" name="ciudad" class="form-control form-control-sirio"
+                                        value="{{ ref.ciudad or '' }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label-sirio">País</label>
+                                    <input type="text" name="pais_publicacion" class="form-control form-control-sirio"
+                                        value="{{ ref.pais_publicacion or '' }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label-sirio">Idioma</label>
+                                    <select name="idioma" class="form-select form-control-sirio">
+                                        <option value="">-</option>
+                                        {% for i in idiomas %}
+                                        <option value="{{ i }}" {% if ref.idioma==i %}selected{% endif %}>{{ i|upper }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Fila: Fuente / Institución -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-12">
+                                    <label class="form-label-sirio">Fuente / Institución</label>
+                                    <input type="text" name="fuente"
+                                        class="form-control form-control-sirio bg-dark text-light w-100 fuente-institucion-input"
+                                        value="{{ ref.fuente or (publicacion_rel.fuente if publicacion_rel else '') or (publicacion_rel.hemeroteca_rel.institucion if publicacion_rel and publicacion_rel.hemeroteca_rel else '') }}"
+                                        placeholder="Archivo, Biblioteca o Institución de origen">
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-3">
+                                    <label class="form-label-sirio">Pág. Ini</label>
+                                    <input type="text" name="pagina_inicio" class="form-control form-control-sirio"
+                                        value="{{ ref.pagina_inicio or '' }}">
+                                </div>
+                                <div class="col-3">
+                                    <label class="form-label-sirio">Pág. Fin</label>
+                                    <input type="text" name="pagina_fin" class="form-control form-control-sirio"
+                                        value="{{ ref.pagina_fin or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Tipo Recurso</label>
+                                    <select name="tipo_recurso" id="selectRecurso"
+                                        class="form-select form-control-sirio">
+                                        {% set tr = (ref.tipo_recurso or 'prensa') %}
+                                        <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
+                                        <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
+                                        <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
+                                            Académico</option>
+                                        <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra Teatral</option>
+                                        <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
+                                        <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
+                                        <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>
+                                            Fotografía</option>
+                                        <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- CAMPOS ESPECÍFICOS PARA LIBROS / ARTÍCULOS (Inicialmente ocultos) -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Editorial</label>
+                                    <input type="text" name="editorial" class="form-control form-control-sirio"
+                                        value="{{ ref.editorial or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Lugar de Pub.</label>
+                                    <input type="text" name="lugar_publicacion" class="form-control form-control-sirio"
+                                        value="{{ ref.lugar_publicacion or '' }}">
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label-sirio">ISBN</label>
+                                    <input type="text" name="isbn" class="form-control form-control-sirio"
+                                        value="{{ ref.isbn or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">ISSN</label>
+                                    <input type="text" name="issn" class="form-control form-control-sirio"
+                                        value="{{ ref.issn or '' }}">
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Volumen / Tomo / Escenas</label>
+                                    <input type="text" name="volumen" class="form-control form-control-sirio"
+                                        value="{{ ref.volumen or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">DOI</label>
+                                    <input type="text" name="doi" class="form-control form-control-sirio"
+                                        value="{{ ref.doi or '' }}">
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Sección / Actos</label>
+                                    <input type="text" name="seccion" class="form-control form-control-sirio"
+                                        value="{{ ref.seccion or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Palabras Clave / Reparto</label>
+                                    <input type="text" name="palabras_clave" class="form-control form-control-sirio"
+                                        value="{{ ref.palabras_clave or '' }}">
+                                </div>
+                            </div>
+                            <hr class="border-secondary my-3 opacity-25">
+
+                            <div class="mb-3">
+                                <label class="form-label-sirio text-accent">URL / Enlace</label>
+                                <div class="input-group flex-nowrap">
+                                    <button
+                                        class="btn btn-outline-secondary bg-dark text-secondary border-secondary border-end-0"
+                                        type="button" id="btn-open-url-ficha" title="Abrir enlace en nueva pestaña"
+                                        style="width: 35px !important;">
+                                        <i class="fa-solid fa-link"></i>
+                                    </button>
+
+                                    <input type="url"
+                                        class="form-control form-control-sirio text-accent border-secondary border-start-0 ps-2"
+                                        id="url_ficha" name="url" value="{{ ref.url or '' }}" placeholder="https://..."
+                                        style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Fecha de Consulta</label>
+                                    <input type="text" name="fecha_consulta"
+                                        class="form-control form-control-sirio validate-date"
+                                        value="{{ ref.fecha_consulta or '' }}" placeholder="DD/MM/AAAA">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label-sirio">Licencia</label>
+                                    <input type="text" name="licencia" class="form-control form-control-sirio"
+                                        value="{{ ref.licencia or 'CC BY 4.0' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3 p-2">
+                                <div class="d-flex align-items-center" style="gap: 1.5rem;">
+                                    <span class="text-accent fw-bold small mb-0" style="white-space:nowrap;">INCLUIR EN
+                                        ESTUDIO:</span>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="incluido" id="incluidoSi"
+                                            value="si" {% if ref.incluido %}checked{% endif %}>
+                                        <label class="form-check-label text-accent" for="incluidoSi">Sí</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="incluido" id="incluidoNo"
+                                            value="no" {% if not ref.incluido %}checked{% endif %}>
+                                        <label class="form-check-label text-accent" for="incluidoNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 p-2 border border-warning border-opacity-10 rounded"
+                                style="background: rgba(255, 193, 7, 0.03);">
+                                <div class="d-flex align-items-center" style="gap: 1.5rem;">
+                                    <span class="text-warning fw-bold small mb-0" style="white-space:nowrap;">INCLUIR
+                                        REF. BIBLIOGRÁFICA:</span>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="es_referencia"
+                                            id="esReferenciaSi" value="si" {% if ref.numero_referencia and
+                                            ref.numero_referencia> 0 %}checked{% endif %}>
+                                        <label class="form-check-label text-warning" for="esReferenciaSi">Sí</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="es_referencia"
+                                            id="esReferenciaNo" value="no" {% if not ref.numero_referencia or
+                                            ref.numero_referencia==0 %}checked{% endif %}>
+                                        <label class="form-check-label text-warning" for="esReferenciaNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="numeroReferenciaContainer"
+                                class="{% if not ref.numero_referencia or ref.numero_referencia == 0 %}d-none{% endif %} mb-3">
+                                <label class="form-label-sirio text-accent">Nº REFERENCIA BIBLIOGRÁFICA</label>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input type="text" name="numero_referencia" id="numero_referencia"
+                                        class="form-control form-control-highlight text-center"
+                                        style="width: 80px !important; flex-shrink: 0;"
+                                        value="{{ ref.numero_referencia or '' }}" pattern="[0-9]*" inputmode="numeric"
+                                        maxlength="4">
+                                    <button type="button" style="width: 40px !important;"
+                                        class="btn btn-outline-warning btn-sm"
+                                        onclick="conditionalFields.suggestNextNumber()"
+                                        title="Sugerir siguiente número">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    </button>
+                                    <button type="button" style="width: 40px !important;"
+                                        class="btn btn-outline-danger btn-sm px-2 py-1" onclick="limpiarReferencia()"
+                                        title="Eliminar referencia">
+                                        <i class="fa-solid fa-times"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning flex-grow-1"
+                                        style="white-space: nowrap;" onclick="mostrarCitaPreview('{{ ref.id }}');">
+                                        <i class="fa-solid fa-quote-left me-1"></i> VER CITA
+                                    </button>
+                                </div>
+                                <small class="text-secondary d-block" style="font-size: 11px;">
+                                    Indique aquí el número o código de referencia bibliográfica que permitirá
+                                    identificar este recurso en su estudio o base de datos.
+                                </small>
+                            </div>
+                            <script>
+                                // La lógica de "Incluir en estudio" y "Número de referencia" 
+                                // ahora está centralizada en form-conditional-fields.js
+                            </script>
+                            <div class="mb-2 flex-grow-1 d-flex flex-column">
+                                <label class="form-label-sirio">Descripción de la Publicación</label>
+                                <textarea name="descripcion_publicacion"
+                                    class="form-control form-control-sirio flex-grow-1"
+                                    style="min-height: 200px; resize: vertical;"
+                                    placeholder="Breve resumen o descripción del medio/fuente...">{{ ref.descripcion_publicacion or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="card-panel mb-4">
+                        <div class="p-3">
+                            <div class="mb-3">
+                                <label class="form-label-sirio">Titulo de la Noticia</label>
+                                <input type="text" name="titulo" class="form-control form-control-sirio fw-bold"
+                                    style="font-size: 1.1rem;" value="{{ ref.titulo or '' }}"
+                                    placeholder="Ingrese el titular...">
+                            </div>
+
+                            <hr class="my-4" style="opacity: 0.15;">
+
+                            <div class="mb-3">
+                                <label class="form-label-sirio"><i class="fa-solid fa-file-import me-1"></i> Cargar
+                                    archivo de texto para contenido(.txt)</label>
+                                <input type="file" name="archivo_texto" id="input-archivo-texto"
+                                    class="form-control form-control-sirio" accept=".txt">
+                                <div class="mt-2 d-flex align-items-center gap-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="limpiar_ocr"
+                                            id="checkLimpiarOCR" checked>
+                                        <label class="form-check-label small text-warning" for="checkLimpiarOCR">
+                                            Limpiar ruido OCR automáticamente al subir
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-muted small">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Si subes un archivo <strong>.txt</strong>, su contenido se usará automáticamente.
+                                </div>
+                            </div>
+
+                            <hr class="my-4" style="opacity: 0.15;">
+
+                            <ul class="nav nav-tabs border-secondary mb-0 d-flex flex-wrap align-items-center gap-3"
+                                id="contentTabs" role="tablist">
+
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 rounded-0 ps-0 pe-3"
+                                        id="traduccion-tab" data-bs-toggle="tab" data-bs-target="#traduccion"
+                                        type="button" style="white-space: nowrap; flex-shrink: 0;">Español /
+                                        Traducción</button>
+
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="original-tab" data-bs-toggle="tab" data-bs-target="#original" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;">Texto Original</button>
+
+                                </li>
+                            </ul>
+                            <div class="tab-content pt-3 flex-grow-1 d-flex flex-column">
+                                <div class="tab-pane fade show active flex-grow-1 d-flex flex-column" id="traduccion">
+                                    <textarea name="contenido" id="contenido"
+                                        class="form-control form-control-sirio border-0 text-light flex-grow-1"
+                                        style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.6; resize: none; text-align: justify; min-height: 400px;"
+                                        placeholder="Contenido traducido o transcrito...">{{ ref.contenido or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="original">
+                                    <textarea name="texto_original" id="texto_original"
+                                        class="form-control form-control-sirio border-0 text-info flex-grow-1"
+                                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5; resize: none; min-height: 400px;"
+                                        placeholder="Pega aquí el texto en su idioma original...">{{ ref.texto_original or '' }}</textarea>
+                                </div>
+                            </div>
+
+                            <!-- Barra de Herramientas de Contenido -->
+                            <div class="small text-muted mb-1 mt-3">
+                                <i class="fa-solid fa-circle-info me-1"></i> Recomendación: Para un mejor refinamiento
+                                del texto, aplica primero la 'Limpieza' y luego la 'Revisión por IA'.
+                            </div>
+                            <div
+                                class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 w-100">
+                                <div id="counter-contenido"
+                                    class="char-counter small mt-1 text-warning d-flex align-items-center w-100">
+                                    <div class="ms-auto d-flex gap-3">
+                                        <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual"
+                                            style="width: auto !important;"
+                                            title="Aplicar limpieza profunda al texto actual">
+                                            <i class="fa-solid fa-broom me-1"></i> Limpiar ahora
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-sirio" id="btn-correct-txt-gemini"
+                                            style="width: auto !important;"
+                                            title="Corregir texto actual con inteligencia artificial">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="counter-texto_original"
+                                    class="char-counter small mt-1 text-warning d-none align-items-center w-100">
+                                    <div class="ms-auto d-flex gap-3">
+                                        <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual-orig"
+                                            style="width: auto !important;"
+                                            title="Aplicar limpieza profunda al texto original">
+                                            <i class="fa-solid fa-broom me-1"></i> Limpiar ahora
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-sirio"
+                                            id="btn-correct-txt-gemini-orig" style="width: auto !important;"
+                                            title="Corregir texto original con inteligencia artificial">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label-sirio">Notas de Investigación</label>
+                                <input type="text" name="notas"
+                                    class="form-control form-control-sirio border-warning fst-italic"
+                                    value="{{ ref.notas or '' }}" placeholder="Notas adicionales...">
+                            </div>
+                            <div class="mt-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label-sirio mb-0">Temas / Etiquetas</label>
+                                    <button type="button" class="btn btn-link btn-sm text-info p-0 text-decoration-none"
+                                        data-bs-toggle="modal" data-bs-target="#modalGestorTemas">
+                                        <i class="fa-solid fa-gear me-1"></i>Gestionar
+                                    </button>
+                                </div>
+                                <select name="temas" id="inputTemas" multiple class="form-control form-control-sirio"
+                                    data-add-items="true" placeholder="Seleccione o escriba temas...">
+                                    {% for t in temas %}
+                                    <option value="{{ t }}" {% if t in temas_sel %}selected{% endif %}>{{ t }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-panel">
+                        <div class="card-header-panel">
+                            <span><i class="fa-solid fa-paperclip me-2"></i> Material Adjunto (Facsímil)</span>
+                        </div>
+                        <div class="p-3">
+                            {% if ref.imagenes and ref.imagenes.count() > 0 %}
+                            <div class="mb-3">
+                                <label class="form-label-sirio text-warning">Imágenes Actuales</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for img in ref.imagenes %}
+                                    <div class="p-2 border border-secondary rounded position-relative"
+                                        style="background: var(--ds-bg-element);">
+                                        <img src="{{ url_for('static', filename='uploads/' + img.filename) }}"
+                                            style="max-height: 100px; max-width: 150px; object-fit: contain; cursor: pointer;"
+                                            data-url="{{ url_for('static', filename='uploads/' + img.filename) }}"
+                                            onclick="window.open(this.dataset.url, '_blank');">
+                                        <div class="mt-2 d-flex justify-content-between gap-2">
+                                            <a href="{{ url_for('ver_imagenes_prensa', id=ref.id) }}" target="_blank"
+                                                class="btn btn-outline-info btn-sm d-flex align-items-center gap-1 shadow-sm flex-fill"
+                                                style="font-size:13px;">
+                                                <i class="fa-solid fa-eye"></i> <span>Ver</span>
+                                            </a>
+                                            <button type="button"
+                                                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 shadow-sm flex-fill"
+                                                style="font-size:13px;"
+                                                onclick="eliminarImagen({{ img.id }}, '{{ csrf_token() }}')">
+                                                <i class="fa-solid fa-trash"></i> <span>Eliminar</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            <label class="form-label-sirio">Añadir Imágenes</label>
+                            <input type="file" name="imagen_scan" class="d-none" accept="image/*" multiple
+                                id="fileInputHidden">
+                            <div id="dropZone" class="ocr-dropzone p-3 text-center cursor-pointer">
+                                <i class="fa-solid fa-cloud-arrow-up fa-2x text-muted mb-2"></i>
+                                <div class="dropzone-text-primary mb-2 small">
+                                    Arrastra imágenes aquí
+                                </div>
+                                <div class="dropzone-text-secondary mb-2 small">o haz click para seleccionar archivos
+                                </div>
+                            </div>
+                            <div id="imagePreviewContainer" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% include '_modal_gestor_temas.html' %}
+
+<div class="modal fade" id="citaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0">
+                <iframe id="citaIframe" style="width: 100%; height: 600px; border: none; border-radius: 8px;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<script src="{{ url_for('static', filename='js/citation-generator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ocr-processor.js') }}?v=fix400"></script>
+<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fix400"></script>
+<script src="{{ url_for('static', filename='js/form-validator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-autosave.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-counter.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-citation-preview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-shortcuts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-progress.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-autocomplete.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-duplicate.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-datepicker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/debug-editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-conditional-fields.js') }}"></script>
+<script src="{{ url_for('static', filename='js/image-uploader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/html-to-plaintext.js') }}"></script>
+<script src="{{ url_for('static', filename='js/publicacion-autocomplete.js') }}"></script>
+<script src="{{ url_for('static', filename='js/theme-manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-editor.js') }}?v=fixSave"></script>
+
+<script>
+    // Función para limpiar número de referencia y marcar como No incluido
+    function limpiarReferencia() {
+        const inputNumero = document.getElementById('numero_referencia');
+        const radioNo = document.getElementById('esReferenciaNo');
+        const refContainer = document.getElementById('numeroReferenciaContainer');
+
+        if (confirm('¿Eliminar el número de referencia bibliográfica?')) {
+            inputNumero.value = '';
+            if (radioNo) radioNo.click(); // Usamos click para disparar el evento del listener
+            refContainer.classList.add('d-none');
+        }
+    }
+
+    // Función para mostrar modal de cita
+    function mostrarCitaPreview(refId) {
+        console.log('Abriendo cita para referencia ID:', refId);
+        const citaUrl = `/cita/${refId}`;
+        const iframe = document.getElementById('citaIframe');
+
+        if (!iframe) {
+            console.error('No se encontró el iframe de cita');
+            return;
+        }
+
+        iframe.src = citaUrl;
+
+        const modalElement = document.getElementById('citaModal');
+        if (!modalElement) {
+            console.error('No se encontró el elemento modal');
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+
+    // Escuchar mensaje del iframe para cerrar el modal
+    window.addEventListener('message', function (event) {
+        if (event.data === 'closeCitaModal') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('citaModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }
+    });
+
+    // Inicialización de colapsables y lógica específica
+    document.addEventListener('DOMContentLoaded', () => {
+        // Toggle OCR
+        const toggleOCRBtn = document.getElementById('toggleOCRSection');
+        const ocrSectionBody = document.getElementById('ocrSectionBody');
+        const ocrToggleIcon = document.getElementById('ocrToggleIcon');
+
+        if (toggleOCRBtn && ocrSectionBody && ocrToggleIcon) {
+            toggleOCRBtn.style.cursor = 'pointer';
+            toggleOCRBtn.addEventListener('click', () => {
+                const isHidden = ocrSectionBody.style.display === 'none' || ocrSectionBody.style.display === '';
+                ocrSectionBody.style.display = isHidden ? 'block' : 'none';
+
+                if (isHidden) {
+                    ocrToggleIcon.classList.remove('fa-caret-down');
+                    ocrToggleIcon.classList.add('fa-caret-up');
+                } else {
+                    ocrToggleIcon.classList.remove('fa-caret-up');
+                    ocrToggleIcon.classList.add('fa-caret-down');
+                }
+            });
+        }
+
+        // Gestionar subrayado de pestañas activas
+        const tabButtons = document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]');
+        tabButtons.forEach(button => {
+            button.addEventListener('shown.bs.tab', function (e) {
+                // Remover subrayado y color de todas las pestañas
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('border-bottom', 'border-warning', 'text-light');
+                    btn.classList.add('text-muted');
+                });
+                // Agregar subrayado y color a la pestaña activa
+                e.target.classList.add('border-bottom', 'border-warning', 'text-light');
+                e.target.classList.remove('text-muted');
+
+                // Toggle visibilidad de contadores según pestaña
+                const counterContenido = document.getElementById('counter-contenido');
+                const counterOriginal = document.getElementById('counter-texto_original');
+
+                if (counterContenido && counterOriginal) {
+                    if (e.target.id === 'traduccion-tab') {
+                        counterContenido.style.display = 'block';
+                        counterOriginal.style.display = 'none';
+                    } else if (e.target.id === 'original-tab') {
+                        counterContenido.style.display = 'none';
+                        counterOriginal.style.display = 'block';
+                    }
+                }
+            });
+        });
+
+        // Manejar aplicación de texto OCR al campo seleccionado
+        const btnApplyOcrText = document.getElementById('btn-apply-ocr-text');
+        if (btnApplyOcrText) {
+            btnApplyOcrText.addEventListener('click', () => {
+                const ocrTextPreview = document.getElementById('ocr-text-preview');
+                const selectedDestination = document.querySelector('input[name="ocr-destination"]:checked');
+
+                if (!ocrTextPreview || !selectedDestination) {
+                    alert('Error: No se pudo obtener el texto o destino');
+                    return;
+                }
+
+                // IMPORTANTE: Obtener texto puro desde data-ocr-text (sin metadatos)
+                const extractedText = ocrTextPreview.getAttribute('data-ocr-text') || ocrTextPreview.textContent || '';
+                const destination = selectedDestination.value;
+
+                if (!extractedText.trim()) {
+                    alert('No hay texto extraído para copiar');
+                    return;
+                }
+
+                // Copiar al campo correspondiente
+                if (destination === 'original') {
+                    const textoOriginalField = document.getElementById('texto_original');
+                    if (textoOriginalField) {
+                        textoOriginalField.value = extractedText;
+                        // Cambiar a la pestaña de Texto Original
+                        const originalTab = document.getElementById('original-tab');
+                        if (originalTab) originalTab.click();
+                    }
+                } else if (destination === 'traduccion') {
+                    const contenidoField = document.getElementById('contenido');
+                    if (contenidoField) {
+                        contenidoField.value = extractedText;
+                        // Cambiar a la pestaña de Español / Traducción
+                        const traduccionTab = document.getElementById('traduccion-tab');
+                        if (traduccionTab) traduccionTab.click();
+                    }
+                }
+
+                // Feedback visual
+                btnApplyOcrText.innerHTML = '<i class="fa-solid fa-check me-2"></i> ¡Texto Copiado!';
+                btnApplyOcrText.classList.remove('btn-success');
+                btnApplyOcrText.classList.add('btn-outline-success');
+
+                setTimeout(() => {
+                    btnApplyOcrText.innerHTML = '<i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado';
+                    btnApplyOcrText.classList.add('btn-success');
+                    btnApplyOcrText.classList.remove('btn-outline-success');
+                }, 2000);
+            });
+        }
+
+        // --- Lógica de limpieza OCR manual ---
+        const btnLimpiarManual = document.getElementById('btnLimpiarManual');
+        if (btnLimpiarManual) {
+            btnLimpiarManual.addEventListener('click', async () => {
+                const areaContenido = document.getElementById('contenido');
+                const textoOriginal = document.getElementById('texto_original');
+
+                // Determinar qué área limpiar (preferencia a la activa)
+                let targetArea = areaContenido;
+                const tabActivo = document.querySelector('#contentTabs .nav-link.active');
+                if (tabActivo && tabActivo.id === 'original-tab') {
+                    targetArea = textoOriginal;
+                }
+
+                const textToClean = targetArea.value.trim();
+                if (!textToClean) {
+                    alert('No hay texto para limpiar.');
+                    return;
+                }
+
+                btnLimpiarManual.disabled = true;
+                btnLimpiarManual.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-1"></i> Limpiando...';
+
+                try {
+                    const response = await fetch('/api/spacy/clean2', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                        },
+                        body: JSON.stringify({ text: textToClean })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        targetArea.value = data.clean_text;
+
+                        btnLimpiarManual.innerHTML = '<i class="fa-solid fa-check me-1"></i> ¡Limpio!';
+                        btnLimpiarManual.classList.replace('btn-outline-warning', 'btn-success');
+                    } else {
+                        throw new Error('Error en el servidor');
+                    }
+                } catch (err) {
+                    console.error('Error al limpiar:', err);
+                    alert('Error al conectar con el servidor de limpieza.');
+                    btnLimpiarManual.innerHTML = '<i class="fa-solid fa-broom me-1"></i> Limpiar ahora';
+                } finally {
+                    setTimeout(() => {
+                        btnLimpiarManual.disabled = false;
+                        btnLimpiarManual.innerHTML = '<i class="fa-solid fa-broom me-1"></i> Limpiar ahora';
+                        btnLimpiarManual.classList.replace('btn-success', 'btn-outline-warning');
+                    }, 2000);
+                }
+            });
+        }
+
+        // Manejar selección de archivo .txt para previsualización inmediata
+        const inputArchivoTexto = document.getElementById('input-archivo-texto');
+        if (inputArchivoTexto) {
+            inputArchivoTexto.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const content = e.target.result;
+                    const areaContenido = document.getElementById('contenido');
+
+                    // Si el área está vacía, cargamos directamente. 
+                    // Si tiene texto, preguntamos si desea sobrescribir.
+                    if (!areaContenido.value.trim() || confirm('¿Deseas reemplazar el contenido actual con el texto del archivo seleccionado?')) {
+
+                        // Verificar si la limpieza OCR está activa
+                        const checkLimpiar = document.getElementById('checkLimpiarOCR');
+                        let contentToSet = content;
+
+                        if (checkLimpiar && checkLimpiar.checked) {
+                            // Si el usuario quiere limpieza inmediata, usamos el botón de limpiar
+                            // pero para cargar el archivo, el backend ya lo hará al guardar.
+                            // Aquí solo mostramos el contenido.
+                            console.log("Limpieza OCR activa, se aplicará al guardar o manualmente con 'Limpiar ahora'");
+                        }
+
+                        areaContenido.value = contentToSet;
+                        // Forzar scroll arriba
+                        areaContenido.scrollTop = 0;
+
+                        // Si hay pestaña "Español / Traducción", activarla
+                        const tradTab = document.getElementById('traduccion-tab');
+                        if (tradTab) tradTab.click();
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+    });
+
+    // Funcionalidad para abrir el enlace (Botón izquierdo) - FICHA
+    const btnUrlFicha = document.getElementById('btn-open-url-ficha');
+    const inputUrlFicha = document.getElementById('url_ficha');
+
+    if (btnUrlFicha && inputUrlFicha) {
+        btnUrlFicha.addEventListener('click', function () {
+            let url = inputUrlFicha.value.trim();
+            if (url) {
+                // Si falta el protocolo, añadimos https por defecto
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
+                }
+                window.open(url, '_blank');
+            } else {
+                // Feedback visual si está vacío
+                inputUrlFicha.classList.add('border-danger');
+                setTimeout(() => inputUrlFicha.classList.remove('border-danger'), 500);
+                inputUrlFicha.focus();
+            }
+        });
+    }
+
+
+    // --- REFUERZO: Autor siempre habilitado salvo anónimo ---
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAnonimo = document.getElementById("anonimo");
+        const inpNombre = document.getElementById("inpNombre");
+        const inpApellido = document.getElementById("inpApellido");
+        function toggleAutor() {
+            if (checkAnonimo && checkAnonimo.checked) {
+                if (inpNombre) {
+                    inpNombre.disabled = true;
+                    inpNombre.value = "";
+                }
+                if (inpApellido) {
+                    inpApellido.disabled = true;
+                    inpApellido.value = "";
+                }
+            } else {
+                if (inpNombre) inpNombre.disabled = false;
+                if (inpApellido) inpApellido.disabled = false;
+            }
+        }
+        if (checkAnonimo) {
+            checkAnonimo.addEventListener("change", toggleAutor);
+            // Refuerzo: SIEMPRE habilitar por defecto salvo que esté marcado
+            toggleAutor();
+        }
+    });
+    // --- CÁLCULO DE PROGRESO DINÁMICO ---
+    /**
+         * Lógica AVANZADA para calcular el progreso real de la ficha.
+         * Ajustada para ignorar campos no obligatorios (Autor si es anónimo, Pág Fin, etc.)
+         */
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('form-ficha');
+        const progressSlot = document.getElementById('header-progress-slot');
+        const anonimoCheckbox = document.getElementById('anonimo');
+
+        if (!form || !progressSlot) return;
+
+        function calcularProgreso() {
+            // 1. Verificar estado de "Anónimo"
+            const esAnonimo = anonimoCheckbox ? anonimoCheckbox.checked : false;
+
+            // 2. Seleccionar todos los inputs, selects y textareas
+            const inputs = Array.from(form.querySelectorAll('input, select, textarea'));
+
+            // 3. Filtrar solo los campos que REALMENTE cuentan para el 100%
+            const camposRelevantes = inputs.filter(el => {
+                const name = el.name;
+                const style = window.getComputedStyle(el);
+
+                // --- FILTROS TÉCNICOS (Lo que no es dato) ---
+                if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button' ||
+                    el.type === 'file' || el.style.display === 'none' ||
+                    style.display === 'none' || el.disabled ||
+                    el.classList.contains('choices__input')) { // Ignorar buscador de tags
+                    return false;
+                }
+
+                // --- FILTROS DE NEGOCIO (Lo que pidió el usuario) ---
+
+                // Excluir siempre "Página Fin" (no es obligatoria)
+                if (name === 'pagina_fin') return false;
+
+                // Excluir siempre "Incluido en estudio" y "Número referencia" (son administrativos)
+                if (name === 'incluido' || name === 'numero_referencia') return false;
+
+                // Excluir siempre "Checkboxes auxiliares" (como el propio check de anónimo o propagar)
+                if (name === 'anonimo' || name === 'propagar') return false;
+
+                // Excluir campos de OCR (motores y opciones)
+                if (name === 'ocr_engine' || name === 'ocr-destination') return false;
+
+                // --- FILTRO CONDICIONAL: AUTOR ---
+                // Si es anónimo, Nombre y Apellido NO cuentan
+                if (esAnonimo && (name === 'nombre_autor' || name === 'apellido_autor')) {
+                    return false;
+                }
+
+                // Nos quedamos solo con campos de texto/selects para el conteo
+                // (Ignoramos radios/checkboxes restantes para no desvirtuar el %)
+                if (el.type === 'checkbox' || el.type === 'radio') return false;
+
+                return true;
+            });
+
+            // 4. Calcular llenados
+            const total = camposRelevantes.length;
+            let completados = 0;
+
+            camposRelevantes.forEach(el => {
+                if (el.value && el.value.trim() !== '') {
+                    completados++;
+                }
+            });
+
+            // 5. Resultado
+            // Al haber quitado del "total" los campos innecesarios, 
+            // llenar el resto dará el 100% real.
+            const porcentaje = total === 0 ? 0 : Math.round((completados / total) * 100);
+
+            // 6. Determinar color
+            let colorClass = 'bg-danger';
+            let textClass = 'text-danger';
+
+            if (porcentaje > 50) { colorClass = 'bg-warning'; textClass = 'text-warning'; }
+            if (porcentaje > 85) { colorClass = 'bg-success'; textClass = 'text-success'; }
+            if (porcentaje === 100) { colorClass = 'bg-info'; textClass = 'text-info'; }
+
+            // 7. Renderizar HTML
+            progressSlot.innerHTML = `
+                <div class="d-flex flex-column align-items-end" style="line-height: 1;">
+                    <span class="${textClass} fw-bold" style="font-size: 11px;">${porcentaje}%</span>
+                    <span class="text-secondary" style="font-size: 9px;">COMPLETADO</span>
+                </div>
+                <div class="progress bg-secondary bg-opacity-25" style="height: 24px; width: 6px; border-radius: 2px;">
+                    <div class="progress-bar ${colorClass}" role="progressbar" 
+                         style="width: 100%; height: ${porcentaje}%; align-self: flex-end; transition: height 0.5s ease;">
+                    </div>
+                </div>
+            `;
+        }
+
+        // Ejecutar al inicio
+        calcularProgreso();
+
+        // Listeners para recalcular en tiempo real
+        form.addEventListener('input', calcularProgreso);
+        form.addEventListener('change', calcularProgreso);
+
+        // Listener especial para el checkbox de anónimo (para que recalcule al marcarlo/desmarcarlo)
+        if (anonimoCheckbox) {
+            anonimoCheckbox.addEventListener('change', calcularProgreso);
+        }
+
+        // Recalcular tras interacciones de clic (por si acaso pestañas u otros elementos)
+        document.addEventListener('click', function () {
+            setTimeout(calcularProgreso, 100);
+        });
+    });
+
+    // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
+    // en static/js/ocr-uploader.js para evitar duplicidad y permitir multimodalidad.
+
+    // --- Lógica de Limpieza OCR Manual (Pre-aplicar) ---
+    const btnCleanOCR = document.getElementById('btn-clean-ocr-preview');
+    if (btnCleanOCR) {
+        btnCleanOCR.addEventListener('click', async () => {
+            const ocrPreview = document.getElementById('ocr-text-preview');
+            const textToClean = ocrPreview.getAttribute('data-ocr-text') || ocrPreview.textContent;
+
+            if (!textToClean || textToClean.trim().length < 5) {
+                alert('No hay texto OCR para limpiar.');
+                return;
+            }
+
+            const originalHTML = btnCleanOCR.innerHTML;
+            btnCleanOCR.disabled = true;
+            btnCleanOCR.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Limpiando...';
+
+            try {
+                const response = await fetch('/api/spacy/clean2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify({ text: textToClean })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    ocrPreview.textContent = data.clean_text;
+                    ocrPreview.setAttribute('data-ocr-text', data.clean_text);
+                } else {
+                    throw new Error('Error en el servidor');
+                }
+            } catch (err) {
+                console.error('Error limpieza OCR:', err);
+                alert('Error al limpiar el texto OCR.');
+            } finally {
+                btnCleanOCR.disabled = false;
+                btnCleanOCR.innerHTML = originalHTML;
+            }
+        });
+    }
+
+    // --- Lógica de Revisión con IA para TXT ---
+    const setupGemini = (btnId, areaId) => {
+        const btn = document.getElementById(btnId);
+        const area = document.getElementById(areaId);
+        if (!btn || !area) return;
+
+        btn.addEventListener('click', async () => {
+            const textToFix = area.value.trim();
+            if (textToFix.length < 10) {
+                alert('Texto insuficiente para revisar con IA.');
+                return;
+            }
+
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-brain fa-spin me-1"></i> Corrigiendo...';
+
+            try {
+                const selPotencia = document.getElementById('sel-potencia-ocr');
+                const potencia = selPotencia ? selPotencia.value : 'gemini:flash';
+
+                const response = await fetch('/api/gemini/correct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify({
+                        text: textToFix,
+                        potencia: potencia
+                    })
+                });
+
+                const data = await response.json();
+                if (data.clean_text || data.corrected_text) {
+                    area.value = data.clean_text || data.corrected_text;
+                    const provider = potencia.split(':')[0].toUpperCase();
+                    alert(`¡Revisión profunda (${provider}) completada con éxito!`);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (error) {
+                console.error('Error IA:', error);
+                alert('Error en revisión IA: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        });
+    };
+
+    setupGemini('btn-correct-txt-gemini', 'contenido');
+    setupGemini('btn-correct-txt-gemini-orig', 'texto_original');
+
+    // Función para eliminar imagen
+    function eliminarImagen(imagenId, csrfToken) {
+        console.log('[DEBUG] eliminarImagen llamada con ID:', imagenId);
+
+        if (!confirm('¿Estás seguro de eliminar esta imagen?')) {
+            console.log('[DEBUG] Usuario canceló');
+            return;
+        }
+
+        console.log('[DEBUG] Enviando POST a /imagen/eliminar/' + imagenId);
+
+        fetch('/imagen/eliminar/' + imagenId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: 'csrf_token=' + encodeURIComponent(csrfToken)
+        })
+            .then(response => {
+                console.log('[DEBUG] Respuesta recibida:', response.status, response.statusText);
+                if (response.ok || response.redirected) {
+                    console.log('[DEBUG] Recargando página...');
+                    window.location.reload();
+                } else {
+                    console.error('[ERROR] Respuesta no exitosa:', response.status);
+                    return response.text().then(text => {
+                        console.error('[ERROR] Body:', text);
+                        alert('Error al eliminar la imagen: ' + response.status);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('[ERROR] Fetch falló:', error);
+                alert('Error al eliminar la imagen: ' + error.message);
+            });
+    }
+    // Inicializar ThemeManager con URLs dinámicas
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof ThemeManager !== 'undefined') {
+            ThemeManager.init({
+                baseUrl: "{{ url_for('noticias.api_get_temas') }}",
+                renameUrl: "{{ url_for('noticias.api_renombrar_tema') }}",
+                deleteUrl: "{{ url_for('noticias.api_eliminar_tema') }}",
+                createUrl: "{{ url_for('noticias.api_crear_tema_v2') }}",
+                themeInputId: 'inputTemas'
+            });
+        }
+    });
+</script>
+
+{% endblock %}

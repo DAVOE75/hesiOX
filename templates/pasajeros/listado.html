@@ -1,0 +1,663 @@
+{% extends "base_desktop.html" %}
+
+{% block page_title %}Listado de Pasajeros{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --sirio-accent: #ff9800;
+        --sirio-accent-alpha-10: rgba(255, 152, 0, 0.1);
+        --sirio-accent-alpha-30: rgba(255, 152, 0, 0.3);
+        --sirio-bg: #0a0a0a;
+        --sirio-text: #ffffff;
+        --sirio-card-bg: rgba(20, 20, 20, 0.8);
+        --sirio-row-1a: rgba(33, 150, 243, 0.08);
+        --sirio-row-2a: rgba(76, 175, 80, 0.08);
+        --sirio-row-3a: rgba(121, 85, 72, 0.08);
+        --sirio-row-trip: rgba(233, 30, 99, 0.12);
+        --sirio-header-bg: #1a1a1a;
+        --sirio-clase-1a: #2196f3;
+        --sirio-clase-2a: #4caf50;
+        --sirio-clase-3a: #795548;
+        --sirio-clase-trip: #e91e63;
+    }
+
+    [data-theme="light"] {
+        --sirio-accent: #294a60;
+        --sirio-accent-alpha-10: rgba(41, 74, 96, 0.1);
+        --sirio-accent-alpha-30: rgba(41, 74, 96, 0.3);
+        --sirio-bg: #ffffff;
+        --sirio-text: #294a60;
+        --sirio-card-bg: #f8f9fa;
+        --sirio-row-1a: rgba(33, 150, 243, 0.08);
+        --sirio-row-2a: rgba(76, 175, 80, 0.08);
+        --sirio-row-3a: rgba(121, 85, 72, 0.1);
+        --sirio-row-trip: rgba(233, 30, 99, 0.08);
+        --sirio-header-bg: #eeeeee;
+        --sirio-clase-1a: #0d6efd;
+        --sirio-clase-2a: #198754;
+        --sirio-clase-3a: #795548;
+        --sirio-clase-trip: #d63384;
+    }
+
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .bg-accent-alpha { background-color: var(--sirio-accent-alpha-10); }
+    
+    .table-sirio th, .table-sirio td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        position: relative;
+    }
+    
+    .table-sirio thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1021 !important;
+        background-color: var(--sirio-header-bg) !important;
+        color: var(--sirio-accent) !important;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--sirio-accent) !important;
+        white-space: nowrap;
+        padding: 0.85rem 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .table-sirio {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    .resizer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 6px;
+        height: 100%;
+        cursor: col-resize;
+        z-index: 10;
+        transition: background 0.2s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .resizer::after {
+        content: "⋮";
+        color: rgba(255, 255, 255, 0.1);
+        font-size: 10px;
+    }
+    .resizer:hover::after, .resizing .resizer::after { color: var(--sirio-accent); }
+    .resizer:hover, .resizing .resizer { background: var(--sirio-accent-alpha-10); width: 8px; }
+    .resizing { cursor: col-resize; }
+
+    .bg-dark-panel { background-color: #121212; }
+    [data-theme="light"] .bg-dark-panel { background-color: #f0f0f0; }
+    
+    .table-sirio thead th a {
+        color: var(--sirio-accent) !important;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+    }
+    .table-sirio thead th a:hover {
+        opacity: 1;
+        text-shadow: 0 0 5px var(--sirio-accent-alpha-30);
+    }
+    
+    .bg-sirio-header { background-color: var(--sirio-header-bg) !important; }
+    .text-accent-muted-responsive { color: var(--sirio-text); opacity: 0.6; }
+    .text-accent { color: var(--sirio-accent) !important; }
+    
+    .row-clase-1a { background-color: var(--sirio-row-1a) !important; color: var(--sirio-text); }
+    .row-clase-2a { background-color: var(--sirio-row-2a) !important; color: var(--sirio-text); }
+    .row-clase-3a { background-color: var(--sirio-row-3a) !important; color: var(--sirio-text); }
+    .row-clase-trip { background-color: var(--sirio-row-trip) !important; color: var(--sirio-text); }
+    
+    .row-clase-1a:hover { background-color: rgba(33, 150, 243, 0.2) !important; color: var(--sirio-text) !important; }
+    .row-clase-2a:hover { background-color: rgba(76, 175, 80, 0.2) !important; color: var(--sirio-text) !important; }
+    .row-clase-3a:hover { background-color: rgba(121, 85, 72, 0.22) !important; color: var(--sirio-text) !important; }
+    .row-clase-trip:hover { background-color: rgba(233, 30, 99, 0.18) !important; color: var(--sirio-text) !important; }
+    
+    .passenger-row:hover { filter: brightness(1.08); }
+    /* En modo claro: no sobreescribir el hover de filas con clase específica */
+    [data-theme="light"] .passenger-row:not(.row-clase-1a):not(.row-clase-2a):not(.row-clase-3a):not(.row-clase-trip):hover { background-color: rgba(0,0,0,0.04) !important; filter: none; }
+    
+    /* Apellidos y nombre visibles en modo claro */
+    /* Modo Claro: nombres en azul SIRIO, no en naranja */
+    [data-theme="light"] .fw-bold.text-accent { color: #294a60 !important; }
+    /* Modo Claro: cabeceras de columna APELLIDOS y NOMBRE en blanco (igual que resto) */
+    [data-theme="light"] thead .text-accent { color: #fff !important; }
+    
+    .toggle-icon { transition: transform 0.2s; }
+    .shadow-inner { box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+    .bg-dark-subtle { background-color: rgba(0,0,0,0.1) !important; }
+    .min-height-0 { min-height: 0; }
+    
+    .passenger-row { transition: all 0.2s ease; border-left: 3px solid transparent; }
+    .passenger-row.active-hover { border-left-color: var(--sirio-accent); filter: brightness(1.2); z-index: 10; position: relative; box-shadow: 0 0 15px var(--sirio-accent-alpha-30); }
+    
+    .rel-highlight-padre, .rel-highlight-madre, .rel-highlight-abuelo, .rel-highlight-abuela { 
+        background-color: rgba(33, 150, 243, 0.25) !important; 
+        border-left: 3px solid #2196f3 !important; 
+    }
+    .rel-highlight-hijo, .rel-highlight-hija, .rel-highlight-nieto, .rel-highlight-nieta { 
+        background-color: rgba(76, 175, 80, 0.25) !important; 
+        border-left: 3px solid #4caf50 !important; 
+    }
+    .rel-highlight-esposo, .rel-highlight-esposa, .rel-highlight-mujer, .rel-highlight-marido { 
+        background-color: rgba(156, 39, 176, 0.25) !important; 
+        border-left: 3px solid #9c27b0 !important; 
+    }
+    .rel-highlight-hermano, .rel-highlight-hermana { 
+        background-color: rgba(255, 193, 7, 0.2) !important; 
+        border-left: 3px solid #ffc107 !important; 
+    }
+    .rel-highlight-familiar, .rel-highlight-pariente, .rel-highlight-tio, .rel-highlight-tia, .rel-highlight-sobrino, .rel-highlight-sobrina { 
+        background-color: rgba(255, 87, 34, 0.2) !important; 
+        border-left: 3px solid #ff5722 !important; 
+    }
+    
+    .btn-sirio-swal {
+        background-color: #ff9800 !important;
+        color: #000 !important;
+        font-weight: 800 !important;
+        border: none !important;
+        padding: 10px 24px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-radius: 4px !important;
+        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        transition: all 0.3s ease;
+    }
+    .btn-sirio-swal:hover {
+        background-color: #ffa726 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+    }
+    .btn-cancel-swal {
+        background-color: #333 !important;
+        color: #fff !important;
+        font-weight: 800 !important;
+        border: 1px solid #444 !important;
+        padding: 10px 24px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-radius: 4px !important;
+        margin-right: 10px !important;
+        transition: all 0.3s ease;
+    }
+    .btn-cancel-swal:hover {
+        background-color: #444 !important;
+    }
+    .btn-pdf-sirio {
+        background-color: transparent !important;
+        color: #ff5252 !important;
+        border: 1px solid #ff5252 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 8px 16px !important;
+        border-radius: 4px !important;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .btn-pdf-sirio:hover {
+        background-color: rgba(255, 82, 82, 0.1) !important;
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+    <div class="d-flex align-items-center gap-3 me-3 pe-3 border-end border-secondary">
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" name="solo_prensa" value="1" id="soloPrensaCheckHeader" {% if solo_prensa == '1' %}checked{% endif %}>
+            <label class="form-check-label small text-accent fw-bold text-uppercase d-none d-xxl-inline-block" for="soloPrensaCheckHeader" style="cursor: pointer; white-space: nowrap;">SOLO PRENSA</label>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('pasajeros.listado') }}" class="btn btn-xs btn-sirio px-2" style="background: #252525; border-color: #444; font-size: 0.65rem;">LIMPIAR</a>
+            <button type="button" class="btn btn-xs btn-sirio active px-3" onclick="document.getElementById('filtersForm').dispatchEvent(new Event('submit'))" style="border: 1px solid var(--sirio-accent); font-size: 0.65rem;">FILTRAR</button>
+        </div>
+    </div>
+
+    <!-- Dropdown Lote -->
+    <div class="dropdown me-2">
+        <button class="btn btn-sirio dropdown-toggle" type="button" id="btn-acciones-lote" data-bs-toggle="dropdown"
+            disabled title="Acciones por lote" style="min-width: 80px !important;">
+            <i class="fa-solid fa-layer-group"></i>
+            <span class="btn-text">LOTE</span>
+            <span id="count-seleccionados" class="badge bg-warning text-dark ms-1" style="font-size: 0.7em;">0</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark shadow" style="border: 1px solid var(--sirio-accent);">
+            <li><a class="dropdown-item text-warning fw-bold small" href="#" data-bs-toggle="modal" data-bs-target="#batchEditModal"><i class="fa-solid fa-pencil me-2"></i> EDITAR SELECCIONADOS</a></li>
+        </ul>
+    </div>
+
+    <a href="{{ url_for('pasajeros.nuevo') }}" class="btn btn-sirio btn-sm">
+        <i class="fa-solid fa-plus-circle me-1"></i> Nuevo Pasajero
+    </a>
+    <button class="btn btn-sirio btn-sm" onclick="showExportModal()">
+        <i class="fa-solid fa-file-export"></i> Exportar
+    </button>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-grow-1 min-height-0" style="position: relative;">
+    <div class="flex-shrink-0 p-4 pb-2">
+        <div class="card hesi-floating-card">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ url_for('pasajeros.listado') }}" class="d-flex flex-column gap-3" id="filtersForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-lg-5">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Búsqueda</label>
+                            <input type="text" name="search" class="form-control form-control-sirio" placeholder="Nombre, apellidos..." value="{{ search }}">
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Estado</label>
+                            <select class="form-select form-control-sirio choice-select" name="estado">
+                                <option value="">(Todos)</option>
+                                <option value="SOBREVIVIENTE" {% if estado == 'SOBREVIVIENTE' %}selected{% endif %}>Superviviente</option>
+                                <option value="DESAPARECIDO/A" {% if estado == 'DESAPARECIDO/A' %}selected{% endif %}>Desaparecido</option>
+                                <option value="FALLECIDO/A" {% if estado == 'FALLECIDO/A' %}selected{% endif %}>Fallecido</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Sexo</label>
+                            <select class="form-select form-control-sirio choice-select" name="sexo">
+                                <option value="">(Todos)</option>
+                                <option value="Hombre" {% if sexo == 'Hombre' %}selected{% endif %}>Hombre</option>
+                                <option value="Mujer" {% if sexo == 'Mujer' %}selected{% endif %}>Mujer</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Clase</label>
+                            <select class="form-select form-control-sirio choice-select" name="pasaje">
+                                <option value="">(Todas)</option>
+                                <option value="1ª Clase" {% if pasaje == '1ª Clase' %}selected{% endif %}>1ª Clase</option>
+                                <option value="2ª Clase" {% if pasaje == '2ª Clase' %}selected{% endif %}>2ª Clase</option>
+                                <option value="3ª Clase" {% if pasaje == '3ª Clase' %}selected{% endif %}>3ª Clase</option>
+                                <option value="TRIPULACIÓN" {% if pasaje == 'TRIPULACIÓN' %}selected{% endif %}>Tripulación</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 align-items-end mt-2">
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Nacionalidad</label>
+                            <select class="form-select form-control-sirio choice-select" name="nacionalidad">
+                                <option value="">(Todas)</option>
+                                {% for n in nacionalidades %}
+                                <option value="{{ n }}" {% if nacionalidad == n %}selected{% endif %}>{{ n }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Embarque</label>
+                            <select class="form-select form-control-sirio choice-select" name="puerto">
+                                <option value="">(Todos)</option>
+                                {% for p in puertos %}
+                                <option value="{{ p }}" {% if puerto == p %}selected{% endif %}>{{ p }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Destino</label>
+                            <select class="form-select form-control-sirio choice-select" name="destino">
+                                <option value="">(Todos)</option>
+                                {% for d in destinos %}
+                                <option value="{{ d }}" {% if destino == d %}selected{% endif %}>{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Lista</label>
+                            <select class="form-select form-control-sirio choice-select" name="lista">
+                                <option value="">(Todas)</option>
+                                <option value="I-M" {% if lista == 'I-M' %}selected{% endif %}>I-M (Vapor Italia MVD)</option>
+                                <option value="I-B" {% if lista == 'I-B' %}selected{% endif %}>I-B (Vapor Italia BA)</option>
+                                <option value="R-S" {% if lista == 'R-S' %}selected{% endif %}>R-S (Vapor Ravenna SP)</option>
+                                <option value="O-G" {% if lista == 'O-G' %}selected{% endif %}>O-G (Vapor Orione GE)</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-8 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Fuente</label>
+                            <select class="form-select form-control-sirio choice-select" name="fuentepub">
+                                <option value="">(Todas)</option>
+                                {% for pub in publicaciones %}
+                                <option value="{{ pub.id_publicacion }}" {% if fuentepub == pub.id_publicacion|string %}selected{% endif %}>{{ pub.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-12 col-lg-2">
+                            <label class="d-block text-accent fw-bold mb-1 small text-uppercase">Edad</label>
+                            <div class="d-flex gap-1">
+                                <input type="number" step="0.01" name="edad_min" class="form-control form-control-sirio py-1 px-2" style="font-size: 0.8rem;" placeholder="Min" value="{{ edad_min }}">
+                                <input type="number" step="0.01" name="edad_max" class="form-control form-control-sirio py-1 px-2" style="font-size: 0.8rem;" placeholder="Max" value="{{ edad_max }}">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="px-4 py-1 border-bottom border-secondary bg-dark-panel d-flex justify-content-between align-items-center flex-shrink-0 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-1" style="font-size: 0.72rem; color: var(--sirio-text); opacity: 0.9;">
+            <div class="d-flex align-items-center gap-1" style="margin-right:12px;">
+                <span style="display:inline-block; width:12px; height:12px; background-color: var(--sirio-clase-1a); border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;"></span> 1ª Clase
+            </div>
+            <div class="d-flex align-items-center gap-1" style="margin-right:12px;">
+                <span style="display:inline-block; width:12px; height:12px; background-color: var(--sirio-clase-2a); border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;"></span> 2ª Clase
+            </div>
+            <div class="d-flex align-items-center gap-1" style="margin-right:12px;">
+                <span style="display:inline-block; width:12px; height:12px; background-color: var(--sirio-clase-3a); border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;"></span> 3ª Clase
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <span style="display:inline-block; width:12px; height:12px; background-color: var(--sirio-clase-trip); border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;"></span> Tripulación
+            </div>
+        </div>
+        <div class="small text-accent" style="font-size: 0.75rem;">
+            <span class="fw-bold total-count-val">{{ total_count }}</span> registros encontrados
+        </div>
+    </div>
+
+    <div class="flex-grow-1 overflow-auto pb-4 bg-dark">
+        <div id="tabla-pasajeros-container">
+            {% include 'pasajeros/_tabla_pasajeros.html' %}
+        </div>
+    </div>
+</div>
+
+{% include 'pasajeros/editar_lote_modal.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let choicesInstances = {};
+let filterTimeout = null;
+let currentSort = '{{ sort_by }}';
+let currentOrder = '{{ order }}';
+
+function ordenarPasajeros(field) {
+    if (currentSort === field) {
+        currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort = field;
+        currentOrder = 'asc';
+    }
+    filtrarPasajeros(1, currentSort, currentOrder);
+}
+
+function initResizers() {
+    const table = document.getElementById('tablaPasajeros');
+    if (!table) return;
+
+    const headerRow = table.querySelector('thead tr');
+    const cols = headerRow ? headerRow.querySelectorAll('th') : [];
+    
+    cols.forEach(col => {
+        const resizer = col.querySelector('.resizer');
+        if (!resizer || resizer.dataset.initialized) return;
+        
+        resizer.dataset.initialized = "true";
+        resizer.addEventListener('mousedown', function(e) {
+            const startX = e.pageX;
+            const startWidth = col.offsetWidth;
+            
+            document.body.classList.add('resizing');
+            
+            function onMouseMove(e) {
+                const newWidth = startWidth + (e.pageX - startX);
+                col.style.width = newWidth + 'px';
+                col.style.minWidth = newWidth + 'px';
+            }
+            
+            function onMouseUp() {
+                document.body.classList.remove('resizing');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+    });
+}
+
+function showExportModal() {
+    Swal.fire({
+        title: '<h5 class="text-accent mb-0" style="font-weight: 800; letter-spacing: 2px;">EXPORTAR LISTADO</h5>',
+        html: `
+            <div class="py-3">
+                <p class="text-white opacity-75 mb-4">Seleccione su formato de exportación preferido:</p>
+                <div class="d-grid gap-2">
+                    <button id="export-excel" class="btn btn-sirio-swal mb-2">
+                        <i class="fa-solid fa-file-excel me-2"></i> FORMATO EXCEL (.XLSX)
+                    </button>
+                    <button id="export-csv" class="btn btn-sirio-swal mb-2" style="background-color: #e0e0e0 !important;">
+                        <i class="fa-solid fa-file-csv me-2"></i> FORMATO CSV (.CSV)
+                    </button>
+                    <button id="export-pdf" class="btn btn-pdf-sirio">
+                        <i class="fa-solid fa-file-pdf me-2"></i> GENERAR DOCUMENTO PDF
+                    </button>
+                </div>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'CANCELAR',
+        background: '#121212',
+        color: '#fff',
+        customClass: {
+            popup: 'border border-secondary',
+            cancelButton: 'btn-cancel-swal'
+        },
+        buttonsStyling: false,
+        didOpen: () => {
+            document.getElementById('export-excel').onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('format', 'excel');
+                window.location.href = "{{ url_for('pasajeros.exportar') }}?" + params.toString();
+                Swal.close();
+            };
+            document.getElementById('export-csv').onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('format', 'csv');
+                window.location.href = "{{ url_for('pasajeros.exportar') }}?" + params.toString();
+                Swal.close();
+            };
+            document.getElementById('export-pdf').onclick = () => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('format', 'pdf');
+                window.location.href = "{{ url_for('pasajeros.exportar') }}?" + params.toString();
+                Swal.close();
+            };
+        }
+    });
+}
+
+function exportToPDF() {
+    Swal.close();
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('format', 'pdf');
+    window.location.href = "{{ url_for('pasajeros.exportar') }}?" + currentParams.toString();
+}
+
+function initChoices() {
+    // _choices_includes.html ya inicializa los selects con clase form-select / choice-select automáticamente
+    // Solo vinculamos el evento change para el filtrado en vivo.
+    document.querySelectorAll('.choice-select').forEach(el => {
+        el.addEventListener('change', () => filtrarPasajeros(1));
+    });
+}
+
+function initSearchAndInputs() {
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => filtrarPasajeros(1), 300);
+        });
+    }
+    const soloPrensa = document.getElementById('soloPrensaCheckHeader');
+    if (soloPrensa) soloPrensa.addEventListener('change', () => filtrarPasajeros(1));
+}
+
+async function filtrarPasajeros(page = 1, sort = null, order = null) {
+    if (sort) currentSort = sort;
+    if (order) currentOrder = order;
+
+    const form = document.getElementById('filtersForm');
+    const formData = new FormData(form);
+    const soloPrensaHeader = document.getElementById('soloPrensaCheckHeader');
+    if (soloPrensaHeader && soloPrensaHeader.checked) formData.set('solo_prensa', '1');
+    const params = new URLSearchParams(formData);
+    params.set('page', page);
+    if (currentSort) params.set('sort', currentSort);
+    if (currentOrder) params.set('order', currentOrder);
+
+    try {
+        const response = await fetch(`{{ url_for('pasajeros.filtrar') }}?${params.toString()}`);
+        const data = await response.json();
+        document.getElementById('tabla-pasajeros-container').innerHTML = data.html;
+        initRowEvents();
+        initFamilyHighlight();
+        initResizers();
+        updateLoteButton(); // Limpiar el check si es necesario
+        const counter = document.querySelector('.total-count-val');
+        if (counter) counter.textContent = data.total_count;
+    } catch (error) { console.error('Error al filtrar:', error); }
+}
+
+function initRowEvents() {
+    document.querySelectorAll('.passenger-row').forEach(row => {
+        const targetId = row.getAttribute('data-bs-target');
+        const target = document.querySelector(targetId);
+        if (target) {
+            target.addEventListener('shown.bs.collapse', () => { /* icon rotate logic */ });
+        }
+    });
+}
+
+function initFamilyHighlight() {
+    document.querySelectorAll('.passenger-row').forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            const relAttr = row.getAttribute('data-relatives');
+            if (!relAttr) return;
+            const relatives = JSON.parse(relAttr);
+            row.classList.add('active-hover');
+            Object.keys(relatives).forEach(relId => {
+                const relRows = document.querySelectorAll(`.passenger-row[data-passenger-id="${relId}"]`);
+                relRows.forEach(relRow => {
+                    const type = relatives[relId].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    relRow.classList.add(`rel-highlight-${type}`);
+                });
+            });
+        });
+        row.addEventListener('mouseleave', () => {
+            row.classList.remove('active-hover');
+            document.querySelectorAll('.passenger-row').forEach(r => {
+                const classes = Array.from(r.classList).filter(c => c.startsWith('rel-highlight-'));
+                classes.forEach(c => r.classList.remove(c));
+            });
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    initChoices();
+    initSearchAndInputs();
+    initRowEvents();
+    initFamilyHighlight();
+    initResizers();
+    document.getElementById('filtersForm')?.addEventListener('submit', (e) => e.preventDefault());
+
+    // --- LÓGICA DE EDICIÓN MASIVA ---
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('pasajero-check')) {
+            updateLoteButton();
+        }
+        if (e.target.id === 'checkAllPasajeros') {
+            const isChecked = e.target.checked;
+            document.querySelectorAll('.pasajero-check').forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateLoteButton();
+        }
+    });
+
+    document.getElementById('btn-guardar-lote')?.addEventListener('click', async function() {
+        const checkedBoxes = document.querySelectorAll('.pasajero-check:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        const btn = this;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Guardando...';
+        btn.disabled = true;
+
+        const formLote = document.getElementById('form-edicion-lote');
+        const formData = new FormData(formLote);
+        
+        // Convert formdata to regular object
+        const data = {};
+        for(let [key, val] of formData.entries()) {
+            if(key !== 'csrf_token') data[key] = val; // let it be empty so backend ignores
+        }
+
+        try {
+            const response = await fetch("{{ url_for('pasajeros.editar_masivo') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({
+                    pasajero_ids: ids,
+                    datos: data
+                })
+            });
+            const resData = await response.json();
+            if (response.ok && resData.success) {
+                bootstrap.Modal.getInstance(document.getElementById('batchEditModal')).hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ÉXITO',
+                    text: resData.message,
+                    customClass: { popup: 'swal2-sirio-custom' },
+                    showConfirmButton: false, 
+                    timer: 2000
+                }).then(() => {
+                    filtrarPasajeros(); // Recargar datos tabla
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: resData.error || 'Ocurrió un error en la edición masiva',
+                    customClass: { popup: 'swal2-sirio-custom' }
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Problema de red al intentar guardar.', 'error');
+        } finally {
+            btn.innerHTML = '<i class="fa-solid fa-save me-1"></i> APLICAR CAMBIOS MASIVOS';
+            btn.disabled = false;
+        }
+    });
+});
+
+function updateLoteButton() {
+    const checked = document.querySelectorAll('.pasajero-check:checked');
+    const btnLote = document.getElementById('btn-acciones-lote');
+    const badge = document.getElementById('count-seleccionados');
+    if (badge && btnLote) {
+        badge.textContent = checked.length;
+        btnLote.disabled = checked.length === 0;
+    }
+}
+</script>
+{% endblock %}

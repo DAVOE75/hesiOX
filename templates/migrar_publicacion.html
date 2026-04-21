@@ -1,0 +1,114 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Migrar Publicaciones — hesiOX{% endblock %}
+{% block page_title %}Migrar Publicaciones{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Herramientas de Migración</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('hemerotecas.lista_publicaciones') }}" class="btn-sirio">
+    <i class="fa-solid fa-newspaper me-1"></i>
+    <span class="btn-text">Publicaciones</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0 d-flex flex-column h-100">
+    <!-- Metrics Strip -->
+    <div class="p-3 pb-0">
+        <div class="metric-strip" style="max-width: 800px;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Proyectos Disponibles</span>
+                    <span class="metric-value">{{ proyectos|length }}</span>
+                </div>
+                <i class="fa-solid fa-diagram-project metric-icon"></i>
+            </div>
+            <div class="metric-compact">
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="text-muted small" style="line-height: 1.2;">
+                        <i class="fa-solid fa-circle-info text-accent me-1"></i>
+                        Herramienta para copiar publicaciones entre proyectos
+                    </span>
+                    <span class="text-muted extra-small opacity-75">Solo se migran las que no existen en destino</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div
+        class="px-3 py-2 border-bottom border-light bg-dark-panel d-flex justify-content-between align-items-center mt-3">
+        <form method="get" class="d-flex gap-3 w-100 align-items-end">
+            <div style="min-width: 220px;">
+                <label for="origen" class="form-label">Proyecto Origen</label>
+                <select name="origen" id="origen" class="form-select" required onchange="this.form.submit()">
+                    <option value="">Selecciona proyecto origen</option>
+                    {% for p in proyectos %}
+                    <option value="{{ p.id }}" {% if proyecto_origen_id and p.id|string==proyecto_origen_id|string
+                        %}selected{% endif %}>{{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="min-width: 220px;">
+                <label for="destino" class="form-label">Proyecto Destino</label>
+                <select name="destino" id="destino" class="form-select" required>
+                    <option value="">Selecciona proyecto destino</option>
+                    {% for p in proyectos %}
+                    <option value="{{ p.id }}" {% if proyecto_destino_id and p.id|string==proyecto_destino_id|string
+                        %}selected{% endif %}>{{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Ver publicaciones</button>
+        </form>
+    </div>
+
+    <!-- Table Container -->
+    <div class="content-scroll-area bg-dark flex-grow-1 overflow-auto p-0">
+        {% if mensaje %}
+        <div class="alert alert-{{ 'danger' if 'Debes seleccionar ambos' in mensaje else 'info' }} m-3">{{ mensaje }}
+        </div>
+        {% endif %}
+        {% if publicaciones %}
+        <form method="post" class="m-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="origen" value="{{ proyecto_origen_id }}">
+            <input type="hidden" name="destino" value="{{ proyecto_destino_id }}">
+            <div class="table-responsive">
+                <table class="table-sirio table-hover m-0">
+                    <thead class="sticky-top bg-dark-panel" style="z-index: 5;">
+                        <tr>
+                            <th style="width: 30%">Nombre Publicación</th>
+                            <th style="width: 20%">Ciudad</th>
+                            <th style="width: 20%">País</th>
+                            <th style="width: 20%">Hemeroteca</th>
+                            <th style="width: 10%">Migrar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pub in publicaciones %}
+                        <tr>
+                            <td><strong class="text-white">{{ pub.nombre }}</strong></td>
+                            <td class="text-light small">{{ pub.ciudad or '-' }}</td>
+                            <td class="text-light small">{{ pub.pais_publicacion or '-' }}</td>
+                            <td class="text-light small">{{ pub.hemeroteca_rel.nombre if pub.hemeroteca_rel else '-' }}
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="publicaciones" value="{{ pub.id_publicacion }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-success mt-3">Migrar seleccionadas</button>
+        </form>
+        {% elif proyecto_origen_id %}
+        <div class="alert alert-warning m-3">No hay publicaciones en el proyecto origen seleccionado.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

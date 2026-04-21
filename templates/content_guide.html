@@ -1,0 +1,486 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Guía de Uso — HesiOX{% endblock %}
+{% block page_title %}Guía de Uso de Contenido{% endblock %}
+
+{% block top_actions %}
+<div class="text-muted small">
+    <i class="fa-solid fa-graduation-cap me-1 text-info"></i> <strong>Manual de Operaciones</strong> v1.1
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex h-100 manual-container">
+    <!-- INDICE DE CONTENIDOS (Sidebar) -->
+    <nav class="manual-sidebar border-end custom-scrollbar bg-darker"
+        style="width: 320px; min-width: 320px; overflow-y: auto;">
+        <div class="p-4">
+            <h6 class="text-uppercase text-muted fw-bold small mb-3 ls-1">Tabla de Contenidos</h6>
+            <div class="list-group list-group-flush small" id="guide-toc">
+                <a href="#intro"
+                    class="list-group-item list-group-item-action fw-bold text-warning bg-transparent border-0 ps-0">
+                    1. Introducción
+                </a>
+                <a href="#proyectos"
+                    class="list-group-item list-group-item-action fw-bold text-light bg-transparent border-0 ps-0 mt-3">
+                    2. Gestión de Proyectos
+                </a>
+                <div class="ms-3">
+                    <a href="#crear-proyecto"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">2.1
+                        Creación Técnica</a>
+                    <a href="#activar-proyecto"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">2.2
+                        Ciclo de Vida (Activo)</a>
+                    <a href="#editar-proyecto"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">2.3
+                        Configuración Avanzada</a>
+                </div>
+
+                <a href="#noticias"
+                    class="list-group-item list-group-item-action fw-bold text-light bg-transparent border-0 ps-0 mt-3">
+                    3. Hemerotecas y Noticias
+                </a>
+                <div class="ms-3">
+                    <a href="#listado-noticias"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">3.1
+                        Filtros y Buscador</a>
+                    <a href="#detalle-noticia"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">3.2
+                        Interacción en Lectura</a>
+                    <a href="#nueva-noticia"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">3.3
+                        Ingreso y Atributos</a>
+                </div>
+
+                <a href="#cartografia"
+                    class="list-group-item list-group-item-action fw-bold text-light bg-transparent border-0 ps-0 mt-3">
+                    4. Cartografía y Espacio
+                </a>
+                <div class="ms-3">
+                    <a href="#mapa-corpus"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">4.1
+                        Visualización Geo-Temporal</a>
+                    <a href="#gestion-ubicaciones"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">4.2
+                        Inteligencia Geográfica (IA)</a>
+                    <a href="#trayectorias"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">4.3
+                        Trayectorias Narrativas</a>
+                    <a href="#herramientas-gis-pro"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">4.4
+                        Herramientas GIS Pro (Lupa/Radius)</a>
+                    <a href="#topografia-semantica"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">4.5
+                        Topografía Semántica</a>
+                </div>
+
+                <a href="#analisis"
+                    class="list-group-item list-group-item-action fw-bold text-light bg-transparent border-0 ps-0 mt-3">
+                    5. Módulos Analíticos (Laboratorio)
+                </a>
+                <div class="ms-3">
+                    <a href="#dashboard-analisis"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">5.1
+                        Explorador de Textos (NLP)</a>
+                    <a href="#buscador-semantico-guia"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">5.2
+                        Buscador Semántico IA</a>
+                    <a href="#regex-lab-guia"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">5.3
+                        Laboratorio REGEX</a>
+                    <a href="#analisis-hd-guia"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">5.4
+                        Humanidades Digitales</a>
+                </div>
+
+                <a href="#produccion"
+                    class="list-group-item list-group-item-action fw-bold text-light bg-transparent border-0 ps-0 mt-3">
+                    6. Producción Científica
+                </a>
+                <div class="ms-3">
+                    <a href="#redaccion"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">6.1
+                        Editor de Artículos</a>
+                    <a href="#revision"
+                        class="list-group-item list-group-item-action text-muted bg-transparent border-0 ps-0 py-1">6.2
+                        Colaboración y Estado</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="flex-grow-1 overflow-auto custom-scrollbar p-5" data-bs-spy="scroll" data-bs-target="#guide-toc"
+        data-bs-offset="0" tabindex="0">
+
+        <!-- 1. INTRODUCCIÓN -->
+        <section id="intro" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-flag me-2"></i>1. Introducción</h2>
+            <p class="lead text-light">
+                Bienvenido a la <strong>Guía de Uso de Contenido</strong> de HesiOX. Este documento es el manual
+                operativo definitivo para maximizar el uso de las herramientas de gestión histórica y análisis
+                computacional.
+            </p>
+            <div class="row mt-4">
+                <div class="col-md-6 border-start border-warning ps-3">
+                    <h5 class="text-warning">¿Qué es esta guía?</h5>
+                    <p class="text-secondary small">Un manual táctico centrado en el <strong>"cómo hacer"</strong> y en
+                        el flujo de trabajo diario de un investigador.</p>
+                </div>
+                <div class="col-md-6 border-start border-info ps-3">
+                    <h5 class="text-info">¿Por qué usar HesiOX?</h5>
+                    <p class="text-secondary small">Para transformar volúmenes masivos de noticias en conocimiento
+                        estructurado, cartográfico y estadístico mediante IA.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-secondary opacity-25 my-5">
+
+        <!-- 2. GESTIÓN DE PROYECTOS -->
+        <section id="proyectos" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-layer-group me-2"></i>2. Gestión de
+                Proyectos</h2>
+            <p class="text-light">
+                HesiOX opera bajo un modelo de **Entornos Aislados**. Un proyecto es una base de datos independiente que
+                contiene sus propios documentos, entidades y resultados analíticos.
+            </p>
+
+            <h3 id="crear-proyecto" class="text-light mt-5 mb-3">2.1 Creación del Entorno</h3>
+            <p class="text-secondary">
+                En el menú lateral <strong>"Misión" > "Proyectos"</strong>, utilice el botón <span
+                    class="badge bg-primary"><i class="fa-solid fa-plus me-1"></i> CREAR NUEVO</span>.
+            </p>
+            <div class="alert alert-dark bg-darker border-secondary">
+                <ul class="mb-0 small text-secondary">
+                    <li><strong class="text-white">Nombre</strong>: Sea descriptivo (ej. "Revoluciones Atlánticas
+                        1820").</li>
+                    <li><strong class="text-white">Tipo</strong>: Define la lógica de carga. **Hemerografía** prioriza
+                        fechas de prensa, mientras que **Bibliografía** se centra en capítulos y autores.</li>
+                </ul>
+            </div>
+
+            <h3 id="activar-proyecto" class="text-light mt-4 mb-3">2.2 Ciclo de Vida y Activación</h3>
+            <p class="text-secondary">
+                El sistema solo permite <strong>un proyecto activo</strong> a la vez. Cuando un proyecto está activo, su
+                nombre aparece en la **Barra Superior** y todas las herramientas (Mapas, IA, Análisis) se enfocan
+                exclusivamente en sus datos.
+            </p>
+
+            <h3 id="editar-proyecto" class="text-light mt-4 mb-3">2.3 Configuración Avanzada</h3>
+            <p class="text-secondary">
+                Dentro de la tarjeta de un proyecto activo, el botón <i class="fa-solid fa-gear text-info"></i>
+                <strong>CONFIGURAR</strong> permite:
+                - Cambiar el **Estado de Visibilidad** (Público/Privado).
+                - Exportar el **Corpus Completo** para copias de seguridad.
+                - Eliminar el proyecto (Cuidado: Acción irreversible que borra noticias y análisis).
+            </p>
+        </section>
+
+        <hr class="border-secondary opacity-25 my-5">
+
+        <!-- 3. HEMEROTECAS Y NOTICIAS -->
+        <section id="noticias" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-box-archive me-2"></i>3. Hemerotecas y
+                Gestión de Noticias</h2>
+
+            <h3 id="listado-noticias" class="text-light mt-4 mb-3">3.1 Filtros y Buscador Dinámico</h3>
+            <p class="text-secondary">
+                Ubicado en <strong>"Noticias" > "Listado"</strong>. Es el corazón de la gestión documental.
+            </p>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm border-secondary small">
+                    <thead class="text-muted">
+                        <tr>
+                            <th>Filtro</th>
+                            <th>Función y Uso</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-secondary">
+                        <tr>
+                            <td><b class="text-info">Temporal</b></td>
+                            <td>Rango de fechas para visualizar la evolución del discurso histórico.</td>
+                        </tr>
+                        <tr>
+                            <td><b class="text-info">Geográfico</b></td>
+                            <td>Filtra por País/Ciudad de la noticia (Origen del suceso).</td>
+                        </tr>
+                        <tr>
+                            <td><b class="text-info">Fuente</b></td>
+                            <td>Aísla publicaciones o hemerotecas específicas.</td>
+                        </tr>
+                        <tr>
+                            <td><b class="text-info">Texto Libre</b></td>
+                            <td>Busca términos exactos en títulos y cuerpos de noticias.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 id="detalle-noticia" class="text-light mt-4 mb-3">3.2 Interacción en el Detalle de Noticia</h3>
+            <p class="text-secondary">Al abrir una noticia, dispone de un entorno de interacción enriquecido:</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="p-3 border border-secondary rounded bg-darker h-100">
+                        <h6 class="text-warning"><i class="fa-solid fa-i-cursor me-2"></i>Añadir Ubicación Manual</h6>
+                        <p class="text-muted extra-small">Seleccione una palabra en el texto y haga <strong>clic
+                                derecho</strong>. Podrá asignar coordenadas a ese término y guardarlo como ubicación.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 border border-secondary rounded bg-darker h-100">
+                        <h6 class="text-warning"><i class="fa-solid fa-map me-2"></i>Mapa Contextual</h6>
+                        <p class="text-muted extra-small">El mapa inferior muestra solo los lugares de <strong>esta
+                                noticia</strong>. Úselo para verificar si la IA ha geolocalizado correctamente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="nueva-noticia" class="text-light mt-4 mb-3">3.3 Ingreso y Atributos Críticos</h3>
+            <p class="text-secondary">
+                Al crear una noticia (<span class="badge bg-success">NUEVA</span>), preste atención a:
+                - **Fecha**: Use el formato `DD/MM/YYYY`. Sin fecha, la noticia no aparecerá en líneas de tiempo.
+                - **Ubicación de Referencia**: Si la noticia no menciona lugares, usará la **Ciudad de Edición** de la
+                publicación como punto en el mapa.
+            </p>
+        </section>
+
+        <hr class="border-secondary opacity-25 my-5">
+
+        <!-- 4. CARTOGRAFÍA -->
+        <section id="cartografia" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-map-location-dot me-2"></i>4.
+                Cartografía y Espacio</h2>
+
+            <h3 id="mapa-corpus" class="text-light mt-4 mb-3">4.1 Visualización Geo-Temporal</h3>
+            <p class="text-secondary">
+                Accesible desde <strong>"Cartografía" > "Mapas del Corpus"</strong>. Representa la "geografía de las
+                noticias".
+                - **Círculos (Clusters)**: El radio crece según el volumen de menciones.
+                - **Filtro Temporal**: Use el deslizador inferior para ver cómo se desplazó el interés geográfico mes a
+                mes.
+            </p>
+
+            <h3 id="gestion-ubicaciones" class="text-light mt-4 mb-3">4.2 Inteligencia Geográfica con IA</h3>
+            <p class="text-secondary">
+                En el botón superior <span class="badge bg-dark border border-warning text-warning"><i
+                        class="fa-solid fa-robot me-1"></i> IA ADVANCED</span> del mapa:
+                - ** spaCy / Gemini**: Procesa miles de noticias buscando nombres de lugares.
+                - **Desambiguación**: Si lee "Santiago", la IA decidirá por contexto si es de Chile, de Compostela o de
+                Cuba.
+                - **Edición**: Puede mover el pin del mapa manualmente si la IA comete un error de geocodificación.
+                - **Frecuencias Pro**: El listado de ubicaciones ahora desglosa menciones en **Título** y **Contenido**.
+                Use el botón de la **Lupa (+)** para re-procesar una ubicación si ha realizado cambios en el texto y
+                desea actualizar su peso en el mapa.
+            </p>
+
+            <h3 id="herramientas-gis-pro" class="text-light mt-4 mb-3">4.4 Herramientas GIS Avanzadas</h3>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 border border-secondary rounded bg-darker h-100">
+                        <h6 class="text-info"><i class="fa-solid fa-magnifying-glass me-2"></i>Lupa Visor</h6>
+                        <p class="text-muted extra-small">Inspeccione el terreno con detalle satelital sin perder el
+                            contexto del mapa base principal.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border border-secondary rounded bg-darker h-100">
+                        <h6 class="text-info"><i class="fa-solid fa-bullseye me-2"></i>Consulta de Radio</h6>
+                        <p class="text-muted extra-small">Mida el impacto de un suceso proyectando un radio de acción
+                            (50km-200km) desde cualquier punto.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border border-secondary rounded bg-darker h-100">
+                        <h6 class="text-info"><i class="fa-solid fa-file-import me-2"></i>Carga GPS (GPX/KML)</h6>
+                        <p class="text-muted extra-small">Importe rutas y tracks externos para comparar la geografía
+                            real con la geografía narrada en la prensa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="trayectorias" class="text-light mt-4 mb-3">4.3 Trayectorias Narrativas</h3>
+            <p class="text-secondary">
+                Active el interruptor <strong>"Trayectorias"</strong> en el panel de mapas para ver el orden de los
+                sucesos.
+                - **Curvas Animadas**: Siga la línea verde para ver el viaje de A a B.
+                - **Contexto**: Al hacer clic en la curva, verá qué noticia conecta esos dos lugares.
+            </p>
+
+            <h3 id="topografia-semantica" class="text-light mt-4 mb-3">4.4 Topografía Semántica: La Joya del Análisis
+            </h3>
+            <p class="text-secondary">
+                Esta es la herramienta más potente y exclusiva de HesiOX. No rastrea palabras, sino <strong>conceptos
+                    abstractos</strong> utilizando el motor de IA Gemini 1.5 Pro.
+                - **Red de Significados**: Al buscar un término semilla (ej. "Justicia"), la IA recupera noticias que
+                hablen de leyes, tribunales, equidad o derecho, superando las limitaciones de la búsqueda literal.
+                - **Viaje en el Tiempo**: El deslizador temporal permite ver la evolución física de las ideas en el
+                mapa.
+                - **Mapeo de Sentimiento**: Identifica focos de optimismo o conflicto asociados a un concepto en
+                diferentes regiones.
+                - **Uso Crítico**: Ideal para tesis doctorales e investigaciones de larga duración donde se busca
+                entender la "mentalidad" de una época.
+            </p>
+        </section>
+
+        <hr class="border-secondary opacity-25 my-5">
+
+        <!-- 5. ANALÍTICO -->
+        <section id="analisis" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>5.
+                Módulos Analíticos (Laboratorio)</h2>
+
+            <h3 id="dashboard-analisis" class="text-light mt-4 mb-3">5.1 Explorador de Textos y NLP</h3>
+            <p class="text-secondary">
+                La **fuerza bruta del análisis**.
+                - **Nube TF-IDF**: No son las palabras más frecuentes, sino las más **significativas** estadísticamente
+                para su corpus.
+                - **Red de Co-ocurrencias**: ¿Qué conceptos suelen aparecer juntos en la misma noticia? Ideal para
+                detectar discursos políticos o alianzas.
+            </p>
+
+            <h3 id="buscador-semantico-guia" class="text-light mt-4 mb-3">5.2 Buscador Semántico IA</h3>
+            <p class="text-secondary">
+                Olvide las palabras clave exactas. Este motor busca por **conceptos**.
+                - **¿Cómo?**: La IA convierte su noticia en un vector matemático. Al buscar "hambre", encontrará
+                noticias que hablen de "carestía", "falta de pan" o "penuria", aunque no contengan la palabra "hambre".
+                - **Filtros Adicionales**: Dispone de un botón derecho <span
+                    class="badge bg-dark border border-info text-info"><i class="fa-solid fa-filter me-1"></i>
+                    FILTROS</span> para acotar por fecha o publicación.
+            </p>
+
+            <h3 id="regex-lab-guia" class="text-light mt-4 mb-3">5.3 Laboratorio REGEX (Expresiones Regulares)</h3>
+            <p class="text-secondary">
+                Herramienta para búsquedas de precisión extrema mediante patrones.
+                - **Instrucciones**: Use el botón <i class="fa-solid fa-circle-question text-warning"></i> para ver
+                ejemplos de sintaxis.
+                - **Utilidad**: Ideal para encontrar barcos (ej. `Fragata \w+`), regimientos o cantidades económicas
+                específicas.
+            </p>
+
+            <h3 id="analisis-hd-guia" class="text-light mt-4 mb-3">5.4 Humanidades Digitales (HD)</h3>
+            <p class="text-secondary">
+                Módulos de alta especialización científica:
+                - **Geosemántica**: Proyecta conceptos en el mapa (ej. "¿En qué regiones se habla más de libertad?").
+                - **Análisis de Redes**: Grafos de comunidades de noticias para detectar redes de influencia o
+                republicación.
+            </p>
+        </section>
+
+        <hr class="border-secondary opacity-25 my-5">
+
+        <!-- 6. PRODUCCIÓN CIENTÍFICA -->
+        <section id="produccion" class="mb-5">
+            <h2 class="display-6 fw-bold mb-4 text-warning"><i class="fa-solid fa-file-pen me-2"></i>6. Producción
+                Científica</h2>
+
+            <h3 id="redaccion" class="text-light mt-4 mb-3">6.1 Editor de Artículos</h3>
+            <p class="text-secondary">
+                Destaque sus hallazgos redactando artículos.
+                - **Vínculos**: Puede insertar referencias directas a las noticias analizadas.
+                - **Figuras**: Suba mapas o gráficos generados en el módulo de análisis para ilustrar su paper.
+            </p>
+
+            <h3 id="revision" class="text-light mt-4 mb-3">6.2 Colaboración y Repositorio</h3>
+            <p class="text-secondary">
+                - **Estados**: Use <span class="badge bg-info">REVISIÓN</span> para indicar que el texto está siendo
+                verificado.
+                - **Figuras**: Gestione todas las imágenes de apoyo en un panel centralizado para asegurar la calidad de
+                la publicación.
+                - **Exportación**: El botón superior permite generar el documento final listo para su envío a revistas o
+                descarga personal.
+            </p>
+        </section>
+
+        <div style="height: 300px;"></div> <!-- Spacer para scroll cómodo -->
+    </div>
+</div>
+
+<style>
+    /* Estilos avanzados para la guía */
+    .manual-container {
+        background-color: #0b0c10;
+        color: #e0e6ed;
+    }
+
+    .manual-sidebar {
+        background-color: #12141d;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .ls-1 {
+        letter-spacing: 1px;
+    }
+
+    .list-group-item {
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+
+    .list-group-item:hover {
+        background-color: rgba(255, 152, 0, 0.05) !important;
+        color: #ff9800 !important;
+        padding-left: 5px !important;
+    }
+
+    .list-group-item.active {
+        background-color: rgba(255, 152, 0, 0.1) !important;
+        color: #ff9800 !important;
+        border-left: 2px solid #ff9800 !important;
+        font-weight: bold;
+    }
+
+    .bg-darker {
+        background-color: #0d0f14;
+    }
+
+    .extra-small {
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .border-dashed {
+        border-style: dashed !important;
+    }
+
+    /* Estilos para Alert y Cards internos */
+    .alert-dark {
+        background-color: rgba(30, 30, 30, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    section h2 {
+        border-bottom: 2px solid rgba(255, 152, 0, 0.2);
+        padding-bottom: 0.5rem;
+    }
+
+    section h3 {
+        color: #ffffff;
+        font-weight: 500;
+        border-left: 4px solid #ff9800;
+        padding-left: 15px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar ScrollSpy para el índice lateral
+        var scrollSpyContentEl = document.querySelector('[data-bs-spy="scroll"]');
+        var scrollSpy = new bootstrap.ScrollSpy(scrollSpyContentEl, {
+            target: '#guide-toc',
+            offset: 100
+        });
+
+        // Manejar el estado activo manual si es necesario
+        const navLinks = document.querySelectorAll('#guide-toc .list-group-item');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

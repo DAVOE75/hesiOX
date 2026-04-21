@@ -1,0 +1,94 @@
+/* ============================================================
+   08-MODALS.CSS - Modal & Overlay Styles
+   ============================================================ */
+
+/* ====== MODAL OVERLAY ====== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
+}
+
+.modal-box {
+    background: #0f0f0f;
+    border: 1px solid var(--app-accent);
+    border-top: 4px solid var(--app-accent);
+    border-radius: 2px;
+    padding: 30px;
+    max-width: 850px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+    position: relative;
+    animation: slideUp 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes slideUp { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover { 
+    color: var(--app-accent); 
+}
+
+.modal-box h2 { 
+    color: #fff; 
+    margin-bottom: 8px; 
+    font-size: 1.5rem; 
+    font-family: var(--ds-font-headers);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modal-box h4 { 
+    color: var(--app-warning); 
+    margin-bottom: 16px; 
+    font-size: 1.1rem; 
+}
+
+.modal-scroll {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 16px;
+    line-height: 1.7;
+    color: var(--app-text-main);
+    font-size: 0.95rem;
+}
+
+.modal-box::-webkit-scrollbar, .modal-scroll::-webkit-scrollbar { width: 8px; }
+.modal-box::-webkit-scrollbar-track, .modal-scroll::-webkit-scrollbar-track { 
+    background: rgba(255, 255, 255, 0.05); 
+    border-radius: 4px; 
+}
+.modal-box::-webkit-scrollbar-thumb, .modal-scroll::-webkit-scrollbar-thumb { 
+    background: var(--app-accent); 
+    border-radius: 4px; 
+}
+.modal-box::-webkit-scrollbar-thumb:hover, .modal-scroll::-webkit-scrollbar-thumb:hover { 
+    background: var(--app-accent-hover); 
+}

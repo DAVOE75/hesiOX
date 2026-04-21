@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entrada.titulo }} · Blog HesiOX{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ========= BLOG DETALLE — Premium Article Layout (Public) ========= */
+.article-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+.article-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 3rem;
+    padding: 1rem 0;
+}
+
+/* Glassmorphism Card for Article */
+.article-glass-card {
+    background: rgba(25, 25, 25, 0.3);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .article-glass-card {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* Portada hero de la entrada */
+.article-hero {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    position: relative;
+}
+.article-hero img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    display: block;
+}
+.article-hero-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg,
+        rgba(var(--ds-accent-rgb,255,152,0),0.05) 0%,
+        rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+.article-hero-placeholder i {
+    font-size: 3rem;
+    opacity: 0.08;
+    color: var(--ds-accent-primary, #ff9800);
+}
+
+/* Cabecera del artículo */
+.article-meta-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+}
+.article-categoria {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(var(--ds-accent-rgb,255,152,0),0.12);
+    color: var(--ds-accent-primary, #ff9800);
+    border: 1px solid rgba(var(--ds-accent-rgb,255,152,0),0.25);
+    text-decoration: none;
+}
+.article-meta-item {
+    font-size: 0.75rem;
+    color: var(--ds-text-muted, #666);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Título principal del artículo */
+.article-titulo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    color: var(--ds-text-primary, #fff);
+    margin-bottom: 1rem;
+}
+
+/* Resumen / subtítulo */
+.article-resumen {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--ds-text-secondary, #aaa);
+    border-left: 3px solid var(--ds-accent-primary, #ff9800);
+    padding-left: 1rem;
+    margin-bottom: 2rem;
+    font-style: italic;
+}
+
+/* Separador autor */
+.article-author-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.9rem 1.2rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 2.5rem;
+}
+.author-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--ds-accent-primary, #ff9800);
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Cuerpo del artículo */
+.article-body {
+    font-family: 'Merriweather', Georgia, serif;
+    font-size: 0.97rem;
+    line-height: 1.95;
+    color: var(--ds-text-secondary, #ccc);
+}
+.article-body h1, .article-body h2, .article-body h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--ds-text-primary, #fff);
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+}
+.article-body h2 {
+    font-size: 1.45rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.4rem;
+}
+.article-body h3 {
+    font-size: 1.15rem;
+    color: var(--ds-accent-primary, #ff9800);
+}
+.article-body p { margin-bottom: 1.4rem; }
+.article-body a {
+    color: var(--ds-accent-primary, #ff9800);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.article-body blockquote {
+    border-left: 4px solid var(--ds-accent-primary, #ff9800);
+    background: rgba(255,255,255,0.02);
+    margin: 1.5rem 0;
+    padding: 1rem 1.4rem;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--ds-text-muted, #888);
+}
+.article-body img {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.07);
+    margin: 1.5rem 0;
+}
+.article-body code {
+    background: rgba(255,255,255,0.06);
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--ds-accent-primary, #ff9800);
+}
+.article-body pre {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1.2rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+.article-body ul, .article-body ol {
+    padding-left: 1.6rem;
+    margin-bottom: 1.4rem;
+}
+.article-body li { margin-bottom: 0.4rem; }
+
+/* Etiquetas al final */
+.article-tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.tag-chip {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(255,255,255,0.04);
+    color: var(--ds-text-muted, #777);
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: all 0.2s;
+}
+.tag-chip:hover {
+    background: rgba(var(--ds-accent-rgb,255,152,0),0.1);
+    border-color: rgba(var(--ds-accent-rgb,255,152,0),0.3);
+    color: var(--ds-accent-primary, #ff9800);
+}
+
+/* Sidebar lateral (TOC + relacionadas) */
+.article-sidebar {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.toc-widget {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+.toc-widget-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ds-text-muted, #666);
+    margin-bottom: 0.75rem;
+}
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-list li { margin-bottom: 0.35rem; }
+.toc-list a {
+    font-size: 0.78rem;
+    color: var(--ds-text-muted, #777);
+    text-decoration: none;
+    display: block;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+}
+.toc-list a:hover {
+    color: var(--ds-accent-primary, #ff9800);
+    background: rgba(var(--ds-accent-rgb,255,152,0),0.06);
+    border-left-color: var(--ds-accent-primary, #ff9800);
+}
+
+/* Entradas relacionadas */
+.related-widget {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 1.2rem;
+}
+.related-item {
+    display: block;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.related-item:last-child { border-bottom: none; }
+.related-item:hover .related-titulo { color: var(--ds-accent-primary, #ff9800); }
+.related-titulo {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ds-text-primary, #ddd);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s;
+}
+.related-fecha {
+    font-size: 0.68rem;
+    color: var(--ds-text-muted, #666);
+    margin-top: 0.2rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .article-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .article-sidebar { position: static; max-height: none; }
+}
+
+/* Light Mode */
+[data-theme="light"] .article-body {
+    color: #333;
+}
+[data-theme="light"] .article-body h1,
+[data-theme="light"] .article-body h2,
+[data-theme="light"] .article-body h3 {
+    color: #1a1a1a;
+}
+[data-theme="light"] .article-titulo { color: #111; }
+[data-theme="light"] .article-resumen { color: #555; }
+[data-theme="light"] .toc-widget,
+[data-theme="light"] .related-widget,
+[data-theme="light"] .article-author-strip {
+    background: #f8f8f8;
+    border-color: rgba(0,0,0,0.07);
+}
+[data-theme="light"] .article-body blockquote {
+    background: rgba(0,0,0,0.03);
+    color: #555;
+}
+[data-theme="light"] .article-body code {
+    background: rgba(0,0,0,0.06);
+}
+[data-theme="light"] .article-body pre {
+    background: rgba(0,0,0,0.03);
+    border-color: rgba(0,0,0,0.08);
+}
+
+/* Subscription Widget */
+.subscribe-widget {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.12) 0%, rgba(25, 25, 25, 0.4) 100%);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.subscribe-widget-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.subscribe-widget p {
+    font-size: 0.78rem;
+    color: var(--ds-text-secondary, #aaa);
+    margin-bottom: 1.2rem;
+    line-height: 1.4;
+}
+
+.widget-subscribe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.widget-subscribe-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none !important;
+    transition: border-color 0.2s;
+}
+
+.widget-subscribe-input:focus {
+    border-color: var(--ds-accent-primary, #ff9800);
+}
+
+.widget-subscribe-btn {
+    background: var(--ds-accent-primary, #ff9800);
+    color: #000;
+    border: none;
+    padding: 0.6rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.widget-subscribe-btn:hover {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+#widget-subscribe-message {
+    margin-top: 0.8rem;
+    font-size: 0.72rem;
+    min-height: 1rem;
+}
+
+[data-theme="light"] .subscribe-widget {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.05) 0%, #fff 100%);
+    border-color: rgba(255, 152, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .subscribe-widget-title { color: #111; }
+[data-theme="light"] .subscribe-widget p { color: #666; }
+[data-theme="light"] .widget-subscribe-input { background: #f9f9f9; border-color: #ddd; color: #000; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="article-container">
+
+        <!-- Toolbar Superior (Volver + Editar si procede) -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ url_for('blog.lista') }}" class="text-warning text-decoration-none fw-bold">
+                <i class="fa-solid fa-arrow-left me-2"></i> Volver al listado
+            </a>
+            
+            {% if current_user.is_authenticated and (current_user.id == entrada.autor_id or current_user.rol == 'admin') %}
+            <a href="{{ url_for('blog.admin_editar', entrada_id=entrada.id) }}" class="btn btn-sm btn-outline-warning">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Editar Entrada
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="article-wrapper">
+
+        <!-- COLUMNA PRINCIPAL -->
+        <article class="article-glass-card">
+
+            <!-- Imagen de portada -->
+            {% if entrada.imagen_portada %}
+            <div class="article-hero">
+                <img src="{{ entrada.imagen_portada if entrada.imagen_portada.startswith('http') else url_for('static', filename=entrada.imagen_portada) }}"
+                     alt="{{ entrada.titulo }}">
+            </div>
+            {% else %}
+            <div class="article-hero-placeholder">
+                <i class="fa-solid fa-feather-pointed"></i>
+            </div>
+            {% endif %}
+
+            <!-- Meta bar -->
+            <div class="article-meta-bar">
+                <a href="{{ url_for('blog.lista', categoria=entrada.categoria) }}" class="article-categoria">
+                    {{ entrada.categoria or 'General' }}
+                </a>
+                <span class="article-meta-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ entrada.publicado_en.strftime('%d de %B de %Y') if entrada.publicado_en else 'N/D' }}
+                </span>
+                <span class="article-meta-item">
+                    <i class="fa-regular fa-eye"></i>
+                    {{ entrada.vistas }} {{ 'vista' if entrada.vistas == 1 else 'vistas' }}
+                </span>
+                {% if entrada.destacado %}
+                <span class="article-meta-item" style="color: var(--ds-accent-primary);">
+                    <i class="fa-solid fa-star"></i> Destacada
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Título -->
+            <h1 class="article-titulo">{{ entrada.titulo }}</h1>
+
+            <!-- Resumen / subtítulo -->
+            {% if entrada.resumen %}
+            <p class="article-resumen">{{ entrada.resumen }}</p>
+            {% endif %}
+
+            <!-- Author strip -->
+            <div class="article-author-strip">
+                <div class="author-avatar-circle">
+                    {% if entrada.autor.foto_perfil %}
+                    <img src="{{ url_for('static', filename=entrada.autor.foto_perfil) }}"
+                         alt="{{ entrada.autor.nombre }}"
+                         style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                    {% else %}
+                    {{ entrada.autor.nombre[0].upper() }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:0.85rem; color: var(--ds-text-primary);">
+                        {{ entrada.autor.nombre }}
+                    </div>
+                    {% if entrada.autor.institucion %}
+                    <div style="font-size:0.72rem; color: var(--ds-text-muted);">
+                        {{ entrada.autor.institucion }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% if entrada.modificado_en and entrada.modificado_en != entrada.creado_en %}
+                <div class="ms-auto">
+                    <span style="font-size:0.68rem; color: var(--ds-text-muted);">
+                        <i class="fa-solid fa-rotate me-1"></i>
+                        Actualizado {{ entrada.modificado_en.strftime('%d/%m/%Y') }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Contenido HTML -->
+            <div class="article-body" id="article-body">
+                {{ entrada.contenido | safe }}
+            </div>
+
+            <!-- Etiquetas -->
+            {% set etiquetas = entrada.get_etiquetas_list() %}
+            {% if etiquetas %}
+            <div class="article-tags">
+                <span style="font-size:0.7rem; color: var(--ds-text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; align-self:center;">
+                    <i class="fa-solid fa-tags me-1"></i>
+                </span>
+                {% for etiqueta in etiquetas %}
+                <a href="{{ url_for('blog.lista', etiqueta=etiqueta) }}" class="tag-chip">
+                    {{ etiqueta }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </article>
+
+        <!-- SIDEBAR LATERAL -->
+        <aside class="article-sidebar">
+
+            <!-- Tabla de Contenidos (autogenerada por JS) -->
+            <div class="toc-widget" id="toc-widget" style="display:none;">
+                <div class="toc-widget-title">
+                    <i class="fa-solid fa-list-ul me-1"></i>Contenido
+                </div>
+                <ul class="toc-list" id="toc-list"></ul>
+            </div>
+
+            <!-- Entradas relacionadas -->
+            {% if relacionadas %}
+            <div class="related-widget">
+                <div class="toc-widget-title mb-3">
+                    <i class="fa-solid fa-link me-1"></i>También puede interesarte
+                </div>
+                {% for rel in relacionadas %}
+                <a href="{{ url_for('blog.detalle', slug=rel.slug) }}" class="related-item">
+                    <div class="related-titulo">{{ rel.titulo }}</div>
+                    <div class="related-fecha">
+                        <i class="fa-regular fa-calendar me-1"></i>
+                        {{ rel.publicado_en.strftime('%d/%m/%Y') if rel.publicado_en else '—' }}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Subscription Widget -->
+            <div class="subscribe-widget">
+                <div class="subscribe-widget-title">
+                    <i class="fa-solid fa-paper-plane me-2 text-warning"></i>Suscríbete
+                </div>
+                <p>Recibe las novedades del blog en tu email.</p>
+                <form id="form-suscribe-widget" class="widget-subscribe-form">
+                    <input type="email" name="email" class="widget-subscribe-input" placeholder="Email..." required>
+                    <button type="submit" class="widget-subscribe-btn">
+                        Unirme ahora
+                    </button>
+                </form>
+                <div id="widget-subscribe-message"></div>
+            </div>
+
+        </aside>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Generar tabla de contenidos automáticamente desde los headings del artículo
+document.addEventListener('DOMContentLoaded', function () {
+    const body = document.getElementById('article-body');
+    const tocList = document.getElementById('toc-list');
+    const tocWidget = document.getElementById('toc-widget');
+    if (!body || !tocList) return;
+
+    const headings = body.querySelectorAll('h2, h3');
+    if (headings.length < 2) return;
+
+    headings.forEach(function (h, i) {
+        if (!h.id) h.id = 'toc-heading-' + i;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent;
+        if (h.tagName === 'H3') a.style.paddingLeft = '1.2rem';
+        li.appendChild(a);
+        tocList.appendChild(li);
+    });
+
+    if (headings.length >= 2) {
+        tocWidget.style.display = '';
+    }
+
+    // Smooth scroll
+    tocList.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.getElementById(this.getAttribute('href').slice(1));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // Newsletter Widget Logic
+    const widgetForm = document.getElementById('form-suscribe-widget');
+    const widgetMsg = document.getElementById('widget-subscribe-message');
+    const widgetBtn = widgetForm.querySelector('.widget-subscribe-btn');
+
+    widgetForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = widgetForm.querySelector('input[name="email"]').value;
+        const formData = new FormData();
+        formData.append('email', email);
+
+        widgetBtn.disabled = true;
+        widgetBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+        fetch("{{ url_for('blog.subscribe') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': "{{ csrf_token() }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                widgetMsg.innerHTML = `<span class="text-success fw-bold">${data.message}</span>`;
+                widgetForm.reset();
+                widgetBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                widgetBtn.style.background = '#28a745';
+                widgetBtn.style.color = '#fff';
+            } else {
+                widgetMsg.innerHTML = `<span class="text-danger">${data.message}</span>`;
+                widgetBtn.disabled = false;
+                widgetBtn.innerHTML = 'Unirme ahora';
+            }
+        })
+        .catch(error => {
+            widgetMsg.innerHTML = '<span class="text-danger">Error de conexión.</span>';
+            widgetBtn.disabled = false;
+            widgetBtn.innerHTML = 'Unirme ahora';
+        });
+    });
+});
+</script>
+{% endblock %}

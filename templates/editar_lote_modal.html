@@ -1,0 +1,322 @@
+<div class="modal fade" id="batchEditModal" tabindex="-1" >
+  <div class="modal-dialog modal-lg" style="margin-top: 60px;">
+    <div class="modal-content bg-dark text-light border-warning">
+      <div class="modal-header border-warning">
+        <h5 class="modal-title text-warning">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+            <path d="M12,1 L15,4 L6,13 L3,13 L3,10 Z" fill="currentColor" />
+            <line x1="11" y1="2" x2="14" y2="5" stroke="#000" stroke-width="0.5" />
+            <rect x="1" y="14" width="14" height="1.5" fill="currentColor" opacity="0.5" />
+          </svg>
+          Edición Masiva
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-light mt-1">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+            <path d="M8,1 L15,14 L1,14 Z" stroke="currentColor" stroke-width="1.5" fill="none" />
+            <line x1="8" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" />
+            <circle cx="8" cy="12" r="0.8" fill="currentColor" />
+          </svg>
+          Los campos que dejes vacíos <strong>NO</strong> se modificarán. Solo se actualizará lo que escribas o
+          selecciones aquí.
+          Esta acción afectará a las noticias seleccionadas.
+        </p>
+
+        <form id="form-edicion-lote">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-warning">Publicación</label>
+              <select class="form-select bg-dark text-light border-secondary" name="publicacion">
+                <option value="">(No cambiar)</option>
+                {% for p in publicaciones %}
+                <option value="{{ p }}">{{ p }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-warning">Edición</label>
+              <select class="form-select bg-dark text-light border-secondary" name="edicion" id="selectLoteEdicion">
+                <option value="">(No cambiar)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-warning">Tipo de Recurso</label>
+              <select class="form-select bg-dark text-light border-secondary" name="tipo_recurso"
+                id="selectLoteRecurso">
+                <option value="">(No cambiar)</option>
+                <option value="prensa">Prensa</option>
+                <option value="libro">Libro</option>
+                <option value="articulo">Artículo Académico</option>
+                <option value="tesis">Tesis</option>
+                <option value="mapa">Mapa</option>
+                <option value="fotografia">Fotografía</option>
+                <option value="obra_teatral">Obra Teatral</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Ciudad</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="ciudad"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">País de Publicación</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="pais_publicacion"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Idioma</label>
+              <select class="form-select bg-dark text-light border-secondary" name="idioma">
+                <option value="">(No cambiar)</option>
+                <option value="es">Español</option>
+                <option value="it">Italiano</option>
+                <option value="en">Inglés</option>
+                <option value="fr">Francés</option>
+                <option value="pt">Portugués</option>
+                <option value="ct">Catalán</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Fecha de Publicación</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="fecha_original"
+                placeholder="Ej: 20/08/1930">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Fecha de Consulta</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="fecha_consulta"
+                placeholder="Ej: 20/08/2025">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Licencia</label>
+              <select class="form-select bg-dark text-light border-secondary" name="licencia">
+                <option value="">(No cambiar)</option>
+                <option value="CC BY 4.0">CC BY 4.0</option>
+                <option value="CC BY-SA 4.0">CC BY-SA 4.0</option>
+                <option value="Dominio Público">Dominio Público</option>
+                <option value="Copyright">Copyright (Todos los derechos reservados)</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Formato Fuente</label>
+              <select class="form-select bg-dark text-light border-secondary" name="formato_fuente">
+                <option value="">(No cambiar)</option>
+                <option value="Digital">Digital (Web/PDF)</option>
+                <option value="Impreso">Impreso / Físico</option>
+                <option value="Microfilm">Microfilm</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Editorial</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="editorial"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Fuente / Institución</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="fuente"
+                placeholder="Ej: Hemeroteca Nacional, BNE, Archivo Municipal..." list="listado-fuentes">
+
+              <datalist id="listado-fuentes">
+                {% for f in fuentes %}
+                <option value="{{ f }}">
+                  {% endfor %}
+              </datalist>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Teatro / Recinto</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="lugar_publicacion"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Actos</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="seccion"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Escenas</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="volumen"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-warning">Reparto / Personajes</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="palabras_clave"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-warning">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+                  <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.5"
+                    fill="none" />
+                  <line x1="4" y1="5" x2="12" y2="5" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                Descripción de la Publicación (Medio)
+              </label>
+              <textarea name="descripcion_publicacion" class="form-control bg-dark text-light border-secondary" rows="3"
+                placeholder="Escribe aquí para actualizar la descripción del periódico en TODAS las noticias seleccionadas..."></textarea>
+              <div class="form-text text-light small">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+                  <path d="M8,1 L15,14 L1,14 Z" stroke="currentColor" stroke-width="1.5" fill="none" />
+                  <line x1="8" y1="6" x2="8" y2="10" stroke="currentColor" stroke-width="1.5" />
+                  <circle cx="8" cy="12" r="0.8" fill="currentColor" />
+                </svg>
+                Cuidado: Esto modificará la descripción general del medio (ej: 'Diario de Cádiz') en la base de datos.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Año</label>
+              <input type="number" class="form-control bg-dark text-light border-secondary" name="anio"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Incluido en Análisis</label>
+              <select class="form-select bg-dark text-light border-secondary" name="incluido">
+                <option value="">(No cambiar)</option>
+                <option value="si">Sí (Incluido)</option>
+                <option value="no">No (Excluido)</option>
+              </select>
+            </div>
+
+            <hr class="border-secondary opacity-25">
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Nombre Autor</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="nombre_autor"
+                placeholder="(No cambiar)">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-warning">Apellido Autor</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="apellido_autor"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-warning">Temas / Etiquetas</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="temas"
+                placeholder="Ej: Política, Sociedad (Separados por coma)">
+              <div class="form-text text-light small">Se añadirán o reemplazarán los temas según la lógica del servidor.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Incluir en Ref. Bibliográfica</label>
+              <select class="form-select bg-dark text-light border-secondary" name="es_referencia">
+                <option value="">(No cambiar)</option>
+                <option value="si">Sí (Incluir)</option>
+                <option value="no">No (Excluir)</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Nº Referencia Bibliográfica</label>
+              <input type="number" class="form-control bg-dark text-light border-secondary" name="numero_referencia"
+                placeholder="(No cambiar)">
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-warning">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btn-guardar-lote">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" class="me-1">
+            <path d="M5,3 L19,3 L19,21 L5,21 Z" stroke="currentColor" stroke-width="2" fill="none" />
+            <rect x="8" y="1" width="8" height="6" fill="currentColor" />
+            <rect x="8" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts de mejoras para edición masiva -->
+<script>
+  // Configuración especial para modal de edición masiva
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectRecurso = document.getElementById('selectLoteRecurso');
+    const selectEdicion = document.getElementById('selectLoteEdicion');
+
+    if (selectRecurso && selectEdicion) {
+      selectRecurso.addEventListener('change', async (e) => {
+        const tipo = e.target.value;
+        if (!tipo) {
+          renderLoteEdiciones([]);
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/ediciones/${tipo}`);
+          const options = await response.json();
+          renderLoteEdiciones(options);
+        } catch (error) {
+          console.error('[Batch Edit] Error fetching editions:', error);
+        }
+      });
+    }
+
+    function renderLoteEdiciones(options) {
+      // Verificar si hay Choices.js instanciado
+      const choicesInstance = window.choicesInstances ? window.choicesInstances['selectLoteEdicion'] : null;
+
+      const selectOptions = [{ value: '', label: '(No cambiar)', selected: true }];
+      options.forEach(opt => {
+        selectOptions.push({ value: opt.value, label: opt.text, selected: false });
+      });
+
+      if (choicesInstance && typeof choicesInstance.setChoices === 'function') {
+        choicesInstance.clearChoices();
+        choicesInstance.setChoices(selectOptions, 'value', 'label', true);
+      } else {
+        selectEdicion.innerHTML = '';
+        selectOptions.forEach(opt => {
+          const row = document.createElement('option');
+          row.value = opt.value;
+          row.textContent = opt.label;
+          if (opt.selected) row.selected = true;
+          selectEdicion.appendChild(row);
+        });
+      }
+    }
+
+    // Inicializar validaciones si existe FormValidator
+    if (typeof FormValidator !== 'undefined') {
+      const modal = document.getElementById('batchEditModal');
+      if (modal) {
+        modal.addEventListener('shown.bs.modal', () => {
+          const form = document.getElementById('form-edicion-lote');
+          if (form && window.formValidator) {
+            form.addEventListener('input', (e) => {
+              if (e.target.name === 'fecha_consulta' && e.target.value) {
+                const isValid = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(e.target.value);
+                e.target.classList.toggle('is-valid', isValid);
+                e.target.classList.toggle('is-invalid', !isValid);
+              }
+            });
+          }
+        });
+      }
+    }
+  });
+</script>
+
+{% include '_choices_includes.html' %}
