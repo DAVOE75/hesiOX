@@ -1,413 +1,150 @@
-{% extends "base_desktop.html" %}
+{% extends "base.html" %}
 
-{% block title %}Perfil de Usuario | hesiOX{% endblock %}
-{% block page_title %}Mi Perfil{% endblock %}
-
-{% block top_actions %}
-<a href="{{ url_for('dashboard') }}" class="btn-sirio">
-    <i class="fa-solid fa-gauge-high text-warning"></i>
-    <span class="btn-text">Dashboard</span>
-</a>
-<a href="{{ url_for('proyectos.listar') }}" class="btn-sirio">
-    <i class="fa-solid fa-folder-tree text-info"></i>
-    <span class="btn-text">Proyectos</span>
-</a>
-{% endblock %}
+{% block title %}hesiOX - Mi Perfil{% endblock %}
 
 {% block extra_css %}
 <style>
-    .profile-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-
-    .profile-card {
-        background-color: rgba(26, 26, 26, 0.8);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+    .perfil-card {
+        background-color: var(--card-bg, #1a1a1a);
+        border: 1px solid var(--border-color, #333);
         border-radius: 12px;
-        padding: 2rem;
-        margin-bottom: 2rem;
+        padding: 30px;
+        margin-top: 20px;
     }
-
-    .profile-header {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    .perfil-header {
+        border-bottom: 2px solid var(--sirio-color, #ff9800);
+        margin-bottom: 30px;
+        padding-bottom: 15px;
     }
-
-    .profile-avatar {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, var(--sirio-color), var(--accent-color));
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        color: white;
-        font-weight: bold;
-    }
-
-    .profile-info h2 {
-        margin: 0;
-        color: white;
-        font-size: 1.5rem;
-    }
-
-    .profile-info p {
-        margin: 0.2rem 0 0;
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .form-section {
-        margin-bottom: 2.5rem;
-    }
-
-    .form-section-title {
-        color: var(--sirio-color);
-        font-size: 1.1rem;
+    .form-label {
         font-weight: 600;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        letter-spacing: 0.5px;
     }
-
-    .key-input-group {
-        background: rgba(0, 0, 0, 0.2);
-        padding: 1.25rem;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.3s ease;
-    }
-
-    .key-input-group:hover {
-        border-color: rgba(255, 152, 0, 0.3);
-        background: rgba(0, 0, 0, 0.3);
-    }
-
-    .info-label {
-        color: rgba(255, 255, 255, 0.5);
+    .status-label {
         font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .key-icon {
-        color: var(--sirio-color);
-        margin-right: 0.5rem;
-    }
-
-    .status-badge {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.5rem;
+        font-weight: bold;
+        margin-left: 10px;
+        padding: 2px 8px;
         border-radius: 4px;
-        font-weight: 600;
-    }
-
-    .status-active {
-        background: rgba(40, 167, 69, 0.1);
-        color: #28a745;
-        border: 1px solid rgba(40, 167, 69, 0.2);
-    }
-
-    .status-inactive {
-        background: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, 0.2);
-    }
-
-    /* Estilos Sirius para el formulario */
-    .form-control-sirio {
-        background-color: rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: white !important;
-        border-radius: 6px !important;
-        padding: 0.75rem 1rem !important;
-    }
-
-    .form-control-sirio:focus {
-        border-color: var(--sirio-color) !important;
-        box-shadow: 0 0 0 0.25rem rgba(255, 152, 0, 0.1) !important;
-    }
-
-    .btn-sirio-save {
-        background: linear-gradient(135deg, var(--sirio-color), #f57c00);
-        border: none;
-        color: white;
-        padding: 0.8rem 2rem;
-        border-radius: 6px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .btn-sirio-save:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-        color: white;
-    }
-
-    /* Ajustes modo claro */
-    html[data-theme="light"] .profile-card {
-        background-color: white;
-        border-color: rgba(0, 0, 0, 0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    html[data-theme="light"] .profile-info h2 {
-        color: #333;
-    }
-
-    html[data-theme="light"] .profile-info p {
-        color: #666;
-    }
-
-    html[data-theme="light"] .key-input-group {
-        background: #f8f9fa;
-        border-color: #e9ecef;
-    }
-
-    html[data-theme="light"] .form-control-sirio {
-        background-color: white !important;
-        border-color: #ddd !important;
-        color: #333 !important;
-    }
-
-    html[data-theme="light"] .info-label {
-        color: #888;
-    }
-
-    /* Estilos específicos para Switches de Configuración de IA */
-    .form-check-input:checked {
-        background-color: var(--sirio-color) !important;
-        border-color: var(--sirio-color) !important;
-    }
-
-    .form-check-label {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.9rem;
-    }
-
-    html[data-theme="light"] .form-check-label {
-        color: #444;
-    }
-
-    .api-status-text {
-        font-weight: 600;
-        margin-left: 0.5rem;
-    }
-
-    .text-success-bright {
-        color: #2ecc71 !important;
-    }
-
-    .text-danger-bright {
-        color: #e74c3c !important;
+        text-transform: uppercase;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="profile-card animate__animated animate__fadeIn">
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    {{ current_user.nombre[0].upper() }}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="perfil-card shadow-lg animate__animated animate__fadeIn">
+                <div class="perfil-header d-flex justify-content-between align-items-center">
+                    <h2 class="text-warning mb-0">
+                        <i class="fa-solid fa-user-circle me-2"></i>Configuración de Perfil
+                    </h2>
+                    <span class="badge bg-dark border border-secondary text-muted">v4.2.0</span>
                 </div>
-                <div class="profile-info">
-                    <h2>{{ current_user.nombre }}</h2>
-                    <p>{{ current_user.email }}</p>
-                </div>
-            </div>
-
-            <form action="{{ url_for('auth.perfil') }}" method="POST">
-                <!-- Información Básica -->
-                <div class="form-section">
-                    <h3 class="form-section-title">
-                        <i class="fa-solid fa-user-gear"></i>
-                        Información de la Cuenta
-                    </h3>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-light-adapt">Nombre de Usuario</label>
-                            <input type="text" class="form-control form-control-sirio" value="{{ current_user.nombre }}" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-light-adapt">Email</label>
-                            <input type="email" name="email" class="form-control form-control-sirio" value="{{ current_user.email }}">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Configuración de API de IA -->
-                <div class="form-section">
-                    <h3 class="form-section-title">
-                        <i class="fa-solid fa-microchip"></i>
-                        Configuración de Inteligencia Artificial
-                    </h3>
-                    
+                
+                <form action="{{ url_for('auth.perfil') }}" method="POST">
                     <div class="row g-4">
-                        <div class="col-md-6 mb-3">
-                            <div class="key-input-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">
-                                    <span>OPENAI API KEY</span>
-                                    <div class="form-check form-switch p-0 m-0" style="min-height: auto;">
-                                        <input class="form-check-input api-toggle m-0" type="checkbox" 
-                                               role="switch" id="toggle_openai" {% if current_user.ai_openai_active %}checked{% endif %}>
-                                        <label class="form-check-label small {% if current_user.ai_openai_active %}text-success{% else %}text-danger{% endif %}" for="toggle_openai" style="font-weight: 700;">
-                                            {% if current_user.ai_openai_active %}ACTIVO{% else %}INACTIVO{% endif %}
-                                        </label>
-                                    </div>
-                                </label>
-                                <input type="password" name="ai_openai_key" class="form-control form-control-sirio" 
-                                       placeholder="sk-..." value="{{ current_user.ai_openai_key or '' }}">
-                            </div>
+                        <!-- Datos Personales -->
+                        <div class="col-md-12">
+                            <h5 class="text-info border-bottom border-dark pb-2 mb-3">Datos de Cuenta</h5>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label text-warning">Nombre de Usuario</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ current_user.nombre }}" readonly>
+                            <div class="form-text text-muted">El nombre de usuario no es editable.</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label text-warning">Correo Electrónico</label>
+                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="{{ current_user.email }}">
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <div class="key-input-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">
-                                    <span>GEMINI API KEY</span>
-                                    <div class="form-check form-switch p-0 m-0" style="min-height: auto;">
-                                        <input class="form-check-input api-toggle m-0" type="checkbox" 
-                                               role="switch" id="toggle_gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
-                                        <label class="form-check-label small {% if current_user.ai_gemini_active %}text-success{% else %}text-danger{% endif %}" for="toggle_gemini" style="font-weight: 700;">
-                                            {% if current_user.ai_gemini_active %}ACTIVO{% else %}INACTIVO{% endif %}
-                                        </label>
-                                    </div>
-                                </label>
-                                <input type="password" name="ai_gemini_key" class="form-control form-control-sirio" 
-                                       placeholder="AIza..." value="{{ current_user.ai_gemini_key or '' }}">
-                            </div>
+                        <!-- Configuración AI -->
+                        <div class="col-md-12 mt-5">
+                            <h5 class="text-info border-bottom border-dark pb-2 mb-3">Servicios de Inteligencia Artificial</h5>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <div class="key-input-group">
-                                <label class="form-label d-flex justify-content-between align-items-center">
-                                    <span>ANTHROPIC API KEY</span>
-                                    <div class="form-check form-switch p-0 m-0" style="min-height: auto;">
-                                        <input class="form-check-input api-toggle m-0" type="checkbox" 
-                                               role="switch" id="toggle_anthropic" {% if current_user.ai_anthropic_active %}checked{% endif %}>
-                                        <label class="form-check-label small {% if current_user.ai_anthropic_active %}text-success{% else %}text-danger{% endif %}" for="toggle_anthropic" style="font-weight: 700;">
-                                            {% if current_user.ai_anthropic_active %}ACTIVO{% else %}INACTIVO{% endif %}
-                                        </label>
-                                    </div>
-                                </label>
-                                <input type="password" name="ai_anthropic_key" class="form-control form-control-sirio" 
-                                       placeholder="sk-ant-..." value="{{ current_user.ai_anthropic_key or '' }}">
-                            </div>
-                        </div>
-
-                        <!-- Panel Moderno de Modelos (Sirius Redesign) -->
-                        <div class="col-12 mt-2">
-                            <div class="alert alert-dark border-secondary bg-black bg-opacity-50 p-4" style="border-radius: 12px;">
-                                <h6 class="text-warning mb-4 d-flex align-items-center">
-                                    <i class="fa-solid fa-layer-group me-2"></i>
-                                    Modelos Activos en Laboratorio
-                                </h6>
-                                <div class="row g-4">
-                                    <!-- OpenAI Card -->
-                                    <div class="col-md-4">
-                                        <div class="key-input-group">
-                                            <label class="info-label d-flex justify-content-between align-items-center w-100">
-                                                <span>OpenAI GPT-4o</span>
-                                                <div class="form-check form-switch" style="padding-left: 2.5em;">
-                                                    <input class="form-check-input" type="checkbox" name="ai_openai_active" 
-                                                           id="toggle-openai" {% if current_user.ai_openai_active %}checked{% endif %}>
-                                                </div>
-                                            </label>
-                                            <i class="fa-solid fa-fire-flame-curved key-icon"></i>
-                                            <input type="password" name="api_key_openai" class="form-control key-input"
-                                                value="{{ current_user.api_key_openai or '' }}" placeholder="sk-...">
-                                        </div>
-                                    </div>
-                                    <!-- Gemini Card -->
-                                    <div class="col-md-4">
-                                        <div class="key-input-group">
-                                            <label class="info-label d-flex justify-content-between align-items-center w-100">
-                                                <span>Google Gemini</span>
-                                                <div class="form-check form-switch" style="padding-left: 2.5em;">
-                                                    <input class="form-check-input" type="checkbox" name="ai_gemini_active"
-                                                           id="toggle-gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
-                                                </div>
-                                            </label>
-                                            <i class="fa-solid fa-bolt key-icon"></i>
-                                            <input type="password" name="api_key_gemini" class="form-control key-input"
-                                                value="{{ current_user.api_key_gemini or '' }}" placeholder="AIza...">
-                                        </div>
-                                    </div>
-                                    <!-- Anthropic Card -->
-                                    <div class="col-md-4">
-                                        <div class="key-input-group">
-                                            <label class="info-label d-flex justify-content-between align-items-center w-100">
-                                                <span>Anthropic Claude</span>
-                                                <div class="form-check form-switch" style="padding-left: 2.5em;">
-                                                    <input class="form-check-input" type="checkbox" name="ai_anthropic_active"
-                                                           id="toggle-anthropic" {% if current_user.ai_anthropic_active %}checked{% endif %}>
-                                                </div>
-                                            </label>
-                                            <i class="fa-solid fa-brain key-icon"></i>
-                                            <input type="password" name="api_key_anthropic" class="form-control key-input"
-                                                value="{{ current_user.api_key_anthropic or '' }}" placeholder="sk-ant-...">
-                                        </div>
+                        <!-- OpenAI -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label text-light mb-0">OpenAI API Key</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="ai_openai_active" 
+                                               id="toggle-openai" {% if current_user.ai_openai_active %}checked{% endif %}>
                                     </div>
                                 </div>
+                                <input type="password" name="ai_openai_key" class="form-control bg-dark text-white border-secondary mb-2" 
+                                       placeholder="sk-..." value="{{ current_user.ai_openai_key or '' }}">
+                                <span id="status-openai" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            </div>
+                        </div>
+
+                        <!-- Gemini -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label text-light mb-0">Google Gemini API Key</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="ai_gemini_active"
+                                               id="toggle-gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
+                                    </div>
+                                </div>
+                                <input type="password" name="ai_gemini_key" class="form-control bg-dark text-white border-secondary mb-2" 
+                                       placeholder="AIza..." value="{{ current_user.ai_gemini_key or '' }}">
+                                <span id="status-gemini" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            </div>
+                        </div>
+
+                        <!-- Anthropic -->
+                        <div class="col-md-6">
+                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label text-light mb-0">Anthropic Claude API Key</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="ai_anthropic_active"
+                                               id="toggle_anthropic_active" {% if current_user.ai_anthropic_active %}checked{% endif %}>
+                                    </div>
+                                </div>
+                                <input type="password" name="ai_anthropic_key" class="form-control bg-dark text-white border-secondary mb-2" 
+                                       placeholder="sk-ant-..." value="{{ current_user.ai_anthropic_key or '' }}">
+                                <span id="status-anthropic" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-5">
+                            <hr class="border-secondary">
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-warning px-5 py-2 fw-bold">
+                                    <i class="fa-solid fa-save me-2"></i>Guardar Cambios
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Seguridad -->
-                <div class="form-section">
-                    <h3 class="form-section-title">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        Seguridad
-                    </h3>
-                    <div class="alert alert-dark bg-black bg-opacity-25 border-secondary">
-                        <p class="small text-muted mb-3">Solo completa estos campos si deseas cambiar tu contraseña actual.</p>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label text-light-adapt">Nueva Contraseña</label>
-                                <input type="password" name="new_password" class="form-control form-control-sirio">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label text-light-adapt">Confirmar Nueva Contraseña</label>
-                                <input type="password" name="confirm_password" class="form-control form-control-sirio">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-3 mt-4">
-                    <button type="submit" class="btn-sirio-save">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        Guardar Cambios
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Manejo dinámico de etiquetas de activación de IA
-    document.querySelectorAll('.key-input-group .form-check-input').forEach(input => {
-        input.addEventListener('change', function() {
-            const label = this.nextElementSibling;
-            if (label && label.classList.contains('form-check-label')) {
-                label.textContent = this.checked ? 'ACTIVO' : 'INACTIVO';
-                label.classList.toggle('text-success', this.checked);
-                label.classList.toggle('text-danger', !this.checked);
+    document.addEventListener('DOMContentLoaded', function() {
+        const models = ['openai', 'gemini', 'anthropic'];
+        
+        models.forEach(model => {
+            const toggleId = model === 'anthropic' ? 'toggle_anthropic_active' : `toggle-${model}`;
+            const toggle = document.getElementById(toggleId);
+            const statusLabel = document.getElementById(`status-${model}`);
+            
+            if (toggle && statusLabel) {
+                const checkStatus = () => {
+                    statusLabel.style.display = toggle.checked ? 'inline' : 'none';
+                };
+                
+                toggle.addEventListener('change', checkStatus);
+                checkStatus(); // Initial state
             }
         });
     });
