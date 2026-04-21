@@ -1,47 +1,49 @@
 # hesiOX - Sistema de Gestión Hemerográfica y Análisis Lab (v4.2.0)
 
-![hesiOX Logo](static/img/hesiox_logo2.png)
+<p align="center">
+  <img src="static/img/hesiox_logo2.png" width="30%">
+</p>
 
-**hesiOX** is a comprehensive methodology and software laboratory designed for the conversion of documentary assets into structured, interoperable knowledge. It represents the convergence between **Archival Science**, **Data Engineering**, and **Digital Humanities**.
+**hesiOX** es una metodología integral y un laboratorio de software diseñado para la conversión de activos documentales en conocimiento estructurado e interoperable. Representa la convergencia entre la **Archivística**, la **Ingeniería de Datos** y las **Humanidades Digitales**.
 
-Originally developed for the academic study of historical press (Project S.S. Sirio), hesiOX has evolved into a multi-purpose tool for managing and analyzing complex document corpora.
+Desarrollado originalmente para el estudio académico de la prensa histórica (Proyecto S.S. Sirio), hesiOX ha evolucionado hasta convertirse en una herramienta multipropósito para la gestión y el análisis de corpus documentales complejos.
 
-## 🚀 Key Features
+## 🚀 Características Principales
 
-### 📂 Academic Corpus Management
-- **Multi-project Support**: Manage independent research projects (theses, articles, books) with their own reference libraries.
-- **Academic Export**: Export references in BibTeX, RIS, Chicago, APA, MLA, and Vancouver formats.
-- **Interoperability**: Compatible with Zotero, Mendeley, and EndNote.
+### 📂 Gestión de Corpus Académico
+- **Soporte Multi-proyecto**: Gestiona proyectos de investigación independientes (tesis, artículos, libros) con sus propias bibliotecas de referencia.
+- **Exportación Académica**: Exporta referencias en formatos BibTeX, RIS, Chicago, APA, MLA y Vancouver.
+- **Interoperabilidad**: Compatible con Zotero, Mendeley y EndNote.
 
-### 🤖 Artificial Intelligence & NLP
-- **Intelligent Knowledge Networks**: Automatic Detection of Entities (People, Places, Organizations) using **spaCy NER**.
-- **Corpus CHAT (RAG)**: Multimodal natural language interaction with your documents with full traceability to primary sources.
-- **Semantic Search**: NLP-powered engine that understands the context of your queries.
+### 🤖 Inteligencia Artificial y NLP
+- **Redes de Conocimiento Inteligentes**: Detección automática de entidades (Personas, Lugares, Organizaciones) utilizando **spaCy NER**.
+- **Corpus CHAT (RAG)**: Interacción en lenguaje natural con tus documentos mediante modelos multimodales, con trazabilidad total a las fuentes primarias.
+- **Búsqueda Semántica**: Motor impulsado por NLP que comprende el contexto de tus consultas.
 
-### 🗺️ Geospatial Analysis (GIS)
-- **Old Map Georeferencing**: Vectorize and digitalize historical maps as Geographic Information Systems.
-- **Spatial Patterns**: Visualize the geographical evolution of documentary sources.
-- **Geosemantic Analysis**: Calculation of geodesics (Haversine) and GeoJSON export.
+### 🗺️ Análisis Geoespacial (GIS)
+- **Georreferenciación de Mapas Antiguos**: Vectorización y digitalización de mapas históricos como Sistemas de Información Geográfica.
+- **Patrones Espaciales**: Visualiza la evolución geográfica de las fuentes documentales.
+- **Análisis Geosemántico**: Cálculo de geodésicas (Haversine) y exportación a GeoJSON.
 
-### 🎭 Theatrical Discourse Processing (NEW)
-- **Drama Analysis**: Study of co-presence, character networks, and emotional trajectories.
-- **Sentiment Analysis**: Visualization of the emotional flow throughout theatrical works.
+### 🎭 Procesamiento del Discurso Teatral
+- **Análisis Dramático**: Estudio de co-presencia, redes de personajes y trayectorias emocionales.
+- **Análisis de Sentimiento**: Visualización del flujo emocional a lo largo de las obras teatrales.
 
-### 🔍 Digitization & Forensics
-- **Smart OCR**: Automatic text extraction from historical press images using **Tesseract.js**.
-- **Monte Carlo Navigation**: Random trajectory execution and forensic analysis of historical drift using AI.
+### 🔍 Digitalización y Forense
+- **OCR Inteligente**: Extracción automática de texto de imágenes de prensa histórica utilizando **Tesseract.js**.
+- **Navegación Monte Carlo**: Ejecución de trayectorias aleatorias y análisis forense de la deriva histórica mediante IA.
 
-## 🛠️ Technology Stack
+## 🛠️ Stack Tecnológico
 
 - **Backend**: Python Flask
-- **Database**: PostgreSQL (SQLAlchemy)
+- **Base de Datos**: PostgreSQL (SQLAlchemy)
 - **Frontend**: Bootstrap 5, D3.js, Chart.js, Leaflet Maps, Choices.js
-- **Artificial Intelligence**: spaCy (NLP), OpenAI/Gemini/Anthropic API integration for RAG.
+- **Inteligencia Artificial**: spaCy (NLP), integración con las APIs de OpenAI/Gemini/Anthropic para RAG.
 - **OCR**: Tesseract.js
 
-## 📄 License
+## 📄 Licencia
 
-**100% Free Software** - Licensed under **GPL v3**. Open source and extensible for the academic community.
+**Software 100% Libre** - Licenciado bajo **GPL v3**. Código abierto y extensible para la comunidad académica.
 
 ---
-Developed for the **LINHD-UNED** and the Digital Humanities community.
+Desarrollado para el **LINHD-UNED** y la comunidad de Humanidades Digitales.
