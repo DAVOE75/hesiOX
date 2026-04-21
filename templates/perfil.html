@@ -397,14 +397,14 @@
                                             {% if current_user.ai_gemini_active %}ACTIVO{% else %}INACTIVO{% endif %}
                                         </span>
                                     </span>
+                                    <div class="form-check form-switch m-0 p-0">
+                                        <input class="form-check-input api-status-toggle" type="checkbox" name="ai_gemini_active" 
+                                               id="toggle-gemini" data-label="status-text-gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
+                                    </div>
                                 </label>
                                 <i class="fa-solid fa-bolt key-icon"></i>
                                 <input type="password" name="api_key_gemini" class="form-control key-input"
                                     value="{{ current_user.api_key_gemini or '' }}" placeholder="sk-...">
-                                <div class="form-check form-switch position-absolute bottom-0 end-0 mb-3 me-3">
-                                    <input class="form-check-input api-status-toggle" type="checkbox" name="ai_gemini_active" 
-                                           id="toggle-gemini" data-label="status-text-gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
-                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -415,14 +415,14 @@
                                             {% if current_user.ai_openai_active %}ACTIVO{% else %}INACTIVO{% endif %}
                                         </span>
                                     </span>
+                                    <div class="form-check form-switch m-0 p-0">
+                                        <input class="form-check-input api-status-toggle" type="checkbox" name="ai_openai_active" 
+                                               id="toggle-openai" data-label="status-text-openai" {% if current_user.ai_openai_active %}checked{% endif %}>
+                                    </div>
                                 </label>
                                 <i class="fa-solid fa-microchip key-icon"></i>
                                 <input type="password" name="api_key_openai" class="form-control key-input"
                                     value="{{ current_user.api_key_openai or '' }}" placeholder="sk-...">
-                                <div class="form-check form-switch position-absolute bottom-0 end-0 mb-3 me-3">
-                                    <input class="form-check-input api-status-toggle" type="checkbox" name="ai_openai_active" 
-                                           id="toggle-openai" data-label="status-text-openai" {% if current_user.ai_openai_active %}checked{% endif %}>
-                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -433,14 +433,14 @@
                                             {% if current_user.ai_anthropic_active %}ACTIVO{% else %}INACTIVO{% endif %}
                                         </span>
                                     </span>
+                                    <div class="form-check form-switch m-0 p-0">
+                                        <input class="form-check-input api-status-toggle" type="checkbox" name="ai_anthropic_active" 
+                                               id="toggle-anthropic" data-label="status-text-anthropic" {% if current_user.ai_anthropic_active %}checked{% endif %}>
+                                    </div>
                                 </label>
                                 <i class="fa-solid fa-feather key-icon"></i>
                                 <input type="password" name="api_key_anthropic" class="form-control key-input"
                                     value="{{ current_user.api_key_anthropic or '' }}" placeholder="sk-...">
-                                <div class="form-check form-switch position-absolute bottom-0 end-0 mb-3 me-3">
-                                    <input class="form-check-input api-status-toggle" type="checkbox" name="ai_anthropic_active" 
-                                           id="toggle-anthropic" data-label="status-text-anthropic" {% if current_user.ai_anthropic_active %}checked{% endif %}>
-                                </div>
                             </div>
                         </div>
                     </div>
