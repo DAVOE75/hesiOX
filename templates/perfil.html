@@ -1,152 +1,447 @@
-{% extends "base.html" %}
+{% extends "base_desktop.html" %}
 
-{% block title %}hesiOX - Mi Perfil{% endblock %}
+{% block title %}Perfil de Usuario | hesiOX{% endblock %}
+{% block page_title %}Mi Perfil{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('dashboard') }}" class="btn-sirio">
+    <i class="fa-solid fa-gauge-high text-warning"></i>
+    <span class="btn-text">Dashboard</span>
+</a>
+<a href="{{ url_for('proyectos.listar') }}" class="btn-sirio">
+    <i class="fa-solid fa-folder-tree text-info"></i>
+    <span class="btn-text">Proyectos</span>
+</a>
+{% endblock %}
 
 {% block extra_css %}
 <style>
-    .perfil-card {
-        background-color: var(--card-bg, #1a1a1a);
-        border: 1px solid var(--border-color, #333);
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .profile-card {
+        background: var(--ds-bg-sidebar, #1e1e1e);
+        border: 1px solid var(--ds-border-color, #444);
         border-radius: 12px;
-        padding: 30px;
-        margin-top: 20px;
+        box-shadow: var(--ds-shadow-float);
+        overflow: hidden;
+        margin-bottom: 2rem;
     }
-    .perfil-header {
-        border-bottom: 2px solid var(--sirio-color, #ff9800);
-        margin-bottom: 30px;
-        padding-bottom: 15px;
+
+    [data-theme="light"] .profile-card {
+        background: #ffffff;
+        border-color: #ddd;
     }
-    .form-label {
-        font-weight: 600;
-        letter-spacing: 0.5px;
+
+    .profile-header {
+        position: relative;
+        background: linear-gradient(rgba(26, 26, 26, 0.8), rgba(255, 152, 0, 0.45)), url('/static/img/hesiox_cabecera.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        padding: 3rem 2rem;
+        text-align: center;
+        border-bottom: 2px solid #ff9800;
     }
-    .status-label {
+
+    [data-theme="light"] .profile-header {
+        background: linear-gradient(rgba(248, 249, 250, 0.8), rgba(41, 74, 96, 0.6)), url('/static/img/hesiox_cabecera.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        border-bottom-color: #294a60;
+    }
+
+    .theme-toggle-wrapper {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 10;
+    }
+
+    .btn-theme-perfil {
+        background: none !important;
+        border: none !important;
+        color: #fff !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        transition: all 0.2s ease !important;
+        text-transform: uppercase;
+        cursor: pointer;
+        line-height: normal !important;
+        outline: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        text-decoration: none !important;
+        position: relative;
+    }
+
+    .theme-circle {
+        background: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        min-height: 26px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.3s ease;
+        flex-shrink: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
+    [data-theme="light"] .theme-circle {
+        background: rgba(41, 74, 96, 0.08) !important;
+        border-color: rgba(41, 74, 96, 0.2) !important;
+    }
+
+    .btn-theme-perfil i {
+        font-size: 0.95rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transition: all 0.3s ease;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .btn-theme-text {
+        font-size: 0.65rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 1.5px !important;
+        color: inherit !important;
+        margin-right: 30px !important;
+        padding-left: 12px !important;
+        /* Clear separation */
+        display: inline-block !important;
+        text-transform: uppercase;
+        line-height: 1 !important;
+    }
+
+    /* Icon colors */
+    .btn-theme-perfil .fa-sun {
+        color: #ff9800 !important;
+        /* Sun = Sirio Orange */
+        padding-left: 1px !important;
+        /* Micro-centering */
+    }
+
+    .btn-theme-perfil .fa-moon {
+        color: #294a60 !important;
+        /* Authentic Sirio Blue */
+        padding-left: 1px !important;
+    }
+
+    .btn-theme-perfil:hover .theme-circle {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+        transform: scale(1.1);
+    }
+
+    [data-theme="light"] .btn-theme-perfil {
+        color: #294a60 !important;
+    }
+
+    [data-theme="light"] .btn-theme-perfil:hover .theme-circle {
+        background: rgba(41, 74, 96, 0.12) !important;
+        border-color: #294a60 !important;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: #ff9800;
+        color: #000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin: 0 auto 1rem;
+        box-shadow: 0 0 30px rgba(255, 152, 0, 0.4);
+        border: 4px solid rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="light"] .profile-avatar {
+        background: #294a60;
+        color: #fff;
+        box-shadow: 0 0 30px rgba(41, 74, 96, 0.2);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--ds-accent-primary, #ff9800);
+        display: inline-block;
+        color: var(--ds-accent-primary, #ff9800);
+    }
+
+    [data-theme="light"] .section-title {
+        color: #294a60;
+        border-bottom-color: #294a60;
+    }
+
+    .form-section {
+        padding: 2rem;
+    }
+
+    .info-label {
         font-size: 0.75rem;
-        font-weight: bold;
-        margin-left: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 0.3rem;
+        display: block;
+    }
+
+    .key-input-group {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .key-icon {
+        position: absolute;
+        left: 12px;
+        top: 38px;
+        color: var(--ds-accent-primary, #ff9800);
+    }
+
+    [data-theme="light"] .key-icon {
+        color: #294a60;
+    }
+
+    .key-input {
+        padding-left: 40px !important;
+    }
+
+    .status-badge {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
         padding: 2px 8px;
         border-radius: 4px;
-        text-transform: uppercase;
+        margin-left: 8px;
+    }
+
+    .status-active {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+        border: 1px solid #28a74540;
+    }
+
+    .status-inactive {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid #dc354540;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-9">
-            <div class="perfil-card shadow-lg animate__animated animate__fadeIn">
-                <div class="perfil-header d-flex justify-content-between align-items-center">
-                    <h2 class="text-warning mb-0">
-                        <i class="fa-solid fa-user-circle me-2"></i>Configuración de Perfil
-                    </h2>
-                    <span class="badge bg-dark border border-secondary text-muted">v4.2.0</span>
+<div class="container py-4">
+    <div class="profile-container">
+
+
+
+        <form action="{{ url_for('auth.perfil') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" name="foto_perfil" id="foto_perfil_input" class="d-none" accept="image/*"
+                onchange="this.form.submit()">
+
+            <div class="profile-card">
+                <!-- Header with Avatar & Theme Toggle -->
+                <div class="profile-header">
+                    <div class="theme-toggle-wrapper">
+                        <button type="button" class="btn-theme-perfil theme-switcher-toggle">
+                            <div class="theme-circle">
+                                <i class="fa-solid fa-sun"></i>
+                            </div>
+                            <span class="btn-theme-text">MODO</span>
+                        </button>
+                    </div>
+
+                    <div class="position-relative d-inline-block">
+                        <div class="profile-avatar overflow-hidden">
+                            {% if current_user.foto_perfil %}
+                            <img src="{{ url_for('static', filename=current_user.foto_perfil) }}" alt="Avatar"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            {{ current_user.nombre[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <button type="button"
+                            class="btn btn-sm btn-dark position-absolute bottom-0 end-0 rounded-circle border-sirio"
+                            onclick="document.getElementById('foto_perfil_input').click()" title="Cambiar Foto">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1 mt-3" style="color: #ffffff !important;">{{ current_user.nombre
+                        }}</h2>
+                    <p class="text-secondary mb-0" style="text-align: center !important; color: #ffffff !important;">{{
+                        current_user.email }}</p>
+                    <div class="mt-3">
+                        <span class="badge bg-sirio text-uppercase px-3 py-2"
+                            style="font-size: 0.7rem; letter-spacing: 1.5px;">
+                            Rol de Usuario: {{ current_user.rol }}
+                        </span>
+                    </div>
                 </div>
-                
-                <form action="{{ url_for('auth.perfil') }}" method="POST">
+
+                <!-- Personal Data Section -->
+                <div class="form-section border-bottom border-secondary border-opacity-10">
+                    <h5 class="section-title"><i class="fa-solid fa-id-card me-2"></i> Datos Personales e
+                        Institucionales</h5>
                     <div class="row g-4">
-                        <!-- Datos Personales -->
-                        <div class="col-md-12">
-                            <h5 class="text-info border-bottom border-dark pb-2 mb-3">Datos de Cuenta</h5>
-                        </div>
-                        
                         <div class="col-md-6">
-                            <label class="form-label text-warning">Nombre de Usuario</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ current_user.nombre }}" readonly>
-                            <div class="form-text text-muted">El nombre de usuario no es editable.</div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label text-warning">Correo Electrónico</label>
-                            <input type="email" name="email" class="form-control bg-dark text-white border-secondary" value="{{ current_user.email }}">
-                        </div>
-
-                        <!-- Configuración AI -->
-                        <div class="col-md-12 mt-5">
-                            <h5 class="text-info border-bottom border-dark pb-2 mb-3">Servicios de Inteligencia Artificial</h5>
-                        </div>
-
-                        <!-- OpenAI -->
-                        <div class="col-md-6">
-                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label text-light mb-0">OpenAI API Key</label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="ai_openai_active" 
-                                               id="toggle-openai" {% if current_user.ai_openai_active %}checked{% endif %}>
-                                    </div>
-                                </div>
-                                <input type="password" name="ai_openai_key" class="form-control bg-dark text-white border-secondary mb-2" 
-                                       placeholder="sk-..." value="{{ current_user.ai_openai_key or '' }}">
-                                <span id="status-openai" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            <div class="mb-3">
+                                <label class="info-label">Nombre Completo</label>
+                                <input type="text" name="nombre" class="form-control" value="{{ current_user.nombre }}"
+                                    required>
                             </div>
                         </div>
-
-                        <!-- Gemini -->
                         <div class="col-md-6">
-                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label text-light mb-0">Google Gemini API Key</label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="ai_gemini_active"
-                                               id="toggle-gemini" {% if current_user.ai_gemini_active %}checked{% endif %}>
-                                    </div>
-                                </div>
-                                <input type="password" name="ai_gemini_key" class="form-control bg-dark text-white border-secondary mb-2" 
-                                       placeholder="AIza..." value="{{ current_user.ai_gemini_key or '' }}">
-                                <span id="status-gemini" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            <div class="mb-3">
+                                <label class="info-label">Correo Electrónico (Solo Lectura)</label>
+                                <input type="email" class="form-control opacity-75" value="{{ current_user.email }}"
+                                    readonly disabled>
                             </div>
                         </div>
-
-                        <!-- Anthropic -->
                         <div class="col-md-6">
-                            <div class="p-3 bg-black bg-opacity-25 rounded border border-dark">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label text-light mb-0">Anthropic Claude API Key</label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="ai_anthropic_active"
-                                               id="toggle_anthropic_active" {% if current_user.ai_anthropic_active %}checked{% endif %}>
-                                    </div>
-                                </div>
-                                <input type="password" name="ai_anthropic_key" class="form-control bg-dark text-white border-secondary mb-2" 
-                                       placeholder="sk-ant-..." value="{{ current_user.ai_anthropic_key or '' }}">
-                                <span id="status-anthropic" class="status-label" style="display: none; color:#22c55e;">ACTIVO</span>
+                            <div class="mb-3">
+                                <label class="info-label">Institución / Universidad</label>
+                                <input type="text" name="institucion" class="form-control"
+                                    value="{{ current_user.institucion or '' }}" placeholder="Ej: UNED, CSIC...">
                             </div>
                         </div>
-
-                        <div class="col-12 mt-5">
-                            <hr class="border-secondary">
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-warning px-5 py-2 fw-bold">
-                                    <i class="fa-solid fa-save me-2"></i>Guardar Cambios
-                                </button>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="mb-3">
+                                        <label class="info-label">ORCID iD</label>
+                                        <input type="text" name="orcid" class="form-control"
+                                            value="{{ current_user.orcid or '' }}" placeholder="0000-0000-...">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="mb-3">
+                                        <label class="info-label">Teléfono de Contacto</label>
+                                        <input type="text" name="telefono" class="form-control"
+                                            value="{{ current_user.telefono or '' }}" placeholder="+34...">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- Security / Password Section -->
+                <div class="form-section bg-secondary bg-opacity-10">
+                    <h5 class="section-title text-info border-info"><i class="fa-solid fa-shield-halved me-2"></i>
+                        Seguridad y Acceso</h5>
+                    <p class="small text-muted mb-4">Complete estos campos solo si desea cambiar su contraseña actual.
+                    </p>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="info-label">Contraseña Actual</label>
+                                <input type="password" name="old_password" class="form-control" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="info-label">Nueva Contraseña</label>
+                                <input type="password" name="new_password" class="form-control" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="info-label">Confirmar Nueva Contraseña</label>
+                                <input type="password" name="confirm_password" class="form-control"
+                                    placeholder="••••••••">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Keys Section -->
+                <div class="form-section">
+                    <h5 class="section-title text-warning border-warning"><i class="fa-solid fa-key me-2"></i>
+                        Configuración de API Keys (IA)</h5>
+                    <p class="small text-muted mb-4">
+                        <i class="fa-solid fa-circle-info me-1"></i> Estas llaves son necesarias para habilitar las
+                        funciones avanzadas de Inteligencia Artificial en hesiOX. Permiten realizar **búsquedas
+                        semánticas**, **resúmenes automáticos** de noticias, **detección de entidades** (lugares,
+                        personas) y análisis avanzado del discurso. Sus claves se almacenan de forma segura y solo se
+                        utilizan para estas peticiones.
+                    </p>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="key-input-group">
+                                <label class="info-label">Google Gemini
+                                    {% if current_user.api_key_gemini %}<span
+                                        class="status-badge status-active">Activo</span>{% else %}<span
+                                        class="status-badge status-inactive">Pendiente</span>{% endif %}
+                                </label>
+                                <i class="fa-solid fa-bolt key-icon"></i>
+                                <input type="password" name="api_key_gemini" class="form-control key-input"
+                                    value="{{ current_user.api_key_gemini or '' }}" placeholder="sk-...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="key-input-group">
+                                <label class="info-label">OpenAI GPT-4o
+                                    {% if current_user.api_key_openai %}<span
+                                        class="status-badge status-active">Activo</span>{% else %}<span
+                                        class="status-badge status-inactive">Pendiente</span>{% endif %}
+                                </label>
+                                <i class="fa-solid fa-microchip key-icon"></i>
+                                <input type="password" name="api_key_openai" class="form-control key-input"
+                                    value="{{ current_user.api_key_openai or '' }}" placeholder="sk-...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="key-input-group">
+                                <label class="info-label">Anthropic Claude
+                                    {% if current_user.api_key_anthropic %}<span
+                                        class="status-badge status-active">Activo</span>{% else %}<span
+                                        class="status-badge status-inactive">Pendiente</span>{% endif %}
+                                </label>
+                                <i class="fa-solid fa-feather key-icon"></i>
+                                <input type="password" name="api_key_anthropic" class="form-control key-input"
+                                    value="{{ current_user.api_key_anthropic or '' }}" placeholder="sk-...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="p-4 bg-dark bg-opacity-25 d-flex justify-content-end gap-3">
+                    <button type="reset" class="btn btn-outline-secondary px-4">Descartar</button>
+                    <button type="submit" class="btn btn-sirio px-5 fw-bold">
+                        <i class="fa-solid fa-floppy-disk me-2"></i> GUARDAR CAMBIOS
+                    </button>
+                </div>
             </div>
-        </div>
+        </form>
+
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const models = ['openai', 'gemini', 'anthropic'];
-        
-        models.forEach(model => {
-            const toggleId = model === 'anthropic' ? 'toggle_anthropic_active' : `toggle-${model}`;
-            const toggle = document.getElementById(toggleId);
-            const statusLabel = document.getElementById(`status-${model}`);
-            
-            if (toggle && statusLabel) {
-                const checkStatus = () => {
-                    statusLabel.style.display = toggle.checked ? 'inline' : 'none';
-                };
-                
-                toggle.addEventListener('change', checkStatus);
-                checkStatus(); // Initial state
-            }
-        });
-    });
-</script>
+</div>
+</div>
+
 {% endblock %}
