@@ -113,4 +113,4 @@ hesiOX ha evolucionado a través de múltiples fases de innovación técnica y a
 </details>
 
 ---
-Desarrollado para el **LINHD-UNED** y la comunidad de Humanidades Digitales.
+Desarrollado para la comunidad de Humanidades Digitales.
