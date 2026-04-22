@@ -3169,9 +3169,19 @@ function loadDramatico(data) {
     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
         <td class="fw-bold py-3" style="color: var(--ds-accent);">${p.nombre}</td>
         <td class="text-center font-monospace" style="color: ${textWhite};">${p.intervenciones || 0}</td>
-        <td class="text-center font-monospace" style="color: ${textWhite};">${(p.palabras || 0).toLocaleString()}</td>
+        <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras_por_intervencion || 0}</td>
+        <td class="small">
+            ${(p.distinctive_words || []).map(w => `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 me-1 fw-bold" style="font-size: 10px !important;">${w}</span>`).join('')}
+            <div class="mt-1 opacity-50" style="font-size: 9px;">
+                Dominantes: ${(p.top_words || []).slice(0,3).map(w => typeof w === 'object' ? w.term : w).join(', ')}
+            </div>
+        </td>
         <td class="small opacity-75">
-            ${(p.top_words || []).map(w => `<span class="badge border border-secondary border-opacity-25 text-muted me-1 fw-normal" style="font-size: 11px !important;">${w}</span>`).join('')}
+            ${(p.top_frases || []).map(f => {
+                const term = typeof f === 'object' ? f.term : f;
+                const count = typeof f === 'object' ? f.count : '?';
+                return `<span class="badge bg-sirio-dim me-1 fw-normal border border-secondary border-opacity-10" style="font-size: 10px; color: var(--ds-accent-primary); opacity: 0.8; font-style: italic; cursor: help;" title="Frecuencia: ${count} veces">"${term}"</span>`;
+            }).join('')}
         </td>
     </tr>
   `).join('');
@@ -3278,11 +3288,12 @@ function loadDramatico(data) {
                         <tr class="small text-muted border-bottom border-secondary border-opacity-25" style="font-size: 10px; letter-spacing: 0.5px;">
                             <th>PERSONAJE / ACTOR</th>
                             <th class="text-center">INTERVENCIONES</th>
-                            <th class="text-center">TOT. PALABRAS</th>
-                            <th>VOCABULARIO DOMINANTE</th>
+                            <th class="text-center">PAL./INT.</th>
+                            <th>IDENTIDAD LINGÜÍSTICA (ZETA)</th>
+                            <th>FRASES REPETIDAS</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="drama-reparto-body">
                         ${tableRows}
                     </tbody>
                 </table>
@@ -3290,34 +3301,60 @@ function loadDramatico(data) {
             <div id="ai-res-tabla-reparto" class="mt-3" style="display: none;"></div>
         </div>
 
-        <!-- 4. Tensión Dramática y Arcos Individuales con Filtrado -->
-        <div class="row g-4">
+        <!-- 4. Ritmo Dramático y Acotaciones -->
+        <div class="row g-4 mb-5">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="text-muted small fw-bold mb-1"><i class="fa-solid fa-wave-square me-2 text-warning"></i>CRONOLOGÍA DE LA TENSIÓN DRAMÁTICA</h5>
-                        <p class="text-muted mb-0" style="font-size: 11px; opacity: 0.8;">Evolución emocional de la obra bloque a bloque.</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-4">
-                        <button class="btn btn-outline-warning btn-sm border-opacity-25 rounded-pill px-3 d-flex align-items-center" 
-                                style="font-size: 10px; height: 34px; box-shadow: 0 4px 15px rgba(255,152,0,0.15);" 
-                                onclick="interpretarSeccionDramatica('tension', 'tension-chart')">
-                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>ANALIZAR SECCIÓN CON IA
-                        </button>
-                    </div>
+                ${getSectionHeader('ritmo-chart', 'Ritmo Dramático e Ironía Narratológica', 'Correlación entre la velocidad de diálogos y el sentimiento de las acotaciones del autor.', 'fa-solid fa-bolt-lightning', 'ritmo')}
+                <div class="glass-panel p-4" style="min-height: 350px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
+                     <canvas id="ritmo-chart"></canvas>
                 </div>
+                <div id="ai-res-ritmo-chart" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 5. Tensión Dramática y Sincronía -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-8">
+                ${getSectionHeader('tension-chart', 'Cronología de la Tensión Dramática', 'Evolución emocional de la obra bloque a bloque.', 'fa-solid fa-wave-square', 'tension')}
                 <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
                      <canvas id="tension-chart"></canvas>
                 </div>
                 <div id="ai-res-tension-chart" class="mt-3" style="display: none;"></div>
             </div>
-            
+            <div class="col-md-4">
+                ${getSectionHeader('sync-matrix', 'Sincronía Emocional (Entrainment)', 'Parejas de personajes con mayor correlación afectiva en escena.', 'fa-solid fa-arrows-spin', 'sincronia')}
+                <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
+                     <div id="sync-list" style="max-height: 320px; overflow-y: auto;"></div>
+                </div>
+                <div id="ai-res-sync-matrix" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="row g-4">
             <div class="col-12 mt-4">
-                ${getSectionHeader('personajes-sentimiento-chart', 'Trayectoria Emocional por Personaje', 'Evolución del sentimiento individual para los protagonistas más relevantes (Filtrado activo).', 'fa-solid fa-person-rays', 'trayectoria')}
+                ${getSectionHeader('personajes-sentimiento-chart', 'Trayectoria Emocional por Personaje', 'Evolución del sentimiento individual para los protagonistas más relevantes.', 'fa-solid fa-person-rays', 'trayectoria')}
                 <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
                      <canvas id="personajes-sentimiento-chart"></canvas>
                 </div>
                 <div id="ai-res-personajes-sentimiento-chart" class="mt-3" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 5. Detalle de Bloque al pinchar -->
+        <div id="drama-block-detail" class="mt-4 animate__animated animate__fadeIn" style="display: none;">
+            <div class="glass-panel p-4" style="border-left: 4px solid #ff9800 !important; background: rgba(255, 152, 0, 0.05) !important;">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-10 pb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <h6 class="text-warning mb-0 fw-bold"><i class="fa-solid fa-file-lines me-2"></i>CONTEXTO DISCURSIVO</h6>
+                        <a id="drama-reader-btn" href="#" target="_blank" 
+                           class="btn btn-outline-warning btn-sm fw-bold px-3 py-1" 
+                           style="font-size: 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; background: rgba(255,152,0,0.1);">
+                            <i class="fa-solid fa-book-open me-2"></i>ABRIR EN LECTOR
+                        </a>
+                    </div>
+                    <button class="btn btn-sm btn-link text-muted p-0" onclick="document.getElementById('drama-block-detail').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="drama-block-text" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ds-text-main); line-height: 1.6; white-space: pre-wrap;"></div>
             </div>
         </div>
     </div>
@@ -3433,16 +3470,25 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     const labels = filteredTension.map(s => s.label);
     const dataTensionValues = filteredTension.map(s => s.sentimiento);
 
-    // 1. Tabla de Reparto
     const tableContainer = document.getElementById('drama-reparto-body');
     if (tableContainer) {
         tableContainer.innerHTML = filteredReparto.map(p => `
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td class="fw-bold py-3" style="color: var(--ds-accent);">${p.nombre}</td>
                 <td class="text-center font-monospace" style="color: ${textWhite};">${p.intervenciones || 0}</td>
-                <td class="text-center font-monospace" style="color: ${textWhite};">${(p.palabras || 0).toLocaleString()}</td>
+                <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras_por_intervencion || 0}</td>
+                <td class="small">
+                    ${(p.distinctive_words || []).map(w => `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 me-1 fw-bold" style="font-size: 10px !important;">${w}</span>`).join('')}
+                    <div class="mt-1 opacity-50" style="font-size: 9px;">
+                        Dominantes: ${(p.top_words || []).slice(0,3).map(w => typeof w === 'object' ? w.term : w).join(', ')}
+                    </div>
+                </td>
                 <td class="small opacity-75">
-                    ${(p.top_words || []).map(w => `<span class="badge border border-secondary border-opacity-25 text-muted me-1 fw-normal" style="font-size: 11px !important;">${w}</span>`).join('')}
+                    ${(p.top_frases || []).map(f => {
+                        const term = typeof f === 'object' ? f.term : f;
+                        const count = typeof f === 'object' ? f.count : '?';
+                        return `<span class="badge bg-sirio-dim me-1 fw-normal border border-secondary border-opacity-10" style="font-size: 10px; color: var(--ds-accent-primary); opacity: 0.8; font-style: italic; cursor: help;" title="Frecuencia: ${count} veces">"${term}"</span>`;
+                    }).join('')}
                 </td>
             </tr>
         `).join('');
@@ -3544,7 +3590,31 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                     y: { min: -1, max: 1, grid: { color: borderColor }, ticks: { color: textMuted } },
                     x: { grid: { display: false }, ticks: { color: textMuted, maxRotation: 45, minRotation: 45, font: { size: 10 } } }
                 },
-                plugins: { legend: { display: false } }
+                plugins: { legend: { display: false } },
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const block = filteredTension[idx];
+                        if (block && block.texto) {
+                            const detail = document.getElementById('drama-block-detail');
+                            const text = document.getElementById('drama-block-text');
+                                if (detail && text) {
+                                    detail.style.display = 'block';
+                                    
+                                    // Actualizar botón del lector en el header
+                                    const readerBtn = document.getElementById('drama-reader-btn');
+                                    if (readerBtn) readerBtn.href = `/noticias/lector?id=${block.doc_id}`;
+
+                                    // Mostrar todas las locuciones con formato
+                                    let html = (block.locuciones || []).map(l => `<span class="text-warning"><b>${l.p}:</b></span> ${l.t}`).join('<br>');
+                                    if (!html) html = block.texto; // Fallback if no locutions detected
+                                    
+                                    text.innerHTML = html;
+                                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -3559,7 +3629,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             type: 'line',
             data: {
                 labels: labels,
-                datasets: (data.reparto_detalle || []).slice(0, 6).map((p, i) => {
+                datasets: (data.reparto_detalle || []).slice(0, 10).map((p, i) => {
                     const fullArc = p.sentimiento_arc || [];
                     const filteredArc = indicesFiltrados.map(idx => fullArc[idx] !== undefined ? fullArc[idx] : null);
                     return {
@@ -3570,7 +3640,61 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                     };
                 })
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textWhite, font: { size: 10 } } } } }
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                plugins: { legend: { labels: { color: textWhite, font: { size: 10 } } } },
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const block = filteredTension[idx];
+                        if (block && block.texto) {
+                            const detail = document.getElementById('drama-block-detail');
+                            const text = document.getElementById('drama-block-text');
+                                if (detail && text) {
+                                    detail.style.display = 'block';
+                                    
+                                    // Actualizar botón del lector en el header
+                                    const readerBtn = document.getElementById('drama-reader-btn');
+                                    if (readerBtn) readerBtn.href = `/noticias/lector?id=${block.doc_id}`;
+
+                                    // Filtrar solo las líneas del personaje seleccionado
+                                    const datasetIdx = elements[0].datasetIndex;
+                                    const charName = e.chart.data.datasets[datasetIdx].label;
+                                    const upperChar = charName.toUpperCase();
+                                    
+                                    // Matching más flexible para identidades unificadas
+                                    const relevant = (block.locuciones || []).filter(l => {
+                                        const lp = l.p.toUpperCase();
+                                        return lp === upperChar || upperChar.includes(lp) || lp.includes(upperChar);
+                                    });
+                                    
+                                    let html = "";
+                                    if (relevant.length > 0) {
+                                        html = relevant.map(l => `<span class="text-warning"><b>${l.p}:</b></span> ${l.t}`).join('<br><br>');
+                                    } else {
+                                        // BÚSQUEDA INTELIGENTE DE MENCIONES (Fallback cuando el nodo existe por mención y no por habla)
+                                        const lines = block.texto.split('\n');
+                                        const mentions = lines.filter(line => line.toUpperCase().includes(upperChar));
+                                        if (mentions.length > 0) {
+                                            html = `<i class="text-muted small d-block mb-3 border-bottom border-warning border-opacity-10 pb-2">
+                                                        <i class="fa-solid fa-circle-info me-2"></i>No hay diálogos directos. El sistema interpreta su presencia por menciones en este bloque:
+                                                    </i>`;
+                                            html += mentions.map(m => {
+                                                const regex = new RegExp(`(${charName})`, 'gi');
+                                                return m.replace(regex, '<span class="text-warning fw-bold">$1</span>');
+                                            }).join('<br><br>');
+                                        } else {
+                                            html = `<i class="text-muted small"><i class="fa-solid fa-triangle-exclamation me-2"></i>No se detectaron diálogos ni menciones directas de <b>${charName}</b>. El sistema asigna el sentimiento base del contexto.</i>`;
+                                        }
+                                    }
+                                    
+                                    text.innerHTML = html;
+                                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -3642,6 +3766,72 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         };
         vegaEmbed('#heatmap-interacciones', spec, { actions: false });
     }
+
+    // 8. Ritmo Dramático y Acotaciones
+    const ctxR = document.getElementById('ritmo-chart');
+    if (ctxR && data.metricas_avanzadas) {
+        let chartR = Chart.getChart('ritmo-chart');
+        if (chartR) chartR.destroy();
+        const ritmoData = data.metricas_avanzadas.ritmo_bloques || [];
+        const filteredRitmo = indicesFiltrados.map(idx => ritmoData[idx]);
+        
+        new Chart(ctxR, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Velocidad de Intervención (Rhythm)',
+                        data: filteredRitmo.map(r => r ? r.intervenciones : 0),
+                        borderColor: '#ff9800',
+                        backgroundColor: 'rgba(255,152,0,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Sentimiento de Acotaciones (Author Intent)',
+                        data: filteredRitmo.map(r => r ? r.sent_acotaciones : 0),
+                        borderColor: '#2196f3',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: textMuted } },
+                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#2196f3' } },
+                    x: { grid: { display: false }, ticks: { color: textMuted, font: { size: 9 } } }
+                },
+                plugins: { legend: { labels: { color: textWhite, font: { size: 10 } } } }
+            }
+        });
+    }
+
+    // 9. Sincronía Emocional
+    const syncContainer = document.getElementById('sync-list');
+    if (syncContainer && data.metricas_avanzadas) {
+        const syncs = (data.metricas_avanzadas.sincronia_pares || []).sort((a, b) => b.score - a.score);
+        if (syncs.length > 0) {
+            syncContainer.innerHTML = syncs.map(s => `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded border border-warning border-opacity-10" style="background: rgba(255,152,0,0.1) !important;">
+                    <div class="small">
+                        <span class="fw-bold" style="color: var(--ds-text-main);">${s.p1}</span> 
+                        <i class="fa-solid fa-arrows-left-right mx-2 text-warning opacity-50"></i> 
+                        <span class="fw-bold" style="color: var(--ds-text-main);">${s.p2}</span>
+                    </div>
+                    <div class="badge bg-warning text-dark font-monospace" style="font-size: 10px;">${Math.round(s.score * 100)}%</div>
+                </div>
+            `).join('');
+        } else {
+            syncContainer.innerHTML = '<div class="text-center text-muted small py-5">No hay datos de sincronía suficientes en este rango.</div>';
+        }
+    }
 };
 
 /**
@@ -3656,8 +3846,8 @@ window.interpretarSeccionDramatica = function(seccion, chartId) {
 
     // UX: Loading
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `<div class="p-3 border border-warning border-opacity-20 rounded bg-warning bg-opacity-10 text-warning small">
-        <span class="spinner-border spinner-border-sm me-2"></span>Analizando ${seccion} con IA...
+    resultDiv.innerHTML = `<div class="p-3 border border-warning border-opacity-20 rounded bg-warning bg-opacity-10" style="color: var(--ds-text-main) !important;">
+        <span class="spinner-border spinner-border-sm me-2 text-warning"></span>Analizando <b class="text-warning">${seccion}</b> con IA...
     </div>`;
 
     // Filtros
@@ -3677,6 +3867,10 @@ window.interpretarSeccionDramatica = function(seccion, chartId) {
         chartDataToSend = (data.reparto_detalle || []).slice(0, 8).map(p => ({ nombre: p.nombre, presencia: p.presencia_matriz }));
     } else if (seccion === 'trayectoria') {
         chartDataToSend = (data.reparto_detalle || []).slice(0, 5).map(p => ({ nombre: p.nombre, sentimiento_arc: p.sentimiento_arc }));
+    } else if (seccion === 'ritmo') {
+        chartDataToSend = data.metricas_avanzadas.ritmo_bloques || [];
+    } else if (seccion === 'sincronia') {
+        chartDataToSend = data.metricas_avanzadas.sincronia_pares || [];
     }
 
     fetch('/api/analisis/dramatico/interpretar', {
@@ -3722,11 +3916,11 @@ window.generarInformeDramaticoIA = function() {
     container.style.display = 'block';
     container.innerHTML = `
         <div class="glass-panel p-4 mb-4 border-warning border-opacity-25" style="background: rgba(255,152,0,0.05);">
-            <div class="d-flex align-items-center text-warning">
-                <div class="spinner-border spinner-border-sm me-3" role="status"></div>
-                <div class="fw-bold small" style="letter-spacing: 1px;">GENERANDO INFORME NARRATOLÓGICO CON IA...</div>
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-3 text-warning" role="status"></div>
+                <div class="fw-bold small" style="letter-spacing: 1px; color: var(--ds-text-main);">GENERANDO INFORME NARRATOLÓGICO CON IA...</div>
             </div>
-            <div class="mt-2 text-muted small">Esto puede tardar unos segundos mientras Gemini analiza los actos y personajes.</div>
+            <div class="mt-2 small opacity-75" style="color: var(--ds-text-main);">Esto puede tardar unos segundos mientras Gemini analiza los actos y personajes.</div>
         </div>
     `;
 
@@ -3780,10 +3974,10 @@ window.refrescarAnalisisDramatico = function() {
     if (!container) return;
     
     container.innerHTML = `
-        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 400px;">
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 400px; color: var(--ds-text-main);">
             <div class="spinner-border text-warning mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-            <h5 class="text-accent animate__animated animate__pulse animate__infinite">RECALCULANDO ANÁLISIS DRAMÁTICO...</h5>
-            <p class="text-muted small">Ignorando caché y re-procesando diálogos para actualizar estadísticas.</p>
+            <h5 class="fw-bold animate__animated animate__pulse animate__infinite" style="color: var(--ds-accent-primary);">RECALCULANDO ANÁLISIS DRAMÁTICO...</h5>
+            <p class="small opacity-75">Ignorando caché y re-procesando diálogos para actualizar estadísticas.</p>
         </div>
     `;
 

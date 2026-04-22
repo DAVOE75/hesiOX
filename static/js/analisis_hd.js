@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="mt-5">
                     <div class="hd-metric-label mb-4">Principales Agentes de Información (Brokers)</div>
                     <div class="row g-3">
-                        ${data.nodos.slice(0, 6).map(n => `
+                        ${data.nodos.slice(0, 10).map(n => `
                             <div class="col-md-2">
                                 <div class="p-3 bg-dark-sirio rounded text-center" style="background: ${cardBg} !important; border-color: ${borderColor} !important;">
                                     <div class="hd-metric-value mb-1" style="color: var(--ds-accent-primary)">${n.influence || n.influencia}</div>
@@ -743,14 +743,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const cardBg = light ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.15)';
         const borderColor = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
 
-        // Generar filas para la tabla de reparto
         const tableRows = (data.reparto_detalle || []).map(p => `
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <td class="fw-bold py-3" style="color: var(--ds-accent);">${p.nombre}</td>
                 <td class="text-center font-monospace" style="color: ${textWhite};">${p.intervenciones}</td>
-                <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras.toLocaleString()}</td>
+                <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras_por_intervencion || 0}</td>
+                <td class="small">
+                    ${(p.distinctive_words || []).map(w => `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 me-1 fw-bold" style="font-size: 10px !important;">${w}</span>`).join('')}
+                    <div class="mt-1 opacity-50" style="font-size: 9px; color: ${textMuted} !important;">
+                        Dominantes: ${(p.top_words || []).slice(0,3).map(w => w.term || w).join(', ')}
+                    </div>
+                </td>
                 <td class="small opacity-75">
-                    ${(p.top_words || []).map(w => `<span class="badge border border-secondary border-opacity-25 text-muted me-1 fw-normal">${w}</span>`).join('')}
+                    ${(p.top_frases || []).map(f => {
+                        const term = typeof f === 'object' ? f.term : f;
+                        const count = typeof f === 'object' ? f.count : '?';
+                        return `<span class="badge bg-sirio-dim me-1 fw-normal border border-secondary border-opacity-10" style="font-size: 10px; color: var(--ds-accent-primary); opacity: 0.8; font-style: italic; cursor: help;" title="Frecuencia: ${count} veces">"${term}"</span>`;
+                    }).join('')}
                 </td>
             </tr>
         `).join('');
@@ -808,8 +817,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <tr class="small text-muted border-bottom border-secondary border-opacity-25" style="font-size: 10px; letter-spacing: 0.5px;">
                                     <th>PERSONAJE / ACTOR</th>
                                     <th class="text-center">ESCENAS/INTERV.</th>
-                                    <th class="text-center">TOT. PALABRAS</th>
-                                    <th>VOCABULARIO DOMINANTE</th>
+                                    <th class="text-center">PAL./INT.</th>
+                                    <th>IDENTIDAD LINGÜÍSTICA (ZETA)</th>
+                                    <th>FRASES REPETIDAS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -819,11 +829,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
-                <!-- Tensión Dramática -->
-                <div class="col-12 mt-5">
-                    <h5 class="hd-metric-label mb-3">Cronología de la Tensión Dramática (Sentimiento)</h5>
-                    <div class="card-panel-hd p-4" style="min-height: 350px; background: rgba(0,0,0,0.1) !important;">
-                         <canvas id="tension-chart"></canvas>
+                <div id="drama-block-detail" class="mt-4 animate__animated animate__fadeIn" style="display: none;">
+                    <div class="glass-panel p-4" style="border-left: 4px solid #ff9800 !important; background: rgba(255, 152, 0, 0.05) !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-10 pb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <h6 class="text-warning mb-0 fw-bold"><i class="fa-solid fa-file-lines me-2"></i>CONTEXTO DISCURSIVO</h6>
+                                <a id="drama-reader-btn" href="#" target="_blank" 
+                                   class="btn btn-outline-warning btn-sm fw-bold px-3 py-1" 
+                                   style="font-size: 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; background: rgba(255,152,0,0.1);">
+                                    <i class="fa-solid fa-book-open me-2"></i>ABRIR EN LECTOR
+                                </a>
+                            </div>
+                            <button class="btn btn-sm btn-link text-muted p-0" onclick="document.getElementById('drama-block-detail').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div id="drama-block-text" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ds-text-main); line-height: 1.6; white-space: pre-wrap;"></div>
                     </div>
                 </div>
             </div>
@@ -919,6 +938,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         callbacks: {
                             afterLabel: function(context) {
                                 return `Obra: ${data.tension[context.dataIndex].titulo_obra}`;
+                            }
+                        }
+                    }
+                },
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const block = data.tension[idx];
+                        if (block && block.texto) {
+                            const detail = document.getElementById('drama-block-detail');
+                            const text = document.getElementById('drama-block-text');
+                            if (detail && text) {
+                                detail.style.display = 'block';
+                                
+                                // Actualizar botón del lector en el header
+                                const readerBtn = document.getElementById('drama-reader-btn');
+                                if (readerBtn) readerBtn.href = `/noticias/lector?id=${block.doc_id}`;
+
+                                // Mostrar todas las locuciones con formato
+                                let html = (block.locuciones || []).map(l => `<span class="text-warning"><b>${l.p}:</b></span> ${l.t}`).join('<br>');
+                                if (!html) html = block.texto;
+                                
+                                text.innerHTML = html;
+                                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
                         }
                     }

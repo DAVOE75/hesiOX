@@ -1744,12 +1744,17 @@ class AnalisisAvanzado:
                 reparto_list = [p.upper().strip() for p in re.split(r'[,;]', reparto_meta) if p.strip()]
                 personajes_detectados.update([p for p in reparto_list if len(p) > 1])
             
-            contenido = pub.get('contenido', '') or ''
+            contenido_raw = pub.get('contenido', '') or ''
             titulo = pub.get('titulo', 'Obra sin título')
             
+            # LIMPIEZA DE HTML (Crucial para detección por línea ^)
+            contenido = re.sub(r'<(?:p|br|div|h\d)[^>]*?>', '\n', contenido_raw)
+            contenido = re.sub(r'<[^>]*?>', '', contenido)
+            contenido = contenido.replace('&nbsp;', ' ').replace('&quot;', '"').replace('&apos;', "'")
+            
             # Intentar detectar personajes por formato (NOMBRE: o NOMBRE.-)
-            # Soporta espacios y múltiples signos de puntuación como separadores
-            nombres_formato = re.findall(r'^\s*([A-ZÁÉÍÓÚÑ\. ]{2,30})\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
+            # Soporta espacios, múltiples signos de puntuación y nombres con aclaraciones (apartes)
+            nombres_formato = re.findall(r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
             personajes_detectados.update([n.upper().strip() for n in nombres_formato if len(n.strip()) > 1])
             
             # Fallback extraction: If section/volume are empty, try finding Roman/Arabic nuggets in Title or Keywords
@@ -1757,11 +1762,11 @@ class AnalisisAvanzado:
             escenas_val = pub.get('volumen')
             
             if not actos_val:
-                match_a = re.search(r'(?i)(?:ACTO|A)\.?\s*([IVXLCDM\d]+)', f"{titulo} {reparto_meta}")
+                match_a = re.search(r'(?i)(?:ACTO|A)\.?\s*([IVXLCDM\d]+)\b', f"{titulo} {reparto_meta}")
                 if match_a: actos_val = match_a.group(1).upper()
             
             if not escenas_val:
-                match_e = re.search(r'(?i)(?:ESCENA|E)\.?\s*([IVXLCDM\d]+)', f"{titulo} {reparto_meta}")
+                match_e = re.search(r'(?i)(?:ESCENA|E)\.?\s*([IVXLCDM\d]+)\b', f"{titulo} {reparto_meta}")
                 if match_e: escenas_val = match_e.group(1).upper()
 
             obras_analizadas.append({
@@ -1882,15 +1887,25 @@ class AnalisisAvanzado:
         }
         
         for obra in obras_analizadas:
-            texto = obra['contenido']
-            # Dividir por escenas/actos si hay marcadores (Mejorado para ignorar texto irrelevante)
-            bloques_raw = re.split(r'(?i)(ACTO|ESCENA|CUADRO)\s+\w+', texto)
+            contenido_raw = obra['contenido']
+            # Re-limpiar por si acaso (obras_analizadas guarda el contenido original)
+            texto = re.sub(r'<(?:p|br|div|h\d)[^>]*?>', '\n', contenido_raw)
+            texto = re.sub(r'<[^>]*?>', '', texto)
+            texto = texto.replace('&nbsp;', ' ').replace('&quot;', '"').replace('&apos;', "'")
+            # Dividir por escenas/actos si hay marcadores internos (regex mejorada)
+            bloques_raw = re.split(r'(?i)(?:ACTO|ESCENA|CUADRO)\s+[IVXLCDM\d]+', texto)
+            bloques_candidatos = [b for b in bloques_raw if b and len(b.strip()) > 15]
             
-            # Si no detectamos bloques, usamos párrafos
-            if len(bloques_raw) < 2:
-                bloques = [b for b in texto.split('\n\n') if b.strip()]
+            # Decidir estrategia de granularidad
+            if len(bloques_candidatos) > 1:
+                # Si hay marcadores internos, los usamos
+                bloques = bloques_candidatos
+            elif len(obras_analizadas) > 1:
+                # Si estamos analizando varias publicaciones/escenas, cada una es un bloque único
+                bloques = [texto]
             else:
-                bloques = [b for b in bloques_raw if b and len(b.strip()) > 10]
+                # Si es una única obra y no tiene marcadores, dividimos por párrafos con un umbral de ruido
+                bloques = [b for b in texto.split('\n\n') if len(b.strip()) > 50]
                 
             for idx, bloque in enumerate(bloques):
                 # Sentiment del bloque
@@ -1911,66 +1926,57 @@ class AnalisisAvanzado:
                 else:
                     label_bloque = f"Esc.{idx+1}" if len(bloques) > 1 else obra['titulo'][:15]
                 
+                # Extraer locuciones para este bloque (diálogos) con regex robusta
+                # Soporta multi-línea, varios formatos de guion y aclaraciones en el nombre (apartes)
+                regex_loc = r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}\s*(.*?)((?=\n\s*[A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?\s*[:\.\-]{1,3})|\Z)'
+                matches_loc = list(re.finditer(regex_loc, bloque, re.MULTILINE | re.DOTALL))
+                
+                presentes_en_bloque = set()
+                sentimiento_locuciones_bloque = defaultdict(list)
+                locuciones_data = [] # Para el panel de contexto frontend
+
+                for m in matches_loc:
+                    # Limpieza del nombre (quitar apartes entre paréntesis) y resolución de alias
+                    raw_p = re.sub(r'\(.*?\)', '', m.group(1)).upper().strip()
+                    raw_p = re.sub(r'[^A-ZÁÉÍÓÚÑ ]', '', raw_p).strip()
+                    nombre_p = resolver_alias(raw_p, aliases)
+                    
+                    if nombre_p not in personajes_finales:
+                        norm_p = self._normalizar_personaje(raw_p)
+                        nombre_p = resolver_alias(norm_p, aliases)
+                        if nombre_p not in personajes_finales and norm_p in mapa_roles_inteligente:
+                            nombre_p = mapa_roles_inteligente[norm_p]
+
+                    # UNIFICACIÓN DEFINITIVA
+                    p_final = self.find_identity(nombre_p, reparto_identities) if 'reparto_identities' in locals() else nombre_p
+                    
+                    if p_final in personajes_finales:
+                        texto_p = m.group(2).strip()
+                        presentes_en_bloque.add(p_final)
+                        personajes_stats[p_final]['texto'].append(texto_p)
+                        personajes_stats[p_final]['intervenciones'] += 1
+                        personajes_stats[p_final]['palabras'] += len(re.findall(r'\b\w+\b', texto_p))
+                        
+                        sent_loc = self._calcular_sentimiento(texto_p)
+                        sentimiento_locuciones_bloque[p_final].append(sent_loc['polaridad'])
+                        
+                        # Guardar para el panel de contexto (mismo nombre que la gráfica)
+                        locuciones_data.append({'p': p_final, 't': texto_p})
+
+                # Ahora sí, guardamos la tensión dramática con los datos sincronizados
                 tension_dramatica.append({
                     'label': label_bloque,
                     'sentimiento': sent_bloque['polaridad'],
                     'subjetividad': sent_bloque['subjetividad'],
                     'titulo_obra': obra['titulo'],
+                    'doc_id': obra['id'],
                     'acto': acto,
-                    'escena': escena
+                    'escena': escena,
+                    'texto': bloque,
+                    'locuciones': locuciones_data
                 })
-                
-                # Personajes en este bloque (Locuciones)
-                # Regex mejorada: permite espacios antes/después, puntos, guiones y colon
-                # Soporta formatos como 'SIMÓN.-', 'DON JUAN :', 'DON JUAN -'
-                regex_loc = r'^\s*([A-ZÁÉÍÓÚÑ\. ]{2,30})\s*[:\.\-]{1,3}\s*(.*?)((?=\n\s*[A-ZÁÉÍÓÚÑ\. ]{2,30}\s*[:\.\-]{1,3})|\Z)'
-                matches_loc = list(re.finditer(regex_loc, bloque, re.MULTILINE | re.DOTALL))
-                presentes_en_bloque = set()
-                sentimiento_locuciones_bloque = defaultdict(list)
 
-                for m in matches_loc:
-                    # Limpieza agresiva del nombre: quitar todo lo que no sea letras o espacios
-                    raw_p = re.sub(r'[^A-ZÁÉÍÓÚÑ ]', '', m.group(1).upper()).strip()
-                    nombre_p = resolver_alias(raw_p, aliases)
-                    
-                    # Si no resuelve, intentar resolver por rol inteligente (substring)
-                    if nombre_p not in personajes_finales:
-                        norm_p = self._normalizar_personaje(raw_p)
-                        nombre_p = resolver_alias(norm_p, aliases)
-                        
-                        # Fallback a roles (ej: VIUDA -> LA VIUDA)
-                        if nombre_p not in personajes_finales and norm_p in mapa_roles_inteligente:
-                            candidato = mapa_roles_inteligente[norm_p]
-                            if candidato: 
-                                nombre_p = candidato
-
-                    # Guardar grupo (primera obra donde aparece)
-                    if nombre_p in personajes_finales and nombre_p not in personaje_a_grupo:
-                        personaje_a_grupo[nombre_p] = obra.get('publicacion_id', 0)
-                    
-                    texto_p = m.group(2).strip()
-                    
-                    if nombre_p in personajes_finales:
-                        presentes_en_bloque.add(nombre_p)
-                        personajes_stats[nombre_p]['texto'].append(texto_p)
-                        personajes_stats[nombre_p]['intervenciones'] += 1
-                        personajes_stats[nombre_p]['palabras'] += len(re.findall(r'\b\w+\b', texto_p))
-                        
-                        sent_loc = self._calcular_sentimiento(texto_p)
-                        sentimiento_locuciones_bloque[nombre_p].append(sent_loc['polaridad'])
-
-                # Fallback: Búsqueda por mención si no hay locuciones detectadas o para complementar la red
-                for p_canonical in personajes_finales:
-                    if p_canonical in presentes_en_bloque:
-                        continue
-                    
-                    # Buscar cualquiera de sus variantes conocidas
-                    for variante in mapeo_variantes[p_canonical]:
-                        if re.search(r'\b' + re.escape(variante) + r'\b', bloque, re.IGNORECASE):
-                            presentes_en_bloque.add(p_canonical)
-                            break
-                
-                # Incrementar protagonismo global
+                # Incrementar protagonismo global (basado únicamente en intervenciones reales)
                 for p in presentes_en_bloque:
                     protagonismo[p] += 1
                 
@@ -1983,6 +1989,10 @@ class AnalisisAvanzado:
                             coocurrencias[par] += 1
                             
                 # Guardar presencia y sentimiento detallado por bloque (Sincronizado)
+                # Extraer acotaciones (texto que no es diálogo)
+                acotaciones_bloque = re.sub(r'^\s*[A-ZÁÉÍÓÚÑ\. ]{2,30}\s*[:\.\-]{1,3}\s*.*', '', bloque, flags=re.MULTILINE).strip()
+                sent_acotaciones = self._calcular_sentimiento(acotaciones_bloque) if acotaciones_bloque else None
+
                 for p in personajes_finales:
                     if p in presentes_en_bloque:
                         personajes_stats[p]['presencia_por_bloque'].append(1)
@@ -1992,6 +2002,15 @@ class AnalisisAvanzado:
                     else:
                         personajes_stats[p]['presencia_por_bloque'].append(0)
                         personajes_stats[p]['sentimiento_por_bloque'].append(None) # No presente
+                
+                # Guardar info de bloque para análisis de ritmo y acotaciones
+                if 'ritmo_bloques' not in locals(): ritmo_bloques = []
+                ritmo_bloques.append({
+                    'label': label_bloque,
+                    'intervenciones': len(matches_loc),
+                    'sent_acotaciones': sent_acotaciones['polaridad'] if sent_acotaciones else 0,
+                    'texto_acotaciones': acotaciones_bloque[:200]
+                })
 
         # Finalizar Stats Detallados
         detalles_reparto = []
@@ -2000,27 +2019,89 @@ class AnalisisAvanzado:
                 s = personajes_stats[p]
                 texto_unido = " ".join(s['texto'])
                 palabras_f = [w.lower() for w in re.findall(r'\b[a-záéíóúñü]{3,}\b', texto_unido) if w.lower() not in self.stopwords_es]
-                top_words = [w for w, _ in Counter(palabras_f).most_common(10)]
                 
+                # Extraer frases más repetidas (Trigramas y Bigramas)
+                texto_limpio_frases = re.sub(r'[^\w\s]', ' ', texto_unido.lower())
+                tokens_frases = texto_limpio_frases.split()
+                
+                trigramas = [" ".join(tokens_frases[i:i+3]) for i in range(len(tokens_frases)-2)]
+                bigramas = [" ".join(tokens_frases[i:i+2]) for i in range(len(tokens_frases)-1)]
+                
+                def es_frase_relevante(f):
+                    words = f.split()
+                    if len(words) < 2: return False
+                    if all(w in self.stopwords_es for w in words): return False
+                    if len(f) < 8: return False
+                    return True
+                
+                all_ngrams = trigramas + bigramas
+
+                # Vocabulario dominante con frecuencias
+                word_counts = Counter(palabras_f).most_common(10)
+                top_words = [{'term': w, 'count': c} for w, c in word_counts]
+                
+                # Frases más repetidas con frecuencias
+                all_ngrams_counts = Counter(all_ngrams).most_common(60)
+                top_frases_data = []
+                for f, count in all_ngrams_counts:
+                    if es_frase_relevante(f):
+                        top_frases_data.append({'term': f, 'count': count})
+                top_frases = top_frases_data[:5]
+                
+                # Métricas Avanzadas: Distinctiveness (Simplificado Zeta)
+                # Palabras que este personaje usa mucho y los demás NO
+                otros_textos = " ".join([" ".join(personajes_stats[op]['texto']) for op in personajes_finales if op != p])
+                otros_words = set([w.lower() for w in re.findall(r'\b[a-záéíóúñü]{3,}\b', otros_textos) if w.lower() not in self.stopwords_es])
+                distinctive_words = [w['term'] for w in top_words if w['term'] not in otros_words][:5]
+
                 detalles_reparto.append({
                     'nombre': p,
                     'palabras': s['palabras'],
                     'intervenciones': s['intervenciones'],
+                    'palabras_por_intervencion': round(s['palabras'] / s['intervenciones'], 1) if s['intervenciones'] > 0 else 0,
                     'top_words': top_words,
+                    'distinctive_words': distinctive_words,
+                    'top_frases': top_frases,
                     'presencia_matriz': s['presencia_por_bloque'],
                     'sentimiento_arc': s['sentimiento_por_bloque']
                 })
         
-        # Purgar personajes sin intervenciones (Filtrado estricto de ruido)
-        # Siempre purgamos personajes que tengan 0 palabras reales detectadas, ya que son ruido
-        nombres_con_palabras = [p for p in personajes_finales if personajes_stats[p].get('palabras', 0) > 0]
-        personajes_finales = [p for p in personajes_finales if p in nombres_con_palabras]
-        detalles_reparto = [d for d in detalles_reparto if d['nombre'] in nombres_con_palabras]
+        # Sincronía Emocional (Correlación de Arcos)
+        sincronia_pares = []
+        for i in range(len(detalles_reparto)):
+            for j in range(i + 1, len(detalles_reparto)):
+                p1 = detalles_reparto[i]
+                p2 = detalles_reparto[j]
+                arc1 = [v for v in p1['sentimiento_arc'] if v is not None]
+                arc2 = [v for v in p2['sentimiento_arc'] if v is not None]
+                # Correlación simple si coinciden en suficientes bloques
+                if len(arc1) > 5 and len(arc2) > 5:
+                    # Encontrar bloques comunes
+                    comunes = [(p1['sentimiento_arc'][k], p2['sentimiento_arc'][k]) 
+                               for k in range(len(p1['sentimiento_arc'])) 
+                               if p1['sentimiento_arc'][k] is not None and p2['sentimiento_arc'][k] is not None]
+                    if len(comunes) > 3:
+                        v1 = [c[0] for c in comunes]
+                        v2 = [c[1] for c in comunes]
+                        # Mock de correlación (tendencia)
+                        corr = 1.0 if all((v1[m] > 0) == (v2[m] > 0) for m in range(len(v1))) else 0.5
+                        sincronia_pares.append({
+                            'p1': p1['nombre'],
+                            'p2': p2['nombre'],
+                            'score': round(corr, 2)
+                        })
+
+        # Purgar personajes sin intervenciones reales (Filtrado estricto de ruido post-análisis)
+        detalles_reparto = [d for d in detalles_reparto if d['intervenciones'] > 0]
+        nombres_activos = set([d['nombre'] for d in detalles_reparto])
+        personajes_finales = [p for p in personajes_finales if p in nombres_activos]
 
         # Ordenar reparto por volumen de palabras
         detalles_reparto.sort(key=lambda x: x['palabras'], reverse=True)
 
         # Formatear Red (Vis.js)
+        nodos = []
+        enlaces = []
         for p in personajes_finales:
             if protagonismo[p] > 0:
                 nodos.append({
@@ -2054,7 +2135,11 @@ class AnalisisAvanzado:
             'reparto_detalle': detalles_reparto,
             'interacciones_heatmap': interacciones_heatmap,
             'personajes': sorted(protagonismo.items(), key=lambda x: x[1], reverse=True)[:15],
-            'total_personajes': len(nodos)
+            'total_personajes': len(nodos),
+            'metricas_avanzadas': {
+                'ritmo_bloques': ritmo_bloques if 'ritmo_bloques' in locals() else [],
+                'sincronia_pares': sincronia_pares if 'sincronia_pares' in locals() else []
+            }
         }
 
 
