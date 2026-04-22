@@ -1971,7 +1971,13 @@
     }
 
     async function recalcularFrecuenciaIndividual(nombre) {
-        if (!confirm(`¿Recalcular frecuencia para "${nombre}" en todo el corpus?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: 'RECALCULAR FRECUENCIA',
+            text: `¿Recalcular frecuencia para "${nombre}" en todo el corpus?`,
+            confirmText: 'RECALCULAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         SirioNotifications.info(`Recalculando "${nombre}"...`);
         try {
             const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
@@ -1991,7 +1997,12 @@
     }
 
     async function limpiarReferenciasIndividual(nombre) {
-        if (!confirm(`¿Borrar todas las referencias de "${nombre}" en este proyecto?\nLas frecuencias se pondrán a 0.`)) return;
+        const confirmed = await hesioxConfirm({
+            title: 'LIMPIAR REFERENCIAS',
+            text: `¿Borrar todas las referencias de "${nombre}" en este proyecto?\nLas frecuencias se pondrán a 0.`,
+            confirmText: 'LIMPIAR'
+        });
+        if (!confirmed) return;
         try {
             const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
                 method: 'POST',
@@ -2013,7 +2024,12 @@
         const checked = document.querySelectorAll('.loc-select-row:checked');
         if (checked.length === 0) return;
         const nombres = Array.from(checked).map(c => c.dataset.nombre);
-        if (!confirm(`¿Limpiar frecuencias de ${nombres.length} ubicaciones seleccionadas?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: 'LIMPIEZA MASIVA',
+            text: `¿Limpiar frecuencias de ${nombres.length} ubicaciones seleccionadas?`,
+            confirmText: 'LIMPIAR'
+        });
+        if (!confirmed) return;
 
         try {
             const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
@@ -2447,7 +2463,12 @@
     }
 
     async function borrarUbicacion(nombre) {
-        if (!confirm(`¿Borrar "${nombre}"?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿BORRAR UBICACIÓN?',
+            text: `¿Borrar "${nombre}"?`,
+            confirmText: 'BORRAR'
+        });
+        if (!confirmed) return;
         try {
             await fetch("{{ url_for('noticias.gestion_borrar_ubicacion') }}", {
                 method: 'POST',
@@ -2490,7 +2511,7 @@
         } catch (e) { console.error(e); }
     }
 
-    function toggleVinculacionRow(el) {
+    async function toggleVinculacionRow(el) {
         const tr = el.closest('tr');
         const nombre = tr.dataset.nombre;
         const loc = _currentLocData.find(l => l.nombre === nombre);
@@ -2501,12 +2522,26 @@
         
         if (isVinculada) {
             // Desvincular (marcar como borrado)
-            if (!confirm(`¿Desvincular "${nombre}" de este proyecto?\n\n• La ubicación es real pero NO aparecerá en el mapa de este proyecto\n• Útil si fue mencionada por otro motivo (nombre de barco, persona, etc.)\n• Se mantiene en BD global para reconocimiento futuro`)) return;
-            ejecutarDesvincularIndividual(nombre);
+            const confirmed = await hesioxConfirm({
+                title: '¿DESVINCULAR UBICACIÓN?',
+                text: `¿Desvincular "${nombre}" de este proyecto?\n\n• La ubicación es real pero NO aparecerá en el mapa de este proyecto\n• Útil si fue mencionada por otro motivo (nombre de barco, persona, etc.)\n• Se mantiene en BD global para reconocimiento futuro`,
+                confirmText: 'DESVINCULAR',
+                confirmColor: 'var(--ds-accent-primary, #ff9800)'
+            });
+            if (confirmed) {
+                ejecutarDesvincularIndividual(nombre);
+            }
         } else {
             // Vincular (restaurar)
-            if (!confirm(`¿Vincular "${nombre}" a este proyecto?\n\n• La ubicación volverá a aparecer en el mapa corpus\n• Solo si es realmente una ubicación geográfica en este contexto`)) return;
-            ejecutarVincularIndividual(nombre);
+            const confirmed = await hesioxConfirm({
+                title: '¿VINCULAR UBICACIÓN?',
+                text: `¿Vincular "${nombre}" a este proyecto?\n\n• La ubicación volverá a aparecer en el mapa corpus\n• Solo si es realmente una ubicación geográfica en este contexto`,
+                confirmText: 'VINCULAR',
+                confirmColor: 'var(--ds-accent-primary, #ff9800)'
+            });
+            if (confirmed) {
+                ejecutarVincularIndividual(nombre);
+            }
         }
     }
 
@@ -2586,57 +2621,17 @@
         }
     }
 
-    function limpiarReferenciasIndividualRow(el) {
-        limpiarReferenciasIndividual(el.closest('tr').dataset.nombre);
-    }
-
-    async function limpiarReferenciasIndividual(nombre) {
-        if (!confirm(`¿Borrar todas las referencias de "${nombre}" en este proyecto?\nLas frecuencias se pondrán a 0.`)) return;
-        try {
-            const resp = await fetch("{{ url_for('noticias.gestion_limpiar_referencias') }}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
-                body: JSON.stringify({ nombre: nombre })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                SirioNotifications.success(`Limpiadas ${data.affected} referencias de "${nombre}".`);
-                actualizarTablaUbicaciones();
-            }
-        } catch (e) {
-            console.error(e);
-            SirioNotifications.error("Error al limpiar referencias.");
-        }
-    }
-
-    function recalcularFrecuenciaIndividualRow(el) {
-        recalcularFrecuenciaIndividual(el.closest('tr').dataset.nombre);
-    }
-
-    async function recalcularFrecuenciaIndividual(nombre) {
-        if (!confirm(`¿Recalcular frecuencia para "${nombre}" en todo el corpus?`)) return;
-        SirioNotifications.info(`Recalculando "${nombre}"...`);
-        try {
-            const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
-                body: JSON.stringify({ nombres: [nombre] })
-            });
-            const data = await res.json();
-            if (data.success) {
-                SirioNotifications.success(`"${nombre}" actualizado.`);
-                actualizarTablaUbicaciones();
-            }
-        } catch (e) {
-            console.error(e);
-            SirioNotifications.error("Error al recalcular frecuencia.");
-        }
-    }
 
     // NER / Batch Processing
     async function ejecutarGeocodificacionMasiva() {
         if (window._batchRunning) return;
-        if (!confirm("¿Iniciar NER base? Buscará ciudades en el corpus y las geocodificará.")) return;
+        const confirmed = await hesioxConfirm({
+            title: 'NER BASE',
+            text: "¿Iniciar NER base? Buscará ciudades en el corpus y las geocodificará.",
+            confirmText: 'INICIAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
 
         const btn = document.querySelector('button[onclick="ejecutarGeocodificacionMasiva()"]');
         const statusContainer = document.getElementById('batch-geocoding-status');
@@ -2682,7 +2677,13 @@
     async function ejecutarGeocodificacionIA() {
         if (window._batchRunning) return;
         const power = document.getElementById('sel-potencia-geocoding').value;
-        if (!confirm(`¿Iniciar NER Avanzado (${power})? Refinará las entidades con modelos de lenguaje.`)) return;
+        const confirmed = await hesioxConfirm({
+            title: 'IA AVANZADA',
+            text: `¿Iniciar NER Avanzado (${power})? Refinará las entidades con modelos de lenguaje.`,
+            confirmText: 'INICIAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
 
         const btn = document.querySelector('button[onclick="ejecutarGeocodificacionIA()"]');
         const statusContainer = document.getElementById('batch-geocoding-status');
@@ -2723,7 +2724,13 @@
     }
 
     async function rebuscarTodasUbicaciones() {
-        if (!confirm("¿Sincronización Global? Recalculará las frecuencias de menciones para cada punto en todo el corpus.")) return;
+        const confirmed = await hesioxConfirm({
+            title: 'SINCRONIZACIÓN GLOBAL',
+            text: "¿Sincronización Global? Recalculará las frecuencias de menciones para cada punto en todo el corpus.",
+            confirmText: 'RECALCULAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         try {
             const res = await fetch("{{ url_for('noticias.api_rebuscar_batch_ubicaciones') }}", {
                 method: 'POST',
@@ -2736,7 +2743,13 @@
     }
 
     async function unificarDuplicadosCaja() {
-        if (!confirm("¿Unificar Mayúsculas? Agrupará automáticamente entidades duplicadas por capitalización (ej: 'MADRID' y 'Madrid').")) return;
+        const confirmed = await hesioxConfirm({
+            title: 'UNIFICAR MAYÚSCULAS',
+            text: "¿Unificar Mayúsculas? Agrupará automáticamente entidades duplicadas por capitalización (ej: 'MADRID' y 'Madrid').",
+            confirmText: 'UNIFICAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         try {
             const res = await fetch("{{ url_for('noticias.api_unificar_duplicados') }}", {
                 method: 'POST',
@@ -2840,7 +2853,13 @@
     }
 
     async function ejecutarDesverificacionGlobal() {
-        if (!confirm("¿Desverificación Masiva? Todas las ubicaciones (activas y borradas) volverán a estado 'Pendiente'.")) return;
+        const confirmed = await hesioxConfirm({
+            title: 'DESVERIFICACIÓN MASIVA',
+            text: "¿Desverificación Masiva? Todas las ubicaciones (activas y borradas) volverán a estado 'Pendiente'.",
+            confirmText: 'RESTABLECER',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         try {
             const res = await fetch("{{ url_for('noticias.api_batch_verificar_ubicaciones') }}", {
                 method: 'POST',
@@ -2863,7 +2882,12 @@
             return;
         }
 
-        if (!confirm(`¿Borrar y añadir a lista negra ${nombres.length} ubicaciones seleccionadas?\n(No volverán a aparecer en futuros procesamientos NER)`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿BORRADO MASIVO?',
+            text: `¿Borrar y añadir a lista negra ${nombres.length} ubicaciones seleccionadas?\n(No volverán a aparecer en futuros procesamientos NER)`,
+            confirmText: 'SÍ, BORRAR TODO'
+        });
+        if (!confirmed) return;
 
         SirioNotifications.info(`Borrando ${nombres.length} ubicaciones...`);
 
@@ -2894,8 +2918,13 @@
             return;
         }
 
-        if (!confirm(`¿Desvincular (Borrar del proyecto actual) ${nombres.length} ubicaciones seleccionadas?\n(A diferencia de 'Borrar', NO se añadirán a la lista negra global)`)) return;
-
+        const confirmed = await hesioxConfirm({
+            title: 'DESVINCULACIÓN MASIVA',
+            text: `¿Desvincular (Borrar del proyecto actual) ${nombres.length} ubicaciones seleccionadas?\n(A diferencia de 'Borrar', NO se añadirán a la lista negra global)`,
+            confirmText: 'DESVINCULAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         SirioNotifications.info(`Desvinculando ${nombres.length} ubicaciones...`);
 
         try {
@@ -2925,8 +2954,13 @@
             return;
         }
 
-        if (!confirm(`¿Recalcular frecuencias para ${nombres.length} ubicaciones seleccionadas?\n(Se volverán a buscar en todo el corpus y recalcular menciones)`)) return;
-
+        const confirmed = await hesioxConfirm({
+            title: 'RECALCULAR FRECUENCIAS',
+            text: `¿Recalcular frecuencias para ${nombres.length} ubicaciones seleccionadas?\n(Se volverán a buscar en todo el corpus y recalcular menciones)`,
+            confirmText: 'RECALCULAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         SirioNotifications.info(`Recalculando frecuencias de ${nombres.length} ubicaciones...`);
 
         try {
@@ -2956,7 +2990,13 @@
             return;
         }
 
-        if (!confirm(`¿Restaurar ${nombres.length} ubicaciones borradas?\n(Se marcarán como activas y se quitarán de la lista negra)`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿RESTAURAR UBICACIONES?',
+            text: `¿Restaurar ${nombres.length} ubicaciones borradas?\n(Se marcarán como activas y se quitarán de la lista negra)`,
+            confirmText: 'RESTAURAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
 
         SirioNotifications.info(`Restaurando ${nombres.length} ubicaciones...`);
 
@@ -2984,7 +3024,13 @@
         const nombres = Array.from(checked).map(c => c.dataset.nombre);
         if (nombres.length === 0) return;
 
-        if (!confirm(`¿Verificar ${nombres.length} ubicaciones seleccionadas?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿VERIFICAR UBICACIONES?',
+            text: `¿Verificar ${nombres.length} ubicaciones seleccionadas?`,
+            confirmText: 'VERIFICAR',
+            confirmColor: '#198754'
+        });
+        if (!confirmed) return;
 
         try {
             const res = await fetch("{{ url_for('noticias.api_batch_verificar_ubicaciones') }}", {
@@ -3067,7 +3113,13 @@
         const nombres = Array.from(checked).map(c => c.dataset.nombre);
         if (nombres.length === 0) return;
 
-        if (!confirm(`¿Desverificar ${nombres.length} ubicaciones seleccionadas?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿DESVERIFICAR?',
+            text: `¿Desverificar ${nombres.length} ubicaciones seleccionadas?`,
+            confirmText: 'DESVERIFICAR',
+            confirmColor: '#6c757d'
+        });
+        if (!confirmed) return;
 
         try {
             const res = await fetch("{{ url_for('noticias.api_batch_unverify_ubicaciones') }}", {
@@ -3209,7 +3261,13 @@
         if (nombres.length === 0) return;
 
         const power = document.getElementById('sel-potencia-geocoding').value;
-        if (!confirm(`¿Iniciar NER Avanzado (${power}) sobre los ${nombres.length} seleccionados?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿INICIAR NER AVANZADO?',
+            text: `¿Iniciar NER Avanzado (${power}) sobre los ${nombres.length} seleccionados?`,
+            confirmText: 'INICIAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
 
         SirioNotifications.info("Iniciando procesamiento IA sobre selección...");
 
@@ -3458,7 +3516,13 @@
     }
 
     async function restaurarTipo(tipoId, nombre) {
-        if (!confirm(`¿Restaurar el tipo "${nombre}"?`)) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿RESTAURAR TIPO?',
+            text: `¿Restaurar el tipo "${nombre}"?`,
+            confirmText: 'RESTAURAR',
+            confirmColor: 'var(--ds-accent-primary, #ff9800)'
+        });
+        if (!confirmed) return;
         try {
             const res = await fetch(`/api/tipos-ubicacion/editar/${tipoId}`, {
                 method: 'PUT',
@@ -3844,7 +3908,12 @@
     }
 
     async function eliminarTipo(tipoId, nombre) {
-        if (!confirm(`¿Eliminar el tipo "${nombre}"?\n\nEsto solo lo desactivará, no eliminará los datos existentes.`)) {
+        const confirmed = await hesioxConfirm({
+            title: '¿ELIMINAR TIPO?',
+            text: `¿Eliminar el tipo "${nombre}"?\n\nEsto solo lo desactivará, no eliminará los datos existentes.`,
+            confirmText: 'ELIMINAR'
+        });
+        if (!confirmed) {
             return;
         }
 

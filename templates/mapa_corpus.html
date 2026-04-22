@@ -9383,13 +9383,13 @@
                 <button onclick="window.abrirModalCambiarTipo('${loc.nombre.replace(/'/g, "\\'")}', '${tipoLugar}', event)" class="btn btn-sm btn-popup-secondary text-primary border-secondary" title="Cambiar Tipo" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
                   <i class="fa-solid fa-tag"></i>
                 </button>
-                <button onclick="if(confirm('¿Desvincular del proyecto actual?')) { fetch('{{ url_for('noticias.api_batch_unlink_ubicaciones') }}', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('input[name=csrf_token]').value}, body: JSON.stringify({nombres:['${loc.nombre.replace(/'/g, "\\'").replace(/"/g, "\\\"")}']}) }).then(r=>r.json()).then(d=>{if(d.success)cargarMapaCorpus();}) }" class="btn btn-sm btn-popup-secondary text-warning border-secondary" title="Desvincular de este proyecto (no la borra globalmente)" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                <button onclick="window.desvincularUbicacionProyecto('${loc.nombre.replace(/'/g, "\\'").replace(/"/g, "\\\"")}')" class="btn btn-sm btn-popup-secondary text-warning border-secondary" title="Desvincular de este proyecto (no la borra globalmente)" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
                   <i class="fa-solid fa-link-slash"></i>
                 </button>
                 <button onclick="window.abrirModalMapear('${loc.nombre.replace(/'/g, "\\'")}', event)" class="btn btn-sm btn-popup-secondary text-info border-secondary" title="Editar Lat/Lon" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
                   <i class="fa-solid fa-map-pin"></i>
                 </button>
-                <button onclick="if(confirm('¿Borrar globalmente?')) { fetch('{{ url_for('noticias.gestion_borrar_ubicacion') }}', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('input[name=csrf_token]').value}, body: JSON.stringify({nombre:'${loc.nombre.replace(/'/g, "\\'").replace(/"/g, "\\\"")}'}) }).then(r=>r.json()).then(d=>{if(d.success){ showMapToast('Eliminado: ' + d.affected + ' registros', '#ff5252'); cargarMapaCorpus(); } }) }" class="btn btn-sm btn-popup-danger border-secondary" title="Borrar" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                <button onclick="window.borrarUbicacionGlobalPopup('${loc.nombre.replace(/'/g, "\\'").replace(/"/g, "\\\"")}')" class="btn btn-sm btn-popup-danger border-secondary" title="Borrar" style="flex: 1; font-size:0.65rem; padding: 4px; display: flex; align-items: center; justify-content: center;">
                   <i class="fa-solid fa-trash-can"></i>
                 </button>
               </div>
@@ -11105,8 +11105,51 @@
     }
   }
 
+  window.desvincularUbicacionProyecto = function(nombre) {
+    hesioxConfirm({
+        title: 'DESVINCULAR',
+        text: '¿Deseas desvincular esta ubicación del proyecto actual? No se eliminará globalmente.',
+        confirmText: 'DESVINCULAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    }).then(confirmed => {
+        if (!confirmed) return;
+        fetch("{{ url_for('noticias.api_batch_unlink_ubicaciones') }}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('input[name=csrf_token]').value},
+            body: JSON.stringify({nombres: [nombre]})
+        }).then(r => r.json()).then(d => {
+            if (d.success) cargarMapaCorpus();
+        });
+    });
+  };
+
+  window.borrarUbicacionGlobalPopup = function(nombre) {
+    hesioxConfirm({
+        title: 'BORRAR GLOBALMENTE',
+        text: '¿Estás seguro de que deseas borrar esta ubicación globalmente? Se eliminará de todas las noticias.',
+        confirmText: 'BORRAR'
+    }).then(confirmed => {
+        if (!confirmed) return;
+        fetch("{{ url_for('noticias.gestion_borrar_ubicacion') }}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('input[name=csrf_token]').value},
+            body: JSON.stringify({nombre: nombre})
+        }).then(r => r.json()).then(d => {
+            if (d.success) {
+                showMapToast('Eliminado: ' + d.affected + ' registros', '#ff5252');
+                cargarMapaCorpus();
+            }
+        });
+    });
+  };
+
   async function borrarUbicacion(nombre) {
-    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente todas las referencias a "${nombre}" en este mapa ? `)) return;
+    const confirmed = await hesioxConfirm({
+        title: 'ELIMINAR PERMANENTEMENTE',
+        text: `¿Estás seguro de que deseas eliminar permanentemente todas las referencias a "${nombre}" en este mapa ? `,
+        confirmText: 'ELIMINAR'
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch("{{ url_for('noticias.gestion_borrar_ubicacion') }}", {
@@ -11168,7 +11211,13 @@
     if (btn.classList.contains('disabled')) return;
     if (window._batchRunning) return;
 
-    if (!confirm('¿Deseas iniciar la detección y geocodificación masiva de todas las noticias? Este proceso puede tardar varios minutos dependiendo del tamaño del corpus.')) return;
+    const confirmed = await hesioxConfirm({
+        title: 'DETECCIÓN MASIVA',
+        text: '¿Deseas iniciar la detección y geocodificación masiva de todas las noticias? Este proceso puede tardar varios minutos dependiendo del tamaño del corpus.',
+        confirmText: 'INICIAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     window._batchRunning = true;
     btn.classList.add('disabled');
@@ -11243,7 +11292,13 @@
     if (btn.classList.contains('disabled')) return;
     if (window._batchRunning) return;
 
-    if (!confirm(`¿Deseas iniciar el refinamiento masivo con IA(${potencia}) ? Este proceso es mucho más preciso pero requiere más tiempo.`)) return;
+    const confirmed = await hesioxConfirm({
+        title: 'REFINAMIENTO CON IA',
+        text: `¿Deseas iniciar el refinamiento masivo con IA(${potencia}) ? Este proceso es mucho más preciso pero requiere más tiempo.`,
+        confirmText: 'REFINAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     window._batchRunning = true;
     btn.classList.add('disabled');
@@ -11320,7 +11375,12 @@
 
     if (nombres.length === 0) return;
 
-    if (!confirm(`¿Estás seguro de que deseas borrar las ${nombres.length} ubicaciones seleccionadas ? `)) return;
+    const confirmed = await hesioxConfirm({
+        title: '¿BORRAR UBICACIONES?',
+        text: `¿Estás seguro de que deseas borrar las ${nombres.length} ubicaciones seleccionadas ? `,
+        confirmText: 'BORRAR'
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch("{{ url_for('noticias.api_batch_delete_ubicaciones') }}", {
@@ -11351,7 +11411,13 @@
   }
 
   async function reactivarUbicacion(nombre) {
-    if (!confirm(`¿Deseas reactivar la ubicación "${nombre}" ? `)) return;
+    const confirmed = await hesioxConfirm({
+        title: 'REACTIVAR UBICACIÓN',
+        text: `¿Deseas reactivar la ubicación "${nombre}" ? `,
+        confirmText: 'REACTIVAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch("{{ url_for('noticias.gestion_reactivar_batch_ubicaciones') }}", {
@@ -11379,7 +11445,13 @@
 
     if (nombres.length === 0) return;
 
-    if (!confirm(`¿Estás seguro de que deseas reactivar las ${nombres.length} ubicaciones seleccionadas ? `)) return;
+    const confirmed = await hesioxConfirm({
+        title: 'REACTIVAR SELECCIÓN',
+        text: `¿Estás seguro de que deseas reactivar las ${nombres.length} ubicaciones seleccionadas ? `,
+        confirmText: 'REACTIVAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     try {
       const res = await fetch("{{ url_for('noticias.gestion_reactivar_batch_ubicaciones') }}", {
@@ -11417,7 +11489,13 @@
       return;
     }
 
-    if (!confirm(`¿Estás seguro de que deseas reactivar TODAS las ubicaciones verificadas(${nombres.length}) ? `)) return;
+    const confirmed = await hesioxConfirm({
+        title: 'REACTIVAR TODAS',
+        text: `¿Estás seguro de que deseas reactivar TODAS las ubicaciones verificadas(${nombres.length}) ? `,
+        confirmText: 'REACTIVAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     try {
       showMapMessage("Reactivando verificados...");
@@ -11480,7 +11558,13 @@
     }
   }
   async function rebuscarTodasUbicaciones() {
-    if (!confirm("Se va a realizar un escaneo global de TODAS las ubicaciones registradas en el corpus. Esto puede tardar varios segundos dependiendo del tamaño del corpus. ¿Continuar?")) return;
+    const confirmed = await hesioxConfirm({
+        title: 'ESCÁNEO GLOBAL',
+        text: 'Se va a realizar un escaneo global de TODAS las ubicaciones registradas en el corpus. Esto puede tardar varios segundos dependiendo del tamaño del corpus. ¿Continuar?',
+        confirmText: 'CONTINUAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     showMapMessage(`<i class="fa-solid fa-cog fa-spin me-1"></i> Iniciando sincronización masiva global...`);
 
@@ -11514,7 +11598,13 @@
   }
 
   async function unificarDuplicadosCaja() {
-    if (!confirm("Se va a proceder a unificar automáticamente todas las ubicaciones que solo varían en mayúsculas/minúsculas (ej: 'vitoria' -> 'Vitoria'). \n\nEsto consolidará las frecuencias de título y contenido en una sola entrada canónica. ¿Continuar?")) return;
+    const confirmed = await hesioxConfirm({
+        title: 'UNIFICAR UBICACIONES',
+        text: "Se va a proceder a unificar automáticamente todas las ubicaciones que solo varían en mayúsculas/minúsculas (ej: 'vitoria' -> 'Vitoria'). \n\nEsto consolidará las frecuencias de título y contenido en una sola entrada canónica. ¿Continuar?",
+        confirmText: 'UNIFICAR',
+        confirmColor: 'var(--ds-accent-primary, #ff9800)'
+    });
+    if (!confirmed) return;
 
     showMapMessage(`<i class="fa-solid fa-wand-magic-sparkles fa-spin me-1"></i> Unificando duplicados de caja...`);
 
@@ -13486,41 +13576,47 @@
       const lat = document.getElementById('editLugarLat').value;
       const lon = document.getElementById('editLugarLon').value;
 
-      // We don't edit frequency manually in global mode usually, but if we wanted to pass it:
-      // const freq = ... 
+      hesioxConfirm({
+          title: 'MODIFICAR GLOBALMENTE',
+          text: `¿Estás seguro de modificar la ubicación "${nombreAntiguo}" globalmente ?\nEsto actualizará todas las noticias vinculadas.`,
+          confirmText: 'MODIFICAR'
+      }).then(confirmed => {
+          if (!confirmed) return;
 
-      if (!confirm(`¿Estás seguro de modificar la ubicación "${nombreAntiguo}" globalmente ?\nEsto actualizará todas las noticias vinculadas.`)) {
-        return;
-      }
-
-      fetch("/api/cartografia/gestion/editar", { // Using direct path or url_for if rendered
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // 'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value // If needed
-        },
-        body: JSON.stringify({
-          nombre_antiguo: nombreAntiguo,
-          nombre_nuevo: nombreNuevo,
-          lat: lat,
-          lon: lon
-        })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            window.hideModalSafely('modalEditarLugar');
-            showMapToast('Ubicación actualizada correctamente.', '#4caf50');
-            // Reload map data
-            cargarMapaCorpus();
-          } else {
-            showMapToast(`Error: ${data.message || 'No se pudo actualizar la ubicación.'}`, '#ef5350');
-          }
-        })
-        .catch(err => {
-          console.error("[HesiOX] Error al editar ubicación:", err);
-          showMapToast("Error de red o servidor al actualizar ubicación.", '#ef5350');
-        });
+          fetch("/api/cartografia/gestion/editar", { 
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+              // 'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value // If needed
+            },
+            body: JSON.stringify({
+              nombre_antiguo: nombreAntiguo,
+              nombre_nuevo: nombreNuevo,
+              lat: lat,
+              lon: lon
+            })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                window.hideModalSafely('modalEditarLugar');
+                showMapToast('Ubicación actualizada correctamente.', '#4caf50');
+                if (window.SirioGIS && window.SirioGIS.refreshAll) {
+                  window.SirioGIS.refreshAll();
+                } else if (typeof cargarMapaCorpus === 'function') {
+                  cargarMapaCorpus();
+                } else {
+                  location.reload();
+                }
+              } else {
+                showMapToast('Error: ' + (data.message || 'Error desconocido'), '#f44336');
+              }
+            })
+            .catch(err => {
+              console.error("[HesiOX] Error al editar ubicación:", err);
+              showMapToast("Error de red o servidor al actualizar ubicación.", '#ef5350');
+            });
+      });
     });
   }
 
@@ -13768,7 +13864,12 @@
   }
 
   async function deleteLayer(id) {
-    if (!confirm("¿Deseas eliminar esta capa?")) return;
+    const confirmed = await hesioxConfirm({
+        title: '¿ELIMINAR CAPA?',
+        text: '¿Deseas eliminar esta capa?',
+        confirmText: 'ELIMINAR'
+    });
+    if (!confirmed) return;
     try {
       const resp = await fetch(`{{ url_for('capas.list_layers') }}/${id}`, {
         method: 'DELETE',
@@ -15939,9 +16040,16 @@
   }
 
   // Global helper for vertex deletion popup during digitization
-  window._removeDigitizeVertex = function (idx) {
+  window._removeDigitizeVertex = async function (idx) {
     const marker = digitizeMarkers[idx];
     if (!marker) return;
+
+    const confirmed = await hesioxConfirm({
+        title: '¿ELIMINAR VÉRTICE?',
+        text: '¿Estás seguro de eliminar este punto del dibujo?',
+        confirmText: 'ELIMINAR'
+    });
+    if (!confirmed) return;
 
     digitizeMarkers.splice(idx, 1);
     window.digitizePoints.splice(idx, 1);

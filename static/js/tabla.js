@@ -1457,7 +1457,9 @@ async function toggleStatusNoticia(id, btn) {
   if (!id) return;
 
   // Feedback visual inmediato
-  const icon = btn.querySelector('i');
+  const icon = btn.tagName === 'I' ? btn : btn.querySelector('i');
+  if (!icon) return;
+
   const originalClass = icon.className;
   icon.className = 'fa-solid fa-spinner fa-spin';
 
@@ -1478,20 +1480,25 @@ async function toggleStatusNoticia(id, btn) {
       if (tr) {
         tr.dataset.incluido = isIncluido ? 'si' : 'no';
 
-        // Actualizar la celda "Incl." si existe
+        // 1. Actualizar la celda "Incl." si existe
         const tdIncl = tr.querySelector('td[data-col="incl"]');
         if (tdIncl) {
           tdIncl.innerHTML = isIncluido
             ? '<i class="fa-solid fa-circle-check text-success" title="Incluido" style="font-size: 1.1rem;"></i>'
             : '<i class="fa-solid fa-circle-xmark text-danger" title="No incluido" style="font-size: 1.1rem;"></i>';
         }
+
+        // 2. Actualizar el botón de alternar en la columna de acciones
+        const btnAccion = tr.querySelector('.btn-toggle-incluir');
+        if (btnAccion) {
+          btnAccion.title = isIncluido ? 'Pausar (Excluir del estudio)' : 'Activar (Incluir en estudio)';
+          const iconAccion = btnAccion.querySelector('i');
+          if (iconAccion) {
+            iconAccion.className = isIncluido ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+          }
+        }
       }
 
-      // Actualizar el botón
-      btn.title = isIncluido ? 'Pausar (Excluir del estudio)' : 'Activar (Incluir en estudio)';
-      icon.className = isIncluido ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-
-      // Mostrar toast o mensaje sutil (opcional)
       console.log(`✅ Noticia ${id}: ${isIncluido ? 'ACTIVADA' : 'PAUSADA'}`);
 
     } else {
@@ -1506,3 +1513,23 @@ async function toggleStatusNoticia(id, btn) {
 }
 
 window.toggleStatusNoticia = toggleStatusNoticia;
+
+/**
+ * eliminarNoticiaIndividual: Confirma y elimina una noticia específica.
+ */
+function eliminarNoticiaIndividual(event, titulo) {
+  if (event) event.preventDefault();
+  const form = event.currentTarget.closest('form');
+  if (!form) return;
+
+  hesioxConfirm({
+    title: '¿Eliminar noticia?',
+    text: `Se eliminará "${titulo || 'esta noticia'}" permanentemente de la biblioteca.`,
+    confirmText: 'ELIMINAR'
+  }).then(confirmed => {
+    if (confirmed) {
+      form.submit();
+    }
+  });
+}
+window.eliminarNoticiaIndividual = eliminarNoticiaIndividual;

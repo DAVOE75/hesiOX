@@ -1,6 +1,6 @@
 {% extends "base_desktop.html" %}
 
-{% block title %}Ficha de Pasajero: {{ pasajero.nombre }} {{ pasajero.apellidos }} - S.S. Sirio{% endblock %}
+{% block title %}Ficha de Pasajero: {{ pasajero.nombre }} {{ pasajero.apellidos }} - {{ proyecto_activo.nombre if proyecto_activo else "S.S. Sirio" }}{% endblock %}
 {% block page_title %}FICHA DE PASAJERO{% endblock %}
 
 {% block top_actions %}

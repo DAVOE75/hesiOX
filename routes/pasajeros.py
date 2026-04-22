@@ -19,14 +19,22 @@ PRENSA_TYPES = ['Prensa', 'prensa', 'Diario', 'revista', 'Semanario', 'Boletín'
 pasajeros_bp = Blueprint('pasajeros', __name__, url_prefix='/pasajeros')
 per_page = 50
 
-def check_sirio_access():
+def check_censo_access():
     proyecto_id = session.get('proyecto_activo_id')
-    if not proyecto_id or str(proyecto_id) != '1':
+    if not proyecto_id:
         return False
-    return True
+    proyecto = Proyecto.query.get(proyecto_id)
+    if not proyecto:
+        return False
+    # Verificamos si el módulo está activado (soportamos 'censo' o el antiguo 'personas')
+    modulos = proyecto.modulos_activados or []
+    if 'censo' in modulos or 'personas' in modulos:
+        return True
+    return False
 
 def get_filtered_pasajeros_query(args):
-    query = PasajeroSirio.query.options(
+    proyecto_id = session.get('proyecto_activo_id')
+    query = PasajeroSirio.query.filter(PasajeroSirio.proyecto_id == proyecto_id).options(
         selectinload(PasajeroSirio.relaciones_como_sujeto),
         selectinload(PasajeroSirio.relaciones_como_objeto),
         selectinload(PasajeroSirio.publicaciones)
@@ -107,7 +115,7 @@ def get_filtered_pasajeros_query(args):
 @pasajeros_bp.route('/listado')
 @login_required
 def listado():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
     
     # Nos saltamos la paginación a petición del usuario
@@ -141,12 +149,13 @@ def listado():
     total_pages = 1
     pasajeros = query.all()
     
-    # Todas las publicaciones del proyecto Sirio para el dropdown inicial
+    # Todas las publicaciones del proyecto activo para el dropdown inicial
     # Filtramos según el estado inicial de solo_prensa
-    # NOTA: Excluimos Italia(393), Ravena(394), Orione(395) y duplicado Maria Luisa(402)
+    proyecto_id_activo = session.get('proyecto_activo_id')
     solo_prensa_val = request.args.get('solo_prensa', '')
+    
     publicaciones_q = Publicacion.query.join(Publicacion.pasajeros_sirio)\
-        .filter(Publicacion.proyecto_id == 1)\
+        .filter(Publicacion.proyecto_id == proyecto_id_activo)\
         .filter(Publicacion.id_publicacion.notin_([393, 394, 395, 402]))
         
     if solo_prensa_val == '1':
@@ -157,14 +166,21 @@ def listado():
         
     publicaciones = publicaciones_q.distinct().order_by(Publicacion.nombre).all()
 
-    # Valores únicos iniciales para los selectores de filtro
+    # Valores únicos iniciales para los selectores de filtro - FILTRADOS POR PROYECTO
     puertos = db.session.query(PasajeroSirio.puerto_embarque).filter(
-        PasajeroSirio.puerto_embarque.isnot(None), PasajeroSirio.puerto_embarque != '').distinct().order_by(PasajeroSirio.puerto_embarque).all()
+        PasajeroSirio.proyecto_id == proyecto_id_activo,
+        PasajeroSirio.puerto_embarque.isnot(None), 
+        PasajeroSirio.puerto_embarque != ''
+    ).distinct().order_by(PasajeroSirio.puerto_embarque).all()
+    
     destinos = db.session.query(PasajeroSirio.ciudad_destino_final).filter(
+        PasajeroSirio.proyecto_id == proyecto_id_activo,
         PasajeroSirio.ciudad_destino_final.isnot(None),
         PasajeroSirio.ciudad_destino_final != ''
     ).distinct().order_by(PasajeroSirio.ciudad_destino_final).all()
+    
     nacionalidades = db.session.query(PasajeroSirio.pais).filter(
+        PasajeroSirio.proyecto_id == proyecto_id_activo,
         PasajeroSirio.pais.isnot(None),
         PasajeroSirio.pais != ''
     ).distinct().order_by(PasajeroSirio.pais).all()
@@ -192,7 +208,7 @@ def listado():
 @pasajeros_bp.route('/filtrar')
 @login_required
 def filtrar():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     # Nos saltamos la paginación a petición del usuario
@@ -262,12 +278,13 @@ def filtrar():
 @pasajeros_bp.route('/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
         
     if request.method == 'POST':
         try:
             pasajero = PasajeroSirio(
+                proyecto_id=session.get('proyecto_activo_id'),
                 nombre=request.form.get('nombre'),
                 apellidos=request.form.get('apellidos'),
                 edad=float(request.form.get('edad')) if request.form.get('edad') else None,
@@ -326,13 +343,16 @@ def nuevo():
 @pasajeros_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar(id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
         
-    pasajero = PasajeroSirio.query.get_or_404(id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     
-    # Todos los pasajeros (optimizado: solo campos necesarios)
-    todos_pasajeros = db.session.query(PasajeroSirio.id, PasajeroSirio.nombre, PasajeroSirio.apellidos).order_by(PasajeroSirio.apellidos).all()
+    # Todos los pasajeros del proyecto (optimizado: solo campos necesarios)
+    todos_pasajeros = db.session.query(PasajeroSirio.id, PasajeroSirio.nombre, PasajeroSirio.apellidos).filter(
+        PasajeroSirio.proyecto_id == proyecto_id
+    ).order_by(PasajeroSirio.apellidos).all()
     
     # Relaciones actuales (ordenadas)
     relaciones_directas = sorted(pasajero.relaciones_como_sujeto, key=lambda r: r.orden or 0)
@@ -424,10 +444,11 @@ def editar(id):
 @pasajeros_bp.route('/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar(id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
-    pasajero = PasajeroSirio.query.get_or_404(id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     try:
         db.session.delete(pasajero)
         db.session.commit()
@@ -445,8 +466,10 @@ def search_autocomplete():
     if not q or len(q) < 2:
         return jsonify([])
     
-    # Búsqueda por nombre o apellidos
+    # Búsqueda por nombre o apellidos - FILTRADO POR PROYECTO
+    proyecto_id = session.get('proyecto_activo_id')
     results = PasajeroSirio.query.filter(
+        PasajeroSirio.proyecto_id == proyecto_id,
         (PasajeroSirio.nombre.ilike(f'%{q}%')) | 
         (PasajeroSirio.apellidos.ilike(f'%{q}%'))
     ).limit(10).all()
@@ -461,19 +484,22 @@ def search_autocomplete():
 @pasajeros_bp.route('/ficha/<int:id>')
 @login_required
 def ficha(id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
         
-    pasajero = PasajeroSirio.query.get_or_404(id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     publicaciones = Publicacion.query.order_by(Publicacion.nombre).all()
     
     # Obtener relaciones
     relaciones_directas = sorted(pasajero.relaciones_como_sujeto, key=lambda r: r.orden or 0)
     relaciones_inversas = pasajero.relaciones_como_objeto
     
-    # Pasajeros del mismo apellido para el buscador de familiares rápido
+    # Pasajeros del mismo apellido para el buscador de familiares rápido - FILTRADO POR PROYECTO
+    proyecto_id = session.get('proyecto_activo_id')
     apellido_base = pasajero.apellidos.split('(')[0].strip() if pasajero.apellidos else ""
     sugerencias = PasajeroSirio.query.filter(
+        PasajeroSirio.proyecto_id == proyecto_id,
         PasajeroSirio.apellidos.ilike(f"{apellido_base}%"),
         PasajeroSirio.id != pasajero.id
     ).all()
@@ -502,10 +528,11 @@ def ficha(id):
 @pasajeros_bp.route('/api/buscar_en_prensa/<int:id>', methods=['GET', 'POST'])
 @login_required
 def buscar_en_prensa(id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
-    pasajero = PasajeroSirio.query.get_or_404(id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     
     # Búsqueda mejorada: buscamos por términos del apellido
     # para máxima cobertura, usando unaccent para ignorar acentos.
@@ -572,9 +599,11 @@ def buscar_en_prensa(id):
 @pasajeros_bp.route('/api/menciones/<int:id>', methods=['GET'])
 @login_required
 def get_menciones(id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
-    pasajero = PasajeroSirio.query.get_or_404(id)
+    
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     results = []
     for art in pasajero.menciones_prensa:
         results.append({
@@ -588,11 +617,12 @@ def get_menciones(id):
 @pasajeros_bp.route('/api/mencion_texto/<int:pasajero_id>/<int:prensa_id>', methods=['GET'])
 @login_required
 def get_mencion_texto(pasajero_id, prensa_id):
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
-    noticia = Prensa.query.get_or_404(prensa_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
+    noticia = Prensa.query.filter_by(id=prensa_id, proyecto_id=proyecto_id).first_or_404()
     
     # Términos de búsqueda
     terms = []
@@ -649,7 +679,7 @@ def get_mencion_texto(pasajero_id, prensa_id):
 @pasajeros_bp.route('/api/vincular_mencion', methods=['POST'])
 @login_required
 def vincular_mencion():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
     try:
         data = request.get_json()
@@ -658,7 +688,8 @@ def vincular_mencion():
         
         current_app.logger.info(f"[VINCULAR] Intentando vincular pasajero_id={pasajero_id} con prensa_id={prensa_id}")
         
-        pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
+        proyecto_id = session.get('proyecto_activo_id')
+        pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
         articulo = Prensa.query.get_or_404(prensa_id)
         
         if articulo not in pasajero.menciones_prensa:
@@ -679,14 +710,15 @@ def vincular_mencion():
 @pasajeros_bp.route('/api/desvincular_mencion', methods=['POST'])
 @login_required
 def desvincular_mencion():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
     prensa_id = data.get('prensa_id')
     
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
-    articulo = Prensa.query.get_or_404(prensa_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
+    articulo = Prensa.query.filter_by(id=prensa_id, proyecto_id=proyecto_id).first_or_404()
     
     if articulo in pasajero.menciones_prensa:
         pasajero.menciones_prensa.remove(articulo)
@@ -697,7 +729,7 @@ def desvincular_mencion():
 @pasajeros_bp.route('/api/crear_mencion_manual', methods=['POST'])
 @login_required
 def crear_mencion_manual():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
@@ -706,8 +738,8 @@ def crear_mencion_manual():
     fecha = data.get('fecha')
     notas = data.get('notas', '')
     
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
-    proyecto_id = session.get('proyecto_activo_id') or 1
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
     
     # Crear un registro básico en Prensa
     nueva_noticia = Prensa(
@@ -728,15 +760,16 @@ def crear_mencion_manual():
 @pasajeros_bp.route('/api/vincular_publicacion', methods=['POST'])
 @login_required
 def vincular_publicacion():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
     publicacion_id = data.get('publicacion_id')
     
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
-    publicacion = Publicacion.query.get_or_404(publicacion_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
+    publicacion = Publicacion.query.filter_by(id_publicacion=publicacion_id, proyecto_id=proyecto_id).first_or_404()
     
     if publicacion not in pasajero.publicaciones:
         pasajero.publicaciones.append(publicacion)
@@ -748,15 +781,16 @@ def vincular_publicacion():
 @pasajeros_bp.route('/api/desvincular_publicacion', methods=['POST'])
 @login_required
 def desvincular_publicacion():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
     publicacion_id = data.get('publicacion_id')
     
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
-    publicacion = Publicacion.query.get_or_404(publicacion_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
+    publicacion = Publicacion.query.filter_by(id_publicacion=publicacion_id, proyecto_id=proyecto_id).first_or_404()
     
     if publicacion in pasajero.publicaciones:
         pasajero.publicaciones.remove(publicacion)
@@ -767,8 +801,10 @@ def desvincular_publicacion():
 @pasajeros_bp.route('/api/vincular_familiar', methods=['POST'])
 @login_required
 def vincular_familiar():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
+    
+    proyecto_id = session.get('proyecto_activo_id')
     
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
@@ -778,6 +814,12 @@ def vincular_familiar():
     
     if not pasajero_id or not relacionado_id:
         return jsonify({'success': False, 'message': 'IDs faltantes'})
+
+    # Validación de seguridad: asegurar que ambos pasajeros pertenecen al proyecto activo
+    p1 = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first()
+    p2 = PasajeroSirio.query.filter_by(id=relacionado_id, proyecto_id=proyecto_id).first()
+    if not p1 or not p2:
+        return jsonify({'success': False, 'message': 'Pasajeros no encontrados o no pertenecen al proyecto activo'})
         
     # Evitar duplicados
     existe = PasajeroRelacion.query.filter_by(
@@ -809,8 +851,9 @@ def _ejecutar_propagacion_familiar(pasajero_id, relacionado_id, tipo, comentario
     Evita redundancias y construye el árbol familiar de forma proactiva.
     """
     try:
-        p1 = PasajeroSirio.query.get(pasajero_id)
-        p2 = PasajeroSirio.query.get(relacionado_id)
+        proyecto_id = session.get('proyecto_activo_id')
+        p1 = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first()
+        p2 = PasajeroSirio.query.filter_by(id=relacionado_id, proyecto_id=proyecto_id).first()
         if not p1 or not p2: return
 
         def safe_link(subject_id, object_id, role, comm='Propagado automáticamente'):
@@ -919,7 +962,7 @@ def _ejecutar_propagacion_familiar(pasajero_id, relacionado_id, tipo, comentario
 @pasajeros_bp.route('/api/desvincular_familiar', methods=['POST'])
 @login_required
 def desvincular_familiar():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json()
@@ -934,7 +977,7 @@ def desvincular_familiar():
 @pasajeros_bp.route('/api/actualizar_familiar', methods=['POST'])
 @login_required
 def actualizar_familiar():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json()
@@ -960,7 +1003,7 @@ def actualizar_familiar():
 @pasajeros_bp.route('/api/reordenar-familiares', methods=['POST'])
 @login_required
 def reordenar_familiares():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
     
     data = request.json
@@ -982,14 +1025,15 @@ def reordenar_familiares():
 @pasajeros_bp.route('/api/actualizar_residencia', methods=['POST'])
 @login_required
 def actualizar_residencia():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
     punto_residencia = data.get('punto_residencia', '')
     
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
     try:
         pasajero.punto_residencia = punto_residencia
         db.session.commit()
@@ -1001,7 +1045,7 @@ def actualizar_residencia():
 @pasajeros_bp.route('/api/editar_masivo', methods=['POST'])
 @login_required
 def editar_masivo():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     req = request.get_json()
@@ -1043,7 +1087,7 @@ def editar_masivo():
 @pasajeros_bp.route('/exportar', methods=['GET'])
 @login_required
 def exportar():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     format = request.args.get('format', 'csv')
@@ -1166,7 +1210,7 @@ def get_ticket_price(clase, destino, age=None, custom_prices=None):
 @pasajeros_bp.route('/api/stats')
 @login_required
 def get_stats():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     subset = request.args.get('subset', 'general', type=str).strip().lower()
@@ -1181,7 +1225,8 @@ def get_stats():
         f.write(f"[{datetime.datetime.now()}] stats_req: subset={subset}, nac={nacionalidad}, sex={sexo}, age={franja_edad}, clase={clase}\n")
     
     # Base Query
-    base_query = PasajeroSirio.query
+    proyecto_id = session.get('proyecto_activo_id')
+    base_query = PasajeroSirio.query.filter(PasajeroSirio.proyecto_id == proyecto_id)
     
     # Filtro por Nacionalidad (País)
     if nacionalidad:
@@ -1250,7 +1295,7 @@ def get_stats():
         print(f" - {p.nombre} {p.apellidos} | Sex: {p.sexo} | Age: {p.edad} | Class: {p.pasaje} | Country: {p.pais}")
     
     # Overall total for percentage calculations
-    overall_total_query = PasajeroSirio.query
+    overall_total_query = PasajeroSirio.query.filter(PasajeroSirio.proyecto_id == proyecto_id)
     if nacionalidad:
         overall_total_query = overall_total_query.filter(PasajeroSirio.pais.ilike(f'%{nacionalidad}%'))
     
@@ -1652,7 +1697,7 @@ def get_stats():
 @pasajeros_bp.route('/api/map-data')
 @login_required
 def get_map_data():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
     
     # Coordinates of country centroids to place passengers without specific geodata
@@ -1734,12 +1779,13 @@ def get_map_data():
 @pasajeros_bp.route('/api/update_journey', methods=['POST'])
 @login_required
 def update_journey():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'success': False, 'message': 'No autorizado'}), 403
         
     data = request.get_json()
     pasajero_id = data.get('pasajero_id')
-    pasajero = PasajeroSirio.query.get_or_404(pasajero_id)
+    proyecto_id = session.get('proyecto_activo_id')
+    pasajero = PasajeroSirio.query.filter_by(id=pasajero_id, proyecto_id=proyecto_id).first_or_404()
     
     try:
         pasajero.fecha_emb_napoles = data.get('fecha_emb_napoles')
@@ -1770,7 +1816,7 @@ def update_journey():
 @pasajeros_bp.route('/api/update-coordinates', methods=['POST'])
 @login_required
 def api_update_coordinates():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
         
     data = request.get_json()
@@ -1797,7 +1843,7 @@ def api_update_coordinates():
 @pasajeros_bp.route('/api/family-data')
 @login_required
 def get_family_data():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     import collections
@@ -1941,20 +1987,34 @@ def get_family_data():
 @pasajeros_bp.route('/api/region-stats')
 @login_required
 def get_region_stats():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
+    
+    proyecto_id_activo = session.get('proyecto_activo_id')
     
     # Group by region
     region_counts = db.session.query(PasajeroSirio.region, func.count(PasajeroSirio.id))\
-        .filter(PasajeroSirio.region.isnot(None), PasajeroSirio.region != '')\
+        .filter(
+            PasajeroSirio.proyecto_id == proyecto_id_activo,
+            PasajeroSirio.region.isnot(None), 
+            PasajeroSirio.region != ''
+        )\
         .group_by(PasajeroSirio.region).all()
         
     provincia_counts = db.session.query(PasajeroSirio.provincia, func.count(PasajeroSirio.id))\
-        .filter(PasajeroSirio.provincia.isnot(None), PasajeroSirio.provincia != '')\
+        .filter(
+            PasajeroSirio.proyecto_id == proyecto_id_activo,
+            PasajeroSirio.provincia.isnot(None), 
+            PasajeroSirio.provincia != ''
+        )\
         .group_by(PasajeroSirio.provincia).all()
 
     country_counts = db.session.query(PasajeroSirio.pais, func.count(PasajeroSirio.id))\
-        .filter(PasajeroSirio.pais.isnot(None), PasajeroSirio.pais != '')\
+        .filter(
+            PasajeroSirio.proyecto_id == proyecto_id_activo,
+            PasajeroSirio.pais.isnot(None), 
+            PasajeroSirio.pais != ''
+        )\
         .group_by(PasajeroSirio.pais).all()
 
     return jsonify({
@@ -1966,11 +2026,13 @@ def get_region_stats():
 @pasajeros_bp.route('/graficos')
 @login_required
 def graficos():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
         
+    proyecto_id_activo = session.get('proyecto_activo_id')
     # Obtener nacionalidades disponibles para el filtro
     nacionalidades_query = db.session.query(PasajeroSirio.pais).filter(
+        PasajeroSirio.proyecto_id == proyecto_id_activo,
         PasajeroSirio.pais.isnot(None),
         PasajeroSirio.pais != ''
     ).distinct().all()
@@ -1993,27 +2055,27 @@ def graficos():
 @pasajeros_bp.route('/mapas')
 @login_required
 def mapas():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
     return render_template('pasajeros/mapas.html')
 
 @pasajeros_bp.route('/redes')
 @login_required
 def redes():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
     return render_template('pasajeros/redes.html')
 
 @pasajeros_bp.route('/timeline')
 @login_required
 def timeline():
-    if not check_sirio_access():
+    if not check_censo_access():
         return render_template('errors/403.html'), 403
     return render_template('pasajeros/timeline.html')
 @pasajeros_bp.route('/api/ai-population-insight', methods=['POST'])
 @login_required
 def ai_population_insight():
-    if not check_sirio_access():
+    if not check_censo_access():
         return jsonify({'error': 'No autorizado'}), 403
         
     data = request.get_json() or {}
@@ -2033,10 +2095,14 @@ def ai_population_insight():
                 'error': 'IA no configurada. Por favor, define tus API Keys (OpenAI o Gemini) en tu perfil de usuario.'
             })
             
+        proyecto_id_activo = session.get('proyecto_activo_id')
+        proyecto = Proyecto.query.get(proyecto_id_activo)
+        nombre_proyecto = proyecto.nombre if proyecto else "HesiOX"
+
         # Construct the detailed prompt
         prompt = f"""
         Actúa como un experto en sociología histórica, demografía y humanidades digitales. 
-        Analiza el siguiente resumen estadístico de una población de pasajeros del naufragio del S.S. Sirio (1906):
+        Analiza el siguiente resumen estadístico de una población de {nombre_proyecto}:
 
         RESUMENESTADÍSTICO:
         - Total de Pasajeros en esta vista: {stats.get('total', 0)}

@@ -97,6 +97,7 @@ class ProyectoSchema(Schema):
         validate=validate.OneOf(['hemerografia', 'libros', 'archivos', 'mixto']),
         allow_none=True
     )
+    modulos_activados = fields.List(fields.Str(), allow_none=True)
 
 
 # =========================================================

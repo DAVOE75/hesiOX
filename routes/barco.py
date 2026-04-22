@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, session
 from flask_login import login_required, current_user
 from models import db, SirioFicha, SirioPuntoInteractivo, Proyecto, LloydsFicha, MotoresFicha
 from extensions import csrf
@@ -11,41 +11,50 @@ import json
 
 barco_bp = Blueprint('barco', __name__, url_prefix='/barco')
 
-def check_sirio_access(f):
+def check_embarcacion_access(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # El menu "El Barco" solo es para el Proyecto 1 (Sirio)
-        try:
-            proyecto_id_raw = request.args.get('proyecto_id')
-            if proyecto_id_raw:
-                proyecto_id = int(proyecto_id_raw)
-            else:
-                proyecto_id = 1
-                
-            if proyecto_id != 1:
-                flash("Este módulo solo está disponible para el proyecto S.S. Sirio.", "warning")
-                return redirect(url_for('index'))
-        except (ValueError, TypeError):
-            # Si el ID es inválido, asumimos Sirio (1) por defecto si estamos en estas rutas
-            pass
+        proyecto_id = session.get('proyecto_activo_id')
+        if not proyecto_id:
+            flash("No hay un proyecto activo seleccionado.", "warning")
+            return redirect(url_for('proyectos.listar'))
             
-        return f(*args, **kwargs)
+        proyecto = Proyecto.query.get(proyecto_id)
+        if not proyecto:
+            flash("Proyecto no encontrado.", "danger")
+            return redirect(url_for('proyectos.listar'))
+            
+        modulos = proyecto.modulos_activados or []
+        if 'embarcacion' in modulos or 'barco' in modulos:
+            return f(*args, **kwargs)
+        
+        flash("Este módulo no está activado para el proyecto actual.", "warning")
+        return redirect(url_for('index'))
+        
     return decorated_function
 
 @barco_bp.route('/ficha')
 @login_required
-@check_sirio_access
+@check_embarcacion_access
 def ficha():
-    ficha_data = SirioFicha.query.first()
-    lloyds = LloydsFicha.query.first()
+    proyecto_id = session.get('proyecto_activo_id')
+    proyecto = Proyecto.query.get(proyecto_id)
+    ficha_data = SirioFicha.query.filter_by(proyecto_id=proyecto_id).first()
+    lloyds = LloydsFicha.query.filter_by(proyecto_id=proyecto_id).first()
     lloyds_dict = {c.name: getattr(lloyds, c.name) for c in lloyds.__table__.columns} if lloyds else {}
-    return render_template('barco/ficha.html', ficha=ficha_data, lloyds=lloyds_dict, lloyds_sections=LLOYDS_SECTIONS)
+    return render_template('barco/ficha.html', 
+                           proyecto_activo=proyecto,
+                           ficha=ficha_data, 
+                           lloyds=lloyds_dict, 
+                           lloyds_sections=LLOYDS_SECTIONS)
 
 @barco_bp.route('/plano')
 @login_required
-@check_sirio_access
+@check_embarcacion_access
 def plano():
-    puntos_db = SirioPuntoInteractivo.query.all()
+    proyecto_id = session.get('proyecto_activo_id')
+    proyecto = Proyecto.query.get(proyecto_id)
+    puntos_db = SirioPuntoInteractivo.query.filter_by(proyecto_id=proyecto_id).all()
     puntos_dict = [{
         'id': p.id,
         'nombre': p.nombre,
@@ -56,20 +65,23 @@ def plano():
         'coordenadas': p.coordenadas,
         'icono': p.icono
     } for p in puntos_db]
-    return render_template('barco/plano.html', puntos=puntos_dict)
+    return render_template('barco/plano.html', 
+                           proyecto_activo=proyecto,
+                           puntos=puntos_dict)
 
 @barco_bp.route('/admin')
 @login_required
-@check_sirio_access
+@check_embarcacion_access
 def admin():
-    ficha_data = SirioFicha.query.first()
-    lloyds = LloydsFicha.query.first()
+    proyecto_id = session.get('proyecto_activo_id')
+    ficha_data = SirioFicha.query.filter_by(proyecto_id=proyecto_id).first()
+    lloyds = LloydsFicha.query.filter_by(proyecto_id=proyecto_id).first()
     lloyds_dict = {c.name: getattr(lloyds, c.name) for c in lloyds.__table__.columns} if lloyds else {}
     
-    motores = MotoresFicha.query.first()
+    motores = MotoresFicha.query.filter_by(proyecto_id=proyecto_id).first()
     motores_dict = {c.name: getattr(motores, c.name) for c in motores.__table__.columns} if motores else {}
     
-    puntos = SirioPuntoInteractivo.query.all()
+    puntos = SirioPuntoInteractivo.query.filter_by(proyecto_id=proyecto_id).all()
     return render_template('barco/admin_barco.html', 
                           ficha=ficha_data, 
                           lloyds=lloyds_dict, 
@@ -82,8 +94,9 @@ def admin():
 @csrf.exempt
 @login_required
 def api_puntos():
+    proyecto_id = session.get('proyecto_activo_id')
     if request.method == 'GET':
-        puntos = SirioPuntoInteractivo.query.order_by(SirioPuntoInteractivo.id.asc()).all()
+        puntos = SirioPuntoInteractivo.query.filter_by(proyecto_id=proyecto_id).order_by(SirioPuntoInteractivo.id.asc()).all()
         return jsonify([{
             'id': p.id,
             'nombre': p.nombre,
@@ -97,6 +110,7 @@ def api_puntos():
     
     data = request.json
     nuevo_punto = SirioPuntoInteractivo(
+        proyecto_id=proyecto_id,
         nombre=data.get('nombre'),
         categoria=data.get('categoria'),
         descripcion=data.get('descripcion'),
@@ -113,7 +127,8 @@ def api_puntos():
 @csrf.exempt
 @login_required
 def api_punto_detail(id):
-    punto = SirioPuntoInteractivo.query.get_or_404(id)
+    proyecto_id = session.get('proyecto_activo_id')
+    punto = SirioPuntoInteractivo.query.filter_by(id=id, proyecto_id=proyecto_id).first_or_404()
     if request.method == 'DELETE':
         print(f"DEBUG: Deleting point {id}")
         db.session.delete(punto)
@@ -135,9 +150,10 @@ def api_punto_detail(id):
 @csrf.exempt
 @login_required
 def api_update_ficha():
-    ficha_data = SirioFicha.query.first()
+    proyecto_id = session.get('proyecto_activo_id')
+    ficha_data = SirioFicha.query.filter_by(proyecto_id=proyecto_id).first()
     if not ficha_data:
-        ficha_data = SirioFicha()
+        ficha_data = SirioFicha(proyecto_id=proyecto_id)
         db.session.add(ficha_data)
     
     data = request.json
@@ -156,9 +172,10 @@ def api_update_ficha():
 @csrf.exempt
 @login_required
 def api_update_lloyds():
-    lloyds_data = LloydsFicha.query.first()
+    proyecto_id = session.get('proyecto_activo_id')
+    lloyds_data = LloydsFicha.query.filter_by(proyecto_id=proyecto_id).first()
     if not lloyds_data:
-        lloyds_data = LloydsFicha()
+        lloyds_data = LloydsFicha(proyecto_id=proyecto_id)
         db.session.add(lloyds_data)
     
     data = request.json
@@ -182,10 +199,13 @@ def api_analizar_seccion():
         model_type = data.get('model', 'flash') 
         context_base = data.get('context', '') # El texto histórico manual como referencia
         
+        proyecto_id = session.get('proyecto_activo_id')
+        proyecto = Proyecto.query.get(proyecto_id)
+        
         section_def = None
         if section_id == 'all':
             section_def = {
-                'title': 'S.S. SIRIO - INFORME GLOBAL',
+                'title': f'{proyecto.nombre if proyecto else "Embarcación"} - INFORME GLOBAL',
                 'fields': []
             }
             # Agregamos todos los campos de todas las secciones
@@ -203,9 +223,10 @@ def api_analizar_seccion():
             return jsonify({'error': 'Sección no encontrada'}), 404
             
         # Obtener los datos reales de la ficha para esta sección
-        lloyds = LloydsFicha.query.first()
+        proyecto_id = session.get('proyecto_activo_id')
+        lloyds = LloydsFicha.query.filter_by(proyecto_id=proyecto_id).first()
         if not lloyds:
-            return jsonify({'error': 'No hay datos de ficha disponibles'}), 404
+            return jsonify({'error': 'No hay datos de ficha disponibles para este proyecto'}), 404
             
         # Construir un string con los datos reales de los campos de esta sección
         section_data_str = ""
@@ -227,7 +248,7 @@ def api_analizar_seccion():
         
         if section_id == 'all':
             prompt = f"""
-            Como Inspector Jefe de Lloyd's Register y experto en arqueología naval, proporciona un INFORME TÉCNICO GLOBAL y EXHAUSTIVO sobre el buque S.S. Sirio basado en su inspección de 1883.
+            Como Inspector Jefe de Lloyd's Register y experto en arqueología naval, proporciona un INFORME TÉCNICO GLOBAL y EXHAUSTIVO sobre el proyecto "{proyecto.nombre if proyecto else 'Embarcación'}" basado en su inspección técnica.
 
             DATOS TÉCNICOS COMPLETOS:
             {section_data_str}
@@ -241,7 +262,7 @@ def api_analizar_seccion():
             """
         else:
             prompt = f"""
-            Como experto analista de Lloyd's Register, proporciona un informe técnico e histórico SOBRE la sección "{section_def['title']}" del buque S.S. Sirio.
+            Como experto analista de Lloyd's Register, proporciona un informe técnico e histórico SOBRE la sección "{section_def['title']}" del proyecto "{proyecto.nombre if proyecto else 'Embarcación'}".
 
             DATOS TÉCNICOS DE LA SECCIÓN:
             {section_data_str}
@@ -281,17 +302,22 @@ def api_analizar_seccion():
 
 @barco_bp.route('/motores')
 @login_required
-@check_sirio_access
+@check_embarcacion_access
 def ficha_motores():
-    """Ficha técnica de los motores del S.S. Sirio."""
-    motores = MotoresFicha.query.first()
+    """Ficha técnica de los motores de la embarcación."""
+    proyecto_id = session.get('proyecto_activo_id')
+    proyecto = Proyecto.query.get(proyecto_id)
+    motores = MotoresFicha.query.filter_by(proyecto_id=proyecto_id).first()
     motores_dict = {c.name: getattr(motores, c.name) for c in motores.__table__.columns} if motores else {}
-    return render_template('barco/ficha_motores.html', motores=motores_dict, motores_sections=MOTORES_SECTIONS)
+    return render_template('barco/ficha_motores.html', 
+                           proyecto_activo=proyecto,
+                           motores=motores_dict, 
+                           motores_sections=MOTORES_SECTIONS)
 
 
 @barco_bp.route('/admin/motores')
 @login_required
-@check_sirio_access
+@check_embarcacion_access
 def admin_motores():
     """Redirige al nuevo panel consolidado con el tab de motores activo."""
     return redirect(url_for('barco.admin', _anchor='motores-tab'))
@@ -302,9 +328,10 @@ def admin_motores():
 @login_required
 def api_update_motores():
     """Actualiza la ficha técnica de motores."""
-    motores_data = MotoresFicha.query.first()
+    proyecto_id = session.get('proyecto_activo_id')
+    motores_data = MotoresFicha.query.filter_by(proyecto_id=proyecto_id).first()
     if not motores_data:
-        motores_data = MotoresFicha()
+        motores_data = MotoresFicha(proyecto_id=proyecto_id)
         db.session.add(motores_data)
 
     data = request.json
@@ -327,10 +354,13 @@ def api_analizar_motores():
         section_id = data.get('section_id')
         model_type = data.get('model', 'flash')
         context_base = data.get('context', '')
+        
+        proyecto_id = session.get('proyecto_activo_id')
+        proyecto = Proyecto.query.get(proyecto_id)
 
         section_def = None
         if section_id == 'all':
-            section_def = {'title': 'S.S. SIRIO - INFORME GLOBAL DE MAQUINARIA', 'fields': []}
+            section_def = {'title': f'{proyecto.nombre if proyecto else "Embarcación"} - INFORME GLOBAL DE MAQUINARIA', 'fields': []}
             for s in MOTORES_SECTIONS:
                 if 'fields' in s:
                     section_def['fields'].extend(s['fields'])
@@ -343,7 +373,8 @@ def api_analizar_motores():
         if not section_def:
             return jsonify({'error': 'Sección no encontrada'}), 404
 
-        motores = MotoresFicha.query.first()
+        proyecto_id = session.get('proyecto_activo_id')
+        motores = MotoresFicha.query.filter_by(proyecto_id=proyecto_id).first()
         if not motores:
             return jsonify({'error': 'No hay datos de motores disponibles'}), 404
 
@@ -363,7 +394,7 @@ def api_analizar_motores():
 
         if section_id == 'all':
             prompt = f"""
-            Como Ingeniero Jefe de Lloyd's Register y experto en arqueología industrial naval, proporciona un INFORME TÉCNICO GLOBAL y EXHAUSTIVO sobre la maquinaria del S.S. Sirio basado en el Informe de Maquinaria de 1883 (Report on Machinery nº 6147).
+            Como Ingeniero Jefe de Lloyd's Register y experto en arqueología industrial naval, proporciona un INFORME TÉCNICO GLOBAL y EXHAUSTIVO sobre la maquinaria del proyecto "{proyecto.nombre if proyecto else 'Embarcación'}" basado en el Informe de Maquinaria.
 
             DATOS TÉCNICOS COMPLETOS DE MAQUINARIA:
             {section_data_str}
@@ -377,7 +408,7 @@ def api_analizar_motores():
             """
         else:
             prompt = f"""
-            Como experto analista de Lloyd's Register con conocimientos en ingeniería de vapor del siglo XIX, proporciona un informe técnico e histórico SOBRE la sección "{section_def['title']}" de la maquinaria del S.S. Sirio.
+            Como experto analista de Lloyd's Register con conocimientos en ingeniería de vapor del siglo XIX, proporciona un informe técnico e histórico SOBRE la sección "{section_def['title']}" de la maquinaria del proyecto "{proyecto.nombre if proyecto else 'Embarcación'}".
 
             DATOS TÉCNICOS DE LA SECCIÓN:
             {section_data_str}

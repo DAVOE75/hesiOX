@@ -1,9 +1,9 @@
 {% extends "base_desktop.html" %}
-{% block title %}Dashboard — Proyecto Sirio{% endblock %}
+{% block title %}Dashboard — {{ proyecto_activo.nombre if proyecto_activo else 'Vista General' }}{% endblock %}
 {% block page_title %}Panel de Control{% endblock %}
 
 {% block breadcrumb %}
-<span class="text-muted ms-2 small">/ Vista General</span>
+<span class="text-muted ms-2 small">/ {{ proyecto_activo.nombre if proyecto_activo else 'Vista General' }}</span>
 {% endblock %}
 
 {% block top_actions %}

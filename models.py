@@ -163,6 +163,9 @@ class Proyecto(db.Model):
     # Configuración de red (JSON con tipos de nodos y sus entidades)
     red_tipos = db.Column(db.Text, default='{"tipo1": {"nombre": "Principales", "color": "#ff9800", "forma": "dot", "entidades": []}, "tipo2": {"nombre": "Secundarios", "color": "#03a9f4", "forma": "dot", "entidades": []}, "tipo3": {"nombre": "Lugares", "color": "#4a7c2f", "forma": "square", "entidades": []}}')
 
+    # Módulos activados para este proyecto (personas, barco, etc.)
+    modulos_activados = db.Column(db.JSON, default=list)
+
     # 🔐 Relación con Usuario (de momento nullable=True para migración tranquila)
     user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
 
@@ -796,6 +799,7 @@ class PasajeroSirio(db.Model):
     __tablename__ = "pasajeros_sirio"
 
     id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id"), nullable=True)
     nombre = db.Column(db.String(255), nullable=True)
     apellidos = db.Column(db.String(255), nullable=True)
     edad = db.Column(db.Float, nullable=True)
@@ -963,6 +967,7 @@ class LloydsFicha(db.Model):
     """
     __tablename__ = 'lloyds_register_survey_inspeccion_absoluta'
     id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id"), nullable=True)
 
     # 1. ENCABEZADO Y DATOS GENERALES
     survey_no_numero_inspeccion = db.Column(db.String(255))
@@ -1199,6 +1204,7 @@ class SirioFicha(db.Model):
     """
     __tablename__ = 'sirio_ficha'
     id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id"), nullable=True)
 
     # Grupo 1: Encabezado, Tonelaje, Dimensiones
     datos_generales = db.Column(db.JSON)
@@ -1224,6 +1230,7 @@ class SirioFicha(db.Model):
 class SirioPuntoInteractivo(db.Model):
     __tablename__ = 'sirio_puntos_interactivos'
     id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id"), nullable=True)
     nombre = db.Column(db.String(255), nullable=False)
     categoria = db.Column(db.String(100))
     descripcion = db.Column(db.Text)
@@ -1240,6 +1247,7 @@ class MotoresFicha(db.Model):
     """
     __tablename__ = 'motores_ficha_sirio'
     id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id"), nullable=True)
 
     # I. ENCABEZADO DEL INFORME
     motor_survey_no = db.Column(db.String(255))

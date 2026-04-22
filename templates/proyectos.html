@@ -680,6 +680,27 @@
                             <option value="mixto" {{ 'selected' if p.tipo=='mixto' }}>Mixto</option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label text-warning small text-uppercase">Módulos Activos</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="form-check p-2 border border-secondary rounded" style="background: rgba(255,255,255,0.02);">
+                                    <input class="form-check-input ms-0 me-2" type="checkbox" name="modulos_activados" value="censo" id="mod_censo{{ p.id }}" {{ 'checked' if 'censo' in p.modulos_activados or 'personas' in p.modulos_activados }}>
+                                    <label class="form-check-label text-light small" for="mod_censo{{ p.id }}">
+                                        Censo de Pasajeros
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check p-2 border border-secondary rounded" style="background: rgba(255,255,255,0.02);">
+                                    <input class="form-check-input ms-0 me-2" type="checkbox" name="modulos_activados" value="embarcacion" id="mod_embarcacion{{ p.id }}" {{ 'checked' if 'embarcacion' in p.modulos_activados or 'barco' in p.modulos_activados }}>
+                                    <label class="form-check-label text-light small" for="mod_embarcacion{{ p.id }}">
+                                        Embarcación
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-secondary d-flex justify-content-end gap-2">
                     <button type="button" class="btn-sirio" data-bs-dismiss="modal">CANCELAR</button>

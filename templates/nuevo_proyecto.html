@@ -245,10 +245,41 @@
                     </div>
                 </div>
 
-                <!-- Paso 4: Descripción -->
+                <!-- Paso 4: Módulos Adicionales -->
+                <div class="mb-5">
+                    <label class="form-label mb-3">
+                        <span class="step-indicator">4</span>
+                        Módulos Adicionales (Capacidades Extra)
+                    </label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="project-type-option w-100 h-100 text-start d-flex flex-row align-items-center gap-3 p-3">
+                                <input type="checkbox" name="modulos_activados" value="censo" class="form-check-input mt-0" style="width: 20px; height: 20px;">
+                                <div>
+                                    <div class="small text-light fw-bold">Módulo Censo de Pasajeros</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Censo, redes de relaciones y listados de personas.</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="project-type-option w-100 h-100 text-start d-flex flex-row align-items-center gap-3 p-3">
+                                <input type="checkbox" name="modulos_activados" value="embarcacion" class="form-check-input mt-0" style="width: 20px; height: 20px;">
+                                <div>
+                                    <div class="small text-light fw-bold">Módulo Embarcación</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Fichas técnicas, planos y maquinaria de la nave.</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-text text-secondary ps-2 small mt-2">
+                        <i class="fa-solid fa-circle-check me-1"></i>Puedes activar o desactivar estos módulos más tarde desde la configuración del proyecto.
+                    </div>
+                </div>
+
+                <!-- Paso 5: Descripción -->
                 <div class="mb-5">
                     <label class="form-label">
-                        <span class="step-indicator">4</span>
+                        <span class="step-indicator">5</span>
                         Descripción y Objetivos (Opcional)
                     </label>
                     <textarea name="descripcion" class="form-control" rows="3"

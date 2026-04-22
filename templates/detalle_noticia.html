@@ -239,7 +239,15 @@ Detalle de noticia
     color: #dcdcdc;
     text-align: justify;
     margin-bottom: 60px;
-    white-space: pre-wrap;
+    /* white-space: pre-wrap; <-- REMOVED TO PREVENT CONFLICTS WITH QUILL HTML */
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
+
+  .news-body p, .news-body ul, .news-body li, .news-body blockquote {
+    margin-bottom: 1.2rem;
+    overflow: visible !important;
   }
 
   .news-body::first-letter {
@@ -418,7 +426,8 @@ Detalle de noticia
     position: relative;
     cursor: default;
     display: inline-block;
-    line-height: 1;
+    line-height: 1.2;
+    z-index: 50; /* Aumentado para asegurar que los botones flotantes estén al frente */
   }
 
   mark.highlight-lugar.active-scroll {
@@ -1248,7 +1257,7 @@ Detalle de noticia
 
     <main class="editorial-content">
       <div class="content-wrapper">
-        <article class="news-body" id="texto-noticia-copiar">
+        <article class="news-body ql-editor" id="texto-noticia-copiar" style="padding: 0; min-height: auto;">
           {{ noticia.contenido|safe or '<span class="text-muted fst-italic opacity-50">Contenido digital no disponible.
             Revise el OCR.</span>'|safe }}
         </article>
@@ -1760,9 +1769,15 @@ Detalle de noticia
     }
   }
 
-  function borrarLugarDesdeResaltado(nombre, event) {
+  async function borrarLugarDesdeResaltado(nombre, event) {
     if (event) event.stopPropagation();
-    if (!confirm(`¿Eliminar la ubicación "${nombre}" de esta noticia?`)) return;
+    
+    const confirmed = await hesioxConfirm({
+        title: '¿Eliminar ubicación?',
+        text: `¿Eliminar la ubicación "${nombre}" de esta noticia?`,
+        confirmText: 'ELIMINAR'
+    });
+    if (!confirmed) return;
 
     fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
       method: 'POST',
@@ -1776,7 +1791,13 @@ Detalle de noticia
         if (typeof limpiarResaltado === 'function') limpiarResaltado();
         window.renderTablaYMapaUltima();
       } else {
-        alert('Error al eliminar la ubicación.');
+        Swal.fire({
+            title: 'ERROR',
+            text: 'Error al eliminar la ubicación.',
+            icon: 'error',
+            background: '#1a1a1a',
+            color: '#fff'
+        });
       }
     });
   }
@@ -2197,9 +2218,15 @@ Detalle de noticia
             `;
 
             // Listener Borrar
-            item.querySelector('.btn-borrar-lugar').onclick = function (event) {
+            item.querySelector('.btn-borrar-lugar').onclick = async function (event) {
               event.stopPropagation();
-              if (!confirm('¿Eliminar esta ubicación de la noticia?')) return;
+              const confirmed = await hesioxConfirm({
+                  title: '¿Eliminar ubicación?',
+                  text: '¿Eliminar esta ubicación de la noticia?',
+                  confirmText: 'ELIMINAR'
+              });
+              if (!confirmed) return;
+              
               fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
                 method: 'POST',
                 headers: {
@@ -2768,9 +2795,15 @@ Detalle de noticia
         }
       };
 
-      item.querySelector('.btn-borrar-lugar').onclick = function (event) {
+      item.querySelector('.btn-borrar-lugar').onclick = async function (event) {
         event.stopPropagation();
-        if (!confirm('¿Eliminar esta ubicación de la noticia?')) return;
+        const confirmed = await hesioxConfirm({
+            title: '¿Eliminar ubicación?',
+            text: '¿Eliminar esta ubicación de la noticia?',
+            confirmText: 'ELIMINAR'
+        });
+        if (!confirmed) return;
+        
         fetch("{{ url_for('noticias.cartografia_noticia_delete_location', id=noticia.id) }}", {
           method: 'POST',
           headers: {

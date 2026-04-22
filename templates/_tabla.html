@@ -234,7 +234,7 @@
         </td>
 
         <!-- INCL -->
-        <td data-col="incl" class="text-center table-v-middle">
+        <td data-col="incl" class="text-center table-v-middle" onclick="toggleStatusNoticia('{{ r.id }}', this)" style="cursor: pointer;">
           {% if r.incluido %}
           <i class="fa-solid fa-circle-check text-success" title="Incluido" style="font-size: 1.1rem;"></i>
           {% else %}
@@ -274,7 +274,8 @@
             <form method="POST" action="{{ url_for('noticias.noticia_eliminar', noticia_id=r.id) }}" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="btn-admin-action btn-admin-action-danger" title="Eliminar noticia"
-                onclick="return confirm('¿Eliminar esta noticia?');" style="width: 28px;">
+                data-titulo="{{ r.titulo or '[Sin título]' }}"
+                onclick="eliminarNoticiaIndividual(event, this.dataset.titulo);" style="width: 28px;">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </form>

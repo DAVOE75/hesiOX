@@ -5,6 +5,7 @@ Incluye: listar, crear, editar, eliminar, activar proyectos
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
+from sqlalchemy.orm.attributes import flag_modified
 
 from extensions import db
 from models import Proyecto, Prensa, Publicacion, Hemeroteca, ProyectoCompartido, Usuario
@@ -82,6 +83,7 @@ def listar():
             "embeddings_completo": docs_sin_embeddings == 0 and total_docs > 0,
             "es_activo": (p.id == proyecto_activo_id),
             "es_propio": True,
+            "modulos_activados": p.modulos_activados or [],
             "compartido_con": [{"id": u[0], "nombre": u[1], "activo": u[2] is not None} for u in compartidos_con],
             "compartido_por": None
         })
@@ -131,6 +133,7 @@ def listar():
             "embeddings_completo": docs_sin_embeddings == 0 and total_docs > 0,
             "es_activo": (p.id == proyecto_activo_id),
             "es_propio": False,
+            "modulos_activados": p.modulos_activados or [],
             "compartido_por": {
                 "id": creador.id if creador else None,
                 "nombre": creador.nombre if creador else "Usuario desconocido",
@@ -159,6 +162,7 @@ def crear():
         nombre = data['nombre']
         descripcion = data.get('descripcion', '')
         tipo = data.get('tipo', 'hemerografia')
+        modulos = request.form.getlist('modulos_activados')
 
         # Verificar si ya existe un proyecto con ese nombre para este usuario
         if Proyecto.query.filter_by(user_id=current_user.id, nombre=nombre).first():
@@ -169,9 +173,11 @@ def crear():
             nombre=nombre,
             descripcion=descripcion,
             tipo=tipo,
+            modulos_activados=modulos,
             user_id=current_user.id,
             activo=True
         )
+        flag_modified(proyecto, "modulos_activados")
         db.session.add(proyecto)
         db.session.commit()
 
@@ -301,6 +307,8 @@ def editar(proyecto_id):
     proyecto.nombre = nombre
     proyecto.descripcion = descripcion
     proyecto.tipo = tipo
+    proyecto.modulos_activados = request.form.getlist('modulos_activados')
+    flag_modified(proyecto, "modulos_activados")
     
     db.session.commit()
     flash(f"Proyecto '{nombre}' actualizado correctamente.", "success")

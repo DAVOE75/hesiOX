@@ -7,7 +7,72 @@
 <span class="text-muted ms-2 small">/ Gestión de Datos</span>
 {% endblock %}
 {% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <style>
+    /* ========================================
+       QUILL EDITOR - Sirius News Theme
+       ======================================== */
+    .quill-editor {
+        background: #0d0d0d !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #e0e0e0 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    [data-theme="light"] .quill-editor {
+        background: #ffffff !important;
+        border-color: #ddd !important;
+        color: #333 !important;
+    }
+
+    .ql-toolbar.ql-snow {
+        background: #1a1a1a !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-bottom: none !important;
+        padding: 8px !important;
+    }
+
+    [data-theme="light"] .ql-toolbar.ql-snow {
+        background: #f8f9fa !important;
+        border-color: #ddd !important;
+    }
+
+    .ql-container.ql-snow {
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 1rem !important;
+    }
+
+    [data-theme="light"] .ql-container.ql-snow {
+        border-color: #ddd !important;
+    }
+
+    #texto_original_editor .ql-editor {
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.9rem !important;
+        color: #80d4ff !important;
+    }
+
+    [data-theme="light"] #texto_original_editor .ql-editor {
+        color: #0056b3 !important;
+    }
+
+    .ql-editor {
+        min-height: 400px !important;
+        text-align: justify;
+        line-height: 1.6;
+    }
+
+    .ql-snow .ql-stroke { stroke: #bbb !important; }
+    .ql-snow .ql-fill { fill: #bbb !important; }
+    .ql-snow .ql-picker { color: #bbb !important; }
+
+    [data-theme="light"] .ql-snow .ql-stroke { stroke: #444 !important; }
+    [data-theme="light"] .ql-snow .ql-fill { fill: #444 !important; }
+    [data-theme="light"] .ql-snow .ql-picker { color: #444 !important; }
+
+    /* Estilos específicos para la cabecera del editor */
+
     /* Estilos específicos para la cabecera del editor */
     .desktop-header {
         height: 60px !important;
@@ -731,16 +796,14 @@
                             </ul>
                             <div class="tab-content pt-3 flex-grow-1 d-flex flex-column">
                                 <div class="tab-pane fade show active flex-grow-1 d-flex flex-column" id="traduccion">
-                                    <textarea name="contenido" id="contenido"
-                                        class="form-control form-control-sirio border-0 text-light flex-grow-1"
-                                        style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; line-height: 1.6; resize: none; text-align: justify; min-height: 400px;"
-                                        placeholder="Contenido traducido o transcrito...">{{ ref.contenido or '' }}</textarea>
+                                    <div id="toolbar-contenido"></div>
+                                    <div id="contenido-editor" class="quill-editor flex-grow-1"></div>
+                                    <textarea name="contenido" id="contenido" class="d-none">{{ ref.contenido or '' }}</textarea>
                                 </div>
                                 <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="original">
-                                    <textarea name="texto_original" id="texto_original"
-                                        class="form-control form-control-sirio border-0 text-info flex-grow-1"
-                                        style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5; resize: none; min-height: 400px;"
-                                        placeholder="Pega aquí el texto en su idioma original...">{{ ref.texto_original or '' }}</textarea>
+                                    <div id="toolbar-texto_original"></div>
+                                    <div id="texto_original_editor" class="quill-editor flex-grow-1"></div>
+                                    <textarea name="texto_original" id="texto_original" class="d-none">{{ ref.texto_original or '' }}</textarea>
                                 </div>
                             </div>
 
@@ -874,6 +937,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="{{ url_for('static', filename='js/noticia-quill-init.js') }}"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
@@ -1355,59 +1420,8 @@
         });
     }
 
-    // --- Lógica de Revisión con IA para TXT ---
-    const setupGemini = (btnId, areaId) => {
-        const btn = document.getElementById(btnId);
-        const area = document.getElementById(areaId);
-        if (!btn || !area) return;
-
-        btn.addEventListener('click', async () => {
-            const textToFix = area.value.trim();
-            if (textToFix.length < 10) {
-                alert('Texto insuficiente para revisar con IA.');
-                return;
-            }
-
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-brain fa-spin me-1"></i> Corrigiendo...';
-
-            try {
-                const selPotencia = document.getElementById('sel-potencia-ocr');
-                const potencia = selPotencia ? selPotencia.value : 'gemini:flash';
-
-                const response = await fetch('/api/gemini/correct', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                    },
-                    body: JSON.stringify({
-                        text: textToFix,
-                        potencia: potencia
-                    })
-                });
-
-                const data = await response.json();
-                if (data.clean_text || data.corrected_text) {
-                    area.value = data.clean_text || data.corrected_text;
-                    const provider = potencia.split(':')[0].toUpperCase();
-                    alert(`¡Revisión profunda (${provider}) completada con éxito!`);
-                } else {
-                    throw new Error(data.error || 'Error desconocido');
-                }
-            } catch (error) {
-                console.error('Error IA:', error);
-                alert('Error en revisión IA: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-            }
-        });
-    };
-
-    setupGemini('btn-correct-txt-gemini', 'contenido');
-    setupGemini('btn-correct-txt-gemini-orig', 'texto_original');
+    // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
+    // en static/js/noticia-quill-init.js para soportar Quill.
 
     // Función para eliminar imagen
     function eliminarImagen(imagenId, csrfToken) {

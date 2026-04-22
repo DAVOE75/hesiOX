@@ -1,6 +1,6 @@
 {% extends "base_desktop.html" %}
 
-{% block title %}HesiOX - Plano Interactivo S.S. Sirio{% endblock %}
+{% block title %}HesiOX - Plano Interactivo {{ proyecto_activo.nombre if proyecto_activo else "S.S. Sirio" }}{% endblock %}
 
 {% block page_title %}Plano Interactivo{% endblock %}
 
@@ -177,7 +177,7 @@
     <div id="map-container">
         <div class="map-sidebar">
             <div class="sidebar-header">
-                <h4 class="mb-1 fw-bold" style="color: #fff !important;">S.S. Sirio</h4>
+                <h4 class="mb-1 fw-bold" style="color: #fff !important;">{{ proyecto_activo.nombre if proyecto_activo else "S.S. Sirio" }}</h4>
                 <p class="mb-0 small opacity-75" style="color: #fff !important;">Planos de Construcción (1883)</p>
             </div>
 
@@ -195,7 +195,7 @@
                 </div>
 
                 <p class="small text-blue-100 opacity-75 mb-0">
-                    Este visor permite explorar las diferentes secciones y cubiertas del S.S. Sirio según los planos
+                    Este visor permite explorar las diferentes secciones y cubiertas de "{{ proyecto_activo.nombre if proyecto_activo else 'la embarcación' }}" según los planos
                     originales de 1883. Haz clic en las áreas resaltadas para obtener detalles técnicos.
                 </p>
             </div>
@@ -337,8 +337,7 @@
         const getCatColor = (cat) => categoryColors[cat] || (isDark ? '#e9ab00' : '#cdb263');
 
         // Puntos cargados desde el backend
-        const puntosData = {{ puntos | tojson | safe if puntos else '[]'
-    }};
+        const puntosData = {{ (puntos or []) | tojson | safe }};
     const allMarkers = [];
 
     if (Array.isArray(puntosData)) {

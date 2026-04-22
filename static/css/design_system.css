@@ -79,7 +79,7 @@
 /* Sidebar specifically needs fixed width for consistency when expanded */
 .desktop-wrapper:not(.sidebar-collapsed) .sidebar-nav .btn-sirio,
 .desktop-wrapper:not(.sidebar-collapsed) .sidebar-nav .nav-item {
-    width: 220px !important;
+    width: 260px !important;
 }
 
 .btn-sirio-primary {

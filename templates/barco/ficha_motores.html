@@ -1,6 +1,6 @@
 {% extends "base_desktop.html" %}
 
-{% block title %}Ficha Técnica de Motores S.S. Sirio - Lloyd's Report on Machinery{% endblock %}
+{% block title %}Ficha Técnica de Motores {{ proyecto_activo.nombre if proyecto_activo else "S.S. Sirio" }} - Lloyd's Report on Machinery{% endblock %}
 
 {% block page_title %}Informe de Maquinaria{% endblock %}
 
@@ -39,7 +39,7 @@
 
     <!-- Navegación -->
     <div class="d-flex gap-1 border-start border-white border-opacity-10 ps-2">
-        <button onclick="openInsight('all', 'S.S. SIRIO - Análisis Global Maquinaria', event)" class="btn btn-sirio" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
+        <button onclick="openInsight('all', '{{ proyecto_activo.nombre if proyecto_activo else \'Análisis Global Machinery\' }}', event)" class="btn btn-sirio" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Global
         </button>
 
@@ -62,7 +62,7 @@
             Lloyd's Report on Machinery · Nº 6147
         </div>
         <i class="fa-solid fa-cogs fa-3x mb-3 mt-2" style="color: var(--br-accent);"></i>
-        <h1 class="display-6 fw-bold mb-2">S.S. SIRIO · MOTORES</h1>
+        <h1 class="display-6 fw-bold mb-2">{{ proyecto_activo.nombre if proyecto_activo else "S.S. SIRIO" }} · MOTORES</h1>
         <p class="text-muted mb-2">
             <span class="lang-es">Informe Técnico de Maquinaria</span>
             <span class="lang-sep">|</span>

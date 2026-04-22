@@ -546,9 +546,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         new bootstrap.Tab(tabOriginal).show();
                     }
 
-                    // Intentar con TinyMCE
+                    // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
                     let textoCopiado = false;
-                    if (typeof tinymce !== 'undefined') {
+                    if (window.quillEditors && window.quillEditors.texto_original) {
+                        window.quillEditors.texto_original.root.innerHTML = extractedData.text.replace(/\n/g, '<br>');
+                        textoCopiado = true;
+                        appliedCount++;
+                    }
+
+                    // MÉTODO 1: Intentar con TinyMCE
+                    if (!textoCopiado && typeof tinymce !== 'undefined') {
                         const editor = tinymce.get('texto_original');
                         if (editor) {
                             editor.setContent(extractedData.text.replace(/\n/g, '<br>'));
@@ -579,9 +586,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.log('[OCR] ✓ Pestaña "Traducción" activada');
                     }
 
-                    // MÉTODO 1: Intentar con TinyMCE (editor rico)
+                    // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
                     let textoCopiado = false;
-                    if (typeof tinymce !== 'undefined') {
+                    if (window.quillEditors && window.quillEditors.contenido) {
+                        window.quillEditors.contenido.root.innerHTML = extractedData.text.replace(/\n/g, '<br>');
+                        console.log('[OCR] ✓ Texto insertado en Quill (contenido)');
+                        textoCopiado = true;
+                        appliedCount++;
+                    }
+
+                    // MÉTODO 1: Intentar con TinyMCE (editor rico)
+                    if (!textoCopiado && typeof tinymce !== 'undefined') {
                         const editor = tinymce.get('contenido');
                         console.log('[OCR] Editor TinyMCE encontrado:', !!editor);
                         if (editor) {

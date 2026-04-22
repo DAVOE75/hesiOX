@@ -1,6 +1,6 @@
 {% extends "base_desktop.html" %}
 
-{% block title %}Ficha Técnica S.S. Sirio - Lloyd's Register{% endblock %}
+{% block title %}Ficha Técnica {{ proyecto_activo.nombre if proyecto_activo else "S.S. Sirio" }} - Lloyd's Register{% endblock %}
 
 {% block page_title %}Ficha Técnica Exhaustiva{% endblock %}
 
@@ -52,7 +52,7 @@
 
     <!-- Navegación y Otros -->
     <div class="d-flex gap-1 border-start border-white border-opacity-10 ps-2">
-        <button onclick="openInsight('all', 'S.S. SIRIO - Análisis Global', event)" class="btn btn-sirio btn-sirio-warning" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
+        <button onclick="openInsight('all', '{{ proyecto_activo.nombre if proyecto_activo else \'Análisis Global\' }}', event)" class="btn btn-sirio btn-sirio-warning" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Global
         </button>
 
@@ -71,7 +71,7 @@
 
     <div class="hero-technical-card">
         <i class="fa-solid fa-anchor fa-3x text-accent mb-3"></i>
-        <h1 class="display-6 fw-bold mb-2">S.S. SIRIO</h1>
+        <h1 class="display-6 fw-bold mb-2">{{ proyecto_activo.nombre if proyecto_activo else "S.S. SIRIO" }}</h1>
 
         <p class="text-muted mb-0">FICHA TÉCNICA</p>
         <div class="mt-2 small text-accent opacity-75 bimodal-header">

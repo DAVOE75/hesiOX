@@ -220,12 +220,12 @@
 
                     <div class="nav-separator"></div>
 
-                    <!-- GRUPO: PASAJEROS (Solo para Sirio ID=1) -->
-                    {% if proyecto_activo and proyecto_activo.id == 1 %}
+                    <!-- GRUPO: CENSO DE PASAJEROS (Modular) -->
+                    {% if proyecto_activo and ('censo' in proyecto_activo.modulos_activados or 'personas' in proyecto_activo.modulos_activados) %}
                     <div class="nav-group-item">
                         <a class="nav-item {% if request.blueprint == 'pasajeros' %}active{% else %}collapsed{% endif %}" data-bs-toggle="collapse" href="#menuPasajeros" role="button" aria-expanded="{% if request.blueprint == 'pasajeros' %}true{% else %}false{% endif %}" aria-controls="menuPasajeros">
-                            <i class="fa-solid fa-person-walking-luggage"></i>
-                            <span class="nav-label fw-bold font-accent">PASAJEROS</span>
+                            <i class="fa-solid fa-users"></i>
+                            <span class="nav-label fw-bold font-accent">CENSO DE PASAJEROS</span>
                             <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
                         </a>
                         <div class="collapse {% if request.blueprint == 'pasajeros' %}show{% endif %}" id="menuPasajeros">
@@ -251,12 +251,12 @@
                     <div class="nav-separator"></div>
                     {% endif %}
 
-                    <!-- GRUPO: EL BARCO (Exhaustivo Lloyd's SIG - Solo Sirio ID=1) -->
-                    {% if proyecto_activo and proyecto_activo.id == 1 %}
+                    <!-- GRUPO: EMBARCACIÓN (Modular) -->
+                    {% if proyecto_activo and ('embarcacion' in proyecto_activo.modulos_activados or 'barco' in proyecto_activo.modulos_activados) %}
                     <div class="nav-group-item">
                         <a class="nav-item {% if request.blueprint == 'barco' %}active{% else %}collapsed{% endif %}" data-bs-toggle="collapse" href="#menuBarco" role="button" aria-expanded="{% if request.blueprint == 'barco' %}true{% else %}false{% endif %}" aria-controls="menuBarco">
                             <i class="fa-solid fa-anchor"></i>
-                            <span class="nav-label fw-bold font-accent">EL BARCO</span>
+                            <span class="nav-label fw-bold font-accent text-uppercase">EMBARCACIÓN</span>
                             <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
                         </a>
                         <div class="collapse {% if request.blueprint == 'barco' %}show{% endif %}" id="menuBarco">
@@ -849,6 +849,37 @@
                 setTimeout(pollEmbeddingProgress, 1500);
             })();
         </script>
-</body>
+        <!-- Sirio Global Helpers -->
+        <script>
+            /**
+             * hesioxConfirm: A centralized confirmation helper using SweetAlert2.
+             */
+            window.hesioxConfirm = function({ 
+                title = '¿Estás seguro?', 
+                text = 'Esta acción no se puede deshacer.', 
+                confirmText = 'ELIMINAR', 
+                icon = 'warning',
+                confirmColor = '#dc3545'
+            } = {}) {
+                return Swal.fire({
+                    title: title.toUpperCase(),
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'CANCELAR',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    confirmButtonColor: confirmColor,
+                    cancelButtonColor: '#333',
+                    customClass: {
+                        popup: 'border border-secondary rounded-0 shadow-lg',
+                        title: 'text-accent small fw-bold',
+                        htmlContainer: 'small opacity-75'
+                    }
+                }).then(result => result.isConfirmed);
+            };
+        </script>
+    </body>
 
 </html>
