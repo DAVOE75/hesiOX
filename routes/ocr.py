@@ -145,8 +145,85 @@ def ocr_advanced():
                         confidences.extend(page_conf)
                 text = '\\n'.join(texts)
                 confidence = sum(confidences) / len(confidences) if confidences else None
+            elif ocr_engine == 'paddle':
+                try:
+                    from paddleocr import PaddleOCR
+                    # PaddleOCR: lang='es' para español, use_angle_cls=True para detectar orientación
+                    # lazy load del modelo para evitar consumo de RAM si no se usa
+                    ocr_p = PaddleOCR(use_angle_cls=True, lang='es', show_log=False)
+                    result = ocr_p.ocr(filepath, cls=True)
+                    if result and result[0]:
+                        # Aplanar resultados: Paddle devuelve [ [[coords], [text, conf]], ... ]
+                        lines = [line[1][0] for line in result[0]]
+                        text = '\n'.join(lines)
+                        confidences = [line[1][1] for line in result[0]]
+                        confidence = (sum(confidences) / len(confidences)) * 100 if confidences else None
+                    print(f'[OCR DEBUG] Texto extraído PaddleOCR: {text[:100]}...')
+                except ImportError:
+                    print('[OCR DEBUG] PaddleOCR no instalado')
+                    return jsonify({'error': 'Motor PaddleOCR no instalado en el servidor. Instale paddlepaddle y paddleocr.'}), 501
+                except Exception as e_paddle:
+                    print(f'[OCR DEBUG] Error en PaddleOCR: {e_paddle}')
+                    return jsonify({'error': f'Error en PaddleOCR: {str(e_paddle)}'}), 500
+
+            elif ocr_engine == 'yolo':
+                try:
+                    from ultralytics import YOLO
+                    import cv2
+                    import numpy as np
+                    
+                    # Cargamos el modelo YOLO (preferiblemente uno de detección de texto/layout)
+                    # Usamos yolov8n como base si no hay uno específico
+                    model_yolo = YOLO('yolov8n.pt') 
+                    results_yolo = model_yolo(filepath, verbose=False)
+                    
+                    img_cv = cv2.imread(filepath)
+                    blocks_text = []
+                    conf_list = []
+                    
+                    # Si YOLO detecta objetos, intentamos OCR por bloques
+                    has_detections = False
+                    for r in results_yolo:
+                        if len(r.boxes) > 0:
+                            has_detections = True
+                            # Ordenar cajas de arriba a abajo para mantener orden de lectura
+                            boxes = sorted(r.boxes.data.tolist(), key=lambda x: x[1])
+                            for box in boxes:
+                                x1, y1, x2, y2, conf_yolo, cls = box
+                                # Crop con un pequeño margen
+                                h, w = img_cv.shape[:2]
+                                pad = 5
+                                crop = img_cv[max(0, int(y1)-pad):min(h, int(y2)+pad), 
+                                              max(0, int(x1)-pad):min(w, int(x2)+pad)]
+                                
+                                # Usamos Tesseract para el texto dentro del bloque detectado por YOLO
+                                ocr_data = pytesseract.image_to_data(crop, config='--psm 6 -l spa', output_type=pytesseract.Output.DICT)
+                                block_txt = ' '.join([t for t in ocr_data['text'] if t.strip()])
+                                if block_txt.strip():
+                                    blocks_text.append(block_txt.strip())
+                                    c_vals = [float(c) for c in ocr_data['conf'] if c != '-1']
+                                    if c_vals: conf_list.extend(c_vals)
+
+                    if has_detections and blocks_text:
+                        text = '\n\n'.join(blocks_text)
+                        confidence = sum(conf_list) / len(conf_list) if conf_list else None
+                    else:
+                        # Fallback: Si YOLO no detecta nada o falla la segmentación, Tesseract normal
+                        ocr_data = pytesseract.image_to_data(img_cv, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
+                        text = ' '.join([t for t in ocr_data['text'] if t.strip()])
+                        c_vals = [float(c) for c in ocr_data['conf'] if c != '-1']
+                        confidence = sum(c_vals) / len(c_vals) if c_vals else None
+
+                    print(f'[OCR DEBUG] Texto extraído YOLO+Tesseract: {text[:100]}...')
+                except ImportError:
+                    print('[OCR DEBUG] Ultralytics/OpenCV no instalado')
+                    return jsonify({'error': 'Motor YOLO requiere ultralytics y opencv-python.'}), 501
+                except Exception as e_yolo:
+                    print(f'[OCR DEBUG] Error en YOLO: {e_yolo}')
+                    return jsonify({'error': f'Error en YOLO: {str(e_yolo)}'}), 500
+
             else:
-                return jsonify({'error': 'Unsupported file type'}), 400
+                return jsonify({'error': 'Unsupported OCR engine or file type combo'}), 400
         except Exception as e:
             print(f'[OCR DEBUG] Exception during OCR processing: {e}')
             import traceback

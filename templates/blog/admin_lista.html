@@ -335,6 +335,14 @@
                                     onclick="eliminarEntrada({{ entrada.id }})">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
+                            {% if entrada.publicado %}
+                             <button class="action-btn {{ 'text-success border-success' if entrada.notificado else 'text-info border-info' }}" 
+                                     id="notificar-btn-{{ entrada.id }}"
+                                     title="{{ 'Ya notificado' if entrada.notificado else 'Notificar a suscriptores' }}"
+                                     onclick="notificarSuscriptores({{ entrada.id }})">
+                                 <i class="fa-solid {{ 'fa-envelope-circle-check' if entrada.notificado else 'fa-paper-plane' }}"></i>
+                             </button>
+                             {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -364,7 +372,8 @@ const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 async function togglePublicar(entradaId, badge) {
     try {
-        const resp = await fetch(`/blog/admin/${entradaId}/publicar`, {
+        const url = `/blog/admin/${entradaId}/publicar`;
+        const resp = await fetch(url, {
             method: 'POST',
             headers: { 'X-CSRFToken': CSRF }
         });
@@ -396,7 +405,8 @@ async function eliminarEntrada(entradaId) {
     if (!confirmed.isConfirmed) return;
 
     try {
-        const resp = await fetch(`/blog/admin/${entradaId}/eliminar`, {
+        const url = `/blog/admin/${entradaId}/eliminar`;
+        const resp = await fetch(url, {
             method: 'POST',
             headers: { 'X-CSRFToken': CSRF }
         });
@@ -412,6 +422,66 @@ async function eliminarEntrada(entradaId) {
         }
     } catch(e) {
         Swal.fire('Error', 'No se pudo eliminar la entrada.', 'error');
+    }
+}
+
+async function notificarSuscriptores(entradaId) {
+    const btn = document.getElementById(`notificar-btn-${entradaId}`);
+    
+    const result = await Swal.fire({
+        title: '¿Enviar newsletter?',
+        text: 'Se enviará un correo a todos los suscriptores activos con el contenido de esta entrada.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, enviar ahora',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#00bcd4',
+        background: 'var(--ds-bg-card, #1a1a1a)',
+        color: 'var(--ds-text-primary, #fff)',
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Loading state
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+    console.log(`[DEBUG] Notificando entrada ${entradaId}...`);
+    const url = `/blog/admin/${entradaId}/notificar`;
+    console.log(`[DEBUG] Fetching URL: ${url}`);
+    
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': CSRF,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await resp.json();
+        
+        if (data.success) {
+            Swal.fire({
+                title: '¡Enviado!',
+                text: data.message,
+                icon: 'success',
+                timer: 3000,
+                background: 'var(--ds-bg-card, #1a1a1a)',
+                color: 'var(--ds-text-primary, #fff)'
+            });
+            btn.className = 'action-btn text-success border-success';
+            btn.innerHTML = '<i class="fa-solid fa-envelope-circle-check"></i>';
+            btn.title = 'Ya notificado';
+        } else {
+            Swal.fire('Error', data.error || 'No se pudo enviar la notificación.', 'error');
+            btn.innerHTML = originalHTML;
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Ocurrió un error en la conexión.', 'error');
+        btn.innerHTML = originalHTML;
+    } finally {
+        btn.disabled = false;
     }
 }
 </script>

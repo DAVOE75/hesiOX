@@ -173,11 +173,12 @@
                                     class="btn-admin-action" title="Migrar">
                                     <i class="fa-solid fa-truck-arrow-right"></i>
                                 </a>
-                                <a href="{{ url_for('hemerotecas.borrar_hemeroteca', id=h.id) }}"
-                                    class="btn-admin-action btn-admin-action-danger"
-                                    onclick="return confirm('¿Eliminar hemeroteca {{ h.nombre }}?')" title="Eliminar">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </a>
+                                <form action="{{ url_for('hemerotecas.borrar_hemeroteca', id=h.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar hemeroteca {{ h.nombre }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-admin-action btn-admin-action-danger bg-transparent border-0" title="Eliminar">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

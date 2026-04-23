@@ -16,6 +16,7 @@ from utils import formatear_fecha_para_ui
 from sqlalchemy import or_, text
 import re
 import sys
+import json
 from analisis_innovador import AnalisisInnovador
 
 # Blueprint
@@ -251,13 +252,18 @@ def publicacion_to_dict(pub):
     if ciudad_nombre:
         get_or_create_city_with_coords(db.session, ciudad_nombre, country=pais)
 
+    # Obtener nombre real de la publicación desde la relación
+    pub_nombre = pub.publicacion or ''
+    if hasattr(pub, 'publicacion_rel') and pub.publicacion_rel:
+        pub_nombre = pub.publicacion_rel.nombre
+        
     return {
         'id': pub.id,
         'publicacion_id': pub.id_publicacion,
         'titulo': pub.titulo or '',
         'contenido': pub.contenido or '',
         'fecha': fecha,
-        'publicacion': pub.publicacion or '',
+        'publicacion': pub_nombre,
         'ciudad': pub.ciudad or '',
         'pais': pub.pais_publicacion or '',
         'autor': pub.nombre_autor or '',
@@ -763,13 +769,14 @@ Analiza los siguientes fragmentos de obras teatrales:
 
 {texto_ia}
 
-Genera un informe analítico premium que incluya:
-1. **Conflicto Central**: Motor dramático principal.
-2. **Arquetipos**: Análisis de los roles de los personajes principales.
-3. **Puntos de Giro**: Identificación de clímax o tensiones clave.
-4. **Temas Subyacentes**: Significado hermenéutico (honor, poder, traición, etc.).
+Genera un informe narratológico de ALTA COMPLEJIDAD que incluya:
+1. **Conflicto y Poder**: Motor dramático y jerarquía discursiva.
+2. **Espectro Táctico**: Deconstrucción de las intenciones predominantes (Persuadir vs Atacar).
+3. **Anatomía del Clímax**: Análisis de los puntos de giro basados en la curva de tensión.
+4. **Sincronía Afectiva**: Interpretación de los vínculos de 'Entrainment' entre el reparto.
+5. **Hermenéutica Teatral**: Significado profundo y temas universales detectados.
 
-Responde en formato Markdown estructurado con iconos 🎭."""
+Responde en formato Markdown estructurado, profesional y académico, usando iconos teatrales 🎭✨."""
 
                 resultado['analisis_ia'] = ai_service.generate_content(
                     prompt=prompt,
@@ -1591,6 +1598,120 @@ def interpretar_sesgos_ia():
     except Exception as e:
         return jsonify({'exito': False, 'error': str(e)}), 500
 
+@analisis_bp.route('/dramatico/subtexto', methods=['POST'])
+@csrf.exempt
+@login_required
+def analisis_subtexto_ia():
+    """Analiza el subtexto y las intenciones dramáticas usando IA"""
+    try:
+        from services.ai_service import AIService
+        data = request.get_json() or {}
+        filtros = extraer_filtros(data)
+        manual_aliases = data.get('manual_aliases', {})
+        modelo_ia = data.get('modelo', 'gemini-1.5-pro')
+        
+        # Obtener documentos
+        limite = filtros.pop('limite', 300)
+        publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=limite if (limite and limite > 0) else None)
+        
+        if not publicaciones_db:
+            return jsonify({'exito': False, 'error': 'No hay documentos para analizar'}), 400
+            
+        # Extraer una muestra representativa de diálogos
+        # Para no saturar el prompt, tomamos fragmentos de los personajes principales
+        reparto_muestra = {}
+        for pub in publicaciones_db[:5]: # Máximo 5 documentos para contexto
+            contenido = pub.contenido or ""
+            # Limpieza básica
+            texto = re.sub(r'<[^>]*?>', '', contenido)
+            # Intentar detectar diálogos (NOMBRE: texto)
+            lineas = texto.split('\n')
+            for linea in lineas:
+                match = re.match(r'^\s*([A-ZÁÉÍÓÚÑ ]+)\s*[:\.]\s*(.*)', linea)
+                if match:
+                    personaje = match.group(1).strip().upper()
+                    # Ignorar acotaciones y nombres cortos
+                    if len(personaje) > 2 and personaje not in ['ACTO', 'ESCENA', 'FIN']:
+                        if personaje not in reparto_muestra:
+                            reparto_muestra[personaje] = []
+                        if len(reparto_muestra[personaje]) < 15: # Máximo 15 intervenciones por personaje
+                            reparto_muestra[personaje].append(match.group(2).strip()[:200])
+
+        # Consolidar data para el prompt
+        dialogos_data = ""
+        for p, d in reparto_muestra.items():
+            dialogos_data += f"\nPERSONAJE: {p}\n"
+            dialogos_data += "\n".join([f"- {i}" for i in d]) + "\n"
+
+        if not dialogos_data:
+            return jsonify({'exito': False, 'error': 'No se detectaron diálogos claros para el análisis de subtexto'}), 400
+
+        prompt = f"""Actúa como un analista literario y experto en dramaturgia profesional. 
+Analiza los siguientes diálogos de una obra teatral y clasifica las "Acciones Dramáticas" (tácticas) de cada personaje según su subtexto.
+
+CATEGORÍAS DE ACCIÓN:
+1. Persuadir/Convencer
+2. Atacar/Confrontar
+3. Seducir/Cortejar
+4. Suplicar/Rogar
+5. Defender/Justificar
+6. Evadir/Huir
+7. Manipular/Engañar
+8. Informar/Exponer
+9. Reflexionar/Dudar
+
+DATOS DE DIÁLOGOS:
+{dialogos_data}
+
+Responde ÚNICAMENTE con un objeto JSON válido con el siguiente formato (sin bloques de código markdown, solo el JSON):
+{{
+  "personajes": {{
+    "NOMBRE_PERSONAJE": {{
+      "tacticas": {{ "Persuadir/Convencer": 30, "Atacar/Confrontar": 10, ... }},
+      "resumen_estrategico": "Breve descripción de su meta",
+      "evolucion": "Cómo cambia su táctica"
+    }}
+  }},
+  "conflicto_dominante": "Choque de intenciones principal",
+  "clima_escenico": "Tono general del subtexto",
+  "evolucion_temporal": [
+    {{ "acto": "I", "tactica": "Persuadir", "valor": 40 }},
+    {{ "acto": "I", "tactica": "Atacar", "valor": 20 }},
+    {{ "acto": "II", "tactica": "Manipular", "valor": 60 }},
+    ...
+  ]
+}}
+"""
+        ai_service = AIService(model=modelo_ia, user=current_user)
+        respuesta_raw = ai_service.generate_content(prompt, temperature=0.3)
+        
+        # Limpiar respuesta por si la IA añade markdown
+        if "```json" in respuesta_raw:
+            respuesta_raw = respuesta_raw.split("```json")[1].split("```")[0].strip()
+        elif "```" in respuesta_raw:
+            respuesta_raw = respuesta_raw.split("```")[1].split("```")[0].strip()
+            
+        try:
+            resultado_ia = json.loads(respuesta_raw)
+            
+            # Generar Streamgraph si hay datos de evolución
+            streamgraph_spec = None
+            if resultado_ia.get('evolucion_temporal'):
+                innovador = AnalisisInnovador()
+                tema = request.args.get('theme', 'dark') # O usar cookie
+                streamgraph_spec = innovador.generar_streamgraph_tactico(resultado_ia['evolucion_temporal'], theme=tema)
+            
+            resultado_ia['streamgraph_spec'] = streamgraph_spec
+            return jsonify({'exito': True, 'analisis': resultado_ia})
+        except Exception as e:
+            print(f"[SUBTEXTO ERROR] Fallo al parsear JSON: {e}\nRespuesta: {respuesta_raw}")
+            return jsonify({'exito': False, 'error': 'La IA no devolvió un formato válido', 'raw': respuesta_raw}), 500
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'exito': False, 'error': str(e)}), 500
+
 @analisis_bp.route('/ping', methods=['GET'])
 def ping_analisis():
     return jsonify({'mensaje': 'Blueprint analisis_avanzado activo'}), 200
@@ -1649,6 +1770,25 @@ def interpretar_dramatico_seccion():
                 "Comenta las diferencias entre los arcos emocionales de los distintos personajes. "
                 "¿Quién tiene la trayectoria más estable? ¿Quién sufre los cambios más erráticos? "
                 "Explica cómo estas trayectorias individuales revelan los conflictos internos y la evolución de los personajes a lo largo de la pieza."
+            ),
+            'tactica_flujo': (
+                "Actúa como un analista de tácticas dramáticas. Analiza el 'Flujo Táctico' de la obra (evolución de intenciones comunicativas):\n"
+                f"{str(chart_data.get('metricas_avanzadas', {}).get('flujo_tactico', []))}\n\n"
+                "Identifica las tácticas dominantes en cada acto (Atacar, Persuadir, Seducir, Manipular, Informar). "
+                "¿Cómo cambia el 'juego de poder' a lo largo de la obra? ¿Hay una transición de la persuasión a la confrontación abierta? "
+                "Explica qué revela este flujo táctico sobre la estrategia narrativa del autor."
+            ),
+            'ritmo': (
+                "Actúa como un analista de ritmo teatral. Analiza las métricas de 'Ritmo Dramático' y sentimiento de 'Acotaciones':\n"
+                f"{str(chart_data.get('metricas_avanzadas', {}).get('ritmo_bloques', []))}\n\n"
+                "Interpreta la relación entre la velocidad de la acción (intervenciones) y el tono del autor (acotaciones). "
+                "¿Hay momentos de estancamiento rítmico con alta carga emocional? ¿Cómo gestiona el autor el 'tempo' de la obra?"
+            ),
+            'sincronia': (
+                "Actúa como un analista de dinámicas relacionales. Analiza la 'Sincronía Emocional' (Entrainment) entre personajes:\n"
+                f"{str(chart_data.get('metricas_avanzadas', {}).get('sincronia_pares', []))}\n\n"
+                "Identifica las parejas de personajes con mayor sintonía afectiva y aquellos con mayor disonancia. "
+                "¿Qué sugiere esto sobre sus vínculos sociales? ¿Quiénes están 'en la misma onda' y quiénes están en conflicto irreconciliable?"
             )
         }
         
@@ -1656,25 +1796,19 @@ def interpretar_dramatico_seccion():
             
         from flask_login import current_user
         # Usar AIService con el modelo solicitado y fallback automático
+        import sys
         print(f"[Análisis Dramático] Iniciando interpretación con modelo {modelo_ia}...", file=sys.stderr)
         ai_service = AIService(model=modelo_ia, user=current_user)
         respuesta = ai_service.generate_content(prompt, temperature=0.7, auto_fallback=True)
         
-        if respuesta and isinstance(respuesta, str):
-            return jsonify({'exito': True, 'interpretacion': respuesta})
-        else:
-            error_msg = ai_service.last_error or "Error de comunicación con todos los proveedores de IA"
-            print(f"[Análisis Dramático] FALLO CRÍTICO IA: {error_msg}", file=sys.stderr)
-            return jsonify({'exito': False, 'error': error_msg}), 500
+        return jsonify({
+            'exito': True,
+            'interpretacion': respuesta
+        })
     except Exception as e:
         import traceback
-        print(f"[Análisis Dramático] EXCEPCIÓN EN RUTA: {str(e)}", file=sys.stderr)
         traceback.print_exc()
-        return jsonify({'exito': False, 'error': str(e)}), 500
-
-@analisis_bp.route('/innovador/literario', methods=['POST'])
-@csrf.exempt
-@login_required
+        return jsonify({'exito': False, 'error': str(e)})
 def analisis_literario():
     """Endpoint para análisis literario profundo (Altair)"""
     try:
@@ -1812,9 +1946,11 @@ def corpus_chat():
         logger.info(f"Corpus Chat - Proyecto: {proyecto.nombre} | Pregunta: {pregunta[:50]}...")
         
         # 1. Inicializar servicio de embeddings
+        logger.info("[CORPUS_CHAT] Inicializando servicio de embeddings...")
         embedding_service = EmbeddingService(user=current_user)
         
         # 2. Buscar documentos con embeddings
+        logger.info(f"[CORPUS_CHAT] Buscando documentos para proyecto ID {proyecto.id}...")
         documentos_candidatos = db.session.query(Prensa).filter(
             Prensa.proyecto_id == proyecto.id,
             Prensa.embedding_vector.isnot(None)
@@ -1824,17 +1960,37 @@ def corpus_chat():
             return jsonify({'exito': False, 'error': 'No hay documentos con embeddings en este proyecto. Por favor, genéralos primero.'}), 404
         
         # 3. Detectar dimensión y modelo
-        first_doc = documentos_candidatos[0]
-        actual_dim = len(first_doc.embedding_vector) if isinstance(first_doc.embedding_vector, list) else 0
+        actual_dim = 0
+        for doc in documentos_candidatos[:20]:
+            emb = doc.embedding_vector
+            if emb is None: continue
+            
+            # Robustez: Si es un string (JSON), lo cargamos
+            if isinstance(emb, str):
+                try:
+                    import json
+                    emb = json.loads(emb)
+                except: continue
+                
+            actual_dim = len(emb) if isinstance(emb, (list, tuple)) else 0
+            if actual_dim > 0:
+                break
         
         if actual_dim == 0:
-            return jsonify({'exito': False, 'error': 'Formato de embedding inválido en la base de datos.'}), 500
+            return jsonify({'exito': False, 'error': 'Formato de embedding inválido en la base de datos (dimensión 0). Por favor, regenera los embeddings para este proyecto.'}), 500
             
         target_model = embedding_service.detect_model_from_dimension(actual_dim)
         if not target_model:
-            target_model = 'google' if actual_dim == 768 else 'openai-small'
+            # Fallback inteligente basado en dimensiones conocidas
+            if actual_dim == 768: target_model = 'google'
+            elif actual_dim == 1536: target_model = 'openai-small'
+            elif actual_dim == 3072: target_model = 'openai-large'
+            else: target_model = 'openai-small' # Fallback final
+            
+        logger.info(f"[CORPUS_CHAT] Dimensión detectada: {actual_dim}, Modelo: {target_model}")
             
         # 4. Generar embedding de la pregunta
+        logger.info("[CORPUS_CHAT] Generando embedding de la pregunta...")
         try:
             query_embedding = embedding_service.generate_query_embedding(pregunta, model=target_model)
         except Exception as api_err:
@@ -1853,14 +2009,24 @@ def corpus_chat():
             }), 500
         
         if not query_embedding:
+            logger.warning(f"[CORPUS_CHAT] No se pudo generar query_embedding para {target_model}")
             return jsonify({'exito': False, 'error': f'La IA no pudo generar un vector para esta pregunta ({target_model})'}), 500
         
         # 5. Filtrar documentos compatibles
+        logger.info(f"[CORPUS_CHAT] Filtrando {len(documentos_candidatos)} candidatos...")
         documentos = []
         doc_embeddings = []
         for doc in documentos_candidatos:
             d_vec = doc.embedding_vector
-            if isinstance(d_vec, list) and len(d_vec) == len(query_embedding):
+            if d_vec is None: continue
+            
+            if isinstance(d_vec, str):
+                try:
+                    import json
+                    d_vec = json.loads(d_vec)
+                except: continue
+                
+            if isinstance(d_vec, (list, tuple)) and len(d_vec) == len(query_embedding):
                 documentos.append(doc)
                 doc_embeddings.append(d_vec)
         
@@ -1887,12 +2053,21 @@ DOCUMENTOS:
 Instrucciones: Cita por ID, sé conciso y fiel a los textos."""
         
         # 8. Generar respuesta con LLM
-        ai_service = AIService(model=modelo_ia, user=current_user)
+        logger.info(f"[CORPUS_CHAT] Generando respuesta con LLM ({modelo_ia})...")
+        
+        # Detectar proveedor basado en el nombre del modelo
+        provider = 'gemini'
+        if 'gpt' in modelo_ia.lower(): provider = 'openai'
+        elif 'claude' in modelo_ia.lower(): provider = 'anthropic'
+        
+        ai_service = AIService(provider=provider, model=modelo_ia, user=current_user)
         respuesta_ia = ai_service.generate_content(prompt, temperature=temperatura)
         
         if not respuesta_ia:
+            logger.error("[CORPUS_CHAT] La IA no devolvió respuesta")
             return jsonify({'exito': False, 'error': 'La IA no pudo generar una respuesta.'}), 500
         
+        logger.info("[CORPUS_CHAT] Respuesta generada con éxito")
         # 9. Respuesta final
         return jsonify({
             'exito': True,

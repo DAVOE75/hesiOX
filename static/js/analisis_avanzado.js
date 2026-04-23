@@ -403,6 +403,9 @@ function cambiarVista(tipo) {
         } else if (tipo === 'estilo') {
           cargarAnalisis('estilo');
           cargarInnovador(); // Carga también la dispersión y heatmap
+        } else if (tipo === 'subtexto') {
+          // No cargar automáticamente, esperar clic del usuario o usar datos previos
+          if (datosActuales['subtexto']) renderSubtexto(datosActuales['subtexto']);
         } else {
           cargarAnalisis(tipo);
         }
@@ -428,6 +431,7 @@ function cambiarVista(tipo) {
           case 'emociones': renderEmociones(datosActuales[tipo]); renderizado = true; break;
           case 'sesgos': renderSesgos(datosActuales[tipo]); renderizado = true; break;
           case 'intertextualidad': renderIntertextualidad(datosActuales[tipo]); renderizado = true; break;
+          case 'subtexto': renderSubtexto(datosActuales[tipo]); renderizado = true; break;
         }
 
         // Asegurarse de ocultar el loading si ya tenemos los datos
@@ -3128,323 +3132,17 @@ function interpretarSesgosIA() {
  * ANALISIS DRAMÁTICO (TEATRO)
  * Migrado y robustecido para trabajar en la vista avanzada.
  */
-function loadDramatico(data) {
-  const container = document.getElementById('view-dramatico');
-  if (!container) return;
-  
-  // UX Reset: Limpiar explícitamente el contenedor de IA antes de renderizar
-  const oldIaContainer = document.getElementById('ia-report-container');
-  if (oldIaContainer) oldIaContainer.innerHTML = '';
-  
-  console.log('[DEBUG] loadDramatico rendering. IA data present?', data.analisis_ia !== undefined && data.analisis_ia !== null);
-
-  const light = UI_COLORS.isLight();
-  const textWhite = light ? '#212121' : '#fff';
-  const textMuted = light ? '#666' : 'rgba(255,255,255,0.7)';
-  const cardBg = light ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.15)';
-  const borderColor = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
-
-  // Helper para generar cabeceras con botón de IA y texto explicativo
-  const getSectionHeader = (id, title, explain, icon, aiSection) => `
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h5 class="text-muted small fw-bold mb-1"><i class="${icon} me-2 text-warning"></i>${title.toUpperCase()}</h5>
-            <p class="text-muted mb-0" style="font-size: 11px; opacity: 0.8;">${explain}</p>
-        </div>
-        <button class="btn btn-outline-warning btn-sm border-opacity-25" style="font-size: 10px; height: 26px; display: flex; align-items: center;" 
-                onclick="interpretarSeccionDramatica('${aiSection}', '${id}')">
-            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Analizar con IA
-        </button>
-    </div>
-  `;
-
-  // Obtener personajes ignorados
-  const ignoreKey = `ignored_${filtros.proyecto_id || 'default'}`;
-  const ignoredChars = JSON.parse(localStorage.getItem(ignoreKey) || '[]');
-
-  // Generar filas para la tabla de reparto (Filtrando ignorados)
-  const tableRows = (data.reparto_detalle || [])
-    .filter(p => !ignoredChars.includes(p.nombre))
-    .map(p => `
-    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <td class="fw-bold py-3" style="color: var(--ds-accent);">${p.nombre}</td>
-        <td class="text-center font-monospace" style="color: ${textWhite};">${p.intervenciones || 0}</td>
-        <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras_por_intervencion || 0}</td>
-        <td class="small">
-            ${(p.distinctive_words || []).map(w => `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 me-1 fw-bold" style="font-size: 10px !important;">${w}</span>`).join('')}
-            <div class="mt-1 opacity-50" style="font-size: 9px;">
-                Dominantes: ${(p.top_words || []).slice(0,3).map(w => typeof w === 'object' ? w.term : w).join(', ')}
-            </div>
-        </td>
-        <td class="small opacity-75">
-            ${(p.top_frases || []).map(f => {
-                const term = typeof f === 'object' ? f.term : f;
-                const count = typeof f === 'object' ? f.count : '?';
-                return `<span class="badge bg-sirio-dim me-1 fw-normal border border-secondary border-opacity-10" style="font-size: 10px; color: var(--ds-accent-primary); opacity: 0.8; font-style: italic; cursor: help;" title="Frecuencia: ${count} veces">"${term}"</span>`;
-            }).join('')}
-        </td>
-    </tr>
-  `).join('');
-
-  const iaInsightsHtml = (data.analisis_ia && data.analisis_ia.trim() !== "" && data.analisis_ia !== "null") ? `
-    <div id="ia-report-container">
-        <div class="glass-panel p-4 mb-4 animate__animated animate__fadeIn" style="background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(0,0,0,0) 100%); border: 1px solid rgba(255, 152, 0, 0.2) !important;">
-            <div class="text-warning mb-3 small fw-bold" style="letter-spacing: 1px;">
-                <i class="fa-solid fa-wand-magic-sparkles me-2"></i>INTERPRETACIÓN NARRATOLÓGICA (IA)
-            </div>
-            <div class="ai-report-content" style="color: ${textWhite}; line-height: 1.7; font-size: 0.85rem;">
-                ${(typeof marked !== 'undefined') ? marked.parse(data.analisis_ia) : data.analisis_ia.replace(/\n/g, '<br>')}
-            </div>
-        </div>
-    </div>
-  ` : '<div id="ia-report-container" style="display: none;"></div>';
-
-  const filtroInfoHtml = data.filtro_nombre ? `
-    <div class="mb-3 d-flex align-items-center animate__animated animate__fadeIn">
-        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill small fw-bold" style="font-size: 10px;">
-            <i class="fa-solid fa-filter me-2"></i>FILTRADO POR: ${data.filtro_nombre}
-        </span>
-        <button class="btn btn-link btn-sm text-muted ms-2 p-0" onclick="refrescarAnalisisDramatico()" title="Recalcular con este filtro">
-            <i class="fa-solid fa-arrows-rotate"></i>
-        </button>
-    </div>
-  ` : '';
-
-  container.innerHTML = `
-    <div class="p-0">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="text-accent mb-0"><i class="fa-solid fa-masks-theater me-2"></i>Laboratorio de Dramaturgia Computacional</h3>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-warning btn-sm fw-bold px-3 d-flex align-items-center" onclick="refrescarAnalisisDramatico()" style="height: 36px; border-opacity: 0.3;">
-                    <i class="fa-solid fa-arrows-rotate me-2"></i>RECALCULAR
-                </button>
-                <button class="btn btn-warning btn-sm fw-bold px-3 d-flex align-items-center" onclick="generarInformeDramaticoIA()" style="height: 36px; box-shadow: 0 4px 15px rgba(255,152,0,0.2);">
-                    <i class="fa-solid fa-file-waveform me-2"></i>INFORME IA
-                </button>
-            </div>
-        </div>
-        
-        ${filtroInfoHtml}
-        ${iaInsightsHtml}
-
-        <div class="p-4 mb-5 rounded border border-warning border-opacity-20" style="background: ${cardBg} !important; backdrop-filter: blur(10px); background: linear-gradient(to right, rgba(255,152,0,0.05), transparent) !important;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div style="flex: 1;">
-                    <div class="text-accent small fw-bold mb-2"><i class="fa-solid fa-circle-info me-2"></i>Objetivo del Análisis</div>
-                    <p class="small mb-0 opacity-75" style="line-height: 1.5; color: ${textMuted} !important;">
-                        Sistema de interpretación diacrónica basado en la micro-segmentación de actos y escenas. 
-                        Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
-                    </p>
-                </div>
-                <div class="ms-3">
-                    <button class="btn btn-warning btn-sm fw-bold px-3" onclick="openAliasManager()" title="Unificar personajes (ej: D Carlos -> Don Carlos)">
-                       <i class="fa-solid fa-users-gear me-2"></i>Gestor Identidades
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 1. Protagonismo y Red Social (65% / 35%) -->
-        <div class="row g-4 mb-5">
-            <div class="col-12 col-lg-8" style="flex: 0 0 65%; max-width: 65%;">
-                ${getSectionHeader('dramatico-network', 'Red Social de Co-presencia', 'Muestra qué personajes comparten tiempo en escena. El tamaño indica su centralidad discursiva.', 'fa-solid fa-project-diagram', 'interacciones')}
-                <div id="dramatico-network" style="height: 550px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid ${borderColor};"></div>
-                <div id="ai-res-dramatico-network" class="mt-3" style="display: none;"></div>
-            </div>
-            
-            <div class="col-12 col-lg-4" style="flex: 0 0 35%; max-width: 35%;">
-                ${getSectionHeader('protagonismo-chart', 'Distribución de Protagonismo', 'Mide el volumen de habla (palabras) emitido por cada actor.', 'fa-solid fa-chart-column', 'protagonismo')}
-                <div class="glass-panel p-4 rounded" style="background: ${cardBg} !important; border: 1px solid ${borderColor}; height: 550px; display: flex; align-items: center;">
-                    <canvas id="protagonismo-chart"></canvas>
-                </div>
-                <div id="ai-res-protagonismo-chart" class="mt-3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- 2. Heatmap de Interacciones y Matriz de Presencia -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-6">
-                ${getSectionHeader('heatmap-interacciones', 'Mapa de Calor de Interacciones', 'Intensidad de relación entre parejas de personajes basada en diálogos compartidos.', 'fa-solid fa-th', 'interacciones')}
-                <div class="glass-panel p-3 rounded" style="background: ${cardBg} !important; border: 1px solid ${borderColor}; height: 450px;">
-                    <div id="heatmap-interacciones" style="width: 100%; height: 100%;"></div>
-                </div>
-                <div id="ai-res-heatmap-interacciones" class="mt-3" style="display: none;"></div>
-            </div>
-            <div class="col-md-6">
-                ${getSectionHeader('matriz-presencia', 'Matriz de Presencia (Reparto por Escena)', 'Visualización binaria de qué actores están activos en cada segmento de la obra.', 'fa-solid fa-table-cells', 'presencia')}
-                <div class="glass-panel p-3 rounded" style="background: ${cardBg} !important; border: 1px solid ${borderColor}; height: 450px;">
-                    <div id="matriz-presencia" style="width: 100%; height: 100%;"></div>
-                </div>
-                <div id="ai-res-matriz-presencia" class="mt-3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- 3. Desglose Detallado -->
-        <div class="mb-5">
-            ${getSectionHeader('tabla-reparto', 'Desglose Analítico por Personaje', 'Estadísticas léxicas y frecuencia de intervención para cada actor del reparto.', 'fa-solid fa-users-viewfinder', 'reparto')}
-            <div class="table-responsive" style="background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px solid ${borderColor}; padding: 15px;">
-                <table class="table table-dark table-hover mb-0" id="tabla-reparto" style="--bs-table-bg: transparent; border-color: transparent;">
-                    <thead>
-                        <tr class="small text-muted border-bottom border-secondary border-opacity-25" style="font-size: 10px; letter-spacing: 0.5px;">
-                            <th>PERSONAJE / ACTOR</th>
-                            <th class="text-center">INTERVENCIONES</th>
-                            <th class="text-center">PAL./INT.</th>
-                            <th>IDENTIDAD LINGÜÍSTICA (ZETA)</th>
-                            <th>FRASES REPETIDAS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="drama-reparto-body">
-                        ${tableRows}
-                    </tbody>
-                </table>
-            </div>
-            <div id="ai-res-tabla-reparto" class="mt-3" style="display: none;"></div>
-        </div>
-
-        <!-- 4. Ritmo Dramático y Acotaciones -->
-        <div class="row g-4 mb-5">
-            <div class="col-12">
-                ${getSectionHeader('ritmo-chart', 'Ritmo Dramático e Ironía Narratológica', 'Correlación entre la velocidad de diálogos y el sentimiento de las acotaciones del autor.', 'fa-solid fa-bolt-lightning', 'ritmo')}
-                <div class="glass-panel p-4" style="min-height: 350px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
-                     <canvas id="ritmo-chart"></canvas>
-                </div>
-                <div id="ai-res-ritmo-chart" class="mt-3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- 5. Tensión Dramática y Sincronía -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-8">
-                ${getSectionHeader('tension-chart', 'Cronología de la Tensión Dramática', 'Evolución emocional de la obra bloque a bloque.', 'fa-solid fa-wave-square', 'tension')}
-                <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
-                     <canvas id="tension-chart"></canvas>
-                </div>
-                <div id="ai-res-tension-chart" class="mt-3" style="display: none;"></div>
-            </div>
-            <div class="col-md-4">
-                ${getSectionHeader('sync-matrix', 'Sincronía Emocional (Entrainment)', 'Parejas de personajes con mayor correlación afectiva en escena.', 'fa-solid fa-arrows-spin', 'sincronia')}
-                <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
-                     <div id="sync-list" style="max-height: 320px; overflow-y: auto;"></div>
-                </div>
-                <div id="ai-res-sync-matrix" class="mt-3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-12 mt-4">
-                ${getSectionHeader('personajes-sentimiento-chart', 'Trayectoria Emocional por Personaje', 'Evolución del sentimiento individual para los protagonistas más relevantes.', 'fa-solid fa-person-rays', 'trayectoria')}
-                <div class="glass-panel p-4" style="min-height: 400px; background: rgba(0,0,0,0.1) !important; border: 1px solid ${borderColor};">
-                     <canvas id="personajes-sentimiento-chart"></canvas>
-                </div>
-                <div id="ai-res-personajes-sentimiento-chart" class="mt-3" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- 5. Detalle de Bloque al pinchar -->
-        <div id="drama-block-detail" class="mt-4 animate__animated animate__fadeIn" style="display: none;">
-            <div class="glass-panel p-4" style="border-left: 4px solid #ff9800 !important; background: rgba(255, 152, 0, 0.05) !important;">
-                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-10 pb-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <h6 class="text-warning mb-0 fw-bold"><i class="fa-solid fa-file-lines me-2"></i>CONTEXTO DISCURSIVO</h6>
-                        <a id="drama-reader-btn" href="#" target="_blank" 
-                           class="btn btn-outline-warning btn-sm fw-bold px-3 py-1" 
-                           style="font-size: 10px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.3s; background: rgba(255,152,0,0.1);">
-                            <i class="fa-solid fa-book-open me-2"></i>ABRIR EN LECTOR
-                        </a>
-                    </div>
-                    <button class="btn btn-sm btn-link text-muted p-0" onclick="document.getElementById('drama-block-detail').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="drama-block-text" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ds-text-main); line-height: 1.6; white-space: pre-wrap;"></div>
-            </div>
-        </div>
-    </div>
-  `;
-
-    // Función auxiliar para convertir romanos a enteros (solo para ordenación en JS)
-    const romanToInt = (s) => {
-        if (!s || typeof s !== 'string') return 0;
-        const romVal = { 'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000 };
-        let intVal = 0;
-        const str = s.toUpperCase().replace(/^(ACTO|ESCENA|A|E)\.?\s*/, '').trim();
-        if (/^\d+$/.test(str)) return parseInt(str);
-        for (let i = 0; i < str.length; i++) {
-            if (romVal[str[i]]) {
-                if (i > 0 && romVal[str[i]] > romVal[str[i - 1]]) {
-                    intVal += romVal[str[i]] - 2 * romVal[str[i - 1]];
-                } else { intVal += romVal[str[i]]; }
-            } else if (!isNaN(str[i])) { // Fallback para números mixtos
-                const nums = str.match(/\d+/);
-                return nums ? parseInt(nums[0]) : 0;
-            }
-        }
-        return intVal;
-    };
-
-    const smartSort = (a, b) => {
-        const vA = romanToInt(String(a));
-        const vB = romanToInt(String(b));
-        if (vA > 0 && vB > 0) return vA - vB;
-        return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
-    };
-
-    const sidebarDyn = document.getElementById('sidebar-dynamic-filters');
-    if (sidebarDyn) {
-        // Limpieza estricta para evitar duplicaciones
-        sidebarDyn.innerHTML = '';
-        sidebarDyn.style.display = 'block';
-        
-        const container = document.createElement('div');
-        container.innerHTML = `
-            <label class="d-block text-warning fw-bold mb-2 small text-uppercase letter-spacing-1">
-                <i class="fa-solid fa-masks-theater me-2"></i>Segmentación Dramática <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6rem;">HESI-LAB v2.2</span>
-            </label>
-            <div class="p-3 rounded border border-warning border-opacity-20 bg-warning bg-opacity-5 mb-3">
-                <div class="mb-3">
-                    <label class="small text-muted mb-1 d-block">Filtrar por Acto</label>
-                    <select id="filtro-acto" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25" onchange="filterDramaticoCharts()">
-                        <option value="all">Todos los Actos</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="small text-muted mb-1 d-block">Filtrar por Escena</label>
-                    <select id="filtro-escena" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25" onchange="filterDramaticoCharts()">
-                        <option value="all">Todas las Escenas</option>
-                    </select>
-                </div>
-            </div>
-            <small class="text-muted d-block" style="font-size: 0.7rem;">
-                <i class="fa-solid fa-circle-info me-1"></i> Estos filtros ajustan la cronología y redes del análisis dramático actual.
-            </small>
-        `;
-        sidebarDyn.appendChild(container);
-
-        const selectActo = document.getElementById('filtro-acto');
-        const selectEscena = document.getElementById('filtro-escena');
-
-        if (selectActo && selectEscena) {
-            const temp = (data.sentimiento_temporal || []);
-            const actosUnicos = [...new Set(temp.map(s => s.acto).filter(a => a && a !== 'None' && a !== ''))].sort(smartSort);
-            const escenasUnicas = [...new Set(temp.map(s => s.escena).filter(e => e && e !== 'None' && e !== ''))].sort(smartSort);
-
-            console.log('[DEBUG] Filtros únicos detectados:', { actos: actosUnicos, escenas: escenasUnicas });
-
-            actosUnicos.forEach(a => { selectActo.innerHTML += `<option value="${a}">Acto ${a}</option>`; });
-            escenasUnicas.forEach(e => { selectEscena.innerHTML += `<option value="${e}">Escena ${e}</option>`; });
-        }
-    }
-
-  // Renderizar componentes primarios y detallados
-  renderDramaticoFull(data);
-};
-
 
 /**
  * Función centralizada que renderiza todos los componentes dramáticos con capacidad de filtrado
  */
-window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = 'all') {
-    const textWhite = UI_COLORS.isLight() ? '#212121' : '#fff';
-    const textMuted = UI_COLORS.isLight() ? '#666' : '#888';
-    const borderColor = UI_COLORS.isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = 'all', filterObra = 'all') {
+    const light = UI_COLORS.isLight();
+    const textWhite = light ? '#212121' : '#fff';
+    const textMuted = light ? '#666' : 'rgba(255,255,255,0.7)';
+    const borderColor = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+    const accentColor = UI_COLORS.accent();
+    const accentAlpha = light ? 'rgba(41, 74, 96, 0.1)' : 'rgba(255, 152, 0, 0.1)';
 
     // 0. Obtener personajes a ignorar/ocultar
     const ignoreKey = `ignored_${filtros.proyecto_id || 'default'}`;
@@ -3460,7 +3158,8 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     const filteredTension = (data.sentimiento_temporal || []).filter((s, idx) => {
         const matchesActo = filterActo === 'all' || String(s.acto) === filterActo;
         const matchesEscena = filterEscena === 'all' || String(s.escena) === filterEscena;
-        if (matchesActo && matchesEscena) {
+        const matchesObra = (filterObra === 'all' || filterObra === '') || String(s.publicacion_id) === String(filterObra);
+        if (matchesActo && matchesEscena && matchesObra) {
             indicesFiltrados.push(idx);
             return true;
         }
@@ -3470,7 +3169,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     const labels = filteredTension.map(s => s.label);
     const dataTensionValues = filteredTension.map(s => s.sentimiento);
 
-    const tableContainer = document.getElementById('drama-reparto-body');
+    const tableContainer = document.getElementById('drama-table-body');
     if (tableContainer) {
         tableContainer.innerHTML = filteredReparto.map(p => `
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -3495,18 +3194,17 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     }
 
     // 2. Red de Personajes (Vis.js)
-    const networkContainer = document.getElementById('dramatico-network');
+    const networkContainer = document.getElementById('drama-network');
     if (networkContainer && typeof vis !== 'undefined') {
         const colorPalette = [
-            { bg: '#ff9800', border: '#e65100' }, // Naranja (Default)
-            { bg: '#ffffff', border: '#aaaaaa' }, // Blanco (Para distinguir otras obras)
-            { bg: '#2196f3', border: '#0d47a1' }, // Azul
-            { bg: '#4caf50', border: '#1b5e20' }, // Verde
-            { bg: '#9c27b0', border: '#4a148c' }, // Púrpura
-            { bg: '#f44336', border: '#b71c1c' }  // Rojo
+            { bg: accentColor, border: light ? '#1d3545' : '#e65100' }, 
+            { bg: '#ffffff', border: '#aaaaaa' }, 
+            { bg: '#2196f3', border: '#0d47a1' }, 
+            { bg: '#4caf50', border: '#1b5e20' }, 
+            { bg: '#9c27b0', border: '#4a148c' }, 
+            { bg: '#f44336', border: '#b71c1c' }  
         ];
 
-        // Mapear IDs de publicación únicos a índices de la paleta
         const gruposPresencia = [...new Set(data.nodos.map(n => n.grupo))].sort();
         const getGroupColor = (groupId) => {
             const idx = gruposPresencia.indexOf(groupId);
@@ -3532,7 +3230,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             edges: filteredEdges.map(e => ({
                 from: e.source, to: e.target,
                 width: 1 + Math.log1p(e.value),
-                color: { color: UI_COLORS.isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)', highlight: '#ff9800' },
+                color: { color: UI_COLORS.isLight() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)', highlight: accentColor },
                 smooth: { type: 'continuous' }
             }))
         };
@@ -3543,9 +3241,9 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     }
 
     // 3. Gráfico de Protagonismo
-    const ctxP = document.getElementById('protagonismo-chart');
+    const ctxP = document.getElementById('chart-drama-protagonismo');
     if (ctxP) {
-        let chartP = Chart.getChart('protagonismo-chart');
+        let chartP = Chart.getChart('chart-drama-protagonismo');
         if (chartP) chartP.destroy();
         new Chart(ctxP, {
             type: 'bar',
@@ -3554,7 +3252,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 datasets: [{
                     label: 'Palabras Habladas',
                     data: filteredReparto.slice(0, 8).map(p => p.palabras),
-                    backgroundColor: 'rgba(255, 152, 0, 0.4)', borderColor: '#ff9800', borderWidth: 1.5, borderRadius: 6
+                    backgroundColor: accentAlpha, borderColor: accentColor, borderWidth: 1.5, borderRadius: 6
                 }]
             },
             options: { 
@@ -3569,9 +3267,9 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     }
 
     // 4. Gráfico de Tensión
-    const ctxT = document.getElementById('tension-chart');
+    const ctxT = document.getElementById('drama-tension-convergence');
     if (ctxT) {
-        let chartT = Chart.getChart('tension-chart');
+        let chartT = Chart.getChart('drama-tension-convergence');
         if (chartT) chartT.destroy();
         new Chart(ctxT, {
             type: 'line',
@@ -3580,8 +3278,8 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 datasets: [{
                     label: 'Sentimiento General',
                     data: dataTensionValues,
-                    borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.1)', fill: true, tension: 0.4,
-                    borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#ff9800'
+                    borderColor: accentColor, backgroundColor: accentAlpha, fill: true, tension: 0.4,
+                    borderWidth: 2, pointRadius: 4, pointBackgroundColor: accentColor
                 }]
             },
             options: { 
@@ -3600,15 +3298,10 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                             const text = document.getElementById('drama-block-text');
                                 if (detail && text) {
                                     detail.style.display = 'block';
-                                    
-                                    // Actualizar botón del lector en el header
                                     const readerBtn = document.getElementById('drama-reader-btn');
                                     if (readerBtn) readerBtn.href = `/noticias/lector?id=${block.doc_id}`;
-
-                                    // Mostrar todas las locuciones con formato
                                     let html = (block.locuciones || []).map(l => `<span class="text-warning"><b>${l.p}:</b></span> ${l.t}`).join('<br>');
-                                    if (!html) html = block.texto; // Fallback if no locutions detected
-                                    
+                                    if (!html) html = block.texto;
                                     text.innerHTML = html;
                                 detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
@@ -3620,9 +3313,9 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     }
 
     // 5. Arcos de Personajes
-    const ctxS = document.getElementById('personajes-sentimiento-chart');
+    const ctxS = document.getElementById('drama-individual-trajectories');
     if (ctxS) {
-        let chartS = Chart.getChart('personajes-sentimiento-chart');
+        let chartS = Chart.getChart('drama-individual-trajectories');
         if (chartS) chartS.destroy();
         const palette = ['#ff9800', '#2196f3', '#4caf50', '#9c27b0', '#f44336', '#00bcd4'];
         new Chart(ctxS, {
@@ -3652,42 +3345,28 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                             const text = document.getElementById('drama-block-text');
                                 if (detail && text) {
                                     detail.style.display = 'block';
-                                    
-                                    // Actualizar botón del lector en el header
                                     const readerBtn = document.getElementById('drama-reader-btn');
                                     if (readerBtn) readerBtn.href = `/noticias/lector?id=${block.doc_id}`;
-
-                                    // Filtrar solo las líneas del personaje seleccionado
                                     const datasetIdx = elements[0].datasetIndex;
                                     const charName = e.chart.data.datasets[datasetIdx].label;
                                     const upperChar = charName.toUpperCase();
-                                    
-                                    // Matching más flexible para identidades unificadas
                                     const relevant = (block.locuciones || []).filter(l => {
                                         const lp = l.p.toUpperCase();
                                         return lp === upperChar || upperChar.includes(lp) || lp.includes(upperChar);
                                     });
-                                    
                                     let html = "";
                                     if (relevant.length > 0) {
                                         html = relevant.map(l => `<span class="text-warning"><b>${l.p}:</b></span> ${l.t}`).join('<br><br>');
                                     } else {
-                                        // BÚSQUEDA INTELIGENTE DE MENCIONES (Fallback cuando el nodo existe por mención y no por habla)
                                         const lines = block.texto.split('\n');
                                         const mentions = lines.filter(line => line.toUpperCase().includes(upperChar));
                                         if (mentions.length > 0) {
-                                            html = `<i class="text-muted small d-block mb-3 border-bottom border-warning border-opacity-10 pb-2">
-                                                        <i class="fa-solid fa-circle-info me-2"></i>No hay diálogos directos. El sistema interpreta su presencia por menciones en este bloque:
-                                                    </i>`;
-                                            html += mentions.map(m => {
-                                                const regex = new RegExp(`(${charName})`, 'gi');
-                                                return m.replace(regex, '<span class="text-warning fw-bold">$1</span>');
-                                            }).join('<br><br>');
+                                            html = `<i class="text-muted small d-block mb-3 border-bottom border-warning border-opacity-10 pb-2">Menciones detectadas:</i>`;
+                                            html += mentions.map(m => m.replace(new RegExp(`(${charName})`, 'gi'), '<span class="text-warning fw-bold">$1</span>')).join('<br><br>');
                                         } else {
-                                            html = `<i class="text-muted small"><i class="fa-solid fa-triangle-exclamation me-2"></i>No se detectaron diálogos ni menciones directas de <b>${charName}</b>. El sistema asigna el sentimiento base del contexto.</i>`;
+                                            html = `<i class="text-muted small">No se detectaron diálogos de <b>${charName}</b> en este bloque.</i>`;
                                         }
                                     }
-                                    
                                     text.innerHTML = html;
                                 detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
@@ -3698,19 +3377,15 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         });
     }
 
-    // 6. Matriz de Presencia (Vega-Lite) - Filtrada
-    const presenceTarget = document.getElementById('matriz-presencia');
+    // 6. Matriz de Presencia
+    const presenceTarget = document.getElementById('drama-presence-matrix');
     if (data.reparto_detalle && presenceTarget && typeof vegaEmbed !== 'undefined') {
         const presenceData = [];
         data.reparto_detalle.slice(0, 10).forEach(p => {
             (p.presencia_matriz || []).forEach((val, idx) => {
                 if (val > 0 && indicesFiltrados.includes(idx)) {
                     const bloq = data.sentimiento_temporal[idx];
-                    presenceData.push({ 
-                        "Personaje": p.nombre, 
-                        "Bloque": (bloq && bloq.label) ? bloq.label : `S${idx+1}`, 
-                        "Presente": val 
-                    });
+                    presenceData.push({ "Personaje": p.nombre, "Bloque": (bloq && bloq.label) ? bloq.label : `S${idx+1}`, "Presente": val });
                 }
             });
         });
@@ -3721,25 +3396,19 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 "width": "container", "height": "container",
                 "mark": { "type": "circle", "size": 100 },
                 "encoding": {
-                    "x": { "field": "Bloque", "type": "nominal", "sort": null, "axis": { "labelColor": textMuted, "labelFontSize": 9, "title": null } },
-                    "y": { "field": "Personaje", "type": "nominal", "axis": { "labelColor": textWhite, "labelFontSize": 10, "title": null } },
-                    "color": { "value": "#ff9800" },
-                    "tooltip": [{ "field": "Personaje" }, { "field": "Bloque" }]
+                    "x": { "field": "Bloque", "type": "nominal", "sort": null, "axis": { "labelColor": textMuted, "labelFontSize": 9, "title": null, "grid": true, "gridColor": borderColor } },
+                    "y": { "field": "Personaje", "type": "nominal", "axis": { "labelColor": textWhite, "labelFontSize": 10, "title": null, "grid": true, "gridColor": borderColor } },
+                    "color": { "value": accentColor }
                 },
                 "background": "transparent",
-                "config": { 
-                    "view": { "stroke": "transparent" },
-                    "axis": { "domain": false, "ticks": false }
-                }
+                "config": { "view": { "stroke": "transparent" }, "axis": { "domain": false, "ticks": false } }
             };
-            vegaEmbed('#matriz-presencia', spec, { actions: false });
-        } else {
-            presenceTarget.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted small">No hay presencia en este rango.</div>';
+            vegaEmbed('#drama-presence-matrix', spec, { actions: false });
         }
     }
     
     // 7. Heatmap de Interacciones
-    const heatmapTarget = document.getElementById('heatmap-interacciones');
+    const heatmapTarget = document.getElementById('drama-heatmap-words');
     const heatmapData = (data.interacciones_heatmap || []);
     if (heatmapData.length > 0 && heatmapTarget && typeof vegaEmbed !== 'undefined') {
         const spec = {
@@ -3750,163 +3419,604 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             "encoding": {
                 "y": { "field": "p1", "type": "nominal", "axis": { "labelColor": textWhite, "labelFontSize": 10, "title": null } },
                 "x": { "field": "p2", "type": "nominal", "axis": { "labelColor": textWhite, "labelFontSize": 10, "labelAngle": -45, "title": null } },
-                "color": { 
-                    "field": "valor", 
-                    "type": "quantitative", 
-                    "scale": { "range": ["rgba(255,152,0,0.05)", "#ff9800"] },
-                    "legend": { "labelColor": textWhite, "titleColor": textWhite, "tickColor": textWhite }
-                },
-                "tooltip": [{ "field": "p1" }, { "field": "p2" }, { "field": "valor" }]
+                "color": { "field": "valor", "type": "quantitative", "scale": { "range": [accentAlpha, accentColor] } }
             },
             "background": "transparent",
-            "config": { 
-                "view": { "stroke": "transparent" }, 
-                "axis": { "grid": false, "domain": false, "ticks": false }
-            }
+            "config": { "view": { "stroke": "transparent" }, "axis": { "grid": false, "domain": false, "ticks": false } }
         };
-        vegaEmbed('#heatmap-interacciones', spec, { actions: false });
+        vegaEmbed('#drama-heatmap-words', spec, { actions: false });
     }
 
-    // 8. Ritmo Dramático y Acotaciones
-    const ctxR = document.getElementById('ritmo-chart');
+    // 8. Ritmo Dramático
+    const ctxR = document.getElementById('drama-rhythm-sync');
     if (ctxR && data.metricas_avanzadas) {
-        let chartR = Chart.getChart('ritmo-chart');
+        let chartR = Chart.getChart('drama-rhythm-sync');
         if (chartR) chartR.destroy();
         const ritmoData = data.metricas_avanzadas.ritmo_bloques || [];
         const filteredRitmo = indicesFiltrados.map(idx => ritmoData[idx]);
-        
         new Chart(ctxR, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Velocidad de Intervención (Rhythm)',
-                        data: filteredRitmo.map(r => r ? r.intervenciones : 0),
-                        borderColor: '#ff9800',
-                        backgroundColor: 'rgba(255,152,0,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Sentimiento de Acotaciones (Author Intent)',
-                        data: filteredRitmo.map(r => r ? r.sent_acotaciones : 0),
-                        borderColor: '#2196f3',
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.4,
-                        yAxisID: 'y1'
-                    }
+                    { label: 'Ritmo', data: filteredRitmo.map(r => r ? r.intervenciones : 0), borderColor: accentColor, backgroundColor: accentAlpha, fill: true, tension: 0.4, yAxisID: 'y' },
+                    { label: 'Acotaciones', data: filteredRitmo.map(r => r ? r.sent_acotaciones : 0), borderColor: '#2196f3', borderDash: [5, 5], fill: false, tension: 0.4, yAxisID: 'y1' }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
                     y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: textMuted } },
                     y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#2196f3' } },
                     x: { grid: { display: false }, ticks: { color: textMuted, font: { size: 9 } } }
-                },
-                plugins: { legend: { labels: { color: textWhite, font: { size: 10 } } } }
+                }
             }
         });
     }
 
     // 9. Sincronía Emocional
     const syncContainer = document.getElementById('sync-list');
+    const syncHeatmap = document.getElementById('heatmap-sincronia');
     if (syncContainer && data.metricas_avanzadas) {
-        const syncs = (data.metricas_avanzadas.sincronia_pares || []).sort((a, b) => b.score - a.score);
-        if (syncs.length > 0) {
-            syncContainer.innerHTML = syncs.map(s => `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded border border-warning border-opacity-10" style="background: rgba(255,152,0,0.1) !important;">
-                    <div class="small">
-                        <span class="fw-bold" style="color: var(--ds-text-main);">${s.p1}</span> 
-                        <i class="fa-solid fa-arrows-left-right mx-2 text-warning opacity-50"></i> 
-                        <span class="fw-bold" style="color: var(--ds-text-main);">${s.p2}</span>
-                    </div>
-                    <div class="badge bg-warning text-dark font-monospace" style="font-size: 10px;">${Math.round(s.score * 100)}%</div>
-                </div>
-            `).join('');
-        } else {
-            syncContainer.innerHTML = '<div class="text-center text-muted small py-5">No hay datos de sincronía suficientes en este rango.</div>';
+        const rawSyncs = (data.metricas_avanzadas.sincronia_pares || []);
+        const syncsMatrix = [];
+        rawSyncs.forEach(s => { syncsMatrix.push(s); syncsMatrix.push({ p1: s.p2, p2: s.p1, score: s.score }); });
+        [...new Set(rawSyncs.flatMap(s => [s.p1, s.p2]))].forEach(p => { syncsMatrix.push({ p1: p, p2: p, score: 1.0 }); });
+        
+        if (syncHeatmap && typeof vegaEmbed !== 'undefined' && syncsMatrix.length > 0) {
+            const syncSpec = {
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "width": "container", "height": "container",
+                "data": { "values": syncsMatrix },
+                "mark": { "type": "rect", "stroke": borderColor, "strokeWidth": 0.5 },
+                "encoding": {
+                    "y": { "field": "p1", "type": "nominal", "axis": { "labelFontSize": 8, "labelColor": textWhite } },
+                    "x": { "field": "p2", "type": "nominal", "axis": { "labelFontSize": 8, "labelColor": textWhite, "labelAngle": -45 } },
+                    "color": { "field": "score", "type": "quantitative", "scale": { "domain": [-1, 0, 1], "range": ["#ef4444", "#333", "#22c55e"] } }
+                },
+                "background": "transparent"
+            };
+            vegaEmbed('#heatmap-sincronia', syncSpec, { actions: false });
         }
-    }
-};
-
-/**
- * Invoca a la IA para analizar una sección específica del análisis dramático
- */
-window.interpretarSeccionDramatica = function(seccion, chartId) {
-    const data = datosActuales['dramatico'];
-    if (!data) return;
-
-    const resultDiv = document.getElementById(`ai-res-${chartId}`);
-    if (!resultDiv) return;
-
-    // UX: Loading
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `<div class="p-3 border border-warning border-opacity-20 rounded bg-warning bg-opacity-10" style="color: var(--ds-text-main) !important;">
-        <span class="spinner-border spinner-border-sm me-2 text-warning"></span>Analizando <b class="text-warning">${seccion}</b> con IA...
-    </div>`;
-
-    // Filtros
-    const modeloIA = window._ia_modelo || 'gemini-1.5-pro';
-
-    // Preparar data según sección
-    let chartDataToSend = {};
-    if (seccion === 'protagonismo') {
-        chartDataToSend = (data.reparto_detalle || []).slice(0, 8).map(p => ({ nombre: p.nombre, palabras: p.palabras }));
-    } else if (seccion === 'tension') {
-        chartDataToSend = (data.sentimiento_temporal || []).map(s => ({ label: s.label, sent: s.sentimiento }));
-    } else if (seccion === 'reparto') {
-        chartDataToSend = (data.reparto_detalle || []).slice(0, 5).map(p => ({ nombre: p.nombre, top_words: p.top_words, intervenciones: p.intervenciones }));
-    } else if (seccion === 'interacciones') {
-        chartDataToSend = data.interacciones_heatmap || [];
-    } else if (seccion === 'presencia') {
-        chartDataToSend = (data.reparto_detalle || []).slice(0, 8).map(p => ({ nombre: p.nombre, presencia: p.presencia_matriz }));
-    } else if (seccion === 'trayectoria') {
-        chartDataToSend = (data.reparto_detalle || []).slice(0, 5).map(p => ({ nombre: p.nombre, sentimiento_arc: p.sentimiento_arc }));
-    } else if (seccion === 'ritmo') {
-        chartDataToSend = data.metricas_avanzadas.ritmo_bloques || [];
-    } else if (seccion === 'sincronia') {
-        chartDataToSend = data.metricas_avanzadas.sincronia_pares || [];
+        syncContainer.innerHTML = rawSyncs.slice(0, 10).map(s => `
+            <div class="d-flex justify-content-between align-items-center mb-1 p-2 rounded border border-warning border-opacity-10" style="background: rgba(255,152,0,0.05) !important; font-size: 11px;">
+                <div class="text-truncate" style="max-width: 180px;"><span class="fw-bold">${s.p1}</span> <i class="fa-solid fa-arrows-left-right mx-1 text-warning opacity-50"></i> <span class="fw-bold">${s.p2}</span></div>
+                <div class="badge bg-warning text-dark font-monospace">${Math.round(s.score * 100)}%</div>
+            </div>
+        `).join('');
     }
 
-    fetch('/api/analisis/dramatico/interpretar', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            seccion: seccion,
-            chart_data: chartDataToSend,
-            modelo: modeloIA
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.exito && data.interpretacion) {
-            const formatted = (typeof marked !== 'undefined') ? marked.parse(data.interpretacion) : data.interpretacion.replace(/\n/g, '<br>');
-            const isLight = UI_COLORS.isLight();
-            resultDiv.innerHTML = `
-                <div class="p-3 border border-warning border-opacity-20 rounded animate__animated animate__fadeIn" 
-                     style="background-color: ${isLight ? '#ffffff' : '#000000'} !important;">
-                    <div class="text-warning mb-2 small fw-bold"><i class="fa-solid fa-robot me-2"></i>ANÁLISIS HERMENÉUTICO</div>
-                    <div style="font-size: 0.82rem; line-height: 1.6; color: ${isLight ? '#212121' : '#ccc'};">
-                        ${formatted}
+    // 10. Evolución del Flujo Táctico (Streamgraph)
+    const tacticalStreamTarget = document.getElementById('drama-tactical-stream');
+    const tacticalData = (data.metricas_avanzadas || {}).flujo_tactico || [];
+    
+    console.log("[DEBUG] Tactical Data for Streamgraph:", tacticalData);
+
+    if (tacticalStreamTarget && tacticalData.length > 0 && typeof vegaEmbed !== 'undefined') {
+        const streamSpec = {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "data": { "values": tacticalData },
+            "width": "container", 
+            "height": 300,
+            "mark": { "type": "area", "interpolate": "monotone", "fillOpacity": 0.85 },
+            "encoding": {
+                "x": { 
+                    "field": "Bloque", 
+                    "type": "nominal", 
+                    "sort": null, 
+                    "axis": { "labelColor": textMuted, "labelFontSize": 9, "title": null, "labelAngle": -45 } 
+                },
+                "y": { 
+                    "field": "Valor", 
+                    "type": "quantitative", 
+                    "stack": "center", 
+                    "axis": null 
+                },
+                "color": { 
+                    "field": "Táctica", 
+                    "type": "nominal", 
+                    "scale": { "scheme": "spectral" }, 
+                    "legend": { "title": "Tácticas", "labelColor": textWhite, "titleColor": textWhite, "orient": "bottom" } 
+                },
+                "tooltip": [
+                    { "field": "Bloque", "type": "nominal" },
+                    { "field": "Táctica", "type": "nominal" },
+                    { "field": "Valor", "type": "quantitative" }
+                ]
+            },
+            "background": "transparent",
+            "config": { "view": { "stroke": "transparent" } }
+        };
+        vegaEmbed('#drama-tactical-stream', streamSpec, { actions: false })
+            .catch(err => console.error("[VEGA ERROR]", err));
+    } else if (tacticalStreamTarget) {
+        tacticalStreamTarget.innerHTML = '<div class="text-muted small italic opacity-50 p-5 text-center">No hay datos tácticos suficientes para generar el flujo.</div>';
+    }
+
+    // 11. Perfiles Tácticos del Reparto (Radar)
+    const radarContainer = document.getElementById('radar-containers');
+    if (radarContainer) {
+        radarContainer.innerHTML = '';
+        const topChars = (data.reparto_detalle || []).slice(0, 12);
+        
+        // Categorías tácticas fijas para asegurar que el radar sea comparable
+        const fixedLabels = ["Atacar", "Persuadir", "Seducir", "Manipular", "Informar"];
+        
+        topChars.forEach((p, idx) => {
+            const charId = `drama-radar-${idx}`;
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-6 mb-3';
+            col.innerHTML = `
+                <div class="glass-panel p-3 text-center h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="small fw-bold text-truncate mb-2" style="color: ${accentColor}; letter-spacing: 1px;">${p.nombre}</div>
+                    <div style="height: 160px; position: relative;">
+                        <canvas id="${charId}"></canvas>
+                    </div>
+                    <div class="mt-2 pt-2 border-top border-secondary border-opacity-10">
+                        <span class="badge bg-sirio-dim text-accent-primary" style="font-size: 8px;">PERFIL DRAMÁTICO</span>
                     </div>
                 </div>
             `;
-        } else {
-            resultDiv.innerHTML = `<div class="alert alert-danger p-2 small">${data.error || 'No se pudo generar la interpretación.'}</div>`;
-        }
-    })
-    .catch(err => {
-        resultDiv.innerHTML = `<div class="alert alert-danger p-2 small">Error de conexión</div>`;
-    });
+            radarContainer.appendChild(col);
+
+            // Retraso para asegurar que el DOM está listo
+            setTimeout(() => {
+                const canvas = document.getElementById(charId);
+                if (canvas) {
+                    const ctxR = canvas.getContext('2d');
+                    const tacticas = p.perfil_tactico || {};
+                    
+                    // Mapear valores a las etiquetas fijas
+                    const values = fixedLabels.map(label => tacticas[label] || 0);
+                    
+                    // Solo renderizar si hay algún dato táctico
+                    if (values.some(v => v > 0)) {
+                        new Chart(ctxR, {
+                            type: 'radar',
+                            data: {
+                                labels: fixedLabels,
+                                datasets: [{
+                                    data: values,
+                                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                                    borderColor: accentColor,
+                                    borderWidth: 2,
+                                    pointRadius: 2,
+                                    pointBackgroundColor: accentColor
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    r: {
+                                        min: 0,
+                                        grid: { color: 'rgba(255,255,255,0.05)' },
+                                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                                        pointLabels: { 
+                                            color: textMuted, 
+                                            font: { size: 9, family: 'JetBrains Mono', weight: 'bold' } 
+                                        },
+                                        ticks: { display: false, backdropColor: 'transparent' }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        ctxR.font = "10px JetBrains Mono";
+                        ctxR.fillStyle = "rgba(255,255,255,0.3)";
+                        ctxR.textAlign = "center";
+                        ctxR.fillText("Sin tácticas detectadas", canvas.width/2, canvas.height/2);
+                    }
+                }
+            }, 100);
+        });
+    }
 };
+
+
+function loadDramatico(data) {
+  const container = document.getElementById('view-dramatico');
+  if (!container) return;
+  
+  const oldIaContainer = document.getElementById('ia-report-container');
+  if (oldIaContainer) oldIaContainer.innerHTML = '';
+  
+  const light = UI_COLORS.isLight();
+  const textWhite = light ? '#212121' : '#fff';
+  const textMuted = light ? '#666' : 'rgba(255,255,255,0.7)';
+  const accentColor = UI_COLORS.accent();
+  const accentAlpha = light ? 'rgba(41, 74, 96, 0.1)' : 'rgba(255, 152, 0, 0.1)';
+  const cardBg = light ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.15)';
+
+  const filtros_raw = data.filtros_aplicados || {};
+  const filtroInfoHtml = data.filtro_nombre ? `
+    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4 py-3" style="background: ${accentAlpha} !important; border-left: 4px solid ${accentColor} !important; backdrop-filter: blur(5px);">
+        <i class="fa-solid fa-circle-info me-3 fs-4 text-info"></i>
+        <div>
+            <div class="small fw-bold text-uppercase opacity-75" style="letter-spacing: 1px;">Conjunto de Datos</div>
+            <div class="fw-bold" style="color: ${textWhite};">${data.filtro_nombre}</div>
+        </div>
+    </div>
+  ` : '';
+
+  const iaInsightsHtml = (data.analisis_ia) ? `
+    <div class="mb-5 p-4 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" style="background: rgba(255,152,0,0.05) !important;">
+        <div class="d-flex align-items-center mb-3">
+            <i class="fa-solid fa-sparkles text-warning me-2 fs-5"></i>
+            <h5 class="mb-0 fw-bold text-warning" style="letter-spacing: 1px;">SÍNTESIS ESTRATÉGICA IA</h5>
+        </div>
+        <div class="markdown-content" style="color: ${textWhite}; line-height: 1.6;">
+            ${marked.parse(data.analisis_ia)}
+        </div>
+    </div>
+  ` : '';
+
+  container.innerHTML = `
+    <div class="p-0">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-accent mb-0"><i class="fa-solid fa-masks-theater me-2"></i>Laboratorio de Dramaturgia Computacional</h3>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-warning btn-sm fw-bold px-3 d-flex align-items-center" onclick="refrescarAnalisisDramatico()" style="height: 36px; border-opacity: 0.3;">
+                    <i class="fa-solid fa-arrows-rotate me-2"></i>RECALCULAR
+                </button>
+                <button class="btn btn-warning btn-sm fw-bold px-3 d-flex align-items-center" onclick="generarInformeDramaticoIA()" style="height: 36px; box-shadow: 0 4px 15px rgba(255,152,0,0.2);">
+                    <i class="fa-solid fa-file-waveform me-2"></i>INFORME IA
+                </button>
+            </div>
+        </div>
+        
+        ${filtroInfoHtml}
+        ${iaInsightsHtml}
+        <div id="ia-report-container"></div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="p-4 h-100 rounded border border-warning border-opacity-20" style="background: ${cardBg} !important; backdrop-filter: blur(10px); background: linear-gradient(to right, ${accentAlpha}, transparent) !important;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div style="flex: 1;">
+                            <div class="small fw-bold mb-2" style="color: ${accentColor};"><i class="fa-solid fa-circle-info me-2"></i>Objetivo del Análisis</div>
+                            <p class="small mb-0 opacity-75" style="line-height: 1.5; color: ${textMuted} !important;">
+                                Sistema de interpretación diacrónica basado en la micro-segmentación de actos y escenas. 
+                                Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
+                            </p>
+                        </div>
+                        <div class="ms-3">
+                            <button class="btn btn-sm fw-bold px-3" onclick="openAliasManager()" title="Unificar personajes" style="background: ${accentColor}; color: ${light ? '#fff' : '#000'};">
+                               <i class="fa-solid fa-users-gear me-2"></i>Gestor Identidades
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="p-4 h-100 rounded border border-secondary border-opacity-20 bg-dark bg-opacity-25" style="backdrop-filter: blur(10px);">
+                    <div class="small fw-bold mb-3 text-uppercase opacity-75" style="letter-spacing: 1px; color: ${textWhite} !important;">
+                        <i class="fa-solid fa-sliders me-2"></i>Segmentación Dramática
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="xsmall text-uppercase fw-bold opacity-50 d-block mb-1" style="font-size: 9px; color: ${textWhite} !important;">Obra / Publicación</label>
+                        <select id="filtro-obra" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25">
+                            <option value="">(Todas las publicaciones)</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="xsmall text-uppercase fw-bold opacity-50 d-block mb-1" style="font-size: 9px; color: ${textWhite} !important;">Acto</label>
+                            <select id="filtro-acto" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25">
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="xsmall text-uppercase fw-bold opacity-50 d-block mb-1" style="font-size: 9px; color: ${textWhite} !important;">Escena</label>
+                            <select id="filtro-escena" class="form-select form-select-sm bg-dark text-white border-secondary border-opacity-25">
+                                <option value="all">Todas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="xsmall text-muted mt-2 mb-0" style="font-size: 10px;"><i class="fa-solid fa-circle-info me-1"></i> Filtra la cronología y redes del análisis.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="drama-main-content">
+            <!-- Row 1: Network & Protagonismo -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Red de Influencia de Personajes
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('interacciones', 'network')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div id="drama-network" style="height: 500px; width: 100%;"></div>
+                        <div id="ai-res-network" class="mt-3" style="display:none"></div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Protagonismo Discursivo
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('protagonismo', 'protagonismo')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div style="height: 400px; position: relative;"><canvas id="chart-drama-protagonismo"></canvas></div>
+                        <div id="ai-res-protagonismo" class="mt-3" style="display:none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Detailed Stats Table -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="p-4 rounded bg-dark border border-secondary border-opacity-10">
+                        <h5 class="fw-bold text-uppercase mb-4" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                            <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Análisis Lexicométrico del Reparto
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover mb-0" style="--bs-table-bg: transparent;">
+                                <thead>
+                                    <tr class="text-secondary small text-uppercase" style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                                        <th class="py-3">Personaje</th>
+                                        <th class="text-center">Intervenciones</th>
+                                        <th class="text-center">Palabras/Int.</th>
+                                        <th>Campos Semánticos Dominantes</th>
+                                        <th>Locuciones Clave</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drama-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- Row NEW: Tactical Analysis -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-12">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-warning border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-fire-glow me-2 text-warning"></i> Evolución del Flujo Táctico (Streamgraph)
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning" style="font-size: 9px;" onclick="interpretarSeccionDramatica('tactica_flujo', 'tactica-stream')">DECONSTRUIR TÁCTICAS</button>
+                        </div>
+                        <div id="drama-tactical-stream" style="height: 350px; width: 100%;"></div>
+                        <div id="ai-res-tactica-stream" class="mt-3" style="display:none"></div>
+                        <p class="xsmall text-muted mt-3 mb-0">Distribución de intenciones comunicativas (Atacar, Persuadir, Seducir, etc.) a lo largo de la obra.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="p-4 rounded bg-dark border border-secondary border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-bullseye me-2 text-warning"></i> Perfiles Tácticos del Reparto (Radar)
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 8px;">A: ATACAR</span>
+                                <span class="badge bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 8px;">P: PERSUADIR</span>
+                                <span class="badge bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 8px;">S: SEDUCIR</span>
+                                <span class="badge bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size: 8px;">M: MANIPULAR</span>
+                                <span class="badge bg-opacity-10 text-secondary border border-secondary border-opacity-25" style="font-size: 8px;">I: INFORMAR</span>
+                            </div>
+                        </div>
+                        <div id="radar-containers" class="row g-3">
+                            <!-- Los radares se inyectarán aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Heatmaps -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Densidad de Interacción (Heatmap)
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('interacciones', 'heatmap')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div id="drama-heatmap-words" style="height: 350px; width: 100%;"></div>
+                        <div id="ai-res-heatmap" class="mt-3" style="display:none"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Matriz de Presencia Escénica
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('presencia', 'presencia')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div id="drama-presence-matrix" style="height: 350px; width: 100%;"></div>
+                        <div id="ai-res-presencia" class="mt-3" style="display:none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4: Rhythm & Cronía -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Ritmo Dramático y Cronía Antropológica
+                            </h5>
+                             <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('ritmo', 'ritmo')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div style="height: 350px; position: relative;"><canvas id="drama-rhythm-sync"></canvas></div>
+                        <div id="ai-res-ritmo" class="mt-3" style="display:none"></div>
+                        <p class="xsmall text-muted mt-3 mb-0">Correlación entre la velocidad de diálogos y el sentimiento de las acotaciones del autor.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 5: Interaction Function & Emotional Sync -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Convergencia de la Tensión Dramática
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('tension', 'tension')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div style="height: 350px; position: relative;"><canvas id="drama-tension-convergence"></canvas></div>
+                        <div id="ai-res-tension" class="mt-3" style="display:none"></div>
+                        <p class="xsmall text-muted mt-3 mb-0">Evolución emocional de la obra bloque a bloque.</p>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Sincronía Emocional (Entrainment)
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('sincronia', 'sincronia')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div id="heatmap-sincronia" style="height: 250px; width: 100%;"></div>
+                        <div id="sync-list" class="mt-3"></div>
+                        <div id="ai-res-sincronia" class="mt-3" style="display:none"></div>
+                        <p class="xsmall text-muted mt-3 mb-0">Parejas de personajes con mayor correlación afectiva en escena.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 6: Individual Trajectories -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="chart-container shadow-sm p-4 rounded bg-dark border border-secondary border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 1px; color: ${textWhite} !important;">
+                                <i class="fa-solid fa-circle text-warning me-2" style="font-size: 0.5rem;"></i> Trayectoria Emocional por Personaje
+                            </h5>
+                            <button class="btn btn-xs btn-outline-warning opacity-75" style="font-size: 9px; padding: 2px 8px;" onclick="interpretarSeccionDramatica('trayectoria', 'trayectoria')"><i class="fa-solid fa-wand-sparkles me-1"></i>ANALIZAR CON IA</button>
+                        </div>
+                        <div style="height: 450px; position: relative;"><canvas id="drama-individual-trajectories"></canvas></div>
+                        <div id="ai-res-trayectoria" class="mt-3" style="display:none"></div>
+                        <p class="xsmall text-muted mt-3 mb-0">Evolución del sentimiento individual para los protagonistas más relevantes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Panel (Fixed/Floating) -->
+        <div id="drama-block-detail" class="glass-panel p-4 shadow-lg border border-warning" style="display: none; position: fixed; top: 100px; right: 20px; width: 400px; max-height: 80vh; overflow-y: auto; z-index: 1050; background: rgba(15, 15, 15, 0.95) !important; backdrop-filter: blur(15px);">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-20 pb-2">
+                <a id="drama-reader-btn" href="#" target="_blank" class="text-warning text-decoration-none fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-book-open me-2"></i>ABRIR EN LECTOR
+                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <h6 class="text-warning fw-bold mb-0 text-uppercase opacity-50" id="drama-block-title" style="font-size: 10px;"></h6>
+                    <button class="btn btn-sm btn-link text-muted p-0" onclick="document.getElementById('drama-block-detail').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="drama-block-text" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ds-text-main); line-height: 1.6; white-space: pre-wrap;"></div>
+        </div>
+    </div>
+  `;
+
+  const temp = (data.sentimiento_temporal || []);
+
+  const safeUpdateSelect = (id, optionsHtml, value) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    
+    if (window.choicesInstances && window.choicesInstances[id]) {
+      window.choicesInstances[id].destroy();
+      delete window.choicesInstances[id];
+    }
+    
+    el.innerHTML = optionsHtml;
+    if (value !== undefined) el.value = value;
+    
+    if (typeof Choices !== 'undefined') {
+       window.choicesInstances = window.choicesInstances || {};
+       const c = new Choices(el, {
+          searchEnabled: true,
+          itemSelectText: '',
+          shouldSort: false,
+          removeItemButton: false,
+          allowHTML: true
+       });
+       window.choicesInstances[id] = c;
+       
+       el.addEventListener('change', () => {
+          if (id === 'filtro-obra') { updateActosEscenas(); window.filterDramaticoCharts(); }
+          else window.filterDramaticoCharts();
+       });
+       
+       el.addEventListener('choice', () => {
+          setTimeout(() => {
+              if (id === 'filtro-obra') { updateActosEscenas(); window.filterDramaticoCharts(); }
+              else window.filterDramaticoCharts();
+          }, 50);
+       });
+    }
+  };
+
+  const smartSort = (a, b) => {
+    const romanToInt = (s) => {
+        if (!s || typeof s !== 'string') return 0;
+        const romVal = { 'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000 };
+        let res = 0;
+        for (let i = 0; i < s.length; i++) {
+            if (romVal[s[i]] < romVal[s[i+1]]) res -= romVal[s[i]];
+            else res += romVal[s[i]];
+        }
+        return res;
+    };
+    const valA = romanToInt(a) || parseInt(a) || 0;
+    const valB = romanToInt(b) || parseInt(b) || 0;
+    return valA - valB;
+  };
+
+  const updateActosEscenas = () => {
+    const obraId = document.getElementById('filtro-obra').value;
+    const isAll = obraId === '' || obraId === 'all';
+    const filtered = isAll ? temp : temp.filter(s => String(s.publicacion_id) === String(obraId));
+    
+    const actosUnicos = [...new Set(filtered.map(s => s.acto).filter(a => a && a !== 'None' && a !== ''))].sort(smartSort);
+    const escenasUnicas = [...new Set(filtered.map(s => s.escena).filter(e => e && e !== 'None' && e !== ''))].sort(smartSort);
+
+    const prevActo = document.getElementById('filtro-acto')?.value || 'all';
+    const prevEscena = document.getElementById('filtro-escena')?.value || 'all';
+
+    let actoHtml = '<option value="all">Todos</option>';
+    actosUnicos.forEach(a => { actoHtml += `<option value="${a}">Acto ${a}</option>`; });
+    const targetActo = [...actosUnicos].some(a => String(a) === String(prevActo)) ? prevActo : 'all';
+    safeUpdateSelect('filtro-acto', actoHtml, targetActo);
+
+    let escenaHtml = '<option value="all">Todas</option>';
+    escenasUnicas.forEach(e => { escenaHtml += `<option value="${e}">Escena ${e}</option>`; });
+    const targetEscena = [...escenasUnicas].some(e => String(e) === String(prevEscena)) ? prevEscena : 'all';
+    safeUpdateSelect('filtro-escena', escenaHtml, targetEscena);
+  };
+
+  // Cargar obras iniciales
+  const mapObras = {};
+  temp.forEach(s => { if (s.publicacion_id && s.titulo_obra) mapObras[s.publicacion_id] = String(s.titulo_obra).trim(); });
+  
+  let obraHtml = '<option value="">(Todas las publicaciones)</option>';
+  Object.entries(mapObras).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, nombre]) => {
+    obraHtml += `<option value="${id}">${nombre}</option>`;
+  });
+
+  const initialObra = (filtros && filtros.publicacion_id) ? filtros.publicacion_id : '';
+  safeUpdateSelect('filtro-obra', obraHtml, initialObra);
+  
+  updateActosEscenas();
+  window.renderDramaticoFull(data);
+}
 
 window.generarInformeDramaticoIA = function() {
     const container = document.getElementById('ia-report-container');
@@ -4017,11 +4127,80 @@ window.refrescarAnalisisDramatico = function() {
 window.filterDramaticoCharts = function() {
     const data = datosActuales['dramatico'];
     if (!data) return;
-    const actoSel = document.getElementById('filtro-acto').value;
-    const escenaSel = document.getElementById('filtro-escena').value;
-    renderDramaticoFull(data, actoSel, escenaSel);
+    
+    const obraEl = document.getElementById('filtro-obra');
+    const actoEl = document.getElementById('filtro-acto');
+    const escenaEl = document.getElementById('filtro-escena');
+    
+    if (!obraEl || !actoEl || !escenaEl) return;
+    
+    const obraSel = obraEl.value;
+    const actoSel = actoEl.value;
+    const escenaSel = escenaEl.value;
+    
+    console.log(`[DRAMA] Aplicando filtros: Obra=${obraSel}, Acto=${actoSel}, Escena=${escenaSel}`);
+    
+    // Forzar limpieza de contenedores antes de re-renderizar para evitar duplicados visuales
+    // (Aunque renderDramaticoFull ya hace destroy() en Chart.js, esto ayuda con Vega y Vis.js)
+    window.renderDramaticoFull(data, actoSel, escenaSel, obraSel);
 }
 
+window.interpretarSeccionDramatica = function(tipo, targetId) {
+    const resDiv = document.getElementById(`ai-res-${targetId}`);
+    if (!resDiv) {
+        console.error(`Contenedor no encontrado: ai-res-${targetId}`);
+        return;
+    }
+
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `
+        <div class="d-flex align-items-center p-2 rounded" style="background: rgba(255,152,0,0.1); border: 1px dashed rgba(255,152,0,0.3);">
+            <div class="spinner-border spinner-border-sm text-warning me-2"></div>
+            <span class="xsmall text-warning fw-bold" style="font-size: 10px;">SOLICITANDO INTERPRETACIÓN IA...</span>
+        </div>
+    `;
+
+    const filtros = getFiltrosActuales();
+    const chartData = datosActuales['dramatico'];
+
+    fetch('/api/analisis/dramatico/interpretar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({
+            seccion: tipo,
+            chart_data: chartData,
+            ...filtros,
+            modelo: window._ia_modelo || 'flash'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.interpretacion) {
+            const isLight = UI_COLORS.isLight();
+            const formatted = (typeof marked !== 'undefined') ? marked.parse(data.interpretacion) : data.interpretacion.replace(/\n/g, '<br>');
+            resDiv.innerHTML = `
+                <div class="p-3 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" 
+                     style="background: ${isLight ? 'rgba(255,152,0,0.05)' : 'rgba(0,0,0,0.3)'};">
+                    <div class="markdown-content small" style="color: ${isLight ? '#333' : '#eee'}; line-height: 1.5; font-size: 0.8rem;">
+                        ${formatted}
+                    </div>
+                    <div class="text-end mt-2">
+                        <button class="btn btn-link btn-xs text-muted p-0 text-decoration-none" onclick="document.getElementById('ai-res-${targetId}').style.display='none'"><i class="fa-solid fa-eye-slash me-1"></i>Ocultar</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            resDiv.innerHTML = `<div class="alert alert-danger py-2 xsmall">${data.error || 'Error en interpretación'}</div>`;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        resDiv.innerHTML = `<div class="alert alert-danger py-2 xsmall">Error de conexión con el servidor.</div>`;
+    });
+};
 
 /* --- GESTOR DE ALIAS / IDENTIDADES --- */
 window.openAliasManager = function() {
@@ -4114,4 +4293,175 @@ window.resetAliases = function() {
     // Limpiar inputs visualmente
     document.querySelectorAll('.alias-input').forEach(input => input.value = '');
   }
+};
+
+/* --- ANÁLISIS DE SUBTEXTO E INTENCIONALIDAD AI --- */
+
+window.analizarSubtexto = function() {
+    const empty = document.getElementById('subtexto-empty');
+    const results = document.getElementById('subtexto-resultados');
+    const grid = document.getElementById('subtexto-personajes-grid');
+    
+    if (empty) empty.style.display = 'none';
+    if (results) results.style.display = 'block';
+    
+    grid.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-accent mb-3" style="color: #9b59b6 !important;"></div>
+            <p class="text-muted animate__animated animate__pulse animate__infinite">La IA está deconstruyendo el subtexto de la obra...</p>
+        </div>
+    `;
+
+    const filtrosActuales = getFiltrosActuales();
+    const projectKey = `aliases_${filtrosActuales.proyecto_id || 'default'}`;
+    const manual_aliases = JSON.parse(localStorage.getItem(projectKey) || '{}');
+
+    fetch('/api/analisis/dramatico/subtexto', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({
+            ...filtrosActuales,
+            manual_aliases: manual_aliases,
+            modelo: window._ia_modelo || 'pro'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.exito) {
+            datosActuales['subtexto'] = data.analisis;
+            renderSubtexto(data.analisis);
+        } else {
+            grid.innerHTML = `<div class="alert alert-danger w-100">${data.error || 'Error al analizar subtexto.'}</div>`;
+        }
+    })
+    .catch(err => {
+        grid.innerHTML = `<div class="alert alert-danger w-100">Error de conexión con el servidor.</div>`;
+    });
+};
+
+window.renderSubtexto = function(data) {
+    if (!data) return;
+    
+    const results = document.getElementById('subtexto-resultados');
+    const empty = document.getElementById('subtexto-empty');
+    if (results) results.style.display = 'block';
+    if (empty) empty.style.display = 'none';
+
+    // Renderizar Clima y Conflicto
+    const clima = document.getElementById('subtexto-clima');
+    const conflicto = document.getElementById('subtexto-conflicto');
+    
+    if (clima) clima.innerHTML = `<i class="fa-solid fa-cloud-sun me-2" style="color: #9b59b6;"></i> <strong>Clima Escénico:</strong> ${data.clima_escenico}`;
+    if (conflicto) conflicto.innerHTML = `<p><strong>Conflicto Dominante:</strong></p>${data.conflicto_dominante}`;
+
+    // Renderizar Grid de Personajes
+    const grid = document.getElementById('subtexto-personajes-grid');
+    if (grid) {
+        grid.innerHTML = '';
+        Object.entries(data.personajes || {}).forEach(([nombre, info], idx) => {
+            const charId = `chart-subtexto-radar-${idx}`;
+            const card = document.createElement('div');
+            card.className = 'col-md-6';
+            card.innerHTML = `
+                <div class="glass-panel p-3 h-100" style="background: rgba(255,255,255,0.03);">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="text-accent small fw-bold m-0" style="color: #9b59b6 !important;">${nombre}</h6>
+                        <span class="badge bg-dark border border-secondary border-opacity-20" style="font-size: 9px;">ARQUETIPO AI</span>
+                    </div>
+                    <div style="height: 200px;">
+                        <canvas id="${charId}"></canvas>
+                    </div>
+                    <div class="mt-3 small text-muted" style="font-size: 11px; line-height: 1.4;">
+                        <p class="mb-1 text-light"><strong>Meta:</strong> ${info.resumen_estrategico}</p>
+                        <p class="mb-0 italic opacity-75">"${info.evolucion}"</p>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+
+            // Crear Radar Chart para este personaje
+            setTimeout(() => {
+                const ctx = document.getElementById(charId);
+                if (ctx) {
+                    const tacticasLabels = Object.keys(info.tacticas || {});
+                    const tacticasValues = Object.values(info.tacticas || {});
+                    
+                    new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: tacticasLabels,
+                            datasets: [{
+                                data: tacticasValues,
+                                backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                                borderColor: '#9b59b6',
+                                borderWidth: 2,
+                                pointRadius: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                r: {
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    angleLines: { color: 'rgba(255,255,255,0.05)' },
+                                    pointLabels: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } },
+                                    ticks: { display: false, backdropColor: 'transparent' }
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        });
+    }
+
+    // Renderizar gráfico de barras de Dominancia Táctica (Opcional/Extra)
+    const evolutionContainer = document.getElementById('chart-subtexto-evolution');
+    if (evolutionContainer) {
+        if (data.streamgraph_spec) {
+            // Usar Vega-Lite para el Streamgraph
+            const spec = typeof data.streamgraph_spec === 'string' ? JSON.parse(data.streamgraph_spec) : data.streamgraph_spec;
+            const patchedSpec = patchVegaTheme(spec, UI_COLORS.isLight() ? 'light' : 'dark');
+            vegaEmbed('#chart-subtexto-evolution', patchedSpec, {actions: false});
+        } else {
+            // Fallback a barras si no hay spec
+            evolutionContainer.innerHTML = '<canvas id="chart-subtexto-global-bar"></canvas>';
+            const ctxGlobal = document.getElementById('chart-subtexto-global-bar');
+            
+            const globales = {};
+            Object.values(data.personajes || {}).forEach(p => {
+                Object.entries(p.tacticas || {}).forEach(([t, v]) => {
+                    globales[t] = (globales[t] || 0) + v;
+                });
+            });
+
+            new Chart(ctxGlobal, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(globales),
+                    datasets: [{
+                        label: 'Peso Táctico Global',
+                        data: Object.values(globales),
+                        backgroundColor: 'rgba(155, 89, 182, 0.4)',
+                        borderColor: '#9b59b6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666' } },
+                        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+    }
 };

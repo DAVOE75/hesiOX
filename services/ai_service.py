@@ -401,44 +401,46 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
 3. El resultado final debe ser una transcripción paleográfica perfecta, literal y diplomática.
 """
 
-        prompt = f"""System Instructions: Arquetipo de Transcriptor Paleográfico
-Actúa como un experto en paleografía y digitalización de prensa histórica de élite. Tu objetivo es realizar una transcripción diplomática (literal) del documento.
+        prompt = f"""System Instructions: Arquetipo de Transcriptor Paleográfico Especializado en Prensa Histórica
+Actúa como un experto en paleografía, tipografía antigua y digitalización de hemerotecas históricas de élite. Tu objetivo es una transcripción diplomática (literal) y estructuralmente perfecta del documento.
+
 {instrucciones_contexto}
 {vision_instruction}
 
-1. Reglas de Fidelidad Textual:
-- Literalidad Absoluta: Transcribe exactamente lo que ves. No corrijas ortografía antigua, no modernices términos (ej. mantener "septentrión", "sármatas") y no omitas conjunciones aunque parezcan redundantes.
-- Puntuación Histórica: Respeta escrupulosamente el uso de puntos y comas (;), guiones largos (—) y paréntesis. En prensa histórica, la puntuación dicta el ritmo de la lectura original.
-- Tratamiento de Superíndices: Identifica las llamadas a notas al pie (números pequeños como 15, 16) y sepáralas del texto mediante etiquetas, por ejemplo: [nota: 15]. Esto evita que el OCR fusione el número con la palabra anterior.
+1. FIDELIDAD TEXTUAL Y PALEOGRÁFICA (Estricta):
+- Literalidad Absoluta: Transcribe exactamente lo que ves. Mantén ortografía antigua (ej. "fué", "á", "septentrión").
+- Tipografía Antigua: Identifica la "s larga" (ſ) y transcríbela como "s" normal si es para búsqueda, pero mantén la fidelidad si el contexto es de transcripción pura.
+- Puntuación de Imprenta: Respeta guiones largos (—), comillas angulares (« ») y el uso de puntos suspensivos para separar noticias.
+- Superíndices y Notas: Extrae números de página y notas al pie usando etiquetas claras [pág: X] o [nota: Y].
 
-2. Optimización para Prensa Histórica (Layout):
-- Reconstrucción de Párrafos: Si una palabra está dividida por un guion al final de una línea o una frase continúa en la siguiente captura, realiza una "unión inteligente" para mantener la fluidez del párrafo.
-- Detección de Columnas: En caso de formato de periódico, transcribe columna por columna de izquierda a derecha, manteniendo la separación visual mediante saltos de línea dobles.
-- Gestión de Errores de Imprenta: Si encuentras una errata evidente del cajista original (ej. una letra invertida o una mancha de tinta), transcribe lo que se lee pero añade un marcador [sic] o [ilegible] si es necesario.
+2. LÓGICA DE PRENSA HISTÓRICA (Layout y Estructura):
+- Reconstrucción de Columnas: La prensa histórica suele dividirse en columnas estrechas. NO leas de izquierda a derecha a través de las columnas. Lee una columna completa de arriba a abajo y luego pasa a la siguiente.
+- Cabeceras y Folletines: Identifica y separa claramente la cabecera (título del diario, fecha, número) del cuerpo de la noticia. Si hay un "folletín" (novela por entregas en la parte inferior), márcalo como tal: [FOLLETÍN: Título].
+- Unificación de Guiones: Une palabras cortadas por guion al final de línea (ej: "cons- / titución" -> "constitución") para facilitar el análisis léxico posterior.
 
-3. Verificación de Entidades Propias (Nombres y Geografía):
-- Validación de Onomástica: Cruza los nombres propios detectados con contextos históricos y bíblicos (específicamente la genealogía de los hijos de Jafet: Gomer, Magog, Madai, Javán, etc.) para asegurar que una "n" no se confunda con una "u".
-- Toponimia Antigua: Mantén los nombres de lugares tal como aparecen (ej. "Tánais", "Meótida", "Gades"), asegurando que los acentos se preserven según el original impreso.
+3. CONOCIMIENTO DE DOMINIO (Entidades y Contexto):
+- Validación de Onomástica y Toponimia: Usa tu conocimiento histórico para corregir errores de OCR en nombres de políticos, militares y lugares de los siglos XVIII-XX.
+- Terminología Específica: Maneja correctamente términos de época (realistas, liberales, gacetillas, sueltos, reclamos publicitarios).
 
-4. Estructuración y Formato de Salida (CRÍTICO):
-Debes generar la transcripción literal en la propiedad "corrected_text" del JSON y extraer los metadatos relevantes en la propiedad "metadata".
-El output debe ser EXCLUSIVAMENTE el JSON, sin introducciones ni comentarios tuyos (Response Mimicry).
+4. ESTRUCTURACIÓN Y FORMATO DE SALIDA (CRÍTICO):
+- Genera la transcripción literal en "corrected_text" y extrae metadatos en "metadata".
+- El output debe ser EXCLUSIVAMENTE el JSON, sin texto adicional.
 
-RESPONDE EXCLUSIVAMENTE EN FORMATO JSON con esta estructura exacta y sin bloque markdown de código:
+RESPONDE EXCLUSIVAMENTE EN FORMATO JSON:
 {{
-    "corrected_text": "Tu transcripción paleográfica estricta aquí, respetando superíndices, saltos dobles y notas.",
+    "corrected_text": "Transcripción literal de prensa, columna por columna, respetando cabeceras y unificando guiones de fin de línea.",
     "metadata": {{
-        "titulo": "Título detectado o null",
-        "autor": "Autor detectado o null",
-        "fecha_original": "Fecha tal cual aparece (ej. 15 de mayo de 1906) o null",
-        "anio": 1906,
-        "publicacion": "Nombre de la obra/periódico o null",
-        "ciudad": "Ciudad mencionada o null",
+        "titulo": "Título de la noticia o cabecera",
+        "autor": "Firma o null",
+        "fecha_original": "Fecha original (ej. Jueves 12 de Junio de 1902)",
+        "anio": 1902,
+        "publicacion": "Nombre del periódico",
+        "ciudad": "Lugar de edición",
+        "seccion": "Ej: Política, Internacional, Anuncios",
         "confianza": 0.99,
-        "correcciones": ["Lista de inferencias paleográficas realizadas, como uniones de guiones o adición de [sic]"]
+        "correcciones": ["Lista de inferencias, ej: 'Unión de 12 palabras divididas por guion'"]
     }}
 }}
-
 TEXTO OCR DE REFERENCIA:
 \"\"\"{text}\"\"\"
 """

@@ -559,3 +559,37 @@ class AnalisisInnovador:
                 'balances': balances
             }
         }
+
+    def generar_streamgraph_tactico(self, data_evolucion: List[Dict], theme: str = 'dark') -> str:
+        """Genera un Streamgraph de la evolución de tácticas dramáticas"""
+        if not data_evolucion:
+            return None
+            
+        is_light = theme == 'light'
+        text_color = '#294a60' if is_light else '#ccc'
+        
+        df = pd.DataFrame(data_evolucion)
+        
+        chart = alt.Chart(df).mark_area(
+            interpolate='monotone',
+            fillOpacity=0.8
+        ).encode(
+            x=alt.X('acto:N', title='Progreso de la Obra (Actos/Escenas)', axis=alt.Axis(labelAngle=0)),
+            y=alt.Y('valor:Q', stack='center', axis=None),
+            color=alt.Color('tactica:N', 
+                           scale=alt.Scale(scheme='spectral'),
+                           legend=alt.Legend(title="Tácticas", orient='right', labelColor=text_color, titleColor=text_color)),
+            tooltip=['acto', 'tactica', 'valor']
+        ).properties(
+            width='container',
+            height=300,
+            title='Evolución del Flujo Táctico (Streamgraph)'
+        ).configure_title(
+            color=text_color,
+            fontSize=16,
+            anchor='start'
+        ).configure_view(
+            strokeOpacity=0
+        )
+        
+        return chart.to_json()

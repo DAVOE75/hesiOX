@@ -327,9 +327,13 @@ class EmbeddingService:
     def get_model_info(self, model: str) -> dict:
         """Retorna información sobre un modelo de embeddings"""
         return self.MODELS.get(model, {})
-    
+    def list_available_models(self) -> List[str]:
+        """Retorna una lista de modelos que tienen API keys configuradas"""
+        available = []
+        for model_id, config in self.MODELS.items():
+            if self._get_api_key(config['provider']):
+                available.append(model_id)
         return available
-        
     def detect_model_from_dimension(self, dimension: int) -> Optional[str]:
         """
         Infiere el modelo de embedding basado en la dimensión del vector

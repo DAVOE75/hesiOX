@@ -307,11 +307,12 @@ endblock %}
                     <div class="small text-muted">
                         Esta acción eliminará la publicación y desvinculará todas sus noticias.
                     </div>
-                    <a href="{{ url_for('hemerotecas.borrar_publicacion', id=pub.id_publicacion) }}"
-                        class="btn btn-outline-danger btn-sm"
-                        onclick="return confirm('¿Eliminar publicación {{ pub.nombre }}? Esta acción no se puede deshacer.')">
-                        <i class="fa-solid fa-trash me-1"></i> Eliminar Publicación
-                    </a>
+                    <form action="{{ url_for('hemerotecas.borrar_publicacion', id=pub.id_publicacion) }}" method="POST" onsubmit="return confirm('¿Eliminar publicación {{ pub.nombre }}? Esta acción no se puede deshacer.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fa-solid fa-trash me-1"></i> Eliminar Publicación
+                        </button>
+                    </form>
                 </div>
             </div>
 

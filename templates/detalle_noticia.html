@@ -234,12 +234,12 @@ Detalle de noticia
 
   .news-body {
     font-family: 'Roboto Condensed', sans-serif;
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 1.1rem;
+    line-height: 1.7;
     color: #dcdcdc;
     text-align: justify;
     margin-bottom: 60px;
-    /* white-space: pre-wrap; <-- REMOVED TO PREVENT CONFLICTS WITH QUILL HTML */
+    white-space: pre-wrap; /* Restaurado para compatibilidad con saltos de línea */
     overflow: visible;
     position: relative;
     z-index: 1;
@@ -250,7 +250,8 @@ Detalle de noticia
     overflow: visible !important;
   }
 
-  .news-body::first-letter {
+  .news-body::first-letter,
+  .news-body p:first-of-type::first-letter {
     float: left;
     font-family: 'Playfair Display', serif;
     font-size: 5rem;

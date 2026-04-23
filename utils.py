@@ -629,20 +629,41 @@ def limpieza_profunda_ocr(texto):
     # Unimos cualquier letra + guion + espacio(s) + letra
     texto = re.sub(fr'({letras}){hyphens}\s+({letras})', r'\1\2', texto)
 
-    # 3. UNIFICACIÓN DE LÍNEAS
-    texto = re.sub(r'\n\s*\n', '[[PARRAFO]]', texto)
-    texto = texto.replace('\n', ' ')
-    texto = texto.replace('[[PARRAFO]]', '\n\n')
+    # 3. PRESERVACIÓN DE ESTRUCTURA (Unificación inteligente)
+    # HESIOX v2.1: Somos conservadores con los saltos de línea para no romper tablas o listas
+    # Solo unificamos si hay un salto de línea simple que parece cortar una oración (sin puntuación final)
+    texto = re.sub(r'(?<![.:;])\n(?=[a-z])', ' ', texto) 
 
-    # 4. NORMALIZACIÓN DE ESPACIOS Y PUNTUACIÓN
-    texto = re.sub(r'\s+', ' ', texto)
-    texto = re.sub(r'\s+([.,;:])', r'\1', texto)
-    # Asegurar espacio después de puntuación si falta
+    # 4. NORMALIZACIÓN DE ESPACIOS (Conservando alineación)
+    # Quitamos espacios al final de línea para limpieza básica,
+    # pero permitimos bloques de espacios internos para alineación de tablas.
+    texto = re.sub(r' +$', '', texto, flags=re.MULTILINE) 
+    # Asegurar un espacio mínimo después de puntuación si falta, pero preservando si ya hay más (alineación)
     texto = re.sub(r'([.,;:])([a-zA-ZáéíóúÁÉÍÓÚñÑ])', r'\1 \2', texto)
 
     # 5. ESTRUCTURACIÓN SEMÁNTICA (Párrafos inteligentes)
     texto = texto.replace(" ítem", "\n\nítem")
-    texto = re.sub(r'\. ([A-ZÁÉÍÓÚÑ])', r'.\n\n\1', texto)
+    
+    # Lista extendida de abreviaturas que NO deben romper el flujo
+    abreviaturas = r'(?:Sr|Sra|Srta|Sres|D|Da|Dr|Dra|Vd|Vds|Ud|Uds|Excmo|Ilmo|Pbro|Mons|Gral|Tte|Cap|Cor|Don|Doña|Mtro|Mtra|Prof|Profa|S\.A|S\.L)'
+    
+    # Regla A: Evitar saltos de párrafo tras abreviaturas en el flujo continuo (. A -> . A)
+    def smart_split(m):
+        prefix = m.string[max(0, m.start()-10):m.start()]
+        if re.search(fr'\b{abreviaturas}$', prefix, re.IGNORECASE):
+            return m.group(0) # Es abreviatura, mantener en la misma línea
+        return f'.\n\n{m.group(1)}'
+    
+    texto = re.sub(r'\. ([A-ZÁÉÍÓÚÑ])', smart_split, texto)
+
+    # Regla B: Unificar líneas si la anterior termina en una abreviatura (D. \n\n Jorge -> D. Jorge)
+    def smart_unify(m):
+        prefix = m.string[max(0, m.start()-10):m.start()]
+        if re.search(fr'\b{abreviaturas}\.?$', prefix, re.IGNORECASE):
+            return " " # Es abreviatura, ignorar el doble salto
+        return "\n\n"
+    
+    texto = re.sub(r'\n\n', smart_unify, texto)
 
     # 6. CORRECCIONES DE ERRORES OCR FRECUENTES (Diccionario extendido con Regex)
     reemplazos_manuales = {

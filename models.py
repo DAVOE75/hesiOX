@@ -1448,6 +1448,7 @@ class BlogPost(db.Model):
 
     # Métricas de engagement
     vistas = db.Column(db.Integer, default=0, nullable=False)
+    notificado = db.Column(db.Boolean, default=False, nullable=False)
 
     __table_args__ = (
         db.Index('idx_blog_publicado', 'publicado'),
@@ -1455,6 +1456,17 @@ class BlogPost(db.Model):
         db.Index('idx_blog_categoria', 'categoria'),
         db.Index('idx_blog_creado', 'creado_en'),
     )
+
+    def get_resumen_corto(self, length=200):
+        """Genera un resumen limpio (sin HTML) para vistas previas."""
+        if self.resumen:
+            return self.resumen[:length] + ('...' if len(self.resumen) > length else '')
+        
+        # Si no hay resumen, limpiar HTML del contenido
+        import re
+        clean_text = re.sub(r'<[^>]*?>', '', self.contenido or '')
+        clean_text = clean_text.replace('&nbsp;', ' ').strip()
+        return clean_text[:length] + ('...' if len(clean_text) > length else '')
 
     def get_etiquetas_list(self):
         """Devuelve la lista de etiquetas como array limpio."""
@@ -1485,3 +1497,38 @@ class BlogSubscription(db.Model):
 
     def __repr__(self):
         return f"<BlogSubscription {self.email}>"
+
+# ============================================================================
+# 18. MENSAJES DE CONTACTO
+# ============================================================================
+
+class MensajeContacto(db.Model):
+    """Modelo para registrar mensajes enviados a través del formulario de contacto."""
+    __tablename__ = "mensajes_contacto"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    asunto = db.Column(db.String(255), nullable=False)
+    contenido = db.Column(db.Text, nullable=False)
+    
+    # Metadata
+    fecha_envio = db.Column(db.DateTime, default=datetime.utcnow)
+    leido = db.Column(db.Boolean, default=False)
+    respondido = db.Column(db.Boolean, default=False)
+    ip_address = db.Column(db.String(50), nullable=True)
+
+    def __repr__(self):
+        return f"<MensajeContacto de {self.email}: {self.asunto}>"
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'email': self.email,
+            'asunto': self.asunto,
+            'contenido': self.contenido,
+            'fecha_envio': self.fecha_envio.isoformat() if self.fecha_envio else None,
+            'leido': self.leido,
+            'respondido': self.respondido
+        }

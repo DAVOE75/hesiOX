@@ -152,11 +152,12 @@
                                     class="p-1 px-2" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <a href="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}"
-                                    class="p-1 px-2 hover-danger" title="Borrar"
-                                    onclick="return confirm('¿Borrar esta publicación?')">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
+                                <form action="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Borrar esta publicación?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="p-1 px-2 hover-danger bg-transparent border-0" title="Borrar" style="color: inherit;">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

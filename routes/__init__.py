@@ -22,6 +22,8 @@ from .simulacion import simulacion_bp
 from .pasajeros import pasajeros_bp
 from .barco import barco_bp
 from .blog import blog_bp
+from .contacto import contacto_bp
+
 
 from .ocr import ocr_bp
 
@@ -54,5 +56,6 @@ all_blueprints = [
     simulacion_bp,
     pasajeros_bp,
     barco_bp,
-    blog_bp
+    blog_bp,
+    contacto_bp
 ]

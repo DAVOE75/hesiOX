@@ -35,7 +35,7 @@ from app import app, db
 from models import Prensa, Proyecto
 from services.embedding_service import EmbeddingService
 from flask import current_app
-from sqlalchemy import func
+from sqlalchemy import func, or_, text
 
 
 def obtener_proyecto_activo():
@@ -53,7 +53,10 @@ def contar_noticias_pendientes(proyecto_id=None):
     """Cuenta cuántas noticias necesitan embeddings"""
     query = db.session.query(func.count(Prensa.id)).filter(
         Prensa.incluido == True,
-        Prensa.embedding_vector.is_(None)
+        or_(
+            Prensa.embedding_vector.is_(None),
+            db.cast(Prensa.embedding_vector, db.String) == 'null'
+        )
     )
     
     if proyecto_id:
@@ -158,10 +161,12 @@ def generar_embeddings_batch(proyecto_id=None, modelo='openai-small', batch_size
         errores = 0
         inicio = time.time()
         
-        # Query para obtener noticias sin embeddings
         query = db.session.query(Prensa).filter(
             Prensa.incluido == True,
-            Prensa.embedding_vector.is_(None)
+            or_(
+                Prensa.embedding_vector.is_(None),
+                db.cast(Prensa.embedding_vector, db.String) == 'null'
+            )
         ).order_by(Prensa.id)
         
         if proyecto_id:

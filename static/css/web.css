@@ -126,7 +126,7 @@ body::before {
 }
 
 .navbar-sirio .navbar-brand {
-  color: #f5c542 !important;
+  color: #ffffff !important;
   font-weight: 700;
   font-size: 1.3rem;
   letter-spacing: 0.5px;
@@ -301,7 +301,7 @@ h5 {
 }
 
 .navbar-brand {
-  color: var(--web-accent) !important;
+  color: fff !important;
   font-weight: 700;
   font-size: 1.3rem;
   letter-spacing: .5px;
@@ -320,7 +320,7 @@ footer {
   background: rgba(44, 44, 44, .98);
   color: #aaa;
   text-align: center;
-  padding: 6px 10px;
+  padding: 20px 10px;
   font-size: .9rem;
   border-top: 2px solid var(--web-accent);
   position: fixed;
@@ -591,7 +591,7 @@ img[src*="data:image/svg+xml"] {
 /* === ESTILOS MIGRADOS DE HOME.HTML === */
 .home-logo-img {
   height: 250px;
-  filter: drop-shadow(0 4px 12px rgba(255, 152, 0, 0.15));
+  /*  filter: drop-shadow(0 4px 12px rgba(255, 152, 0, 0.15));*/
 }
 
 .home-main-title {
@@ -609,6 +609,101 @@ img[src*="data:image/svg+xml"] {
 
 .img-transition {
   transition: transform 0.3s;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* === TECH STACK SHOWCASE (MARQUEE) === */
+.tech-stack-section {
+  position: relative;
+  width: 100%;
+  margin-top: 30px;
+  padding: 20px 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.tech-marquee-container {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  width: 100%;
+  /* Wide mask */
+  mask-image: linear-gradient(to right,
+      transparent,
+      black 1%,
+      black 99%,
+      transparent);
+}
+
+.tech-marquee-content {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 100px;
+  padding-right: 100px;
+  animation: scroll 60s linear infinite;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.tech-logo-item {
+  height: 32px;
+  /* Tamaño restaurado */
+  width: auto;
+  filter: grayscale(1) brightness(0.4) opacity(0.8);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.tech-text-item {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.tech-text-item:hover {
+  color: var(--web-accent);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.tech-logo-item:hover {
+  filter: grayscale(0) brightness(1) opacity(1);
+  transform: scale(1.1);
+}
+
+.tech-stack-title {
+  font-size: 0.75rem;
+  /* Título restaurado */
+  color: var(--web-panel);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  /* Margen restaurado */
+  opacity: 0.8;
 }
 
 /* === ESTILOS MIGRADOS DE LOGIN/REGISTRO === */

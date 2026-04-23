@@ -201,19 +201,20 @@ class AnalisisAvanzado:
                 
                 # Para visualización, usaremos el índice/título como eje X
                 # No agrupamos, mostramos cada punto individualmente (ideal para capítulos)
+                
                 return {
-                    'exito': True,
-                    'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
-                    'datos_individuales': resultados,
-                    'estadisticas': {
-                        'promedio_sentimiento': float(df['sentimiento'].mean()),
-                        'promedio_subjetividad': float(df['subjetividad'].mean()),
-                        'mediana_sentimiento': float(df['sentimiento'].median()),
-                        'mediana_subjetividad': float(df['subjetividad'].median()),
-                        'total_documentos': len(df)
-                    },
-                    'tipo_eje': 'secuencia'
-                }
+                            'exito': True,
+                            'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
+                            'datos_individuales': resultados,
+                            'estadisticas': {
+                                'promedio_sentimiento': float(df['sentimiento'].mean()),
+                                'promedio_subjetividad': float(df['subjetividad'].mean()),
+                                'mediana_sentimiento': float(df['sentimiento'].median()),
+                                'mediana_subjetividad': float(df['subjetividad'].median()),
+                                'total_documentos': len(df)
+                            },
+                            'tipo_eje': 'secuencia'
+                        }
             
             else: # eje_x == 'fecha' (COMPORTAMIENTO ORIGINAL)
                 # Intentar convertir a datetime, coercing errores (fechas < 1677 o > 2262)
@@ -268,7 +269,8 @@ class AnalisisAvanzado:
                          print(f"Error agrupando fechas fallback: {e}")
                          datos_finales = []
 
-                return {
+                
+        return {
                     'exito': True,
                     'datos_temporales': datos_finales,
                     'datos_individuales': resultados,
@@ -281,6 +283,7 @@ class AnalisisAvanzado:
                     },
                     'tipo_eje': 'fecha'
                 }
+        
         
         return {'exito': False, 'error': 'No hay datos suficientes'}
     
@@ -371,6 +374,7 @@ class AnalisisAvanzado:
             meta['topico'] = topico_dominante + 1
             meta['probabilidad'] = float(doc_topic[i][topico_dominante])
         
+        
         return {
             'exito': True,
             'topicos': topicos,
@@ -435,6 +439,7 @@ class AnalisisAvanzado:
         
         nodos_lista = [{'id': n, 'name': n} for n in nodos]
         
+        
         return {
             'exito': True,
             'nodos': nodos_lista,
@@ -482,11 +487,13 @@ class AnalisisAvanzado:
                 'promedio_diversidad_lexica': float(df['diversidad_lexica'].mean())
             }
             
-            return {
+            
+        return {
                 'exito': True,
                 'documentos': resultados,
                 'estadisticas_globales': estadisticas_globales
             }
+        
         
         return {'exito': False, 'error': 'No hay datos'}
     
@@ -515,6 +522,7 @@ class AnalisisAvanzado:
         palabras_unicas = len(conteo_palabras)
         hapax_legomena = sum(1 for p in conteo_palabras if conteo_palabras[p] == 1)
         
+        
         return {
             'total_palabras': total_palabras,
             'total_oraciones': total_oraciones,
@@ -531,7 +539,62 @@ class AnalisisAvanzado:
     # 5. ANÁLISIS DE N-GRAMAS
     # ============================================
     
-    def analisis_ngramas(self, publicaciones: List[Dict], n: int = 2, top_k: int = 20) -> Dict:
+    def _calcular_zeta(self, texto_p: List[str], texto_resto: List[str]) -> List[str]:
+        """
+        Implementación de Burrows' Zeta (simplificada para personajes).
+        Identifica palabras que un personaje usa de forma consistente pero el resto no.
+        """
+        if not texto_p or not texto_resto:
+            return []
+            
+        # Dividir en segmentos (ej. cada intervención es un segmento o grupos de 100 palabras)
+        def segmentar(lista_textos, chunk_size=5):
+            return [ " ".join(lista_textos[i:i + chunk_size]) for i in range(0, len(lista_textos), chunk_size) ]
+            
+        seg_p = segmentar(texto_p)
+        seg_r = segmentar(texto_resto)
+        
+        if not seg_p or not seg_r:
+            return []
+            
+        # Vocabulario total (filtrando stopwords)
+        vocab = set()
+        for s in seg_p + seg_r:
+            words = [w.lower() for w in re.findall(r'\b[a-záéíóúñü]{4,}\b', s) if w.lower() not in self.stopwords_es]
+            vocab.update(words)
+            
+        zeta_scores = {}
+        for word in vocab:
+            # Porcentaje de segmentos donde aparece la palabra
+            p_p = sum(1 for s in seg_p if word in s.lower()) / len(seg_p)
+            p_r = sum(1 for s in seg_r if word in s.lower()) / len(seg_r)
+            
+            # Zeta Score = Presencia en P - Presencia en Resto
+            # Favorece palabras que P usa en CASI TODAS sus intervenciones y los demás NO
+            zeta_scores[word] = p_p - p_r
+            
+        # Retornar top 5 palabras con mayor Zeta (más distintivas)
+        sorted_zeta = sorted(zeta_scores.items(), key=lambda x: x[1], reverse=True)
+        return [w for w, score in sorted_zeta if score > 0.1][:5]
+
+    def _calcular_correlacion(self, v1: List[float], v2: List[float]) -> float:
+        """Calcula la correlación de Pearson entre dos vectores de sentimiento."""
+        if len(v1) < 3 or len(v2) < 3: return 0.0
+        try:
+            # Pearson Correlation Coefficient
+            mu1 = sum(v1) / len(v1)
+            mu2 = sum(v2) / len(v2)
+            
+            num = sum((x - mu1) * (y - mu2) for x, y in zip(v1, v2))
+            den1 = sum((x - mu1)**2 for x in v1)
+            den2 = sum((y - mu2)**2 for y in v2)
+            
+            if den1 == 0 or den2 == 0: return 0.0
+            return num / (den1 * den2)**0.5
+        except:
+            return 0.0
+
+    def analizar_drama(self, obras_analizadas: List[Dict], reparto_identities: Dict = None) -> Dict:
         """
         Extrae los n-gramas más frecuentes del corpus
         
@@ -568,6 +631,7 @@ class AnalisisAvanzado:
         # Top K
         top_ngramas = ngramas_counter.most_common(top_k)
         
+        
         return {
             'exito': True,
             'ngramas': [{'texto': ng, 'frecuencia': freq} for ng, freq in top_ngramas],
@@ -594,6 +658,7 @@ class AnalisisAvanzado:
                 ngramas_counter[ngrama] += 1
         
         top_ngramas = ngramas_counter.most_common(top_k)
+        
         
         return {
             'exito': True,
@@ -669,6 +734,7 @@ class AnalisisAvanzado:
         
         # Calcular palabras clave por cluster
         cluster_keywords = self._extraer_keywords_clusters(matriz, clusters, vectorizer, n_clusters)
+        
         
         return {
             'exito': True,
@@ -749,6 +815,7 @@ class AnalisisAvanzado:
                 'similitud': float(similitudes[idx])
             })
         
+        
         return {
             'exito': True,
             'documento_referencia': {
@@ -818,6 +885,7 @@ class AnalisisAvanzado:
             top_keywords = sorted(keyness_scores, key=lambda x: x[1], reverse=True)[:top_k]
             resultados[g_nombre] = [{'palabra': p, 'score': float(s), 'frecuencia': f} for p, s, f in top_keywords]
             
+        
         return {
             'exito': True,
             'eje': eje,
@@ -864,6 +932,7 @@ class AnalisisAvanzado:
                         'coincidencias': len(interseccion),
                         'ejemplos': list(interseccion)[:3]
                     })
+        
         
         return {
             'exito': True,
@@ -921,6 +990,7 @@ class AnalisisAvanzado:
                 'intensidad': sum(counts.values())
             })
             
+        
         return {
             'exito': True,
             'geo_data': resultado_geo,
@@ -940,7 +1010,8 @@ class AnalisisAvanzado:
             
         # Dividir por periodos (tercios del corpus)
         df = pd.DataFrame(publicaciones)
-        if df.empty: return {'exito': False}
+        if df.empty: 
+            return {'exito': False}
         df['fecha'] = pd.to_datetime(df['fecha'])
         df = df.sort_values('fecha')
         
@@ -968,6 +1039,7 @@ class AnalisisAvanzado:
             except:
                 continue
                 
+        
         return {
             'exito': True,
             'palabra': palabra_objetivo,
@@ -1144,23 +1216,24 @@ class AnalisisAvanzado:
                 if 'fecha' in df.columns:
                     df.drop(columns=['fecha'], inplace=True)
                 
+                
                 return {
-                    'exito': True,
-                    'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
-                    'datos_individuales': resultados,
-                    'estadisticas': {
-                        'promedio_ironia': float(df['ironia'].mean()),
-                        'promedio_metafora_belica': float(df['metafora_belica'].mean()),
-                        'promedio_lenguaje_emocional': float(df['lenguaje_emocional'].mean()),
-                        'mediana_ironia': float(df['ironia'].median()),
-                        'mediana_metafora_belica': float(df['metafora_belica'].median()),
-                        'mediana_lenguaje_emocional': float(df['lenguaje_emocional'].median()),
-                        'total_documentos': len(df),
-                        'max_ironia': float(df['ironia'].max()),
-                        'max_metafora': float(df['metafora_belica'].max()),
-                        'max_emocional': float(df['lenguaje_emocional'].max())
-                    },
-                    'tipo_eje': 'secuencia'
+                'exito': True,
+                'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
+                'datos_individuales': resultados,
+                'estadisticas': {
+                'promedio_ironia': float(df['ironia'].mean()),
+                'promedio_metafora_belica': float(df['metafora_belica'].mean()),
+                'promedio_lenguaje_emocional': float(df['lenguaje_emocional'].mean()),
+                'mediana_ironia': float(df['ironia'].median()),
+                'mediana_metafora_belica': float(df['metafora_belica'].median()),
+                'mediana_lenguaje_emocional': float(df['lenguaje_emocional'].median()),
+                'total_documentos': len(df),
+                'max_ironia': float(df['ironia'].max()),
+                'max_metafora': float(df['metafora_belica'].max()),
+                'max_emocional': float(df['lenguaje_emocional'].max())
+                },
+                'tipo_eje': 'secuencia'
                 }
 
             # EJE X = FECHA (COMPORTAMIENTO ORIGINAL)
@@ -1215,7 +1288,8 @@ class AnalisisAvanzado:
                     print(f"Error agrupando fechas retorica fallback: {e}")
                     datos_finales = []
             
-            return {
+            
+        return {
                 'exito': True,
                 'datos_temporales': datos_finales,
                 'datos_individuales': resultados,
@@ -1232,6 +1306,7 @@ class AnalisisAvanzado:
                     'max_emocional': float(df['lenguaje_emocional'].max())
                 }
             }
+        
         
         return {'exito': False, 'error': 'No hay datos suficientes'}
 
@@ -1441,23 +1516,24 @@ class AnalisisAvanzado:
                 if 'fecha' in df.columns:
                     df.drop(columns=['fecha'], inplace=True)
                 
+                
                 return {
-                    'exito': True,
-                    'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
-                    'datos_individuales': resultados,
-                    'estadisticas': {
-                        'promedio_modalidad': float(df['modalidad'].mean()),
-                        'promedio_polarizacion': float(df['polarizacion'].mean()),
-                        'promedio_sensacionalismo': float(df['sensacionalismo'].mean()),
-                        'promedio_agencia': float(df['agencia'].mean()),
-                        'promedio_propaganda': float(df['propaganda'].mean()),
-                        'mediana_modalidad': float(df['modalidad'].median()),
-                        'mediana_polarizacion': float(df['polarizacion'].median()),
-                        'mediana_sensacionalismo': float(df['sensacionalismo'].median()),
-                        'mediana_agencia': float(df['agencia'].median()),
-                        'mediana_propaganda': float(df['propaganda'].median())
-                    },
-                    'tipo_eje': 'secuencia'
+                'exito': True,
+                'datos_temporales': df.rename(columns={'etiqueta': 'fecha'}).to_dict('records'), # Reusamos campo 'fecha' para label X
+                'datos_individuales': resultados,
+                'estadisticas': {
+                'promedio_modalidad': float(df['modalidad'].mean()),
+                'promedio_polarizacion': float(df['polarizacion'].mean()),
+                'promedio_sensacionalismo': float(df['sensacionalismo'].mean()),
+                'promedio_agencia': float(df['agencia'].mean()),
+                'promedio_propaganda': float(df['propaganda'].mean()),
+                'mediana_modalidad': float(df['modalidad'].median()),
+                'mediana_polarizacion': float(df['polarizacion'].median()),
+                'mediana_sensacionalismo': float(df['sensacionalismo'].median()),
+                'mediana_agencia': float(df['agencia'].median()),
+                'mediana_propaganda': float(df['propaganda'].median())
+                },
+                'tipo_eje': 'secuencia'
                 }
             
             # EJE X = FECHA (COMPORTAMIENTO ORIGINAL)
@@ -1516,7 +1592,8 @@ class AnalisisAvanzado:
                     print(f"Error agrupando fechas retorica fallback: {e}")
                     datos_finales = []
             
-            return {
+            
+        return {
                 'exito': True,
                 'datos_temporales': datos_finales,
                 'datos_individuales': resultados,
@@ -1539,6 +1616,7 @@ class AnalisisAvanzado:
                     'max_propaganda': float(df['propaganda'].max())
                 }
             }
+        
         
         return {'exito': False, 'error': 'No hay datos suficientes'}
 
@@ -1672,6 +1750,7 @@ class AnalisisAvanzado:
                     import logging
                     logging.error(f"AI Error Rareza: {e}")
         
+        
         return {
             'exito': True,
             'anomalias': anomalias_top,
@@ -1691,6 +1770,39 @@ class AnalisisAvanzado:
         # Colapsar múltiples espacios
         n = re.sub(r'\s+', ' ', n).strip()
         return n
+
+    def _clasificar_tactica(self, texto):
+        """Clasificador heurístico de tácticas dramáticas"""
+        if not texto: return "Informar"
+        t = texto.lower()
+        
+        # Pesos por categoría
+        scores = {
+            "Persuadir": 0,
+            "Atacar": 0,
+            "Seducir": 0,
+            "Manipular": 0,
+            "Informar": 1 # Base
+        }
+        
+        # Persuadir: Razonamiento, ruegos, preguntas retóricas
+        if re.search(r'\?|debe|razón|creo|entiende|escucha|por favor|conviene', t): scores["Persuadir"] += 2
+        if re.search(r'si .* entonces', t): scores["Persuadir"] += 1
+        
+        # Atacar: Imperativos, insultos, exclamaciones
+        if re.search(r'!|¡|traidor|miente|calla|vete|jamás|nunca|odio|muerte', t): scores["Atacar"] += 3
+        if len(t.split()) < 5 and '!' in t: scores["Atacar"] += 2
+        
+        # Seducir: Adjetivación, términos afectuosos
+        if re.search(r'amor|belleza|querida|dulce|hermosa|cielo|vida mía|corazón', t): scores["Seducir"] += 3
+        if re.search(r'tan .* como', t): scores["Seducir"] += 1
+        
+        # Manipular: Condicionales, ambigüedad, apelación a terceros
+        if re.search(r'si tú|tal vez|quizá|dicen que|alguien|podría|acaso', t): scores["Manipular"] += 2
+        if re.search(r'no me digas|sabes que', t): scores["Manipular"] += 1
+        
+        # Ganador
+        return max(scores, key=scores.get)
 
     def analisis_dramatico(self, publicaciones, manual_aliases=None, filtrado_activo=False):
         """
@@ -1772,6 +1884,8 @@ class AnalisisAvanzado:
             obras_analizadas.append({
                 'id': pub.get('id'),
                 'titulo': titulo,
+                'publicacion': pub.get('publicacion', 'Sin obra'),
+                'publicacion_id': pub.get('publicacion_id'),
                 'contenido': contenido,
                 'actos': actos_val,
                 'escenas': escenas_val,
@@ -1782,7 +1896,7 @@ class AnalisisAvanzado:
             return {'error': 'No hay contenido para analizar'}
 
         # ORDENACIÓN CRÍTICA: Asegurar flujo narrativo (Actos y Escenas)
-        obras_analizadas.sort(key=lambda x: (natural_key(x['actos']), natural_key(x['escenas'])))
+        obras_analizadas.sort(key=lambda x: (natural_key(x['publicacion']), natural_key(x['actos']), natural_key(x['escenas'])))
 
         nodos = []
         enlaces = []
@@ -1880,7 +1994,7 @@ class AnalisisAvanzado:
             p: {
                 'texto': [], 
                 'palabras': 0, 
-                'intervenciones': 0,
+                'intervenciones': 0, 'palabras': 0, 'tacticas': Counter(),
                 'presencia_por_bloque': [],
                 'sentimiento_por_bloque': []
             } for p in personajes_finales
@@ -1961,14 +2075,17 @@ class AnalisisAvanzado:
                         sentimiento_locuciones_bloque[p_final].append(sent_loc['polaridad'])
                         
                         # Guardar para el panel de contexto (mismo nombre que la gráfica)
-                        locuciones_data.append({'p': p_final, 't': texto_p})
+                        tactic = self._clasificar_tactica(texto_p)
+                        locuciones_data.append({'p': p_final, 't': texto_p, 'tac': tactic})
+                        personajes_stats[p_final]['tacticas'][tactic] += 1
 
                 # Ahora sí, guardamos la tensión dramática con los datos sincronizados
                 tension_dramatica.append({
                     'label': label_bloque,
                     'sentimiento': sent_bloque['polaridad'],
                     'subjetividad': sent_bloque['subjetividad'],
-                    'titulo_obra': obra['titulo'],
+                    'titulo_obra': obra['publicacion'],
+                    'publicacion_id': obra['publicacion_id'],
                     'doc_id': obra['id'],
                     'acto': acto,
                     'escena': escena,
@@ -2005,9 +2122,16 @@ class AnalisisAvanzado:
                 
                 # Guardar info de bloque para análisis de ritmo y acotaciones
                 if 'ritmo_bloques' not in locals(): ritmo_bloques = []
+                
+                # Densidad y Dinamismo
+                total_palabras_bloque = sum(len(re.findall(r'\b\w+\b', m.group(2))) for m in matches_loc)
+                dinamismo = len(matches_loc) / (total_palabras_bloque / 100) if total_palabras_bloque > 0 else 0
+                
                 ritmo_bloques.append({
                     'label': label_bloque,
                     'intervenciones': len(matches_loc),
+                    'palabras': total_palabras_bloque,
+                    'dinamismo': round(dinamismo, 2),
                     'sent_acotaciones': sent_acotaciones['polaridad'] if sent_acotaciones else 0,
                     'texto_acotaciones': acotaciones_bloque[:200]
                 })
@@ -2027,6 +2151,8 @@ class AnalisisAvanzado:
                 trigramas = [" ".join(tokens_frases[i:i+3]) for i in range(len(tokens_frases)-2)]
                 bigramas = [" ".join(tokens_frases[i:i+2]) for i in range(len(tokens_frases)-1)]
                 
+
+
                 def es_frase_relevante(f):
                     words = f.split()
                     if len(words) < 2: return False
@@ -2048,11 +2174,13 @@ class AnalisisAvanzado:
                         top_frases_data.append({'term': f, 'count': count})
                 top_frases = top_frases_data[:5]
                 
-                # Métricas Avanzadas: Distinctiveness (Simplificado Zeta)
-                # Palabras que este personaje usa mucho y los demás NO
-                otros_textos = " ".join([" ".join(personajes_stats[op]['texto']) for op in personajes_finales if op != p])
-                otros_words = set([w.lower() for w in re.findall(r'\b[a-záéíóúñü]{3,}\b', otros_textos) if w.lower() not in self.stopwords_es])
-                distinctive_words = [w['term'] for w in top_words if w['term'] not in otros_words][:5]
+                # Métricas Avanzadas: Distinctiveness (Burrows' Zeta)
+                texto_resto = []
+                for op in personajes_finales:
+                    if op != p:
+                        texto_resto.extend(personajes_stats[op]['texto'])
+                
+                distinctive_words = self._calcular_zeta(s['texto'], texto_resto)
 
                 detalles_reparto.append({
                     'nombre': p,
@@ -2063,7 +2191,7 @@ class AnalisisAvanzado:
                     'distinctive_words': distinctive_words,
                     'top_frases': top_frases,
                     'presencia_matriz': s['presencia_por_bloque'],
-                    'sentimiento_arc': s['sentimiento_por_bloque']
+                    'sentimiento_arc': s['sentimiento_por_bloque'], 'perfil_tactico': s['tacticas']
                 })
         
         # Sincronía Emocional (Correlación de Arcos)
@@ -2074,17 +2202,18 @@ class AnalisisAvanzado:
                 p2 = detalles_reparto[j]
                 arc1 = [v for v in p1['sentimiento_arc'] if v is not None]
                 arc2 = [v for v in p2['sentimiento_arc'] if v is not None]
-                # Correlación simple si coinciden en suficientes bloques
-                if len(arc1) > 5 and len(arc2) > 5:
+                # Correlación real si coinciden en suficientes bloques
+                if len(arc1) > 3 and len(arc2) > 3:
                     # Encontrar bloques comunes
                     comunes = [(p1['sentimiento_arc'][k], p2['sentimiento_arc'][k]) 
                                for k in range(len(p1['sentimiento_arc'])) 
                                if p1['sentimiento_arc'][k] is not None and p2['sentimiento_arc'][k] is not None]
+                    
                     if len(comunes) > 3:
                         v1 = [c[0] for c in comunes]
                         v2 = [c[1] for c in comunes]
-                        # Mock de correlación (tendencia)
-                        corr = 1.0 if all((v1[m] > 0) == (v2[m] > 0) for m in range(len(v1))) else 0.5
+                        corr = self._calcular_correlacion(v1, v2)
+                        
                         sincronia_pares.append({
                             'p1': p1['nombre'],
                             'p2': p2['nombre'],
@@ -2127,6 +2256,18 @@ class AnalisisAvanzado:
                     'valor': peso
                 })
             
+        
+
+        # Cálculo del flujo táctico (Streamgraph)
+        flujo_tactico = []
+        for idx, s in enumerate(tension_dramatica):
+            counts = Counter([l.get('tac', 'Informar') for l in s['locuciones']])
+            for tac, count in counts.items():
+                flujo_tactico.append({
+                    'Bloque': s['label'],
+                    'Táctica': tac,
+                    'Valor': count
+                })
         return {
             'exito': True,
             'nodos': nodos,
@@ -2138,9 +2279,9 @@ class AnalisisAvanzado:
             'total_personajes': len(nodos),
             'metricas_avanzadas': {
                 'ritmo_bloques': ritmo_bloques if 'ritmo_bloques' in locals() else [],
-                'sincronia_pares': sincronia_pares if 'sincronia_pares' in locals() else []
+                'sincronia_pares': sincronia_pares if 'sincronia_pares' in locals() else [],
+                'flujo_tactico': flujo_tactico
             }
         }
-
 
 

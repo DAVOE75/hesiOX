@@ -456,6 +456,10 @@
 [data-theme="light"] .newsletter-content p { color: #555; }
 [data-theme="light"] .subscribe-form { background: #fff; border-color: rgba(0,0,0,0.1); }
 [data-theme="light"] .subscribe-input { color: #000; }
+
+.subscribe-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
 </style>
 {% endblock %}
 
@@ -601,7 +605,10 @@
             <p class="text-accent smaller text-uppercase fw-bold mb-2" style="letter-spacing: 2px;">
                 <i class="fa-solid fa-paper-plane me-2"></i> Mantente informado
             </p>
-            <h3>Suscríbete al Cuaderno</h3>
+            <h3 class="d-flex align-items-center justify-content-center gap-3">
+                <img src="{{ url_for('static', filename='img/hesiox_logo2.png') }}" alt="HesiOX Logo" style="height: 45px; width: auto; filter: drop-shadow(0 0 10px rgba(255,152,0,0.3));">
+                SUSCRÍBETE AL CUADERNO
+            </h3>
             <p>Recibe directamente en tu correo las últimas investigaciones, crónicas y hallazgos digitales del equipo HesiOX.</p>
             
             <form id="form-suscribe-blog" class="subscribe-form">

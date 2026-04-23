@@ -33,6 +33,11 @@
     <span class="btn-text">Sesgos</span>
 </button>
 
+<button class="btn-sirio" data-analisis="subtexto" title="Análisis de Subtexto e Intencionalidad AI">
+    <i class="fa-solid fa-masks-theater"></i>
+    <span class="btn-text">Subtexto</span>
+</button>
+
 <div class="vr mx-1 opacity-25"></div>
 
 <!-- Filtros -->
@@ -436,6 +441,70 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Análisis de Subtexto e Intencionalidad AI -->
+    <div id="view-subtexto" class="analisis-view" style="display: none;">
+        <div class="glass-panel p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="text-accent m-0" style="color: #9b59b6 !important;">
+                    <i class="fa-solid fa-masks-theater me-2"></i>Intencionalidad y Subtexto (Dramaturgia AI)
+                </h3>
+                <button class="btn-sirio btn-sirio-primary" onclick="analizarSubtexto()">
+                    <i class="fa-solid fa-brain me-2"></i>Analizar Subtexto Profesional
+                </button>
+            </div>
+
+            <div class="alert alert-warning bg-dark border-warning text-light mb-4" style="border-left: 4px solid #9b59b6 !important;">
+                <div class="d-flex">
+                    <i class="fa-solid fa-wand-magic-sparkles me-3 fa-2x" style="color: #9b59b6;"></i>
+                    <div>
+                        <p class="mb-1"><strong>Módulo de Inteligencia Dramatúrgica</strong></p>
+                        <p class="small mb-0 opacity-75">
+                            Este análisis trasciende las palabras para identificar la <strong>acción dramática subyacente</strong>. 
+                            Clasifica las intervenciones en tácticas psicológicas (Persuadir, Atacar, Seducir...) permitiendo entender el "juego" entre personajes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="subtexto-resultados" style="display: none;">
+                <!-- Resultados de la IA -->
+                <div class="row g-4">
+                    <!-- Resumen Global -->
+                    <div class="col-md-4">
+                        <div class="glass-panel p-4 h-100" style="background: rgba(155, 89, 182, 0.05); border: 1px solid rgba(155, 89, 182, 0.2);">
+                            <h5 class="text-white mb-3 small fw-bold text-uppercase" style="letter-spacing: 1px;">Conflicto y Clima</h5>
+                            <div id="subtexto-clima" class="mb-4 p-3 rounded" style="background: rgba(0,0,0,0.3); border-left: 3px solid #9b59b6;">
+                                <!-- Tono general -->
+                            </div>
+                            <div id="subtexto-conflicto" class="small text-muted" style="line-height: 1.6;">
+                                <!-- Conflicto principal -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Radar de Tácticas (Grid de personajes) -->
+                    <div class="col-md-8">
+                        <div class="glass-panel p-4" style="background: rgba(255,255,255,0.02);">
+                            <h5 class="text-white mb-4 small fw-bold text-uppercase" style="letter-spacing: 1px;">Espectro Táctico de los Personajes</h5>
+                            <div id="subtexto-personajes-grid" class="row g-3">
+                                <!-- Aquí irán los Radares por personaje -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado vacío -->
+            <div id="subtexto-empty" class="text-center py-5">
+                <i class="fa-solid fa-masks-theater fa-4x mb-4 opacity-20"></i>
+                <h4 class="text-muted">Análisis de Subtexto no iniciado</h4>
+                <p class="text-muted small mx-auto" style="max-width: 500px;">
+                    Haz clic en el botón superior para que la IA procese los diálogos y extraiga las intenciones tácticas de los personajes.
+                </p>
             </div>
         </div>
     </div>

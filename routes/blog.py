@@ -7,6 +7,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from extensions import db, csrf
 from models import BlogPost, Usuario, BlogSubscription
+from services.email_service import EmailService
 from datetime import datetime
 import re
 import os
@@ -330,6 +331,39 @@ def admin_publicar(entrada_id):
         'publicado': entrada.publicado,
         'label': 'Publicado' if entrada.publicado else 'Borrador',
     })
+
+
+@blog_bp.route('/admin/<int:entrada_id>/notificar', methods=['POST'])
+@login_required
+@csrf.exempt
+def admin_notificar(entrada_id):
+    """Enviar notificación de nueva entrada a todos los suscriptores."""
+    if current_user.rol != 'admin':
+        return jsonify({'success': False, 'error': 'Solo administradores pueden enviar notificaciones'}), 403
+        
+    entrada = db.session.get(BlogPost, entrada_id)
+    if not entrada:
+        return jsonify({'success': False, 'error': 'Entrada no encontrada'}), 404
+    
+    if not entrada.publicado:
+        return jsonify({'success': False, 'error': 'La entrada debe estar publicada para notificar'}), 404
+    
+    suscriptores = BlogSubscription.query.filter_by(activo=True).all()
+    if not suscriptores:
+        return jsonify({'success': False, 'error': 'No hay suscriptores activos'}), 400
+        
+    try:
+        success, message = EmailService.send_newsletter(suscriptores, entrada)
+        
+        if success:
+            entrada.notificado = True
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Notificación enviada correctamente'})
+        else:
+            # Si el servicio de correo falla por configuración, devolvemos 200 pero con el error para que el UI no se rompa
+            return jsonify({'success': False, 'message': f'Error en el servicio de correo: {message}'}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error inesperado: {str(e)}'}), 200
 
 
 @blog_bp.route('/admin/<int:entrada_id>/eliminar', methods=['POST'])

@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     const ocrProgressContainer = document.getElementById('ocr-progress-container');
+    const ocrProgressText = document.getElementById('ocr-progress-text');
+    const ocrProgressBar = document.getElementById('ocr-progress-bar');
     const ocrResultContainer = document.getElementById('ocr-result-container');
     const ocrTextPreview = document.getElementById('ocr-text-preview');
-    const btnApplyMetadata = document.getElementById('btn-apply-metadata');
+    const btnApplyMetadata = document.getElementById('btn-apply-ocr-text');
 
     // Si no hay botón de procesar, estamos en modo simplificado (solo uploader)
     const simplifiedMode = !btnProcessOCR;
@@ -532,9 +534,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-            // Copiar texto completo según selector de idioma
-            const idiomaSelector = document.getElementById('ocr-idioma-selector');
-            const esIdiomaOriginal = idiomaSelector && idiomaSelector.value === 'original';
+            // Copiar texto completo según selector de destino
+            const destOriginal = document.getElementById('ocr-dest-original');
+            const esIdiomaOriginal = destOriginal && destOriginal.checked;
 
             if (extractedData.text) {
                 if (esIdiomaOriginal) {
@@ -549,16 +551,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
                     let textoCopiado = false;
                     if (window.quillEditors && window.quillEditors.texto_original) {
-                        window.quillEditors.texto_original.root.innerHTML = extractedData.text.replace(/\n/g, '<br>');
+                        // USAR setText para preservar espacios y formato idéntico al OCR
+                        window.quillEditors.texto_original.setText(extractedData.text);
                         textoCopiado = true;
                         appliedCount++;
                     }
 
-                    // MÉTODO 1: Intentar con TinyMCE
                     if (!textoCopiado && typeof tinymce !== 'undefined') {
                         const editor = tinymce.get('texto_original');
                         if (editor) {
-                            editor.setContent(extractedData.text.replace(/\n/g, '<br>'));
+                            // Para TinyMCE usamos un pre-wrap si es posible
+                            editor.setContent('<pre style="font-family:inherit; white-space:pre-wrap;">' + extractedData.text + '</pre>');
                             textoCopiado = true;
                             appliedCount++;
                             editor.focus();
@@ -589,7 +592,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
                     let textoCopiado = false;
                     if (window.quillEditors && window.quillEditors.contenido) {
-                        window.quillEditors.contenido.root.innerHTML = extractedData.text.replace(/\n/g, '<br>');
+                        // USAR setText para preservar espacios y formato idéntico al OCR
+                        window.quillEditors.contenido.setText(extractedData.text);
                         console.log('[OCR] ✓ Texto insertado en Quill (contenido)');
                         textoCopiado = true;
                         appliedCount++;

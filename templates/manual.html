@@ -647,45 +647,27 @@
                 <h5 class="fw-bold"><i class="fa-solid fa-sparkles me-2"></i>Actualizaciones Críticas (v4.2.0 - Abril
                     2026)</h5>
                 <div class="small">
-                    <p class="mb-2"><strong>Laboratorio de IA (Despliegue Final Innovador):</strong></p>
+                    <p class="mb-2"><strong>Lo nuevo en el Laboratorio de IA (Análisis Dramático):</strong></p>
                     <ul class="mb-2">
-                        <li><strong>Semántica Diacrónica:</strong> Nuevo sistema de <b>Seguimiento Semántico
-                                Personalizado</b> que permite al investigador trazar la deriva de términos específicos
-                            introducidos bajo demanda.</li>
-                        <li><strong>Circulación e Intertextualidad:</strong> Motor de detección de <em>Reprint
-                                Culture</em> mediante algoritmos de Jaccard para el mapeo de redes de influencia léxica.
-                        </li>
-                        <li><strong>Análisis de Sesgos:</strong> Identificación proactiva de asimetrías de Género, Clase
-                            y Geografía mediante lexicones de raíces especializados.</li>
-                        <li><strong>Rueda de Plutchik:</strong> Optimización de la huella octogonal y análisis de
-                            "Tijeras" emocionales para la detección de picos de tensión en el corpus.</li>
+                        <li><strong>Análisis Táctico Profundo:</strong> La IA ahora deconstruye las intervenciones de cada personaje para identificar sus tácticas psicológicas (Persuadir, Atacar, Seducir, Manipular, etc.), revelando el juego de poder subyacente.</li>
+                        <li><strong>Visualización de Perfil Táctico (Radar Charts):</strong> Cada personaje cuenta con un gráfico de radar dinámico que muestra su espectro de acciones, permitiendo comparar visualmente las personalidades dramáticas.</li>
+                        <li><strong>Evolución del Flujo Táctico (Streamgraph):</strong> Se ha integrado un gráfico de áreas fluido (Streamgraph) generado con Vega-Lite que muestra cómo evolucionan las tácticas dominantes a lo largo de la obra.</li>
+                        <li><strong>Síntesis Estratégica:</strong> El sistema genera informes sobre el Conflicto Dominante, el Clima Escénico y las Metas Estratégicas de cada personaje.</li>
                     </ul>
                     <hr class="my-3 opacity-25">
     
-                    <p class="mb-2"><strong>Documentación Integral (La Biblia v4.1.0):</strong></p>
+                    <p class="mb-2"><strong>Laboratorio de IA General:</strong></p>
                     <ul class="mb-2">
-                        <li><strong>Sección VII (Ampliación):</strong> Integración de la metodología técnica y operativa
-                            del Laboratorio IA en el punto 7.5.</li>
-                        <li><strong>Referencia Cruzada:</strong> Sistema de enlaces dinámicos entre el Ecosistema
-                            Analítico y el Corpus CHAT para una navegación holística.</li>
+                        <li><strong>Semántica Diacrónica:</strong> Seguimiento Semántico Personalizado para trazar la deriva de términos específicos.</li>
+                        <li><strong>Análisis de Sesgos:</strong> Identificación proactiva de asimetrías de Género, Clase y Geografía.</li>
+                        <li><strong>Rueda de Plutchik:</strong> Optimización de la huella octogonal y análisis de "Tijeras" emocionales.</li>
                     </ul>
                     <hr class="my-3 opacity-25">
     
                     <p class="mb-2"><strong>Optimización de Interfaz y UX:</strong></p>
                     <ul class="mb-0">
-                        <li><strong>Layouts Inmersivos:</strong> Rediseño de vistas de ancho completo y sistemas de
-                            columnas 8+4 para la exploración de grafos complejos.</li>
-                        <li><strong>Filtros Avanzados:</strong> Inserción de campos de tracking específicos en el panel
-                            de control lateral para análisis dirigidos.</li>
-                    </ul>
-
-                    <hr class="my-3 opacity-25">
-
-                    <p class="mb-2"><strong>Procesamiento del Discurso (Módulo Analítico Teatral):</strong></p>
-                    <ul class="mb-0">
-                        <li><strong>Dramaturgia Computacional:</strong> Interfaz para el mapeo de redes de co-presencia de personajes y grafos de interacción social.</li>
-                        <li><strong>Trayectorias de Tensión:</strong> Cronologías dinámicas de intensidad emocional y análisis de clímax narrativo.</li>
-                        <li><strong>Gestor de Identidades:</strong> Herramienta de unificación de alias para la normalización prosopográfica de personajes.</li>
+                        <li><strong>Filtros Tácticos:</strong> Integración de selectores de Acto/Escena directamente en el espacio de trabajo de dramaturgia.</li>
+                        <li><strong>Layouts Inmersivos:</strong> Rediseño de vistas para la exploración de grafos y radares complejos.</li>
                     </ul>
                 </div>
             </div>
@@ -5792,8 +5774,14 @@
 
             <h3 id="dramatic-stylometry" class="h4 mt-5 fw-bold text-accent">9.7 Estilometría y Identidad Lingüística (Zeta Score)</h3>
             <p>
-                HesiOX implementa el algoritmo de <strong>Zeta de Burrows</strong> adaptado al diálogo teatral. Esta métrica permite identificar qué palabras son verdaderamente distintivas de un personaje frente al resto del reparto, revelando su "idiosincrasia verbal".
+                HesiOX implementa una versión refinada del algoritmo <strong>Zeta de Burrows</strong>. A diferencia del análisis de frecuencias simple (TF-IDF), Zeta mide la <strong>consistencia</strong> del uso léxico. Identifica palabras que un personaje usa de forma recurrente en múltiples intervenciones, pero que son evitadas o poco frecuentes en el resto del reparto.
             </p>
+            <div class="card p-3 border-0 bg-sirio-light mb-4 shadow-sm border-start-accent">
+                <h6 class="fw-bold xsmall text-uppercase ls-1 text-accent mb-2"><i class="fa-solid fa-flask-vial me-2"></i>Fundamento Matemático</h6>
+                <p class="xsmall text-muted mb-0">
+                    Calculamos la probabilidad de ocurrencia de cada término en segmentos de 5 intervenciones. El <em>Zeta Score</em> es la diferencia de probabilidades entre el personaje analizado y el corpus de referencia. Valores > 0.1 indican términos altamente idiosincrásicos que definen la "huella digital" del personaje.
+                </p>
+            </div>
             <div class="row g-3 small mb-4">
                 <div class="col-md-6">
                     <div class="card p-3 border-0 bg-light">
@@ -5816,11 +5804,11 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <h5 class="h6 fw-bold text-uppercase text-muted"><i class="fa-solid fa-gauge-high me-2"></i>Ritmo y Acotaciones</h5>
-                    <p class="small">Correlaciona la <strong>velocidad del diálogo</strong> (palabras por bloque) con el sentimiento de las <strong>acotaciones del autor</strong>. Permite identificar si el clímax emocional del texto coincide con una aceleración de las intervenciones.</p>
+                    <p class="small">Correlaciona la <strong>velocidad del diálogo</strong> (palabras por bloque) con el sentimiento de las <strong>acotaciones del autor</strong>. Permite identificar si el clímax emocional del texto coincide con una aceleración de las intervenciones (esticomitía vs. rhesis).</p>
                 </div>
                 <div class="col-md-6">
-                    <h5 class="h6 fw-bold text-uppercase text-muted"><i class="fa-solid fa-sync me-2"></i>Sincronía de Pares</h5>
-                    <p class="small">Mide el <strong>"Entrainment" afectivo</strong>: la tendencia de dos personajes a sincronizar sus arcos de sentimiento cuando comparten escena, revelando complicidades o tensiones latentes.</p>
+                    <h5 class="h6 fw-bold text-uppercase text-muted"><i class="fa-solid fa-sync me-2"></i>Sincronía de Pares (Pearson Correlation)</h5>
+                    <p class="small">Mide el <strong>"Entrainment" afectivo</strong> mediante el cálculo del coeficiente de correlación de Pearson entre los vectores de sentimiento. Una sincronía del 100% indica una coordinación emocional perfecta entre dos personajes, mientras que valores negativos revelan una disonancia o conflicto latente.</p>
                 </div>
             </div>
 
@@ -5833,6 +5821,34 @@
                 <li><strong>Frases Repetitivas:</strong> Análisis de redundancia para detectar obsesiones temáticas o patrones retóricos (e.g., el uso sistemático de la ironía o la queja).</li>
                 <li><strong>Tooltips Dinámicos:</strong> Al pasar el ratón sobre cualquier palabra o frase, el sistema revela instantáneamente la frecuencia de uso por parte de ese personaje.</li>
             </ul>
+                    <h3 id="dramatic-subtext-ia" class="h4 mt-5 fw-bold text-accent">9.10 Análisis de Subtexto e Intencionalidad Táctica</h3>
+            <p>
+                La evolución más disruptiva del laboratorio es el <strong>Análisis Táctico Profundo</strong>. Mediante modelos de lenguaje de última generación, HesiOX es capaz de leer "entre líneas" para identificar la intención psicológica de cada intervención.
+            </p>
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm bg-sirio-dim p-3 border-top border-warning">
+                        <h6 class="fw-bold"><i class="fa-solid fa-bullseye me-2 text-warning"></i>Deconstrucción Táctica</h6>
+                        <p class="xsmall text-muted mb-0">Identifica categorías como <em>Persuadir, Atacar, Seducir, Manipular, Evadir</em> o <em>Informar</em>, permitiendo un mapeo objetivo del conflicto dramático.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm bg-sirio-dim p-3 border-top border-warning">
+                        <h6 class="fw-bold"><i class="fa-solid fa-chart-radar me-2 text-warning"></i>Radar de Personalidad</h6>
+                        <p class="xsmall text-muted mb-0">Visualización radial que muestra el equilibrio de tácticas de un personaje. Ideal para comparar perfiles (ej: el manipulador vs el mediador).</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm bg-sirio-dim p-3 border-top border-warning">
+                        <h6 class="fw-bold"><i class="fa-solid fa-water me-2 text-warning"></i>Evolución (Streamgraph)</h6>
+                        <p class="xsmall text-muted mb-0">Gráficos de flujo temporal que muestran cómo las tácticas dominantes cambian a lo largo de la obra, revelando giros en la estrategia de los personajes.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-light border-start-accent bg-light">
+                <h6 class="fw-bold"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Síntesis Estratégica IA</h6>
+                <p class="small mb-0">El sistema no solo grafica; genera una síntesis textual sobre el <strong>Conflicto Dominante</strong>, el <strong>Clima Escénico</strong> y las <strong>Metas Estratégicas</strong> detectadas en el subtexto del diálogo.</p>
+            </div>
         </section>
 
         <!-- 10. ADMIN -->
