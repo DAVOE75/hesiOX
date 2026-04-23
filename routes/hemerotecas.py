@@ -241,13 +241,17 @@ def repositorio_global():
         query_base = query_base.filter(Hemeroteca.pais == pais_seleccionado)
         
     # Obtener datos y agrupar por nombre para evitar duplicados en la vista
-    todas = query_base.order_by(Hemeroteca.nombre).all()
+    # Priorizamos verificadas en el ordenamiento inicial
+    todas = query_base.order_by(Hemeroteca.verificada.desc(), Hemeroteca.nombre).all()
     
     # Deduplicar por nombre (case insensitive) y url
     unicas = {}
     for h in todas:
         key = (h.nombre.lower().strip(), (h.url or "").lower().strip())
         if key not in unicas:
+            unicas[key] = h
+        elif h.verificada and not unicas[key].verificada:
+            # Si encontramos una versión verificada del mismo repositorio, la preferimos
             unicas[key] = h
             
     # Convertir a lista y ordenar
@@ -333,6 +337,77 @@ def importar_hemeroteca(id):
     
     flash(f"✅ Importada '{nueva_hemeroteca.nombre}' con {contador_pubs} publicaciones", "success")
     return redirect(url_for("hemerotecas.hemerotecas"))
+
+
+# =========================================================
+# RUTAS DE ADMINISTRACIÓN: VERIFICACIÓN Y FUSIÓN
+# =========================================================
+
+@hemerotecas_bp.route("/hemeroteca/verificar/<int:id>", methods=["POST"])
+@login_required
+def verificar_hemeroteca(id):
+    """Marcar una hemeroteca como verificada (solo admin)"""
+    if current_user.rol != "admin":
+        flash("❌ No tienes permisos de administrador", "danger")
+        return redirect(url_for("hemerotecas.repositorio_global"))
+        
+    hemeroteca = Hemeroteca.query.get_or_404(id)
+    hemeroteca.verificada = not hemeroteca.verificada  # Toggle
+    db.session.commit()
+    
+    estado = "verificada" if hemeroteca.verificada else "desmarcada como verificada"
+    flash(f"✅ La hemeroteca '{hemeroteca.nombre}' ha sido {estado}", "success")
+    return redirect(url_for("hemerotecas.repositorio_global"))
+
+
+@hemerotecas_bp.route("/hemeroteca/fusionar", methods=["GET", "POST"])
+@login_required
+def fusionar_hemerotecas():
+    """Herramienta para fusionar dos hemerotecas duplicadas (solo admin)"""
+    if current_user.rol != "admin":
+        flash("❌ No tienes permisos de administrador", "danger")
+        return redirect(url_for("dashboard"))
+        
+    if request.method == "POST":
+        id_origen = request.form.get("id_origen", type=int)
+        id_destino = request.form.get("id_destino", type=int)
+        
+        if not id_origen or not id_destino or id_origen == id_destino:
+            flash("⚠️ Debes seleccionar dos hemerotecas diferentes", "warning")
+            return redirect(url_for("hemerotecas.fusionar_hemerotecas"))
+            
+        origen = Hemeroteca.query.get_or_404(id_origen)
+        destino = Hemeroteca.query.get_or_404(id_destino)
+        
+        # Mover todas las publicaciones
+        publicaciones = Publicacion.query.filter_by(hemeroteca_id=origen.id).all()
+        contador = 0
+        for pub in publicaciones:
+            # Comprobar si ya existe una con el mismo nombre en el destino
+            existe = Publicacion.query.filter_by(hemeroteca_id=destino.id, nombre=pub.nombre).first()
+            if not existe:
+                pub.hemeroteca_id = destino.id
+                # Si la publicación original pertenecía a otro proyecto, 
+                # la vinculamos al proyecto de la hemeroteca destino para coherencia
+                pub.proyecto_id = destino.proyecto_id
+                contador += 1
+            else:
+                # Si ya existe, podríamos intentar mover los artículos vinculados
+                # pero por seguridad de datos, solo informamos o los movemos si el nombre es idéntico
+                # Actualizar Prensa (artículos) vinculados a la publicación redundante
+                Prensa.query.filter_by(id_publicacion=pub.id_publicacion).update({"id_publicacion": existe.id_publicacion})
+                db.session.delete(pub) # Eliminamos la publicación duplicada
+        
+        nombre_eliminada = origen.nombre
+        db.session.delete(origen)
+        db.session.commit()
+        
+        flash(f"🚀 Fusión completada. Se han movido/fusionado {len(publicaciones)} publicaciones de '{nombre_eliminada}' a '{destino.nombre}'", "success")
+        return redirect(url_for("hemerotecas.repositorio_global"))
+        
+    # Obtener todas las hemerotecas compartidas para el formulario de fusión
+    hemerotecas = Hemeroteca.query.filter_by(compartida=True).order_by(Hemeroteca.nombre).all()
+    return render_template("fusionar_hemerotecas.html", hemerotecas=hemerotecas)
 
 
 # =========================================================

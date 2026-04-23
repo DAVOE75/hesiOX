@@ -30,6 +30,12 @@
         <i class="fa-solid fa-arrow-left"></i>
         <span class="btn-text">Hemerotecas</span>
     </a>
+    {% if current_user.rol == 'admin' %}
+    <a href="{{ url_for('hemerotecas.fusionar_hemerotecas') }}" class="btn-sirio btn-sirio-warning" style="width: 160px !important;">
+        <i class="fa-solid fa-object-group"></i>
+        <span class="btn-text">Fusionar</span>
+    </a>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -166,6 +172,12 @@
                             {% else %}
                             <strong class="text-light">{{ h.nombre }}</strong>
                             {% endif %}
+                            
+                            {% if h.verificada %}
+                            <span class="badge rounded-pill bg-success ms-1" style="font-size: 0.6rem; vertical-align: middle;" title="Repositorio Verificado">
+                                <i class="fa-solid fa-check-circle me-1"></i>VERIFICADO
+                            </span>
+                            {% endif %}
                             {% if h.resumen_corpus %}
                             <div class="text-muted extra-small text-truncate" style="max-width: 300px;">
                                 {{ h.resumen_corpus }}
@@ -187,14 +199,26 @@
                             </span>
                         </td>
                         <td class="text-end pe-3">
-                            <form action="{{ url_for('hemerotecas.importar_hemeroteca', id=h.id) }}" method="POST"
-                                onsubmit="return confirm('¿Importar esta hemeroteca y sus publicaciones a tu proyecto?');">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn-sirio btn-sirio-primary py-1 px-3"
-                                    style="height: 28px; width: 100px;">
-                                    <i class="fa-solid fa-download me-1"></i> Importar
-                                </button>
-                            </form>
+                            <div class="d-flex justify-content-end gap-1">
+                                <form action="{{ url_for('hemerotecas.importar_hemeroteca', id=h.id) }}" method="POST"
+                                    onsubmit="return confirm('¿Importar esta hemeroteca y sus publicaciones a tu proyecto?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-sirio btn-sirio-primary py-1 px-3"
+                                        style="height: 28px; width: 100px;">
+                                        <i class="fa-solid fa-download me-1"></i> Importar
+                                    </button>
+                                </form>
+
+                                {% if current_user.rol == 'admin' %}
+                                <form action="{{ url_for('hemerotecas.verificar_hemeroteca', id=h.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-{{ 'warning' if h.verificada else 'success' }} btn-sm py-0 px-2"
+                                        style="height: 28px;" title="{{ 'Quitar verificación' if h.verificada else 'Verificar repositorio' }}">
+                                        <i class="fa-solid fa-{{ 'shield' if h.verificada else 'certificate' }}"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

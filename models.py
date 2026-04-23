@@ -203,6 +203,7 @@ class Hemeroteca(db.Model):
     resumen_corpus = db.Column(db.Text)  # Descripción del corpus de la hemeroteca
     url = db.Column(db.Text)
     compartida = db.Column(db.Boolean, default=True, nullable=False)  # Control de compartición en repositorio global
+    verificada = db.Column(db.Boolean, default=False, nullable=False)  # Repositorio validado por administrador
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
     modificado_en = db.Column(
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
