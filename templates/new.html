@@ -64,52 +64,65 @@
         line-height: 1.6;
     }
 
-    .ql-snow .ql-stroke { stroke: #bbb !important; }
-    .ql-snow .ql-fill { fill: #bbb !important; }
-    .ql-snow .ql-picker { color: #bbb !important; }
-
-    [data-theme="light"] .ql-snow .ql-stroke { stroke: #444 !important; }
-    [data-theme="light"] .ql-snow .ql-fill { fill: #444 !important; }
-    [data-theme="light"] .ql-snow .ql-picker { color: #444 !important; }
-
-    /* Estilos específicos para la cabecera del editor */
-
-    /* Estilos específicos para la cabecera del editor */
-    .desktop-header {
-        height: 60px !important;
-        border-bottom: 1px solid var(--ds-accent-primary);
-        background: #0a0a0a;
-        padding: 0 20px !important;
+    .ql-snow .ql-stroke {
+        stroke: #bbb !important;
     }
 
-    /* Hacer que el contenido se estire hasta el footer */
-    .container-fluid {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: calc(100vh - 120px);
+    .ql-snow .ql-fill {
+        fill: #bbb !important;
     }
 
-    /* Eliminado: ya no usamos toolbar-editor como contenedor interno */
+    .ql-snow .ql-picker {
+        color: #bbb !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-stroke {
+        stroke: #444 !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-fill {
+        fill: #444 !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-picker {
+        color: #444 !important;
+    }
+
+    /* Estilos específicos para la cabecera del editor */
+    header.desktop-header {
+        border-bottom: 1px solid var(--ds-accent-primary) !important;
+        background: #0a0a0a !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    .header-left {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+
+    h1.page-title {
+        font-size: 0.9rem !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
 
     .header-center {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
     }
 
-    /* Contenedor de progreso compacto en header */
-    .header-progress-container,
-    #header-progress-slot {
-        font-size: 10px;
-    }
-
-    #header-progress-slot .progress {
-        height: 4px;
-        width: 80px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
+    .header-actions-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
 
     .card-panel {
@@ -119,8 +132,8 @@
     }
 
     /* Ambas columnas se estiran igual */
-    .col-lg-4,
-    .col-lg-8 {
+    #row-principal > .col-lg-4,
+    #row-principal > .col-lg-8 {
         padding: 12px;
         display: flex;
         flex-direction: column;
@@ -138,7 +151,6 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-        /* overflow-y: auto;  <-- ELIMINADO para permitir que el dropdown sobresalga */
         overflow-y: visible;
         min-height: 0;
     }
@@ -148,7 +160,7 @@
         flex: 0 0 auto;
     }
 
-    .row.g-3 {
+    #row-principal {
         display: flex;
         flex: 1;
         margin: 0 -12px;
@@ -162,82 +174,134 @@
     }
 
     .tab-pane.show.active {
-        display: flex !important;
+        display: block !important;
     }
 
-    /* Ocultar flechas del input número de referencia */
-    input[name="numero_referencia"]::-webkit-outer-spin-button,
-    input[name="numero_referencia"]::-webkit-inner-spin-button {
-        -webkit-appearance: none !important;
-        appearance: none !important;
+
+    .header-actions-wrapper>* {
         margin: 0 !important;
-        display: none !important;
-    }
-
-    input[name="numero_referencia"],
-    input#numero_referencia {
-        -moz-appearance: textfield !important;
-        appearance: textfield !important;
-    }
-
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-        -webkit-appearance: none !important;
-        margin: 0 !important;
-    }
-
-    input[type="number"] {
-        -moz-appearance: textfield !important;
-        appearance: textfield !important;
-    }
-    /* Fixed header alignment and normalization */
-    .header-actions-wrapper {
-        height: 60px !important; 
-        margin-top: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-    
-    .header-actions-wrapper > * {
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
         align-self: center !important;
     }
-    
-    .header-actions-wrapper .btn-sirio,
-    .header-actions-wrapper .dropdown {
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-        height: 32px !important;
-        display: inline-flex !important;
-        align-items: center !important;
+
+    .btn-sirio {
+        background: #ff9800;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        transition: all 0.2s;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 15px;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
     }
 
-    .header-actions-wrapper .dropdown-toggle::after {
-        vertical-align: middle !important;
+    .btn-sirio:hover {
+        background: #e68a00;
+        transform: translateY(-1px);
+    }
+
+    .btn-sirio.active {
+        background: #ff9800;
+        box-shadow: 0 0 15px rgba(255, 152, 0, 0.4);
+    }
+
+    .form-section-sirio {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-section-sirio:first-of-type {
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+    }
+
+    .section-header-sirio {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: var(--ds-color-accent, #ff9800);
+        letter-spacing: 1.2px;
+        margin-bottom: 1.2rem;
+        text-transform: uppercase;
+        opacity: 0.8;
+        font-family: var(--ds-font-ui, monospace);
+    }
+
+    .card-header-panel {
+        background: rgba(255, 152, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+        padding: 10px 15px;
+        font-weight: bold;
+        color: #ff9800;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .form-control-sirio {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        border-radius: 4px;
+        padding: 8px 12px;
+    }
+
+    [data-theme="light"] .form-control-sirio {
+        background: #fff !important;
+        border-color: #ccc !important;
+        color: #333 !important;
+    }
+
+    .form-label-sirio {
+        color: var(--ds-color-accent, #ff9800);
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    #traduccion-tab.active,
+    #original-tab.active {
+        border-bottom: 2px solid var(--ds-color-accent, #ff9800) !important;
+        color: #fff !important;
+    }
+
+    [data-theme="light"] #traduccion-tab.active,
+    [data-theme="light"] #original-tab.active {
+        color: #333 !important;
+    }
+
+    .ocr-dropzone {
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .ocr-dropzone:hover {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
     }
 </style>
 {% endblock %}
 
 {% block top_actions %}
 <!-- Actions Group -->
-<button type="button" id="btn-guardar-manual" class="btn-sirio active" title="Guardar cambios">
-    <i class="fa-solid fa-save"></i>
-    <span class="btn-text">GUARDAR</span>
-</button>
-
-<button type="button" class="btn-sirio" onclick="location.href='{{ url_for('noticias.crear') }}';"
-    title="Nueva Referencia">
-    <i class="fa-solid fa-plus"></i>
-    <span class="btn-text">NUEVA</span>
+<button type="submit" form="form-nuevo" class="btn-sirio active" title="Guardar Referencia">
+    <i class="fa-solid fa-save me-2"></i>
+    <span class="btn-text">GUARDAR REFERENCIA</span>
 </button>
 
 <div class="vr mx-1 opacity-25"></div>
 
 <!-- Navigation Group -->
 <a href="{{ url_for('noticias.listar') }}" class="btn-sirio" title="Volver al listado">
-    <i class="fa-solid fa-arrow-left"></i>
+    <i class="fa-solid fa-arrow-left me-2"></i>
     <span class="btn-text">VOLVER</span>
 </a>
 
@@ -250,24 +314,16 @@
 </button>
 
 <div class="ms-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-    title="<strong>Nueva Referencia</strong><br><small>Registro de Datos</small><hr class='my-1'>Herramienta para registrar nuevos documentos y noticias. Integra validación automática y soporte OCR dual: <strong>Tesseract</strong> (rápido/local) y <strong>OCR.space + Gemini AI</strong> (alta precisión).">
+    title="<strong>Nueva Referencia</strong><br><small>Ingreso de Datos</small><hr class='my-1'>Permite catalogar nuevos documentos en el corpus.">
     <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
 </div>
-
-<div class="vr mx-1 opacity-25"></div>
-
-<!-- Progress Slot -->
-<div id="header-progress-slot" class="d-flex align-items-center gap-2"></div>
 {% endblock %}
-
 
 {% block content %}
 <div class="container-fluid py-2">
-    <div class="container" style="max-width: 100%;">
-        <!-- Header central -->
-        <!-- Portada eliminada para evitar título duplicado, ya que el header superior lo muestra -->
+    <div>
 
-        <!-- OCR Section (Collapsed by default) -->
+
         <div class="row justify-content-center mb-2">
             <div class="col-12">
                 <div class="card-panel" id="ocrCard">
@@ -283,22 +339,31 @@
                                 <span class="input-group-text"><i class="fa-solid fa-robot"></i></span>
                                 <select name="ocr_engine" id="ocrEngineSelect" class="form-select form-select-sirio">
                                     <option value="tesseract">Tesseract (local, rápido)</option>
-                                    <option value="ocrspace" selected
-                                        style="background-color:#e6f7ff;font-weight:bold;">OCR.space (web, máxima
-                                        calidad)</option>
+                                    <option value="ocrspace">OCR.space (web, máxima calidad)</option>
                                     <option value="paddle">PaddleOCR (IA, multilingüe)</option>
                                     <option value="yolo">YOLO Layout (IA, estructurado)</option>
+                                    <option value="hybrid" selected style="background-color:#e6f7ff;font-weight:bold;">
+                                        Híbrido (Doble Paso + Reconciliación IA)</option>
                                 </select>
                             </div>
                             <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
                                 <i class="fa-solid fa-circle-info me-1"></i>
-                                <strong>Recomendado:</strong> Para documentos complejos o antiguos, usa <span style="color:#294a60;font-weight:bold;">PaddleOCR</span> o <span style="color:#294a60;font-weight:bold;">OCR.space</span>. Para prensa estructurada y tablas, <span style="color:#294a60;font-weight:bold;">YOLO Layout</span> ofrece el mejor segmentado. Refina siempre con <span style="color:#8e44ad;font-weight:bold;">IA Gemini/GPT-4</span> y el <strong>Arquetipo de Transcriptor Paleográfico</strong>.<br>
-                                <span class="text-muted">Tesseract es la opción local rápida para textos sencillos y modernos.</span>
+                                <strong>Recomendado:</strong> Para documentos complejos o antiguos, usa <span
+                                    style="color:#ffffff;font-weight:bold;">PaddleOCR</span> o <span
+                                    style="color:#ffffff;font-weight:bold;">OCR.space</span>. Para prensa estructurada y
+                                tablas, <span style="color:#ffffff;font-weight:bold;">YOLO Layout</span> ofrece el mejor
+                                segmentado. Refina siempre con <span style="color:#cf93e9;font-weight:bold;">IA
+                                    Gemini/GPT-4</span> e el <strong>Arquetipo de Transcriptor
+                                    Paleográfico</strong>.<br>
+                                <span class="text-muted">Tesseract es la opción local rápida para textos sencillos y
+                                    modernos.</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="text-muted small flex-grow-1">
-                                Sube una imagen o PDF para extraer texto automáticamente con Tesseract OCR.
+                                Arrastra o selecciona un documento (Imagen o PDF) para iniciar la extracción avanzada
+                                con
+                                Deep Vision IA.
                             </div>
                             <input type="file" id="fileInputOCR" class="d-none" accept="image/*,application/pdf">
                             <button class="btn btn-sirio" onclick="document.getElementById('fileInputOCR').click()"
@@ -331,7 +396,6 @@
                             </button>
                         </div>
 
-                        <!-- Barra de progreso -->
                         <div id="ocr-progress-container" class="mt-3 d-none">
                             <div class="progress" style="height: 4px;">
                                 <div id="ocr-progress-bar" class="progress-bar bg-warning" style="width: 0%"></div>
@@ -339,7 +403,6 @@
                             <small id="ocr-progress-text" class="text-warning mt-1 d-block">Procesando...</small>
                         </div>
 
-                        <!-- Resultado OCR -->
                         <div id="ocr-result-container" class="mt-3 d-none">
                             <div class="card bg-dark border-warning">
                                 <div
@@ -353,17 +416,14 @@
                                     </button>
                                 </div>
                                 <div class="card-body">
-                                    <!-- Metadatos detectados -->
                                     <div id="ocr-metadata-preview" class="mb-3"></div>
 
-                                    <!-- Preview del texto -->
                                     <div class="mb-3">
                                         <label class="text-muted small mb-2">TEXTO COMPLETO:</label>
                                         <div id="ocr-text-preview" class="p-3 text-preview-box font-monospace small"
                                             style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
                                     </div>
 
-                                    <!-- Opciones de destino (sin spaCy) -->
                                     <div class="d-flex gap-2 align-items-center mb-3">
                                         <label class="text-warning small mb-0">Copiar texto a:</label>
                                         <div class="btn-group" role="group">
@@ -403,7 +463,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- Botones de acción -->
                                     <div class="d-flex gap-2 mb-2">
                                         <button id="btn-correct-gemini" class="btn btn-sirio flex-grow-1">
                                             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
@@ -413,12 +472,13 @@
                                             <i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado
                                         </button>
                                     </div>
-                                    <script>
-                                        document.addEventListener('DOMContentLoaded', function () {
-                                            // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
-                                            // en static/js/ocr-uploader.js para evitar conflictos y duplicación.
-                                        });
-                                    </script>
+                                    <div class="mb-2">
+                                        <button id="btn-vincular-imagen-ocr" type="button"
+                                            class="btn btn-sm btn-outline-info w-100" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada como
+                                            Material Adjunto
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -429,199 +489,291 @@
 
         <form method="POST" enctype="multipart/form-data" id="form-nuevo">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-            <div class="row g-3">
-                <!-- COLUMNA IZQUIERDA: DATOS -->
+            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64" />
+            <div class="row g-3" id="row-principal">
                 <div class="col-lg-4">
                     <div class="card-panel">
                         <div class="card-header-panel">
                             <span><i class="fa-solid fa-book-bookmark me-2"></i> Datos Hemerográficos</span>
                         </div>
                         <div class="p-3">
-                            <!-- Fila 1: Publicación -->
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Publicación / Medio <span
-                                        class="text-danger">*</span></label>
-                                <input list="lista_publicaciones" name="publicacion" id="input-publicacion"
-                                    autocomplete="off"
-                                    class="form-control form-control-sirio w-100 publicacion-medio-input"
-                                    value="{{ precargados.publicacion or '' }}" required
-                                    placeholder="Nombre del periódico o revista">
-                                <datalist id="lista_publicaciones">
-                                    {% for p in publicaciones %}
-                                    <option value="{{ p }}">
-                                        {% endfor %}
-                                </datalist>
-                            </div>
-                            <!-- Fila 2: Cronología -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-5">
-                                    <label class="form-label-sirio">Fecha Publicación <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" name="fecha_original"
-                                        class="form-control form-control-sirio validate-date"
-                                        value="{% if precargados.fecha_original and precargados.fecha_original|length == 10 and '-' in precargados.fecha_original %}{{ precargados.fecha_original[8:10] }}/{{ precargados.fecha_original[5:7] }}/{{ precargados.fecha_original[0:4] }}{% else %}{{ precargados.fecha_original or '' }}{% endif %}"
-                                        placeholder="DD/MM/AAAA" onkeyup="autoformatearFecha(event)" required>
-                                </div>
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Año</label>
-                                    <input type="number" name="anio" class="form-control form-control-sirio"
-                                        value="{{ precargados.anio or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Núm/Vol</label>
-                                    <input type="text" name="numero" class="form-control form-control-sirio"
-                                        value="{{ precargados.numero or '' }}" placeholder="Número de edición">
-                                </div>
-                            </div>
-                            <!-- Fila 3: Edición -->
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Edición</label>
-                                <select name="edicion" id="selectEdicion" class="form-select form-control-sirio"
-                                    data-value="{{ (precargados.edicion or '') }}">
-                                    <option value="">Cargando ediciones...</option>
+                            <!-- El desencadenante arriba del todo -->
+                            <div class="mb-4">
+                                <label class="form-label-sirio">Tipo de Recurso</label>
+                                <select name="tipo_recurso" id="selectRecurso" class="form-select form-control-sirio">
+                                    {% set tr = precargados.tipo_recurso or 'prensa' %}
+                                    <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
+                                    <option value="folleto" {{ 'selected' if tr=='folleto' else '' }}>Folleto</option>
+                                    <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
+                                    <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
+                                        Académico
+                                    </option>
+                                    <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra
+                                        Teatral
+                                    </option>
+                                    <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
+                                    <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
+                                    <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>Fotografía
+                                    </option>
+                                    <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
                                 </select>
                             </div>
-                            <!-- Fila 4: Autor(es) -->
-                            <div class="mb-1">
-                                <label class="form-label-sirio">Autor(es)</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <input type="text" name="nombre_autor" class="form-control form-control-sirio"
-                                            placeholder="Nombre" value="{{ precargados.nombre_autor or '' }}"
-                                            id="inpNombre">
+
+                            <!-- Bloque: Identificación de la Obra -->
+                            <div class="form-section-sirio">
+                                <div class="section-header-sirio">Identificación de la Obra</div>
+                                <div class="mb-3">
+                                    <label class="form-label-sirio">Publicación / Medio / Colección</label>
+                                    <input list="lista_publicaciones" name="publicacion" id="input-publicacion"
+                                        autocomplete="off" class="form-control form-control-sirio w-100"
+                                        value="{{ precargados.publicacion or '' }}"
+                                        placeholder="Nombre del periódico, revista o colección">
+                                    <datalist id="lista_publicaciones">
+                                        {% for p in publicaciones %}<option value="{{ p }}">{% endfor %}
+                                    </datalist>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Idioma</label>
+                                        <select name="idioma" class="form-select form-control-sirio">
+                                            <option value="">-</option>
+                                            {% for i in idiomas %}
+                                            <option value="{{ i }}" {% if precargados.idioma==i %}selected{% endif %}>{{
+                                                i|upper }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-                                    <div class="col-6">
-                                        <input type="text" name="apellido_autor" class="form-control form-control-sirio"
-                                            placeholder="Apellido" value="{{ precargados.apellido_autor or '' }}"
-                                            id="inpApellido">
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Ciudad</label>
+                                        <input type="text" name="ciudad" class="form-control form-control-sirio"
+                                            value="{{ precargados.ciudad or '' }}">
                                     </div>
-                                </div>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="anonimo" id="anonimo" checked>
-                                <label class="form-check-label text-secondary small" for="anonimo">Es anónimo</label>
-                            </div>
-                            <!-- Fila 5: Localización -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Ciudad</label>
-                                    <input type="text" name="ciudad" class="form-control form-control-sirio"
-                                        value="{{ precargados.ciudad or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">País</label>
-                                    <input type="text" name="pais_publicacion" class="form-control form-control-sirio"
-                                        value="{{ precargados.pais_publicacion or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Idioma</label>
-                                    <select name="idioma" class="form-select form-control-sirio">
-                                        <option value="">-</option>
-                                        {% for i in idiomas %}
-                                        <option value="{{ i }}" {% if precargados.idioma==i %}selected{% endif %}>{{
-                                            i|upper }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <!-- Fila: Fuente / Institución -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-12">
-                                    <label class="form-label-sirio">Fuente / Institución</label>
-                                    <input type="text" name="fuente"
-                                        class="form-control form-control-sirio bg-dark text-light w-100 fuente-institucion-input"
-                                        value="{{ precargados.fuente or (publicacion_rel.fuente if publicacion_rel else '') or (publicacion_rel.hemeroteca_rel.institucion if publicacion_rel and publicacion_rel.hemeroteca_rel else '') }}"
-                                        placeholder="Archivo, Biblioteca o Institución de origen">
-                                </div>
-                            </div>
-                            <!-- Fila: Páginas y Tipo de Recurso -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Pág. Ini</label>
-                                    <input type="text" name="pagina_inicio" class="form-control form-control-sirio"
-                                        value="{{ precargados.pagina_inicio or '' }}">
-                                </div>
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Pág. Fin</label>
-                                    <input type="text" name="pagina_fin" class="form-control form-control-sirio"
-                                        value="{{ precargados.pagina_fin or '' }}">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Tipo Recurso</label>
-                                    <select name="tipo_recurso" id="selectRecurso"
-                                        class="form-select form-control-sirio">
-                                        {% set tr = precargados.tipo_recurso %}
-                                        <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
-                                        <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
-                                        <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
-                                            Académico</option>
-                                        <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra Teatral</option>
-                                        <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
-                                        <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
-                                        <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>
-                                            Fotografía</option>
-                                        <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
-                                    </select>
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">País</label>
+                                        <input type="text" name="pais_publicacion"
+                                            class="form-control form-control-sirio"
+                                            value="{{ precargados.pais_publicacion or '' }}">
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- CAMPOS ESPECÍFICOS PARA LIBROS / ARTÍCULOS (Inicialmente ocultos) -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Editorial</label>
-                                    <input type="text" name="editorial" class="form-control form-control-sirio"
-                                        value="{{ precargados.editorial or '' }}">
+                            <!-- Bloque: Autoría -->
+                            <div class="form-section-sirio">
+                                <div class="section-header-sirio">Autoría</div>
+                                <div class="mb-1 d-flex justify-content-between align-items-center">
+                                    <label class="form-label-sirio mb-0">AUTOR/A (ES)</label>
+                                    <button type="button" class="btn-sirio" id="btn-add-autor"
+                                        title="Añadir otro autor">
+                                        <i class="fa-solid fa-plus me-1"></i>AÑADIR
+                                    </button>
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Lugar de Pub.</label>
-                                    <input type="text" name="lugar_publicacion" class="form-control form-control-sirio"
-                                        value="{{ precargados.lugar_publicacion or '' }}">
+                                <div id="autores-container" class="mt-2"
+                                    data-initial='{{ autores_json|safe if autores_json else "[]" }}'>
+                                    <!-- Las filas de autores se cargarán aquí vía JS -->
                                 </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">ISBN</label>
-                                    <input type="text" name="isbn" class="form-control form-control-sirio"
-                                        value="{{ precargados.isbn or '' }}">
+                                <div class="mt-3">
+                                    <label class="form-label-sirio">Pseudónimo(s)</label>
+                                    <input type="text" name="pseudonimo" class="form-control form-control-sirio"
+                                        placeholder="Ej: Fígaro, El Curioso Parlante..."
+                                        value="{{ precargados.pseudonimo or '' }}">
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">ISSN</label>
-                                    <input type="text" name="issn" class="form-control form-control-sirio"
-                                        value="{{ precargados.issn or '' }}">
-                                </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Volumen / Tomo / Escenas</label>
-                                    <input type="text" name="volumen" class="form-control form-control-sirio"
-                                        value="{{ precargados.volumen or '' }}">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">DOI</label>
-                                    <input type="text" name="doi" class="form-control form-control-sirio"
-                                        value="{{ precargados.doi or '' }}">
+                                <div class="mt-3">
+                                    <label class="form-label-sirio">Colección</label>
+                                    <input type="text" name="coleccion" class="form-control form-control-sirio"
+                                        placeholder="Ej: Colección Clásicos Castellanos"
+                                        value="{{ precargados.coleccion or '' }}">
                                 </div>
                             </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Sección / Actos</label>
-                                    <input type="text" name="seccion" class="form-control form-control-sirio"
-                                        value="{{ precargados.seccion or '' }}">
+
+                            <!-- Bloque: Publicación y Fecha / Puesta en Escena -->
+                            <div class="form-section-sirio mt-5" id="section-escena">
+                                <div class="section-header-sirio pt-3 border-top" id="header-section-3">Publicación y Fecha</div>
+                                
+                                <!-- Datos Hemerográficos (Siempre visibles) -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Tipo de Publicación</label>
+                                        <select name="tipo_publicacion" id="selectTipoPublicacion" class="form-select form-select-sirio" data-value="{{ precargados.tipo_publicacion or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Periodicidad</label>
+                                        <select name="periodicidad" id="selectPeriodicidad" class="form-select form-select-sirio" data-value="{{ precargados.periodicidad or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                            <option value="Diaria" {% if precargados.periodicidad == 'Diaria' %}selected{% endif %}>Diaria</option>
+                                            <option value="Semanal" {% if precargados.periodicidad == 'Semanal' %}selected{% endif %}>Semanal</option>
+                                            <option value="Quincenal" {% if precargados.periodicidad == 'Quincenal' %}selected{% endif %}>Quincenal</option>
+                                            <option value="Mensual" {% if precargados.periodicidad == 'Mensual' %}selected{% endif %}>Mensual</option>
+                                            <option value="Bimensual" {% if precargados.periodicidad == 'Bimensual' %}selected{% endif %}>Bimensual</option>
+                                            <option value="Trimestral" {% if precargados.periodicidad == 'Trimestral' %}selected{% endif %}>Trimestral</option>
+                                            <option value="Semestral" {% if precargados.periodicidad == 'Semestral' %}selected{% endif %}>Semestral</option>
+                                            <option value="Anual" {% if precargados.periodicidad == 'Anual' %}selected{% endif %}>Anual</option>
+                                            <option value="Bianual" {% if precargados.periodicidad == 'Bianual' %}selected{% endif %}>Bianual</option>
+                                            <option value="Irregular" {% if precargados.periodicidad == 'Irregular' %}selected{% endif %}>Irregular</option>
+                                            <option value="Unica" {% if precargados.periodicidad == 'Unica' %}selected{% endif %}>Única</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Palabras Clave / Reparto</label>
-                                    <input type="text" name="palabras_clave" class="form-control form-control-sirio"
-                                        value="{{ precargados.palabras_clave or '' }}">
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label-sirio">Fecha de Publicación <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="fecha_original"
+                                            class="form-control form-control-sirio validate-date"
+                                            value="{{ precargados.fecha_original or '' }}" placeholder="DD/MM/AAAA"
+                                            onkeyup="autoformatearFecha(event)" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label-sirio">Año</label>
+                                        <input type="number" name="anio" class="form-control form-control-sirio"
+                                            value="{{ precargados.anio or '' }}" placeholder="AAAA">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label-sirio">Lugar de Publicación / Teatro</label>
+                                        <input type="text" name="lugar_publicacion"
+                                            class="form-control form-control-sirio"
+                                            value="{{ precargados.lugar_publicacion or '' }}"
+                                            placeholder="Ciudad, Teatro, etc...">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Edición</label>
+                                        <select name="edicion" id="selectEdicion" class="form-select form-control-sirio" data-value="{{ precargados.edicion or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Volumen</label>
+                                        <input type="text" name="volumen" class="form-control form-control-sirio"
+                                            value="{{ precargados.volumen or '' }}">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Número</label>
+                                        <input type="text" name="numero" class="form-control form-control-sirio"
+                                            value="{{ precargados.numero or '' }}">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio" id="label-editorial">Compañía / Productora / Editorial</label>
+                                        <input type="text" name="editorial" class="form-control form-control-sirio"
+                                            value="{{ precargados.editorial or '' }}"
+                                            placeholder="Nombre de la compañía o editorial...">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Páginas (Inicio - Fin)</label>
+                                        <div class="input-group flex-nowrap">
+                                            <input type="text" name="pagina_inicio"
+                                                class="form-control form-control-sirio"
+                                                value="{{ precargados.pagina_inicio or '' }}" placeholder="Ini">
+                                            <input type="text" name="pagina_fin" class="form-control form-control-sirio"
+                                                value="{{ precargados.pagina_fin or '' }}" placeholder="Fin">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <hr class="border-secondary my-3 opacity-25">
-                            <!-- Link y Referencia -->
+
+                            <!-- Bloque: Estructura y Contenido Dramático -->
+                            <div class="form-section-sirio" id="section-dramatico">
+                                <div class="section-header-sirio">Estructura y Contenido Dramático</div>
+
+                                <!-- SUBSECCIÓN: Totales de la Obra (Global) -->
+                                <div class="mb-3 p-2 border border-secondary border-opacity-10 rounded">
+                                    <label class="form-label-sirio text-info small mb-2"><i
+                                            class="fa-solid fa-clapperboard me-1"></i> Totales de la Obra
+                                        (Global)</label>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Actos (Totales)</label>
+                                            <input type="text" name="actos_totales"
+                                                class="form-control form-control-sirio form-control-sm"
+                                                value="{{ precargados.actos_totales or '' }}" placeholder="Ej: 3 Actos">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Escenas (Totales)</label>
+                                            <input type="text" name="escenas_totales"
+                                                class="form-control form-control-sirio form-control-sm"
+                                                value="{{ precargados.escenas_totales or '' }}"
+                                                placeholder="Ej: 24 Escenas">
+                                        </div>
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label-sirio small opacity-75">Reparto Completo (Obra)</label>
+                                        <textarea name="reparto_total"
+                                            class="form-control form-control-sirio form-control-sm" rows="2"
+                                            placeholder="Lista completa de personajes de la obra...">{{ precargados.reparto_total or '' }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- SUBSECCIÓN: Contenido de la Referencia (Fragmento) -->
+                                <div class="mb-0">
+                                    <label class="form-label-sirio text-warning small mb-2"><i
+                                            class="fa-solid fa-bookmark me-1"></i> Contenido de la Referencia
+                                        (Fragmento)</label>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Acto(s) en este
+                                                documento</label>
+                                            <input type="text" name="seccion" class="form-control form-control-sirio"
+                                                value="{{ precargados.seccion or '' }}" placeholder="Ej: Acto I">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Escena(s) en este
+                                                documento</label>
+                                            <input type="text" name="escenas" class="form-control form-control-sirio"
+                                                value="{{ precargados.escenas or '' }}" placeholder="Ej: Escena III">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-sirio small opacity-75">Personajes en este
+                                            fragmento</label>
+                                        <textarea name="reparto" class="form-control form-control-sirio" rows="3"
+                                            placeholder="Personajes que aparecen en este texto...">{{ precargados.reparto or '' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section-sirio">
+                                <div class="section-header-sirio">Datos de Archivo</div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">ISBN / ISSN</label>
+                                        <input type="text" name="isbn" class="form-control form-control-sirio"
+                                            value="{{ precargados.isbn or precargados.issn or '' }}" placeholder="Código">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">DOI</label>
+                                        <input type="text" name="doi" class="form-control form-control-sirio"
+                                            value="{{ precargados.doi or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-secondary my-4 opacity-10">
+
                             <div class="mb-3">
                                 <label class="form-label-sirio text-accent">URL / Enlace</label>
-                                <input type="text" name="url" class="form-control form-control-sirio text-accent"
-                                    value="{{ precargados.url or '' }}" placeholder="https://...">
+                                <div class="input-group flex-nowrap">
+                                    <button
+                                        class="btn btn-outline-secondary bg-dark text-secondary border-secondary border-end-0"
+                                        type="button" id="btn-open-url-ficha" title="Abrir enlace en nueva pestaña"
+                                        style="width: 35px !important;">
+                                        <i class="fa-solid fa-link"></i>
+                                    </button>
+
+                                    <input type="url"
+                                        class="form-control form-control-sirio text-accent border-secondary border-start-0 ps-2"
+                                        id="url_ficha" name="url" value="{{ precargados.url or '' }}"
+                                        placeholder="https://..."
+                                        style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                </div>
                             </div>
+
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label class="form-label-sirio">Fecha de Consulta</label>
@@ -632,25 +784,27 @@
                                 <div class="col-6">
                                     <label class="form-label-sirio">Licencia</label>
                                     <input type="text" name="licencia" class="form-control form-control-sirio"
-                                        value="CC BY 4.0">
+                                        value="{{ precargados.licencia or 'CC BY 4.0' }}">
                                 </div>
                             </div>
+
                             <div class="mb-3 p-2">
                                 <div class="d-flex align-items-center" style="gap: 1.5rem;">
                                     <span class="text-accent fw-bold small mb-0" style="white-space:nowrap;">INCLUIR EN
                                         ESTUDIO:</span>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="incluido" id="incluidoSi"
-                                            value="si">
+                                            value="si" {% if precargados.incluido == 'si' or not precargados.incluido %}checked{% endif %}>
                                         <label class="form-check-label text-accent" for="incluidoSi">Sí</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="incluido" id="incluidoNo"
-                                            value="no" checked>
+                                            value="no" {% if precargados.incluido == 'no' %}checked{% endif %}>
                                         <label class="form-check-label text-accent" for="incluidoNo">No</label>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="mb-3 p-2 border border-warning border-opacity-10 rounded"
                                 style="background: rgba(255, 193, 7, 0.03);">
                                 <div class="d-flex align-items-center" style="gap: 1.5rem;">
@@ -658,23 +812,26 @@
                                         REF. BIBLIOGRÁFICA:</span>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="es_referencia"
-                                            id="esReferenciaSi" value="si">
+                                            id="esReferenciaSi" value="si" {% if precargados.numero_referencia %}checked{% endif %}>
                                         <label class="form-check-label text-warning" for="esReferenciaSi">Sí</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="es_referencia"
-                                            id="esReferenciaNo" value="no" checked>
+                                            id="esReferenciaNo" value="no" {% if not precargados.numero_referencia %}checked{% endif %}>
                                         <label class="form-check-label text-warning" for="esReferenciaNo">No</label>
                                     </div>
                                 </div>
                             </div>
-                            <div id="numeroReferenciaContainer" class="d-none mb-3">
+
+                            <div id="numeroReferenciaContainer"
+                                class="{% if not precargados.numero_referencia %}d-none{% endif %} mb-3">
                                 <label class="form-label-sirio text-accent">Nº REFERENCIA BIBLIOGRÁFICA</label>
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <input type="text" name="numero_referencia" id="numero_referencia"
                                         class="form-control form-control-highlight text-center"
-                                        style="width: 80px !important; flex-shrink: 0;" pattern="[0-9]*"
-                                        inputmode="numeric" maxlength="4">
+                                        style="width: 80px !important; flex-shrink: 0;"
+                                        value="{{ precargados.numero_referencia or '' }}" pattern="[0-9]*" inputmode="numeric"
+                                        maxlength="4">
                                     <button type="button" style="width: 40px !important;"
                                         class="btn btn-outline-warning btn-sm"
                                         onclick="conditionalFields.suggestNextNumber()"
@@ -686,22 +843,9 @@
                                         title="Eliminar referencia">
                                         <i class="fa-solid fa-times"></i>
                                     </button>
-                                    <button type="button" class="btn btn-warning flex-grow-1"
-                                        style="white-space: nowrap;" disabled
-                                        title="Debe guardar primero para ver la cita">
-                                        <i class="fa-solid fa-quote-left me-1"></i> VER CITA
-                                    </button>
                                 </div>
-                                <small class="text-secondary d-block" style="font-size: 11px;">
-                                    Indique aquí el número o código de referencia bibliográfica que permitirá
-                                    identificar este recurso en su estudio o base de datos. (Debe guardar primero para
-                                    ver la cita)
-                                </small>
                             </div>
-                            <script>
-                                // La lógica de "Incluir en estudio" y "Número de referencia" 
-                                // ahora está centralizada en form-conditional-fields.js
-                            </script>
+
                             <div class="mb-2 flex-grow-1 d-flex flex-column">
                                 <label class="form-label-sirio">Descripción de la Publicación</label>
                                 <textarea name="descripcion_publicacion"
@@ -712,19 +856,19 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- COLUMNA DERECHA: CONTENIDO -->
                 <div class="col-lg-8">
                     <div class="card-panel mb-4">
                         <div class="card-header-panel">
-                            <span><i class="fa-solid fa-file-pen me-2"></i> Contenido y Transcripción</span>
+                            <span><i class="fa-solid fa-heading me-2"></i> Título y Contenido Principal</span>
                         </div>
                         <div class="p-3">
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Titulo de la Noticia</label>
-                                <input type="text" name="titulo" class="form-control form-control-sirio fw-bold"
-                                    style="font-size: 1.1rem;" value="{{ precargados.titulo or '' }}"
-                                    placeholder="Ingrese el titular...">
+                            <div class="mb-4">
+                                <label class="form-label-sirio">Título de la Noticia / Texto <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="titulo" id="input-titulo-principal"
+                                    class="form-control form-control-sirio form-control-lg fw-bold"
+                                    value="{{ precargados.titulo or '' }}" required
+                                    placeholder="Título completo o titular de la noticia">
                             </div>
 
                             <hr class="my-4" style="opacity: 0.15;">
@@ -743,24 +887,20 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="mt-2 text-muted small">
-                                    <i class="fa-solid fa-circle-info me-1"></i>
-                                    Si subes un archivo <strong>.txt</strong>, su contenido se usará automáticamente.
-                                </div>
                             </div>
 
                             <hr class="my-4" style="opacity: 0.15;">
 
                             <ul class="nav nav-tabs border-secondary mb-0 d-flex flex-wrap align-items-center gap-3"
                                 id="contentTabs" role="tablist">
+
                                 <li class="nav-item">
                                     <button
-                                        class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 rounded-0 ps-0 pe-3"
+                                        class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 border-bottom border-2 border-warning rounded-0 ps-0 pe-3"
                                         id="traduccion-tab" data-bs-toggle="tab" data-bs-target="#traduccion"
-                                        type="button" style="white-space: nowrap; flex-shrink: 0;">Español /
-                                        Traducción</button>
+                                        type="button" style="white-space: nowrap; flex-shrink: 0;">ESPAÑOL /
+                                        TRADUCCIÓN</button>
                                 </li>
-
                                 <li class="nav-item">
                                     <button
                                         class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
@@ -768,21 +908,35 @@
                                         style="white-space: nowrap; flex-shrink: 0;">Texto Original</button>
 
                                 </li>
-
                             </ul>
+                            <!-- AI Progress Bar (Global for both editors) -->
+                            <div id="ai-progress-container" class="w-100 mb-3 d-none">
+                                <div class="progress"
+                                    style="height: 6px; background-color: rgba(255,152,0,0.05); border-radius: 3px; overflow: hidden;">
+                                    <div id="ai-progress-bar"
+                                        class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+                                        role="progressbar" style="width: 0%; transition: width 0.4s ease;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <span class="small text-warning fw-bold" id="ai-progress-text">Analizando documento
+                                        con
+                                        IA...</span>
+                                    <span class="small text-muted" style="font-size: 10px;">hesiOX IA Motor v4.2</span>
+                                </div>
+                            </div>
 
                             <div class="tab-content pt-3 flex-grow-1 d-flex flex-column">
                                 <div class="tab-pane fade show active flex-grow-1 d-flex flex-column" id="traduccion">
-                                    <!-- Toolbar Quill para Contenido -->
                                     <div id="toolbar-contenido"></div>
                                     <div id="contenido-editor" class="quill-editor flex-grow-1"></div>
-                                    <textarea name="contenido" id="contenido" class="d-none">{{ precargados.contenido or '' }}</textarea>
+                                    <textarea name="contenido" id="contenido"
+                                        class="d-none">{{ precargados.contenido or '' }}</textarea>
                                 </div>
                                 <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="original">
-                                    <!-- Toolbar Quill para Texto Original -->
                                     <div id="toolbar-texto_original"></div>
                                     <div id="texto_original_editor" class="quill-editor flex-grow-1"></div>
-                                    <textarea name="texto_original" id="texto_original" class="d-none">{{ precargados.texto_original or '' }}</textarea>
+                                    <textarea name="texto_original" id="texto_original"
+                                        class="d-none">{{ precargados.texto_original or '' }}</textarea>
                                 </div>
                             </div>
 
@@ -828,12 +982,13 @@
                                 <label class="form-label-sirio">Notas de Investigación</label>
                                 <input type="text" name="notas"
                                     class="form-control form-control-sirio border-warning fst-italic"
-                                    placeholder="Notas adicionales...">
+                                    value="{{ precargados.notas or '' }}" placeholder="Notas adicionales...">
                             </div>
                             <div class="mt-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label class="form-label-sirio mb-0">Temas / Etiquetas</label>
-                                    <button type="button" class="btn btn-link btn-sm text-info p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalGestorTemas">
+                                    <button type="button" class="btn btn-link btn-sm text-info p-0 text-decoration-none"
+                                        data-bs-toggle="modal" data-bs-target="#modalGestorTemas">
                                         <i class="fa-solid fa-gear me-1"></i>Gestionar
                                     </button>
                                 </div>
@@ -844,10 +999,8 @@
                                     {% endfor %}
                                 </select>
                             </div>
-
                         </div>
                     </div>
-
                     <div class="card-panel">
                         <div class="card-header-panel">
                             <span><i class="fa-solid fa-paperclip me-2"></i> Material Adjunto (Facsímil)</span>
@@ -867,12 +1020,15 @@
                             <div id="imagePreviewContainer" style="margin-top: 20px;"></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </form>
     </div>
 </div>
+
+
+<!-- Modal para añadir Biografía de Autor -->
+{% include 'modal_autor_bio.html' %}
 
 {% include '_modal_gestor_temas.html' %}
 
@@ -884,43 +1040,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
-
-<!-- Scripts del flujo de trabajo -->
-<script src="{{ url_for('static', filename='js/citation-generator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ocr-processor.js') }}?v=fix400"></script>
-<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fix400"></script>
+<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fixFinal_v2"></script>
 <script src="{{ url_for('static', filename='js/form-validator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-counter.js') }}"></script>
-<script src="{{ url_for('static', filename='js/form-citation-preview.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-shortcuts.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-progress.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-autocomplete.js') }}"></script>
-<script src="{{ url_for('static', filename='js/form-duplicate.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-datepicker.js') }}"></script>
-<script src="{{ url_for('static', filename='js/debug-editor.js') }}"></script>
-
 <script src="{{ url_for('static', filename='js/form-conditional-fields.js') }}"></script>
 <script src="{{ url_for('static', filename='js/image-uploader.js') }}"></script>
 <script src="{{ url_for('static', filename='js/html-to-plaintext.js') }}"></script>
 <script src="{{ url_for('static', filename='js/publicacion-autocomplete.js') }}"></script>
-<script src="{{ url_for('static', filename='js/form-editor.js') }}?v=fixSave"></script>
 <script src="{{ url_for('static', filename='js/theme-manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form-editor.js') }}?v=fixSave"></script>
 
-<script>
-    // Función para limpiar número de referencia y marcar como No incluido
-    function limpiarReferencia() {
-        const inputNumero = document.getElementById('numero_referencia');
-        const radioNo = document.getElementById('esReferenciaNo');
-        const refContainer = document.getElementById('numeroReferenciaContainer');
-
-        if (confirm('¿Eliminar el número de referencia bibliográfica?')) {
-            inputNumero.value = '';
-            if (radioNo) radioNo.click(); // Usamos click para disparar el evento del listener
-            refContainer.classList.add('d-none');
-        }
-    }
-</script>
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
 
 <script>
     // Inicialización de colapsables y lógica específica
@@ -975,276 +1111,120 @@
             });
         });
 
-        // Manejar aplicación de texto OCR al campo seleccionado
-        const btnApplyOcrText = document.getElementById('btn-apply-ocr-text');
-        if (btnApplyOcrText) {
-            btnApplyOcrText.addEventListener('click', () => {
-                const ocrTextPreview = document.getElementById('ocr-text-preview');
-                const selectedDestination = document.querySelector('input[name="ocr-destination"]:checked');
+        // Lógica dinámica para mostrar/ocultar secciones según Tipo de Recurso
+        const selectRecurso = document.getElementById('selectRecurso');
+        const sectionEscena = document.getElementById('section-escena');
+        const sectionDramatico = document.getElementById('section-dramatico');
+        const headerSection3 = document.getElementById('header-section-3');
+        const groupTituloSidebar = document.getElementById('group-titulo-sidebar');
+        const inputTituloSidebar = document.getElementById('input-titulo-sidebar');
 
-                if (!ocrTextPreview || !selectedDestination) {
-                    alert('Error: No se pudo obtener el texto o destino');
-                    return;
-                }
+        function toggleTeatro() {
+            if (!selectRecurso) return;
+            const val = selectRecurso.value;
 
-                // IMPORTANTE: Obtener texto puro desde data-ocr-text (sin metadatos)
-                const extractedText = ocrTextPreview.getAttribute('data-ocr-text') || ocrTextPreview.textContent || '';
-                const destination = selectedDestination.value;
-
-                if (!extractedText.trim()) {
-                    alert('No hay texto extraído para copiar');
-                    return;
-                }
-
-                // Copiar al campo correspondiente
-                if (destination === 'original') {
-                    const textoOriginalField = document.getElementById('texto_original');
-                    if (textoOriginalField) {
-                        textoOriginalField.value = extractedText;
-                        // Cambiar a la pestaña de Texto Original
-                        const originalTab = document.getElementById('original-tab');
-                        if (originalTab) originalTab.click();
-                    }
-                } else if (destination === 'traduccion') {
-                    const contenidoField = document.getElementById('contenido');
-                    if (contenidoField) {
-                        contenidoField.value = extractedText;
-                        // Cambiar a la pestaña de Traducción
-                        const traduccionTab = document.getElementById('traduccion-tab');
-                        if (traduccionTab) traduccionTab.click();
-                    }
-                }
-
-                // Feedback visual
-                btnApplyOcrText.innerHTML = '<i class="fa-solid fa-check me-2"></i> ¡Texto Copiado!';
-                btnApplyOcrText.classList.remove('btn-success');
-                btnApplyOcrText.classList.add('btn-outline-success');
-
-                setTimeout(() => {
-                    btnApplyOcrText.innerHTML = '<i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado';
-                    btnApplyOcrText.classList.add('btn-success');
-                    btnApplyOcrText.classList.remove('btn-outline-success');
-                }, 2000);
-            });
-        }
-
-        // Manejar selección de archivo .txt para previsualización inmediata
-        const inputArchivoTexto = document.getElementById('input-archivo-texto');
-        if (inputArchivoTexto) {
-            inputArchivoTexto.addEventListener('change', function (e) {
-                if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    if (file.name.toLowerCase().endsWith('.txt')) {
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            const content = e.target.result;
-                            const areaContenido = document.getElementById('contenido');
-                            if (areaContenido) {
-                                // Si el área está vacía, cargamos directamente. 
-                                // Si tiene texto, preguntamos si desea sobrescribir.
-                                if (!areaContenido.value.trim() || confirm('¿Deseas reemplazar el contenido actual con el texto del archivo seleccionado?')) {
-
-                                    // Verificar si la limpieza OCR está activa
-                                    const checkLimpiar = document.getElementById('checkLimpiarOCR');
-                                    let contentToSet = content;
-
-                                    if (checkLimpiar && checkLimpiar.checked) {
-                                        // Aplicar limpieza básica en cliente mientras se sube
-                                        console.log('[OCR] Aplicando limpieza rápida en cliente...');
-                                        contentToSet = contentToSet.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "") // Caracteres no imprimibles
-                                            .replace(/\r\n/g, "\n")
-                                            .replace(/[ \t]+/g, " ");
-                                    }
-
-                                    areaContenido.value = contentToSet;
-                                    // Cambiar a la pestaña de Traducción/Español para mostrar el resultado
-                                    const traduccionTab = document.getElementById('traduccion-tab');
-                                    if (traduccionTab) traduccionTab.click();
-
-                                    // Notificación visual de éxito
-                                    console.log('Contenido de .txt cargado con éxito');
-                                }
-                            }
-                        };
-                        reader.readAsText(file);
-                    }
-                }
-            });
-        }
-
-        // Lógica para botón "Limpiar ahora" manual
-        const btnLimpiarManual = document.getElementById('btnLimpiarManual');
-        if (btnLimpiarManual) {
-            btnLimpiarManual.addEventListener('click', async function () {
-                const areaContenido = document.getElementById('contenido');
-                if (!areaContenido || !areaContenido.value.trim()) {
-                    alert('No hay contenido para limpiar.');
-                    return;
-                }
-
-                if (!confirm('¿Deseas aplicar la limpieza profunda de OCR al texto actual? Esto eliminará saltos de línea innecesarios y ruido de escaneo.')) return;
-
-                const originalText = areaContenido.value;
-                btnLimpiarManual.disabled = true;
-                btnLimpiarManual.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Limpiando...';
-
-                try {
-                    const response = await fetch('/api/spacy/clean2', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                        },
-                        body: JSON.stringify({ text: originalText })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        areaContenido.value = data.clean_text;
-                        alert('Limpieza completada con éxito.');
-                    } else {
-                        throw new Error('Error en el servidor');
-                    }
-                } catch (error) {
-                    console.error('Error al limpiar OCR:', error);
-                    alert('Error al conectar con el servidor para la limpieza.');
-                } finally {
-                    btnLimpiarManual.disabled = false;
-                    btnLimpiarManual.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1"></i> Limpiar ahora';
-                }
-            });
-        }
-    });
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Refuerzo: Autor siempre habilitado salvo anónimo
-        const checkAnonimo = document.getElementById("anonimo");
-        const inpNombre = document.getElementById("inpNombre");
-        const inpApellido = document.getElementById("inpApellido");
-        function toggleAutor() {
-            if (checkAnonimo && checkAnonimo.checked) {
-                if (inpNombre) {
-                    inpNombre.disabled = true;
-                    inpNombre.value = "";
-                }
-                if (inpApellido) {
-                    inpApellido.disabled = true;
-                    inpApellido.value = "";
-                }
+            // Visibilidad de secciones teatrales
+            if (val === 'obra_teatral') {
+                if (sectionEscena) sectionEscena.style.display = 'block';
+                if (sectionDramatico) sectionDramatico.style.display = 'block';
+                if (headerSection3) headerSection3.textContent = 'Puesta en Escena / Representación';
             } else {
-                if (inpNombre) inpNombre.disabled = false;
-                if (inpApellido) inpApellido.disabled = false;
-            }
-        }
-        if (checkAnonimo) {
-            checkAnonimo.addEventListener("change", toggleAutor);
-            // Refuerzo: SIEMPRE habilitar por defecto salvo que esté marcado
-            toggleAutor();
-        }
-        // Lógica para mostrar/ocultar número de referencia
-        const checkIncluido = document.getElementById("checkIncluido");
-        const numeroReferenciaContainer = document.getElementById("numeroReferenciaContainer");
-        if (checkIncluido && numeroReferenciaContainer) {
-            checkIncluido.addEventListener("change", function () {
-                if (this.checked) {
-                    numeroReferenciaContainer.classList.remove("d-none");
+                if (sectionEscena) sectionEscena.style.display = 'block';
+                if (sectionDramatico) sectionDramatico.style.display = 'none';
+
+                if (val === 'prensa' || val === 'folleto') {
+                    if (headerSection3) headerSection3.textContent = 'Publicación y Fecha';
+                } else if (val === 'libro') {
+                    if (headerSection3) headerSection3.textContent = 'Edición y Publicación';
                 } else {
-                    numeroReferenciaContainer.classList.add("d-none");
+                    if (headerSection3) headerSection3.textContent = 'Datos de Publicación / Fecha';
                 }
-            });
-        }
-    });
-</script>
-
-<script>
-    // Manejo manual del botón guardar para evitar problemas de submit
-    document.addEventListener('DOMContentLoaded', function () {
-        const btnGuardar = document.getElementById('btn-guardar-manual');
-        if (btnGuardar) {
-            btnGuardar.addEventListener('click', function () {
-                const form = document.getElementById('form-nuevo');
-                if (form) {
-                    // Validar formulario (HTML5 validation)
-                    if (form.reportValidity()) {
-                        // Limpiar borrador si existe (autosave)
-                        if (window.autosave) {
-                            try {
-                                window.autosave.clearDraft();
-                            } catch (e) { console.error(e); }
-                        }
-                        // Enviar formulario directamente
-                        // if (typeof tinymce !== 'undefined') { tinymce.triggerSave(); } <-- REMOVED
-                        form.submit();
-                    }
-                }
-            });
-        }
-    });
-
-
-    // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
-    // en static/js/ocr-uploader.js para evitar duplicidad y permitir multimodalidad.
-
-    // --- Lógica de Limpieza OCR Manual (Pre-aplicar) ---
-    const btnCleanOCR = document.getElementById('btn-clean-ocr-preview');
-    if (btnCleanOCR) {
-        btnCleanOCR.addEventListener('click', async () => {
-            const ocrPreview = document.getElementById('ocr-text-preview');
-            const textToClean = ocrPreview.getAttribute('data-ocr-text') || ocrPreview.textContent;
-
-            if (!textToClean || textToClean.trim().length < 5) {
-                alert('No hay texto OCR para limpiar.');
-                return;
             }
+        }
 
-            const originalHTML = btnCleanOCR.innerHTML;
-            btnCleanOCR.disabled = true;
-            btnCleanOCR.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Limpiando...';
+        if (selectRecurso) {
+            selectRecurso.addEventListener('change', toggleTeatro);
+            toggleTeatro();
+        }
+    });
 
-            try {
-                const response = await fetch('/api/spacy/clean2', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                    },
-                    body: JSON.stringify({ text: textToClean })
+    // --- AJAX SAVE FOR MAIN FORM ---
+    document.getElementById('form-nuevo').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const formData = new FormData(form);
+        const btnSave = document.querySelector('button[form="form-nuevo"]');
+        const originalBtnHTML = btnSave.innerHTML;
+        
+        // Visual feedback
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> GUARDANDO...';
+        
+        fetch(form.action + '?ajax=1', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en el servidor');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Guardado!',
+                    text: data.message || 'Referencia creada correctamente.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    background: '#294a60',
+                    color: '#fff',
+                    iconColor: '#4caf50'
+                }).then(() => {
+                    // Redirigir al listado resaltando la noticia nueva
+                    window.location.href = "{{ url_for('noticias.listar') }}?highlight_id=" + data.id;
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    ocrPreview.textContent = data.clean_text;
-                    ocrPreview.setAttribute('data-ocr-text', data.clean_text);
-                } else {
-                    throw new Error('Error en el servidor');
-                }
-            } catch (err) {
-                console.error('Error limpieza OCR:', err);
-                alert('Error al limpiar el texto OCR.');
-            } finally {
-                btnCleanOCR.disabled = false;
-                btnCleanOCR.innerHTML = originalHTML;
+            } else {
+                throw new Error(data.message || 'Error al guardar');
             }
-        });
-    }
-
-    // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
-    // en static/js/noticia-quill-init.js para soportar Quill.
-
-    // Inicializar ThemeManager con URLs dinámicas
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof ThemeManager !== 'undefined') {
-            ThemeManager.init({
-                baseUrl: "{{ url_for('noticias.api_get_temas') }}",
-                renameUrl: "{{ url_for('noticias.api_renombrar_tema') }}",
-                deleteUrl: "{{ url_for('noticias.api_eliminar_tema') }}",
-                createUrl: "{{ url_for('noticias.api_crear_tema_v2') }}",
-                themeInputId: 'inputTemas'
+        })
+        .catch(error => {
+            console.error('[ERROR] Error al guardar:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar la referencia: ' + error.message,
+                background: '#294a60',
+                color: '#fff'
             });
-        }
+        })
+        .finally(() => {
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalBtnHTML;
+        });
     });
-</script>
 
+    function autoformatearFecha(e) {
+        let input = e.target;
+        let valor = input.value.replace(/\D/g, '');
+        if (valor.length > 8) valor = valor.substring(0, 8);
+
+        let formateado = '';
+        if (valor.length > 0) {
+            formateado = valor.substring(0, 2);
+            if (valor.length > 2) {
+                formateado += '/' + valor.substring(2, 4);
+                if (valor.length > 4) {
+                    formateado += '/' + valor.substring(4, 8);
+                }
+            }
+        }
+        input.value = formateado;
+    }
+</script>
 {% endblock %}

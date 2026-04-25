@@ -614,14 +614,16 @@
                 <a href="#dramatic-stylometry" class="list-group-item list-group-item-action ps-3 text-info">9.7 Estilometría y Zeta Score</a>
                 <a href="#dramatic-rhythm-sync" class="list-group-item list-group-item-action ps-3 text-info">9.8 Sincronía y Ritmo Dramático</a>
 
-                <div class="mt-3 mb-1 text-uppercase text-secondary xsmall fw-bold">X. Administración del Sistema</div>
-                <a href="#admin-panel" class="list-group-item list-group-item-action ps-3">10.1 Gestión de Infraestructura y Recursos</a>
+                <div class="mt-3 mb-1 text-uppercase text-secondary xsmall fw-bold">X. Ecosistema de Autores y Biografías IA</div>
+                <a href="#authors-ecosystem" class="list-group-item list-group-item-action ps-3 fw-bold text-success">
+                    <span class="badge bg-success me-1" style="font-size: 0.5em;">NUEVO</span>
+                    10.1 Gestión de Identidades y Dossiers
+                </a>
+                <a href="#authors-ai-expansion" class="list-group-item list-group-item-action ps-3">10.2 Expansión Automática con Gemini 1.5 Pro</a>
+                <a href="#authors-premium-visor" class="list-group-item list-group-item-action ps-3">10.3 El Visor de Dossier Premium</a>
 
-
-
-                <div class="mt-3 mb-1 text-uppercase text-secondary xsmall fw-bold">IX. Administración del Sistema</div>
-                <a href="#admin-panel" class="list-group-item list-group-item-action ps-3">9.1 Panel de
-                    Administración</a>
+                <div class="mt-3 mb-1 text-uppercase text-secondary xsmall fw-bold">XI. Administración del Sistema</div>
+                <a href="#admin-panel" class="list-group-item list-group-item-action ps-3">11.1 Panel de Administración</a>
             </div>
         </div>
     </nav>
@@ -1366,125 +1368,103 @@
                 </ul>
             </div>
 
-            <h3 id="ocr-deep-dive" class="h4 mt-5 fw-bold text-accent">4.2 Motores de Reconocimiento Óptico (OCR)</h3>
+            <h3 id="ocr-deep-dive" class="h4 mt-5 fw-bold text-accent">4.2 Motores de Reconocimiento Óptico (OCR) — hesiOX IA Motor v4.2</h3>
             <p>
-                HesiOX ofrece una arquitectura modular de OCR para adaptarse a la calidad y antigüedad de cada
-                documento. La selección del motor adecuado es crítica para minimizar el ruido en el corpus final:
+                HesiOX ofrece una arquitectura modular de OCR de alta precisión diseñada para la prensa histórica. La joya de la corona es el nuevo <strong>Motor Híbrido (Vision Edition)</strong>, que trasciende la lectura mecánica para entender la composición espacial del documento.
             </p>
 
             <div class="row g-4 mt-3">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card h-100 border-secondary">
-                        <div class="card-header bg-secondary text-white-adapt fw-bold">
-                            <i class="fa-solid fa-server me-2"></i>Opción A: Tesseract 5
+                        <div class="card-header bg-secondary text-white-adapt fw-bold xsmall">
+                            <i class="fa-solid fa-server me-2"></i>Tesseract 5 (Local)
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small"><strong>Motor Local.</strong> Rápido y privado. Ideal para textos modernos
-                                y limpios.</p>
-                            <ul class="small text-success mb-0 ps-3">
-                                <li>Privacidad absoluta.</li>
-                                <li>Gratuito y veloz.</li>
-                            </ul>
+                            <p class="xsmall text-muted mb-0">Rápido y privado. Ideal para textos modernos y limpios sin necesidad de conexión externa.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="card h-100 border-info">
-                        <div class="card-header bg-info text-white-adapt fw-bold">
-                            <i class="fa-solid fa-cloud me-2"></i>Opción B: OCR.space
+                        <div class="card-header bg-info text-white-adapt fw-bold xsmall">
+                            <i class="fa-solid fa-cloud me-2"></i>OCR.space (Cloud)
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small"><strong>Motor Cloud.</strong> Máxima precisión para documentos antiguos o
-                                de baja calidad.</p>
-                            <ul class="small text-success mb-0 ps-3">
-                                <li>Excelente con fuentes antiguas.</li>
-                                <li>Maneja mejor el ruido visual.</li>
-                            </ul>
+                            <p class="xsmall text-muted mb-0">Alta precisión para documentos antiguos. Mejor manejo de fuentes complejas y ruido visual.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-4">
-                    <div class="card h-100 border-warning">
-                        <div class="card-header bg-warning text-white-adapt fw-bold">
-                            <i class="fa-solid fa-brain me-2"></i>Opción C: Gemini Vision (IA)
+                <div class="col-lg-6">
+                    <div class="card h-100 border-accent shadow-sm">
+                        <div class="card-header bg-accent text-white fw-bold xsmall">
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Híbrido: Reconciliación IA (Vision)
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small"><strong>IA Multimodal.</strong> No solo "lee", sino que "entiende" la
-                                página.</p>
-                            <ul class="small text-success mb-0 ps-3">
-                                <li>Revisión <strong>Multimodal</strong> (Texto + Imagen).</li>
-                                <li>Layout Awareness inteligente.</li>
+                            <p class="small mb-2"><strong>Arquitectura de Doble Paso:</strong></p>
+                            <ul class="xsmall text-success mb-0 ps-3">
+                                <li><strong>Hibridación Multimodal:</strong> La IA analiza simultáneamente el texto OCR y los píxeles de la imagen original.</li>
+                                <li><strong>Zonificación Inteligente:</strong> Recupera automáticamente columnas o fragmentos que el OCR tradicional "salta" o ignora.</li>
+                                <li><strong>Fuente de Verdad Absoluta:</strong> Corrige errores de interpretación geométrica basándose en la visión directa del facsímil.</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="alert alert-info mt-4 small border-start-accent">
-                <strong><i class="fa-solid fa-lightbulb me-2"></i>La Estrategia Híbrida:</strong> HesiOX recomienda usar
-                Tesseract para el grueso del archivo (90%) y reservar Gemini Pro para los documentos "joya" o ilegibles
-                (10%).
+            <h4 class="h6 fw-bold mt-4">4.2.1 Gestión de Documentos Complejos (PDF y Vision Preview)</h4>
+            <div class="p-3 border rounded bg-light mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <p class="small mb-1"><strong>Selección Granular:</strong> El sistema fragmenta archivos PDF pesados permitiendo al investigador seleccionar y previsualizar miniaturas antes de procesar páginas específicas.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="small mb-1"><strong>Captura de Calidad (OpenCV):</strong> Aplicamos binarización adaptativa y eliminación de ruido (denoising) antes del OCR para maximizar la legibilidad de documentos degradados.</p>
+                    </div>
+                </div>
             </div>
 
-            <h3 id="text-refinement" class="h4 mt-5 fw-bold text-accent">4.3 El Taller de Refinamiento: De la Mancha al
-                Dato</h3>
+            <h3 id="text-refinement" class="h4 mt-5 fw-bold text-accent">4.3 El Sistema de Triple Filtro: De la Mancha al Dato</h3>
             <p>
-                Una vez extraído el texto (vía OCR o subida de TXT), HesiOX ofrece un pipeline de refinamiento en dos
-                fases diseñado para convertir una lectura mecánica en un documento de alta calidad científica.
+                Para garantizar una transcripción de grado científico, el texto procesado en HesiOX atraviesa tres capas de refinamiento sucesivas:
             </p>
 
             <div class="row g-4 mt-2">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card h-100 border-sirio">
-                        <div class="card-header bg-sirio text-white-adapt fw-bold">
-                            <i class="fa-solid fa-broom me-2"></i>FASE 1: Limpieza Profunda (Heurística)
+                        <div class="card-header bg-sirio text-white-adapt fw-bold xsmall">
+                            CAPA 1: Extracción Raw (Filtro Base)
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small">Algoritmos basados en reglas y REGEX que atacan los errores estructurales
-                                del OCR.</p>
-                            <ul class="xsmall text-muted ps-3">
-                                <li><strong>De-hyphenation:</strong> Une palabras cortadas al final de la línea o
-                                    fragmentadas por espacios erróneos (ej: 'pri- mer' → 'primer').</li>
-                                <li><strong>Unificación de Líneas:</strong> Convierte saltos de línea arbitrarios en
-                                    texto fluido.</li>
-                                <li><strong>Eliminación de Ruido Geométrico:</strong> Borra caracteres "fantasma" (^, |,
-                                    ¬) y manchas interpretadas como texto.</li>
-                                <li><strong>Estructuración:</strong> Detecta marcadores históricos (ej: 'ítem') para
-                                    crear párrafos coherentes.</li>
-                            </ul>
+                            <p class="xsmall">Conversión mecánica de grafemas. Se obtiene el borrador inicial con la estructura básica del documento.</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card h-100 border-accent">
-                        <div class="card-header bg-accent text-white fw-bold">
-                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>FASE 2: Revisión por IA (Gemini)
+                <div class="col-md-4">
+                    <div class="card h-100 border-info">
+                        <div class="card-header bg-info text-white-adapt fw-bold xsmall">
+                            CAPA 2: Reconstrucción (Filtro Vision)
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small">Intervención de IA generativa con contexto paleográfico y lingüístico.</p>
-                            <ul class="xsmall text-muted ps-3">
-                                <li><strong>Restauración de Acentos:</strong> Coloca tildes omitidas o mal leídas por el
-                                    OCR según reglas gramaticales.</li>
-                                <li><strong>Reconstrucción Inteligente:</strong> Detecta y une fragmentos de palabras
-                                    que el OCR dejó separados por guiones o espacios (ej: 'pri- mer' → 'primer').</li>
-                                <li><strong>Corrección Ortográfica:</strong> Resuelve ambigüedades (ej: 'í' vs '1') sin
-                                    modernizar el lenguaje original.</li>
-                                <li><strong>Consistencia Semántica:</strong> Une fragmentos que carecen de sentido
-                                    gramatical.</li>
-                                <li><strong>Paleografía Digital:</strong> Entiende giros lingüísticos de época para no
-                                    "corregir" lo que es estilo histórico.</li>
-                            </ul>
+                            <p class="xsmall">La IA "mira" la imagen y rellena las lagunas del OCR. Recupera columnas perdidas y corrige errores de layout.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-accent">
+                        <div class="card-header bg-accent text-white fw-bold xsmall">
+                            CAPA 3: Normalización (Filtro Semántico)
+                        </div>
+                        <div class="card-body bg-light">
+                            <p class="xsmall">NLP avanzado para limpiar ruido OCR, restaurar acentos y extraer metadatos preservando la ortografía histórica.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="alert alert-warning mt-4 small border-start-warning">
-                <strong><i class="fa-solid fa-circle-exclamation me-2"></i>Flujo Recomendado:</strong> Para obtener
-                resultados óptimos, aplique siempre la <strong>"Limpieza"</strong> primero para resolver la estructura,
-                y luego la <strong>"Revisión por IA"</strong> para pulir el contenido lingüístico.
+                <strong><i class="fa-solid fa-circle-exclamation me-2"></i>Recomendación Metodológica:</strong> Utilice siempre el <strong>Motor Híbrido</strong> para documentos de prensa estructurada (columnas) para asegurar que el sistema no omita ningún bloque de contenido visual.
             </div>
 
             <h3 id="editor-rich" class="h4 mt-5 fw-bold">4.4 El Editor: Human-in-the-Loop</h3>
@@ -5851,7 +5831,95 @@
             </div>
         </section>
 
-        <!-- 10. ADMIN -->
+        <!-- 10. ECOSISTEMA DE AUTORES Y BIOGRAFÍAS IA -->
+        <section id="authors-ecosystem" class="manual-section mb-5 pt-5 border-top">
+            <h2 class="section-title">X. Ecosistema de Autores y Biografías IA</h2>
+            <p class="lead">
+                HesiOX redefine la gestión de entidades mediante un sistema centralizado de identidades que conecta a los autores con el corpus documental a través de una lente biográfica enriquecida por IA.
+            </p>
+
+            <h3 id="authors-id-management" class="h4 mt-5 fw-bold text-accent">10.1 Gestión de Identidades y Dossiers</h3>
+            <p>
+                Cada autor en HesiOX deja de ser un simple nombre en una lista para convertirse en un **Dossier Biográfico** estructurado. El sistema permite registrar:
+            </p>
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm bg-light p-3 border-top border-sirio">
+                        <h6 class="fw-bold text-sirio">Identificación</h6>
+                        <p class="xsmall text-muted mb-0">Nombres, apellidos, seudónimos históricos y retratos certificados.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm bg-light p-3 border-top border-sirio">
+                        <h6 class="fw-bold text-sirio">Trayectoria</h6>
+                        <p class="xsmall text-muted mb-0">Formación académica, influencias y movimientos literarios.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm bg-light p-3 border-top border-sirio">
+                        <h6 class="fw-bold text-sirio">Producción</h6>
+                        <p class="xsmall text-muted mb-0">Géneros, temáticas recurrentes y catálogo de obras principales.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100 border-0 shadow-sm bg-light p-3 border-top border-sirio">
+                        <h6 class="fw-bold text-sirio">Legado</h6>
+                        <p class="xsmall text-muted mb-0">Impacto histórico, premios y bibliografía de referencia.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="authors-ai-expansion" class="h4 mt-5 fw-bold text-accent">10.2 Expansión Automática con Gemini 1.5 Pro</h3>
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-start gap-3">
+                <i class="fa-solid fa-microchip fa-2x opacity-50"></i>
+                <div>
+                    <h5 class="h6 fw-bold">Potencia Analítica de Última Generación</h5>
+                    <p class="small mb-0">
+                        HesiOX utiliza el motor <strong>Gemini 1.5 Pro</strong> para la autocompletitud de fichas. Con solo introducir el nombre del autor y pulsar el botón <span class="badge bg-sirio">IA COMPLETAR</span>, el sistema consulta su base de conocimiento masiva y rellena automáticamente los 19 campos biográficos con una precisión académica asombrosa.
+                    </p>
+                </div>
+            </div>
+            <p>
+                Este proceso no solo ahorra horas de investigación manual, sino que garantiza la estandarización de los datos (fechas, lugares, movimientos) facilitando el posterior filtrado y cruce de información en el corpus.
+            </p>
+
+            <h3 id="authors-premium-visor" class="h4 mt-5 fw-bold text-accent">10.3 El Visor de Dossier Premium</h3>
+            <p>
+                La culminación de este sistema es el <strong>Visor Premium</strong>, una interfaz diseñada para la lectura inmersiva que presenta la información del autor como un dossier de inteligencia:
+            </p>
+            <ul class="list-group list-group-flush mb-4 small">
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-check text-success me-2"></i><strong>Diseño Adaptive:</strong> Compatible con modo claro y oscuro, ajustando automáticamente contrastes para evitar la fatiga visual.</li>
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-link text-sirio me-2"></i><strong>Enlaces Inteligentes:</strong> Detección automática de URLs en la bibliografía y enlaces de interés, haciéndolos clickeables y seguros.</li>
+                <li class="list-group-item bg-transparent"><i class="fa-solid fa-chart-line text-warning me-2"></i><strong>Métricas de Completitud:</strong> Visualización en tiempo real del porcentaje de información disponible en la ficha del autor.</li>
+            </ul>
+            <div class="card bg-dark text-light p-4 border-0 rounded-4 shadow mb-5">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold text-warning mb-1">Integración con el Corpus</h5>
+                        <p class="small opacity-75 mb-0">Cada ficha de autor incluye un enlace directo a sus publicaciones dentro del proyecto actual, permitiendo navegar del "quién" al "qué" en un solo clic.</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fa-solid fa-address-card fa-4x text-sirio opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="authors-collective-knowledge" class="h4 mt-5 fw-bold text-accent">10.4 Red de Investigación Global y Construcción Colectiva</h3>
+            <p>
+                HesiOX no es un sistema estanco. Uno de sus pilares fundamentales es la **filosofía de repositorio compartido**. Cada vez que un investigador crea o enriquece la ficha de un autor para su proyecto específico, esa información se integra en una **Base de Datos Universal de Autores**.
+            </p>
+            <div class="alert alert-warning border-0 shadow-sm">
+                <h6 class="fw-bold"><i class="fa-solid fa-people-group me-2"></i>El Valor de la Red</h6>
+                <p class="small mb-0">
+                    El sistema va construyendo, de forma orgánica y progresiva, un repositorio bibliográfico masivo. El esfuerzo de investigación de un usuario beneficia a toda la comunidad: un autor completado por un experto en el Siglo de Oro estará disponible instantáneamente para otro investigador que trabaje en un proyecto de prensa contemporánea si el autor coincide.
+                </p>
+            </div>
+            <p>
+                Esta arquitectura fomenta la **Economía de Escala del Conocimiento**, donde el corpus biográfico de HesiOX crece exponencialmente con cada nueva investigación, convirtiéndose en el catálogo de autoridades más potente de la red hemerográfica.
+            </p>
+        </section>
+
+        <!-- 11. ADMIN -->
         <section id="admin-panel" class="manual-section mb-5 pt-5 border-top">
             <h2 class="section-title">X. Administración del Sistema</h2>
             <p>

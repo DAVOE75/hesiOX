@@ -105,8 +105,9 @@ class AIService:
                 model_name = 'gemini-1.5-flash-latest' # Final safety fallback
             
             # Verificar origen de la API KEY para log
-            usando_key_usuario = self.user and getattr(self.user, 'api_key_gemini', None)
-            key_info = f"Usuario (ID: {self.user.id})" if usando_key_usuario else "Sistema (Environment)"
+            usando_key_usuario = self.user and hasattr(self.user, 'api_key_gemini') and getattr(self.user, 'api_key_gemini', None)
+            user_id = str(getattr(self.user, 'id', 'Unknown')) if self.user else "None"
+            key_info = f"Usuario (ID: {user_id})" if usando_key_usuario else "Sistema (Environment)"
             
             print(f"[AIService Gemini] Configurando Gemini con modelo: {model_name} | Key source: {key_info}", file=sys.stderr)
             genai.configure(api_key=self.api_key)
@@ -119,13 +120,14 @@ class AIService:
             
             parts = [prompt]
             if image_data:
-                # Handle base64 image data
+                # Handle base64 image/document data
                 base64_content = image_data
-                mime_type = "image/jpeg"
+                mime_type = "image/jpeg" # Default
                 if "," in image_data:
                     header, base64_content = image_data.split(",", 1)
-                    if "image/" in header:
-                        mime_type = header.split(";")[0].split(":")[1]
+                    # Extraer MIME type de forma más robusta
+                    if ":" in header and ";" in header:
+                        mime_type = header.split(":")[1].split(";")[0]
                 
                 parts.append({
                     "mime_type": mime_type,
@@ -382,7 +384,7 @@ class AIService:
         raw_text = self.generate_content(prompt, temperature=0.1)
         return self._extract_json_from_text(raw_text)
 
-    def correct_ocr_text(self, text, part_num=1, total_parts=1, image_data=None):
+    def correct_ocr_text(self, text, part_num=1, total_parts=1, image_data=None, custom_prompt=None):
         """Corrige texto OCR y extrae metadatos estructurados usando IA. Soporta Vision."""
         instrucciones_contexto = ""
         if total_parts > 1:
@@ -401,51 +403,74 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
 3. El resultado final debe ser una transcripción paleográfica perfecta, literal y diplomática.
 """
 
-        prompt = f"""System Instructions: Arquetipo de Transcriptor Paleográfico Especializado en Prensa Histórica
-Actúa como un experto en paleografía, tipografía antigua y digitalización de hemerotecas históricas de élite. Tu objetivo es una transcripción diplomática (literal) y estructuralmente perfecta del documento.
-
-{instrucciones_contexto}
-{vision_instruction}
-
-1. FIDELIDAD TEXTUAL Y PALEOGRÁFICA (Estricta):
-- Literalidad Absoluta: Transcribe exactamente lo que ves. Mantén ortografía antigua (ej. "fué", "á", "septentrión").
-- Tipografía Antigua: Identifica la "s larga" (ſ) y transcríbela como "s" normal si es para búsqueda, pero mantén la fidelidad si el contexto es de transcripción pura.
-- Puntuación de Imprenta: Respeta guiones largos (—), comillas angulares (« ») y el uso de puntos suspensivos para separar noticias.
-- Superíndices y Notas: Extrae números de página y notas al pie usando etiquetas claras [pág: X] o [nota: Y].
-
-2. LÓGICA DE PRENSA HISTÓRICA (Layout y Estructura):
-- Reconstrucción de Columnas: La prensa histórica suele dividirse en columnas estrechas. NO leas de izquierda a derecha a través de las columnas. Lee una columna completa de arriba a abajo y luego pasa a la siguiente.
-- Cabeceras y Folletines: Identifica y separa claramente la cabecera (título del diario, fecha, número) del cuerpo de la noticia. Si hay un "folletín" (novela por entregas en la parte inferior), márcalo como tal: [FOLLETÍN: Título].
-- Unificación de Guiones: Une palabras cortadas por guion al final de línea (ej: "cons- / titución" -> "constitución") para facilitar el análisis léxico posterior.
-
-3. CONOCIMIENTO DE DOMINIO (Entidades y Contexto):
-- Validación de Onomástica y Toponimia: Usa tu conocimiento histórico para corregir errores de OCR en nombres de políticos, militares y lugares de los siglos XVIII-XX.
-- Terminología Específica: Maneja correctamente términos de época (realistas, liberales, gacetillas, sueltos, reclamos publicitarios).
-
-4. ESTRUCTURACIÓN Y FORMATO DE SALIDA (CRÍTICO):
-- Genera la transcripción literal en "corrected_text" y extrae metadatos en "metadata".
-- El output debe ser EXCLUSIVAMENTE el JSON, sin texto adicional.
-
-RESPONDE EXCLUSIVAMENTE EN FORMATO JSON:
-{{
-    "corrected_text": "Transcripción literal de prensa, columna por columna, respetando cabeceras y unificando guiones de fin de línea.",
-    "metadata": {{
-        "titulo": "Título de la noticia o cabecera",
-        "autor": "Firma o null",
-        "fecha_original": "Fecha original (ej. Jueves 12 de Junio de 1902)",
-        "anio": 1902,
-        "publicacion": "Nombre del periódico",
-        "ciudad": "Lugar de edición",
-        "seccion": "Ej: Política, Internacional, Anuncios",
-        "confianza": 0.99,
-        "correcciones": ["Lista de inferencias, ej: 'Unión de 12 palabras divididas por guion'"]
-    }}
-}}
-TEXTO OCR DE REFERENCIA:
-\"\"\"{text}\"\"\"
-"""
-        raw_text = self.generate_content(prompt, temperature=0.0, image_data=image_data, top_p=1.0)
-        return self._extract_json_from_text(raw_text)
+        if custom_prompt:
+            prompt = custom_prompt
+        else:
+            prompt = f"""Rol y Objetivo:
+            Actúa como un Archivero Digital Senior y Especialista en Reconocimiento Óptico de Caracteres (OCR) y Análisis de Diseño de Documentos (OLR) de una Biblioteca Nacional. Tu objetivo es realizar una transcripción diplomática, INTEGRA y estructurada de la página de prensa histórica adjunta. 
+            
+            ES CRÍTICO: No debes omitir ni una sola palabra del documento original. Tu prioridad absoluta es la COBERTURA TOTAL (Full Coverage). Si detectas bloques de texto, columnas o fragmentos en la imagen que NO están en el texto OCR de referencia, DEBES transcribirlos e integrarlos en su posición lógica.
+            
+            Directrices Estrictas de Transcripción (Normativa Institucional):
+            
+            1. Fidelidad Diplomática (Cero Alteraciones):
+            - Ortografía histórica: Mantén intacta la ortografía original, incluyendo tildes anacrónicas (ej. á, fué, vió), grafías antiguas (estensión, muger, relox), arcaísmos, contracciones y posibles erratas de imprenta. No modernices ni corrijas la gramática bajo ninguna circunstancia.
+            - Puntuación: Respeta la puntuación original, incluso si parece gramaticalmente incorrecta para los estándares modernos.
+            
+            2. Análisis de Diseño y Orden de Lectura (Zonificación):
+            - La prensa histórica utiliza un diseño de múltiples columnas. Debes realizar una zonificación lógica: lee de arriba a abajo y de izquierda a derecha, estrictamente columna por columna.
+            - REVISIÓN DE COLUMNAS: Asegúrate de identificar TODAS las columnas verticales. Es común que el OCR inicial se salte columnas enteras; tú debes ser más minucioso y recuperar ese contenido.
+            - Nunca unas líneas que pertenecen a columnas adyacentes horizontalmente.
+            - Identifica y separa claramente los diferentes bloques lógicos: Cabeceras (Mastheads), Noticias, Crónicas, Secciones Financieras (Cotizaciones) y Anuncios Comerciales.
+            
+            3. Marcado Estructural y Metadatos (Formato Markdown):
+            Utiliza etiquetas en corchetes y formato Markdown para mapear la estructura visual del documento al texto plano:
+            - Usa [CABECERA] para el título del periódico, fecha, precios de suscripción y datos de edición.
+            - Usa [COLUMNA 1], [COLUMNA 2], etc., para indicar el inicio de cada bloque espacial.
+            - Usa ## Título de la noticia para los titulares.
+            - Usa [SECCIÓN DE ANUNCIOS] para bloques publicitarios y separa cada anuncio con un divisor ---.
+            - Si un artículo salta de una columna a otra, indícalo (ej. [Continúa en Columna 3]).
+            
+            4. Tratamiento de Lagunas y Daños Físicos:
+            - Si una palabra es totalmente ilegible: Escribe [ilegible].
+            - Si una palabra está incompleta o es dudosa pero deducible por el contexto: Escribe la palabra seguida de un signo de interrogación entre corchetes, ej. constitu[?] o [texto dudoso: constitución].
+            - Si hay un salto físico en el papel que elimina varias líneas: Escribe [falta fragmento por daño en el original].
+            
+            5. Elementos Gráficos y Tipográficos:
+            - Si hay capitulares (Letras grandes al inicio de un párrafo), intégralas a la palabra correspondiente sin espacios.
+            - Mantén el texto en cursiva o negrita usando el marcado de Markdown (*cursiva*, **negrita**).
+            - Si hay ilustraciones, grabados o filetes decorativos separadores, descríbelos brevemente: [Grabado: descripción visual].
+            
+            {instrucciones_contexto}
+            {vision_instruction}
+            
+            RESPONDE EXCLUSIVAMENTE EN FORMATO JSON siguiendo esta estructura:
+            {{
+              "corrected_text": "...",
+              "metadata": {{
+                "titulo": "...",
+                "autor": "...",
+                "fecha_original": "...",
+                "anio": 1900,
+                "publicacion": "...",
+                "ciudad": "...",
+                "seccion": "...",
+                "confianza": 0.99,
+                "correcciones": []
+              }}
+            }}
+            
+            TEXTO OCR DE REFERENCIA PARA PROCESAR (BORRADOR):
+            --------------------------------------
+            {text}
+            --------------------------------------
+            """
+        try:
+            raw_text = self.generate_content(prompt, temperature=0.0, image_data=image_data, top_p=1.0)
+            return self._extract_json_from_text(raw_text)
+        except Exception as e_gen:
+            print(f"[AIService] Error crítico en correct_ocr_text: {e_gen}", file=sys.stderr)
+            return {"corrected_text": text, "metadata": {}, "error": str(e_gen)}
 
     def _extract_json_from_text(self, text):
         if not text: return {}

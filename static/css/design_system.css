@@ -946,6 +946,7 @@ body.theme-transitioning * {
     position: relative;
     /* Padding is handled by specific views or inner containers */
     padding: 0;
+    min-height: 0; /* Ensures flex child can scroll instead of expanding past main */
 }
 
 /* STATUS BAR */
@@ -1250,7 +1251,7 @@ label.form-label-sirio {
     font-size: 10px;
     text-transform: uppercase;
     font-weight: 700;
-    color: #888;
+    color: #fff;
     margin-bottom: 4px;
     display: block;
     letter-spacing: 0.5px;
@@ -1977,7 +1978,7 @@ html:not([data-theme="light"]) .project-card-archive:hover {
     width: 480px;
     max-width: 90vw;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
-    z-index: 12005;
+    z-index: 130000;
     color: #ccc;
     font-family: var(--ds-font-ui);
     opacity: 0;
@@ -2526,5 +2527,124 @@ html:not([data-theme="light"]) .project-card-archive:hover {
 [data-theme="light"] .swal2-sirio-cancel {
     background-color: #eeeeee !important;
     color: #333333 !important;
+}
+
+/* ============================================================
+   SECTION: INSTITUTIONAL OCR & OLR
+   ============================================================ */
+
+.ocr-dropzone {
+    border: 2px dashed var(--ds-border-light) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: var(--ds-radius-md) !important;
+    cursor: pointer;
+}
+
+.ocr-dropzone:hover {
+    border-color: var(--ds-accent-primary) !important;
+    background: rgba(255, 152, 0, 0.08) !important;
+    box-shadow: 0 0 20px var(--ds-accent-alpha) !important;
+}
+
+.ocr-dropzone .text-accent {
+    color: var(--ds-accent-primary) !important;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+#ocr-text-preview {
+    font-family: var(--ds-font-mono) !important;
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+    background: var(--ds-bg-panel) !important;
+    border: 1px solid var(--ds-border-color) !important;
+    color: var(--ds-text-main) !important;
+    padding: 20px !important;
+    white-space: pre-wrap !important;
+    border-radius: var(--ds-radius-sm) !important;
+    box-shadow: var(--ds-shadow-inset) !important;
+}
+
+/* Paleographic Markers in Preview */
+.ocr-marker-column {
+    color: var(--ds-accent-primary);
+    font-weight: bold;
+    border: 1px solid var(--ds-accent-primary);
+    padding: 1px 4px;
+    font-size: 10px;
+    border-radius: 3px;
+    background: rgba(255, 152, 0, 0.1);
+    margin: 0 4px;
+    text-transform: uppercase;
+}
+
+.ocr-marker-header {
+    color: #fff;
+    background: var(--ds-accent-primary);
+    padding: 2px 8px;
+    font-weight: bold;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-size: 11px;
+}
+
+.ocr-marker-metadata {
+    color: var(--ds-warning);
+    font-style: italic;
+    opacity: 0.9;
+}
+
+#ocr-metadata-preview .p-2 {
+    border: 1px solid var(--ds-border-color) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    transition: all 0.2s ease;
+}
+
+#ocr-metadata-preview .p-2:hover {
+    border-color: var(--ds-accent-primary) !important;
+    background: rgba(255, 152, 0, 0.05) !important;
+}
+
+/* Page Indicator for PDF */
+.ocr-page-badge {
+    background: var(--ds-accent-primary);
+    color: #000;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    vertical-align: middle;
+}
+
+[data-theme="light"] .ocr-page-badge {
+    color: #ffffff !important;
+}
+
+/* Fix Height for Quill Editors */
+.quill-editor {
+    height: 500px !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.quill-editor .ql-container {
+    flex-grow: 1;
+    overflow-y: auto !important;
+    background: var(--ds-bg-panel);
+    border-color: var(--ds-border-color) !important;
+}
+
+.quill-editor .ql-editor {
+    min-height: 100%;
+    font-family: var(--ds-font-ui);
+    font-size: 14px;
+}
+
+.quill-editor .ql-toolbar {
+    background: var(--ds-bg-app);
+    border-color: var(--ds-border-color) !important;
 }
 

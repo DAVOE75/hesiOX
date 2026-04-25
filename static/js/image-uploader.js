@@ -288,6 +288,34 @@ class ImageUploader {
         console.log(`[Image Uploader] Eliminado: ${filename}`);
     }
     
+    // NUEVO: Añadir preview de imagen proveniente de OCR
+    addOCRPreview(base64Data) {
+        if (!this.previewContainer) return;
+        
+        const filename = "OCR_Image_" + new Date().getTime() + ".png";
+        const fakeFile = {
+            name: filename,
+            size: base64Data.length * 0.75
+        };
+        
+        // Crear la card
+        this.createPreviewCard(fakeFile, base64Data);
+        
+        // Personalizar la card para indicar que es de OCR
+        const card = this.previewContainer.querySelector(`[data-filename="${filename}"]`);
+        if (card) {
+            const label = card.querySelector('div[style*="padding: 10px"]');
+            if (label) {
+                label.innerHTML += `<div style="color: #ff9800; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">(VINCULADA DESDE OCR)</div>`;
+            }
+        }
+        
+        // Asegurarse de que el contenedor de preview sea visible
+        this.previewContainer.style.display = 'block';
+        
+        console.log('[Image Uploader] Preview de OCR añadido correctamente');
+    }
+    
     updateUI() {
         const count = this.uploadedFiles.length;
         

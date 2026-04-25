@@ -42,6 +42,8 @@
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
     <!-- Fondo decorativo exclusivo para el select de palabras clave -->
     <link href="{{ url_for('static', filename='sirio-select-bg.css') }}" rel="stylesheet">
+    <!-- Estilos para filas dinámicas de autores y autocomplete -->
+    <link href="{{ url_for('static', filename='css/autores-dinamicos.css') }}" rel="stylesheet">
     {% endblock %}
 
     <!-- Fonts -->
@@ -188,6 +190,31 @@
                                 <a href="{{ url_for('hemerotecas.nueva_publicacion') }}"
                                     class="nav-item py-1 {% if request.endpoint == 'nueva_publicacion' %}active-sub{% endif %}">
                                     <span class="nav-label">Nueva Publicación</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRUPO: AUTORES (NUEVO MENU DEDICADO) -->
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.endpoint not in ['lista_autores'] %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuAutores" role="button"
+                            aria-expanded="{% if request.endpoint in ['lista_autores'] %}true{% else %}false{% endif %}"
+                            aria-controls="menuAutores">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span class="nav-label">Autores</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.endpoint in ['lista_autores'] %}show{% endif %}"
+                            id="menuAutores">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('lista_autores') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'lista_autores' %}active-sub{% endif %}">
+                                    <span class="nav-label">Listado</span>
+                                </a>
+                                <a href="{{ url_for('nuevo_autor_page') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'nuevo_autor_page' %}active-sub{% endif %}">
+                                    <span class="nav-label">NUEVO AUTOR/A</span>
                                 </a>
                             </div>
                         </div>
@@ -649,6 +676,8 @@
 
             {% block modals %}{% endblock %}
         </div>
+    </div>
+
 
         <!-- Scripts -->
         <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>

@@ -1195,7 +1195,7 @@ function filtrarAjax(page = 1, instant = false) {
 /**
  * Ejecuta la petición fetch al backend y actualiza el DOM.
  */
-function filtrarAjaxReal(page = 1) {
+function filtrarAjaxReal(page = 1, noPushState = false) {
   const filtros = obtenerFiltrosActuales();
   const params = new URLSearchParams();
 
@@ -1214,8 +1214,19 @@ function filtrarAjaxReal(page = 1) {
 
   console.log("🚀 [AJAX] Filtrando con parámetros final:", Object.fromEntries(params));
 
+  // Actualizar la URL del navegador para que coincida con los filtros (sin recargar la página)
+  // Usamos el pathname actual (que debería ser /listar) para mantener la interfaz.
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  if (!noPushState && window.location.search !== `?${params.toString()}`) {
+      window.history.pushState({ page, filtros: Object.fromEntries(params) }, "", newUrl);
+  }
+
   // La ruta /filtrar ahora es gestionada por el blueprint de noticias
-  fetch(`/filtrar?${params.toString()}`)
+  fetch(`/filtrar?${params.toString()}`, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
       return r.json();
@@ -1271,6 +1282,9 @@ function filtrarAjaxReal(page = 1) {
       if (typeof activarTooltipsAvanzados === 'function') activarTooltipsAvanzados();
       if (typeof actualizarBotonAccionesMasivas === 'function') actualizarBotonAccionesMasivas();
       initCheckboxes();
+
+      // 4. Actualizar enlaces de edición con el parámetro 'next' para facilitar el retorno
+      actualizarEnlacesEditar();
 
       // Re-aplicar visibilidad de columnas guardada en localStorage 
       if (typeof reapplyColumnVisibilityAfterAjax === 'function') {
@@ -1458,21 +1472,21 @@ async function toggleStatusNoticia(id, btn) {
 
   // Feedback visual inmediato
   const icon = btn.tagName === 'I' ? btn : btn.querySelector('i');
-  if (!icon) return;
-
-  const originalClass = icon.className;
+  const oldClass = icon.className;
   icon.className = 'fa-solid fa-spinner fa-spin';
 
   try {
-    const response = await fetch(`/api/noticia/toggle_incluido/${id}`, {
+    const response = await fetch(`/api/noticia/${id}/toggle_incluido`, {
       method: 'POST',
       headers: {
-        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value
       }
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    const data = await response.json();
+    if (data.success) {
+      // Cambiar icono y título del botón
       const isIncluido = data.incluido;
 
       // Actualizar la fila en la tabla

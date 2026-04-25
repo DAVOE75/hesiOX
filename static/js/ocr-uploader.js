@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentFile = null;
     let extractedData = null;
     let ocrProcessor = null;
+    let pdfPageCount = 0;
+    let stopSequentialOCR = false;
 
     // Inicializar procesador
     ocrProcessor = new window.OCRProcessor();
@@ -86,36 +88,90 @@ document.addEventListener('DOMContentLoaded', async () => {
     // MANEJO DE ARCHIVO
     // ============================================================
 
-    function handleFileSelected(file) {
+    async function handleFileSelected(file) {
         console.log('[OCR Uploader] Archivo seleccionado:', file.name);
         currentFile = file;
+        pdfPageCount = 0;
 
-        // Actualizar UI
-        dropZoneOCR.innerHTML = `
-            <div class="text-warning mb-2" style="font-size: 1.1rem;">
-                <svg width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5L14 4.5z"/>
-                    <path d="M1.5 11.5A1.5 1.5 0 0 1 3 10h10a1.5 1.5 0 0 1 1.5 1.5v2a1.5 1.5 0 0 1-1.5 1.5H3A1.5 1.5 0 0 1 1.5 13.5v-2z"/>
-                </svg>
-            </div>
-            <div class="text-light mb-2" style="font-size: 1rem;">
-                <strong>${file.name}</strong>
-            </div>
-            <div class="small text-info">
-                ${(file.size / 1024).toFixed(2)} KB
-            </div>
-            <div class="small text-secondary mt-2">
-                Haz click en "Procesar Documento" para extraer el texto
-            </div>
-        `;
+        // Deshabilitar botones mientras analizamos
+        if (btnProcessOCR) {
+            btnProcessOCR.classList.add('d-none');
+            btnProcessOCR.disabled = true;
+        }
 
-        // Mostrar botones de acción
+        // Si es PDF, mostrar estado de "analizando"
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            dropZoneOCR.innerHTML = `
+                <div class="text-accent mb-2">
+                    <i class="fa-solid fa-sync fa-spin fa-2x"></i>
+                </div>
+                <div class="text-light">Analizando estructura del PDF...</div>
+                <div class="small text-muted mt-1">${file.name}</div>
+            `;
+            await fetchPDFInfo(file);
+        } else {
+            // Imagen normal
+            updateDropZoneWithFile(file);
+        }
+
+        // Mostrar botones de acción y habilitar
         const actionButtonsContainer = document.getElementById('ocr-action-buttons');
         if (actionButtonsContainer) {
             actionButtonsContainer.classList.remove('d-none');
         }
-        if (btnProcessOCR) btnProcessOCR.classList.remove('d-none');
+        if (btnProcessOCR) {
+            btnProcessOCR.classList.remove('d-none');
+            btnProcessOCR.disabled = false;
+        }
         if (btnCancelOCR) btnCancelOCR.classList.remove('d-none');
+
+        // AUTO-TRIGGER: Si es PDF, preguntar inmediatamente (independientemente del conteo para asegurar que salga)
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            console.log('[OCR] PDF detectado, forzando activación de diálogo...');
+            setTimeout(triggerOCRProcessing, 500);
+        }
+    }
+
+    function updateDropZoneWithFile(file, extraInfo = '') {
+        dropZoneOCR.innerHTML = `
+            <div class="text-accent mb-2" style="font-size: 1.1rem;">
+                <i class="fa-solid fa-file-pdf fa-2x"></i>
+            </div>
+            <div class="text-light mb-2" style="font-size: 1rem;">
+                <strong>${file.name}</strong>
+            </div>
+            <div class="small text-muted">
+                ${(file.size / (1024 * 1024)).toFixed(2)} MB ${extraInfo}
+            </div>
+            <div class="small text-accent mt-2 fw-bold">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> LISTO PARA PROCESAR
+            </div>
+        `;
+    }
+
+    async function fetchPDFInfo(file) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch('/api/ocr/pdf-info', {
+                method: 'POST',
+                headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
+                body: formData
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    pdfPageCount = data.pages;
+                    console.log(`[OCR] PDF detectado con ${pdfPageCount} páginas`);
+                    updateDropZoneWithFile(file, `| <span class="ocr-page-badge">${pdfPageCount} páginas</span>`);
+                }
+            }
+        } catch (e) {
+            console.error('[OCR] Error obteniendo info del PDF:', e);
+        }
     }
 
     // ============================================================
@@ -129,99 +185,401 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // === PROCESAR DOCUMENTO (MODOS) ===
-    if (btnProcessOCR) {
-        btnProcessOCR.addEventListener('click', async () => {
-            if (!currentFile) {
-                alert('No hay archivo seleccionado');
+    // === FUNCIÓN PRINCIPAL DE PROCESAMIENTO ===
+    async function triggerOCRProcessing() {
+        if (!currentFile) {
+            alert('No hay archivo seleccionado');
+            return;
+        }
+
+        // Manejo de multi-página si es PDF (o forzar si es PDF y el conteo falló)
+        const isPDF = currentFile.type === 'application/pdf' || currentFile.name.toLowerCase().endsWith('.pdf');
+        
+        if (isPDF) {
+            // Si el conteo falló o es 0/1, intentamos preguntar de todos modos o dar opción manual
+            const displayCount = pdfPageCount > 0 ? pdfPageCount : 'varias';
+            
+            const result = await Swal.fire({
+                title: 'Documento PDF Detectado',
+                text: `Se han detectado ${displayCount} páginas. ¿Cómo deseas proceder?`,
+                icon: 'question',
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                background: '#1a1d21',
+                color: '#fff',
+                html: `
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                        <button id="swal-btn-all-once" class="swal2-confirm swal2-styled" style="background-color: #ff9800; margin: 0; width: 100%;">Procesar todo (Un solo bloque)</button>
+                        <button id="swal-btn-all-seq" class="swal2-confirm swal2-styled" style="background-color: #294a60; margin: 0; width: 100%;">Procesar todo (Secuencial)</button>
+                        <button id="swal-btn-single" class="swal2-deny swal2-styled" style="background-color: #111; margin: 0; width: 100%; border: 1px solid #444;">Elegir página específica</button>
+                    </div>
+                `,
+                didOpen: () => {
+                    document.getElementById('swal-btn-all-once').onclick = () => {
+                        window.swalOcrAction = 'all-once';
+                        Swal.clickConfirm();
+                    };
+                    document.getElementById('swal-btn-all-seq').onclick = () => {
+                        window.swalOcrAction = 'all-seq';
+                        Swal.clickConfirm();
+                    };
+                    document.getElementById('swal-btn-single').onclick = () => {
+                        window.swalOcrAction = 'single';
+                        Swal.clickConfirm();
+                    };
+                },
+                preConfirm: () => {
+                    return window.swalOcrAction;
+                }
+            });
+
+            const action = result.isConfirmed ? result.value : null;
+
+            if (action === 'all-once') {
+                // Procesar todo en una sola llamada (sin page_number)
+                console.log('[OCR] Procesando documento completo en un bloque');
+                await runOCR();
                 return;
-            }
-
-
-            // Siempre usar OCR BACKEND (FLASK)
-            try {
-                // Ocultar botones, mostrar progreso
-                btnProcessOCR.classList.add('d-none');
-                btnCancelOCR.classList.add('d-none');
-                ocrProgressContainer.classList.remove('d-none');
-                if (ocrProgressText) ocrProgressText.innerHTML = '<i class="fa-solid fa-microchip fa-spin me-2"></i>Iniciando Hibridación Deep Vision (IA)...';
-
-                let result = null;
-                // === OCR BACKEND (FLASK) ===
-                const formData = new FormData();
-                formData.append('file', currentFile);
-                // Añadir el motor OCR seleccionado
-                const ocrEngineSelect = document.getElementById('ocrEngineSelect');
-                // Añadir el modelo de IA seleccionado para corrección automática
-                const ocrModelSelect = document.getElementById('sel-potencia-ocr');
-                if (ocrModelSelect) {
-                    formData.append('ocr_model', ocrModelSelect.value);
-                }
-
-                // Obtener token CSRF del meta tag
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-                const headers = {};
-                if (csrfToken) {
-                    headers['X-CSRFToken'] = csrfToken;
-                }
-
-                const response = await fetch('/api/ocr/advanced', {
-                    method: 'POST',
-                    headers: headers,
-                    body: formData
-                });
-                if (!response.ok) {
-                    let msg = 'Error en el OCR del servidor';
-                    try {
-                        const errData = await response.json();
-                        if (errData && errData.error) msg = `Error del servidor: ${errData.error}`;
-                    } catch (e) {
-                        console.error('Error parsing error response:', e);
+            } else if (action === 'all-seq') {
+                // Procesar todo secuencialmente
+                if (pdfPageCount === 0) pdfPageCount = 1; 
+                await processSequentialOCR();
+                return;
+            } else if (action === 'single') {
+                // Elegir página específica
+                let page;
+                if (pdfPageCount > 0) {
+                    const inputOptions = {};
+                    for (let i = 1; i <= pdfPageCount; i++) {
+                        inputOptions[i] = `Página ${i}`;
                     }
-                    console.error('[OCR Uploader] Server returned error:', msg);
-                    alert(msg);
-                    // Resetear UI
-                    resetOCRUI();
-                    return;
+
+                    const { value: selectedPage } = await Swal.fire({
+                        title: 'Seleccionar Página',
+                        html: `
+                            <div style="margin-top: 15px; text-align: left;">
+                                <label class="sirio-label" style="display: block; margin-bottom: 12px; color: #ff9800;">
+                                    Haz clic en la página que deseas transcribir:
+                                </label>
+                                <div id="swal-page-list" class="custom-scrollbar" style="max-height: 250px; overflow-y: auto; background: #111; border: 1px solid #444; border-radius: 6px;">
+                                    ${Array.from({length: pdfPageCount}, (_, i) => i + 1).map(i => `
+                                        <div class="sirio-option" data-value="${i}" style="padding: 12px 15px; cursor: pointer; color: #ffd580; border-bottom: 1px solid #222;">
+                                            <i class="fas fa-file-alt" style="margin-right: 10px; opacity: 0.5;"></i> Página ${i}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        showConfirmButton: false, // El usuario elige al hacer clic
+                        cancelButtonText: 'Cancelar',
+                        background: '#1a1d21',
+                        color: '#fff',
+                        didOpen: () => {
+                            const list = document.getElementById('swal-page-list');
+                            list.querySelectorAll('.sirio-option').forEach(opt => {
+                                opt.onclick = () => {
+                                    window.selectedPageValue = opt.getAttribute('data-value');
+                                    Swal.clickConfirm();
+                                };
+                            });
+                        },
+                        preConfirm: () => {
+                            return window.selectedPageValue;
+                        }
+                    });
+                    page = selectedPage;
+                } else {
+                    // Fallback manual si por algún motivo técnico no sabemos el total
+                    const { value: manualPage } = await Swal.fire({
+                        title: 'Seleccionar Página (Manual)',
+                        input: 'number',
+                        inputLabel: `No se pudo detectar el total de páginas. Introduce el número manualmente:`,
+                        inputValue: 1,
+                        inputAttributes: { min: 1, max: 999, step: 1 },
+                        showCancelButton: true,
+                        confirmButtonText: 'Extraer',
+                        confirmButtonColor: '#ff9800',
+                        background: '#1a1d21',
+                        color: '#fff',
+                        customClass: {
+                            input: 'sirio-select',
+                            label: 'sirio-label'
+                        }
+                    });
+                    page = manualPage;
                 }
-                const data = await response.json();
-                result = {
-                    text: data.text || '',
-                    confidence: data.confidence || 0,
-                    metadata: {},
-                    duration: 0
-                };
 
-                // CRÍTICO: Guardar datos extraídos de forma segura
-                extractedData = {
-                    text: result.text || '',
-                    confidence: result.confidence || 0,
-                    metadata: result.metadata || {},
-                    duration: result.duration || 0
-                };
-
-                // Verificación de integridad
-                console.log('[OCR Uploader] ✓ extractedData guardado:');
-                console.log('  - text length:', extractedData.text.length);
-                console.log('  - confidence:', extractedData.confidence);
-                console.log('  - metadata keys:', Object.keys(extractedData.metadata));
-
-                // Mostrar resultado
-                displayOCRResult(extractedData);
-
-                // ============================================
-                // AUTO-CORRECCIÓN CON IA (AUTOMÁTICA)
-                // ============================================
-                console.log('[OCR] Iniciando corrección automática con IA...');
-                await improveWithAI();
-
-            } catch (error) {
-                console.error('[OCR Uploader] Error:', error);
-                alert(`Error al procesar el documento: ${error.message}`);
-                // Resetear UI
-                resetOCRUI();
+                if (page) {
+                    console.log(`[OCR] Solicitando extracción de página específica: ${page}`);
+                    // Resetear estado anterior para asegurar una transcripción limpia
+                    extractedData = null;
+                    await runOCR(parseInt(page));
+                }
+                return;
+            } else {
+                return; // Cancelado o cerrado
             }
+        }
+
+        // Caso normal (Imagen o PDF de 1 página)
+        await runOCR();
+    }
+
+    if (btnProcessOCR) {
+        btnProcessOCR.addEventListener('click', triggerOCRProcessing);
+    }
+
+    async function runOCR(pageNumber = null) {
+        try {
+            // Ocultar botones, mostrar progreso
+            if (btnProcessOCR) btnProcessOCR.classList.add('d-none');
+            if (btnCancelOCR) btnCancelOCR.classList.add('d-none');
+            if (ocrProgressContainer) ocrProgressContainer.classList.remove('d-none');
+            
+            // Reiniciar barra si es primera página o proceso único
+            if (!pageNumber || pageNumber === 1) {
+                if (ocrProgressBar) ocrProgressBar.style.width = '0%';
+            }
+
+            const pageInfo = pageNumber ? ` (Página ${pageNumber} de ${pdfPageCount})` : '';
+            if (ocrProgressText) ocrProgressText.innerHTML = `<i class="fa-solid fa-microchip fa-spin me-2"></i>Iniciando Hibridación Deep Vision${pageInfo}...`;
+
+            // Simulador de progreso para la página actual
+            let currentProgress = 0;
+            const progressInterval = setInterval(() => {
+                if (currentProgress < 90) {
+                    currentProgress += 5;
+                    // Si es secuencial, el progreso base es de las páginas anteriores
+                    let baseProgress = 0;
+                    let pageWeight = 100;
+                    
+                    // Asegurar que pdfPageCount sea al menos 1 para evitar NaN/Infinity
+                    const safeTotal = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : (pageNumber || 1);
+                    
+                    if (safeTotal > 1 && pageNumber) {
+                        baseProgress = ((pageNumber - 1) / safeTotal) * 100;
+                        pageWeight = (1 / safeTotal) * 100;
+                    }
+                    
+                    const totalProgress = Math.min(100, baseProgress + (currentProgress / 100) * pageWeight);
+                    if (ocrProgressBar) ocrProgressBar.style.width = `${totalProgress}%`;
+                    
+                    const totalDisplay = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : '?';
+                    const pageInfo = pageNumber ? ` Pág. ${pageNumber}` : ' Documento';
+                    const progressDisplay = pageNumber ? `(${pageNumber}/${totalDisplay})` : '';
+                    
+                    if (ocrProgressText) {
+                        ocrProgressText.innerHTML = `
+                            <i class="fa-solid fa-microchip fa-spin me-2"></i>
+                            Procesando${pageInfo}... 
+                            <span class="text-white ms-1">${Math.round(totalProgress)}%</span> 
+                            <small class="text-muted">${progressDisplay}</small>
+                        `;
+                    }
+                }
+            }, 300);
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            
+            // Validar y añadir número de página de forma segura
+            if (pageNumber !== null && pageNumber !== undefined) {
+                const pNum = parseInt(pageNumber);
+                if (!isNaN(pNum)) {
+                    formData.append('page_number', pNum.toString());
+                    console.log(`[OCR] Enviando solicitud para página: ${pNum}`);
+                }
+            }
+
+            const ocrModelSelect = document.getElementById('sel-potencia-ocr');
+            if (ocrModelSelect) {
+                formData.append('ocr_model', ocrModelSelect.value);
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const headers = csrfToken ? { 'X-CSRFToken': csrfToken } : {};
+
+            // DOBLE CANAL: Enviar por FormData y por Query Params para asegurar recepción
+            let apiUrl = '/api/ocr/advanced';
+            if (pageNumber) {
+                apiUrl += `?page_number=${pageNumber}`;
+            }
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            clearInterval(progressInterval);
+
+            if (!response.ok) {
+                let msg = 'Error en el OCR del servidor';
+                try {
+                    const errData = await response.json();
+                    if (errData && errData.error) msg = `Error del servidor: ${errData.error}`;
+                } catch (e) {}
+                throw new Error(msg);
+            }
+
+            const data = await response.json();
+            
+            // Priorizar el texto corregido por la IA si existe
+            const finalPageText = data.corrected_text || data.text || '';
+            
+            // Sincronizar el total de páginas si el cliente no lo sabía
+            if (data.total_pages && (!pdfPageCount || pdfPageCount === 0)) {
+                pdfPageCount = data.total_pages;
+                console.log(`[OCR] Sincronizado total de páginas desde el servidor: ${pdfPageCount}`);
+            }
+            
+            // Gestionar la acumulación de texto
+            const pageHeader = pageNumber ? `\n\n--- [PÁGINA ${pageNumber}] ---\n\n` : '';
+            
+            if (extractedData && pageNumber && pageNumber > 1) {
+                // Acumular si ya hay datos (modo secuencial)
+                extractedData.text += pageHeader + finalPageText;
+                if (data.metadata) {
+                    extractedData.metadata = { ...extractedData.metadata, ...data.metadata };
+                }
+                extractedData.imageData = data.image_data;
+            } else {
+                // Primer proceso o página única
+                extractedData = {
+                    text: (pageNumber ? pageHeader : '') + finalPageText,
+                    confidence: data.confidence || 0,
+                    metadata: data.metadata || (data.metadatos ? data.metadatos : {}),
+                    imageData: data.image_data
+                };
+            }
+
+            // Marcar página actual como 100% (o el porcentaje correspondiente en el PDF)
+            if (pdfPageCount > 1 && pageNumber) {
+                const completedProgress = (pageNumber / pdfPageCount) * 100;
+                if (ocrProgressBar) ocrProgressBar.style.width = `${completedProgress}%`;
+            } else {
+                if (ocrProgressBar) ocrProgressBar.style.width = '100%';
+            }
+
+            displayOCRResult(extractedData);
+            
+        } catch (error) {
+            console.error('[OCR Uploader] Error:', error);
+            alert(`Error al procesar el documento: ${error.message}`);
+            resetOCRUI();
+        }
+    }
+
+    async function processSequentialOCR() {
+        extractedData = null; // Resetear para empezar de cero
+        stopSequentialOCR = false;
+
+        let p = 1;
+        while (!stopSequentialOCR) {
+            await runOCR(p);
+
+            // ¿Hay más páginas?
+            // Solo paramos automáticamente si estamos SEGUROS de que no hay más
+            if (pdfPageCount > 1 && p >= pdfPageCount) {
+                console.log(`[OCR] Fin del documento alcanzado (${p}/${pdfPageCount})`);
+                break;
+            }
+            
+            // Si el total es desconocido o solo se detectó 1 pero estamos en modo secuencial,
+            // permitimos seguir hasta que el usuario diga basta o lleguemos al límite.
+            if (p >= 100) {
+                break;
+            }
+
+            // Si llegamos aquí, preguntamos si desea continuar con la siguiente
+            const result = await Swal.fire({
+                title: `Página ${p} extraída`,
+                text: `¿Deseas continuar con la transcripción de la página ${p + 1}?`,
+                icon: 'success',
+                footer: pdfPageCount > 0 ? `<span class="text-muted">Página ${p} de ${pdfPageCount}</span>` : '<span class="text-warning">Total de páginas desconocido</span>',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar a pág. ' + (p + 1),
+                cancelButtonText: 'Terminar aquí',
+                confirmButtonColor: '#ff9800',
+                cancelButtonColor: '#294a60',
+                background: '#1a1d21',
+                color: '#fff'
+            });
+
+            if (result.isConfirmed) {
+                p++;
+            } else {
+                stopSequentialOCR = true;
+            }
+        }
+        if (extractedData && p > 1) {
+            await performGlobalRefinement();
+        }
+        
+        showNotification('✓ Extracción multi-página completada', 'success');
+    }
+
+    async function performGlobalRefinement() {
+        if (!extractedData || !extractedData.text) return;
+
+        Swal.fire({
+            title: 'Refinamiento Global',
+            text: 'La IA está perfeccionando el documento completo para asegurar coherencia entre páginas...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            background: '#1a1d21',
+            color: '#fff'
         });
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch('/api/ocr/corregir', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken || ''
+                },
+                body: JSON.stringify({
+                    texto: extractedData.text,
+                    metadatos: extractedData.metadata,
+                    image_data: extractedData.imageData
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    extractedData.text = data.corrected_text || extractedData.text;
+                    if (data.metadatos) {
+                        extractedData.metadata = { ...extractedData.metadata, ...data.metadatos };
+                    }
+                    displayOCRResult(extractedData);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Refinamiento Completado',
+                        text: 'El documento ha sido optimizado integralmente por la IA.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#1a1d21',
+                        color: '#fff'
+                    });
+                } else {
+                    console.warn('[OCR] El refinamiento devolvió un error:', data.error);
+                    Swal.close();
+                }
+            } else {
+                console.warn('[OCR] Falló la petición de refinamiento');
+                Swal.close();
+            }
+        } catch (e) {
+            console.error('[OCR] Error en refinamiento global:', e);
+            Swal.close();
+        }
     }
 
     // ============================================================
@@ -231,6 +589,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnCancelOCR) {
         btnCancelOCR.addEventListener('click', () => {
             resetOCRUI();
+        });
+    }
+
+    // --- NUEVO: Vincular imagen OCR como material adjunto ---
+    const btnVincularImagenOCR = document.getElementById('btn-vincular-imagen-ocr');
+    if (btnVincularImagenOCR) {
+        btnVincularImagenOCR.addEventListener('click', () => {
+            if (extractedData && extractedData.imageData) {
+                const hiddenInput = document.getElementById('ocr_image_base64');
+                if (hiddenInput) {
+                    hiddenInput.value = extractedData.imageData;
+                    
+                    // NUEVO: Mostrar preview inmediato en el formulario principal
+                    if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
+                        window.imageUploader.addOCRPreview(extractedData.imageData);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Imagen vinculada',
+                        text: 'La imagen se ha añadido al material adjunto y se guardará con la noticia.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#1a1d21',
+                        color: '#fff'
+                    });
+                    btnVincularImagenOCR.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada correctamente';
+                    btnVincularImagenOCR.classList.remove('btn-outline-info');
+                    btnVincularImagenOCR.classList.add('btn-info');
+                    btnVincularImagenOCR.disabled = true;
+                }
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin imagen',
+                    text: 'Primero debes procesar el documento con OCR.',
+                    background: '#1a1d21',
+                    color: '#fff'
+                });
+            }
         });
     }
 
@@ -305,8 +703,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ocrTextPreview) {
             // Guardar texto en atributo data para copiado
             ocrTextPreview.setAttribute('data-ocr-text', result.text || '');
-            // Mostrar texto con formato
-            ocrTextPreview.textContent = result.text || 'No se extrajo texto';
+            
+            // Highlight paleographic markers
+            let previewText = (result.text || 'No se extrajo texto');
+            
+            // === MEJORA: MAPA DE CALOR DE CONFIANZA ===
+            if (result.words_data && result.words_data.length > 0) {
+                console.log('[OCR] Generando mapa de calor de confianza...');
+                let heatmapHTML = '';
+                
+                result.words_data.forEach(item => {
+                    const word = item.word;
+                    const conf = item.confidence;
+                    
+                    // Escapar palabra
+                    let escapedWord = word.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    
+                    if (conf !== -1 && conf < 85) {
+                        // Resaltar si la confianza es baja (< 85%)
+                        // Calculamos una opacidad basada en la duda
+                        const opacity = (100 - conf) / 100;
+                        heatmapHTML += `<span class="ocr-low-confidence" title="Confianza: ${conf}%" style="background: rgba(255, 152, 0, ${opacity * 0.4}); border-bottom: 1px dotted #ff9800;">${escapedWord}</span> `;
+                    } else {
+                        heatmapHTML += escapedWord + ' ';
+                    }
+                });
+                
+                previewText = heatmapHTML.trim();
+                
+                // Aplicar marcadores paleográficos sobre el heatmap (con cuidado de no romper el HTML)
+                // Usamos una aproximación segura: solo si no están ya envueltos
+                previewText = previewText.replace(/\[COLUMNA\s+(\d+)\]/gi, '<span class="ocr-marker-column">[COLUMNA $1]</span>');
+                previewText = previewText.replace(/\[CABECERA\]/gi, '<span class="ocr-marker-header">[CABECERA]</span>');
+                previewText = previewText.replace(/\[ANUNCIO\]/gi, '<span class="ocr-marker-column">[ANUNCIO]</span>');
+                previewText = previewText.replace(/\[PÁGINA\s+(\d+)\]/gi, '<span class="ocr-marker-header">[PÁGINA $1]</span>');
+                previewText = previewText.replace(/\[NOTICIA\]/gi, '<span class="ocr-marker-header">[NOTICIA]</span>');
+            } else {
+                // Fallback: texto plano con marcadores (lógica original)
+                previewText = previewText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                previewText = previewText.replace(/\[COLUMNA\s+(\d+)\]/gi, '<span class="ocr-marker-column">[COLUMNA $1]</span>');
+                previewText = previewText.replace(/\[CABECERA\]/gi, '<span class="ocr-marker-header">[CABECERA]</span>');
+                previewText = previewText.replace(/\[ANUNCIO\]/gi, '<span class="ocr-marker-column">[ANUNCIO]</span>');
+                previewText = previewText.replace(/\[PÁGINA\s+(\d+)\]/gi, '<span class="ocr-marker-header">[PÁGINA $1]</span>');
+                previewText = previewText.replace(/\[NOTICIA\]/gi, '<span class="ocr-marker-header">[NOTICIA]</span>');
+                previewText = previewText.replace(/\[METADATOS:?.*?\]/gi, '<span class="ocr-marker-metadata">$&</span>');
+            }
+
+            ocrTextPreview.innerHTML = previewText;
         }
 
         // Mostrar contenedor de resultado
@@ -341,6 +784,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
             }
 
+            // --- LÓGICA DE BARRA DE PROGRESO SIMULADA ---
+            const progContainer = document.getElementById('ai-progress-container');
+            const progBar = document.getElementById('ai-progress-bar');
+            const progText = document.getElementById('ai-progress-text');
+            
+            let progressInterval;
+            if (progContainer && progBar) {
+                progContainer.classList.remove('d-none');
+                progBar.style.width = '0%';
+                if (progText) progText.textContent = 'Iniciando conexión con motor de IA...';
+                
+                let width = 0;
+                progressInterval = setInterval(() => {
+                    if (width < 90) {
+                        const increment = (95 - width) / 20;
+                        width += increment;
+                        progBar.style.width = width + '%';
+                        
+                        if (progText) {
+                            if (width > 20 && width < 40) progText.textContent = 'Analizando estructura del documento...';
+                            if (width > 40 && width < 70) progText.textContent = 'Refinando texto y metadatos...';
+                            if (width > 70) progText.textContent = 'Finalizando corrección profunda...';
+                        }
+                    }
+                }, 500);
+            }
+
             // Obtener potencia (modelo) seleccionada
             const selPotencia = document.getElementById('sel-potencia-ocr');
             const potencia = selPotencia ? selPotencia.value : 'gemini:flash';
@@ -356,9 +826,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers['X-CSRFToken'] = csrfToken;
             }
 
-            // Convertir imagen a Base64 si existe
-            let imageData = null;
-            if (currentFile && currentFile.type.startsWith('image/')) {
+            // Obtener imagen en Base64 (Prioridad: imagen de la página procesada, Fallback: archivo original si es imagen)
+            let imageData = extractedData.imageData || null;
+            
+            if (!imageData && currentFile && currentFile.type.startsWith('image/')) {
                 imageData = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
@@ -465,6 +936,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             showNotification(mensajeError, 'danger');
 
         } finally {
+            // --- FINALIZAR BARRA DE PROGRESO ---
+            const progContainer = document.getElementById('ai-progress-container');
+            const progBar = document.getElementById('ai-progress-bar');
+            const progText = document.getElementById('ai-progress-text');
+            
+            if (progBar) {
+                progBar.style.width = '100%';
+                if (progText) progText.textContent = '¡Corrección completada!';
+                setTimeout(() => {
+                    if (progContainer) progContainer.classList.add('d-none');
+                }, 1000);
+            }
+
             // Restaurar botón
             if (btnMejorarIA) {
                 btnMejorarIA.disabled = false;
@@ -499,38 +983,57 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const metadata = extractedData.metadata;
 
-            // Mapeo de campos OCR → formulario
+            // Mapeo de campos OCR → formulario (SOLO los solicitados por el usuario)
             const fieldMap = {
-                'titulo': 'titulo',
-                'fecha_original': 'fecha_original',
-                'anio': 'anio',
-                'publicacion': 'publicacion',
-                'ciudad': 'ciudad',
-                'pagina_inicio': 'pagina_inicio',
-                'pagina_fin': 'pagina_fin',
-                'nombre_autor': 'nombre_autor',
-                'apellido_autor': 'apellido_autor'
+                'titulo': 'titulo'
             };
 
-            // Aplicar valores
+            // Aplicar valores básicos del mapa
             let appliedCount = 0;
             for (const [ocrField, formField] of Object.entries(fieldMap)) {
                 if (metadata[ocrField]) {
                     const input = document.querySelector(`[name="${formField}"]`);
                     if (input) {
                         input.value = metadata[ocrField];
-
-                        // Trigger change event para validación
                         input.dispatchEvent(new Event('change', { bubbles: true }));
-
-                        // Highlight temporal
                         input.style.borderColor = '#4a7c2f';
-                        setTimeout(() => {
-                            input.style.borderColor = '';
-                        }, 2000);
-
+                        setTimeout(() => { input.style.borderColor = ''; }, 2000);
                         appliedCount++;
                     }
+                }
+            }
+
+            // Lógica especial para AUTOR (separar en Nombre y Apellido si es posible)
+            if (metadata.autor) {
+                const autorFull = metadata.autor.trim();
+                let nombre = "";
+                let apellido = "";
+
+                // Intento de división simple por el último espacio para nombre/apellido
+                const parts = autorFull.split(' ');
+                if (parts.length > 1) {
+                    apellido = parts.pop();
+                    nombre = parts.join(' ');
+                } else {
+                    nombre = autorFull;
+                }
+
+                const inputNombre = document.querySelector('[name="nombre_autor"]');
+                const inputApellido = document.querySelector('[name="apellido_autor"]');
+
+                if (inputNombre && nombre) {
+                    inputNombre.value = nombre;
+                    inputNombre.dispatchEvent(new Event('change', { bubbles: true }));
+                    inputNombre.style.borderColor = '#4a7c2f';
+                    setTimeout(() => { inputNombre.style.borderColor = ''; }, 2000);
+                    appliedCount++;
+                }
+                if (inputApellido && apellido) {
+                    inputApellido.value = apellido;
+                    inputApellido.dispatchEvent(new Event('change', { bubbles: true }));
+                    inputApellido.style.borderColor = '#4a7c2f';
+                    setTimeout(() => { inputApellido.style.borderColor = ''; }, 2000);
+                    appliedCount++;
                 }
             }
 
@@ -539,9 +1042,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const esIdiomaOriginal = destOriginal && destOriginal.checked;
 
             if (extractedData.text) {
+                // Función interna para limpiar etiquetas de metadatos del OCR
+                const cleanText = (txt) => {
+                    if (!txt) return "";
+                    // Regex para eliminar [PÁGINA ...], [COLUMNA ...], [GRABADO ...], [CABECERA ...], [PIE ...], etc.
+                    return txt.replace(/\[(PÁGINA|COLUMNA|GRABADO|CABECERA|PAGE|COLUMN|HEADER|FOLL|FOLLE|PIE|PIE DE PÁGINA)[^\]]*\]/gi, "").trim();
+                };
+
+                const textToApply = cleanText(extractedData.text);
+
                 if (esIdiomaOriginal) {
                     // Pegar en campo "Texto original"
-
                     // Cambiar a la pestaña "Texto Original" PRIMERO
                     const tabOriginal = document.getElementById('original-tab');
                     if (tabOriginal) {
@@ -552,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     let textoCopiado = false;
                     if (window.quillEditors && window.quillEditors.texto_original) {
                         // USAR setText para preservar espacios y formato idéntico al OCR
-                        window.quillEditors.texto_original.setText(extractedData.text);
+                        window.quillEditors.texto_original.setText(textToApply);
                         textoCopiado = true;
                         appliedCount++;
                     }
@@ -561,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const editor = tinymce.get('texto_original');
                         if (editor) {
                             // Para TinyMCE usamos un pre-wrap si es posible
-                            editor.setContent('<pre style="font-family:inherit; white-space:pre-wrap;">' + extractedData.text + '</pre>');
+                            editor.setContent('<pre style="font-family:inherit; white-space:pre-wrap;">' + textToApply + '</pre>');
                             textoCopiado = true;
                             appliedCount++;
                             editor.focus();
@@ -572,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!textoCopiado) {
                         const textareaOriginal = document.querySelector('textarea[name="texto_original"]');
                         if (textareaOriginal) {
-                            textareaOriginal.value = extractedData.text;
+                            textareaOriginal.value = textToApply;
                             textareaOriginal.focus();
                             appliedCount++;
                         }
@@ -593,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     let textoCopiado = false;
                     if (window.quillEditors && window.quillEditors.contenido) {
                         // USAR setText para preservar espacios y formato idéntico al OCR
-                        window.quillEditors.contenido.setText(extractedData.text);
+                        window.quillEditors.contenido.setText(textToApply);
                         console.log('[OCR] ✓ Texto insertado en Quill (contenido)');
                         textoCopiado = true;
                         appliedCount++;
@@ -604,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const editor = tinymce.get('contenido');
                         console.log('[OCR] Editor TinyMCE encontrado:', !!editor);
                         if (editor) {
-                            editor.setContent(extractedData.text.replace(/\n/g, '<br>'));
+                            editor.setContent(textToApply.replace(/\n/g, '<br>'));
                             console.log('[OCR] ✓ Texto insertado en TinyMCE (contenido)');
                             textoCopiado = true;
                             appliedCount++;
@@ -625,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const textareaContenido = document.querySelector('textarea[name="contenido"]');
                         console.log('[OCR] Textarea nativo encontrado:', !!textareaContenido);
                         if (textareaContenido) {
-                            textareaContenido.value = extractedData.text;
+                            textareaContenido.value = textToApply;
                             textareaContenido.dispatchEvent(new Event('change', { bubbles: true }));
                             textareaContenido.style.borderColor = '#4a7c2f';
                             setTimeout(() => {

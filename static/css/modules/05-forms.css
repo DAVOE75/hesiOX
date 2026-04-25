@@ -116,11 +116,23 @@ select.form-control-sirio:not([multiple]):focus {
     z-index: 9999 !important;
     position: relative;
     overflow: visible !important;
+    width: 100% !important; /* Asegurar ancho total */
 }
 
 .choices.is-open,
 .choices.is-focused {
     z-index: 9999 !important;
+}
+
+/* Ocultar select original de forma absoluta cuando Choices está activo */
+select[data-choices-initialized],
+.choices select {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
 }
 
 /* Elevate parent containers when a dropdown is open to avoid stacking context capping */
@@ -151,12 +163,12 @@ select.form-control-sirio:not([multiple]):focus {
 
 .choices__list--dropdown,
 .choices__list[aria-expanded] {
-    z-index: 10000 !important;
+    z-index: 100000 !important;
     background-color: #1e1e1e !important;
     border: 1px solid #ff9800 !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-    border-radius: 8px !important;
-    /* Removed custom poisoning/layout to let library handle it */
+    border-radius: 4px !important;
+    min-width: 100% !important;
 }
 
 /* ====== FORM VALIDATION ====== */

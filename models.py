@@ -2,20 +2,14 @@ from extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import case, and_, func
 
 SQL_PRENSA_DATE = """
-CASE
-    WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$'
-         AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12
-         AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31
-         AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100
-    THEN to_date(prensa.fecha_original, 'DD/MM/YYYY')
-    WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$'
-         AND split_part(prensa.fecha_original, '-', 2)::int BETWEEN 1 AND 12
-         AND split_part(prensa.fecha_original, '-', 3)::int BETWEEN 1 AND 31
-         AND split_part(prensa.fecha_original, '-', 1)::int BETWEEN 1800 AND 2100
-    THEN to_date(prensa.fecha_original, 'YYYY-MM-DD')
-    ELSE NULL
+CASE 
+    WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY')
+    WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD')
+    ELSE NULL 
 END
 """
 
@@ -247,6 +241,26 @@ class Publicacion(db.Model):
     editorial = db.Column(db.Text)  # Editorial / Imprenta
     url_publi = db.Column(db.Text)  # URL de la publicación (sitio oficial / hemeroteca / ficha)
     frecuencia = db.Column(db.Text, nullable=True)  # Frecuencia de la publicación: diaria, semanal, quincenal, mensual, bimensual, semestral, anual
+    tipo_publicacion = db.Column(db.Text)
+    periodicidad = db.Column(db.Text)
+    lugar_publicacion = db.Column(db.Text)
+    
+    # Datos teatrales globales (si aplica)
+    actos_totales = db.Column(db.Text)
+    escenas_totales = db.Column(db.Text)
+    reparto_total = db.Column(db.Text)
+    
+    # Nuevos campos para Colección y Autoría
+    coleccion = db.Column(db.Text)
+    nombre_autor = db.Column(db.Text)
+    apellido_autor = db.Column(db.Text)
+    pseudonimo = db.Column(db.Text)
+
+    # Relación para múltiples autores
+    autores = db.relationship(
+        "AutorPublicacion", backref="publicacion_rel_aut", cascade="all, delete-orphan", order_by="AutorPublicacion.orden"
+    )
+
     
     @property
     def tipo(self):
@@ -303,6 +317,105 @@ pasajero_prensa = db.Table('pasajero_prensa',
     db.Column('prensa_id', db.Integer, db.ForeignKey('prensa.id', ondelete="CASCADE"), primary_key=True)
 )
 
+class AutorPrensa(db.Model):
+    __tablename__ = "autores_prensa"
+    id = db.Column(db.Integer, primary_key=True)
+    prensa_id = db.Column(db.Integer, db.ForeignKey("prensa.id", ondelete="CASCADE"), nullable=False)
+    nombre = db.Column(db.Text)
+    apellido = db.Column(db.Text)
+    tipo = db.Column(db.Text) # firmado, corresponsal, etc.
+    es_anonimo = db.Column(db.Boolean, default=False)
+    orden = db.Column(db.Integer, default=0)
+
+    def __repr__(self):
+        return f"<AutorPrensa {self.apellido}, {self.nombre}>"
+
+class AutorPublicacion(db.Model):
+    __tablename__ = "autores_publicacion"
+    id = db.Column(db.Integer, primary_key=True)
+    publicacion_id = db.Column(db.Integer, db.ForeignKey("publicaciones.id_publicacion", ondelete="CASCADE"), nullable=False)
+    nombre = db.Column(db.Text)
+    apellido = db.Column(db.Text)
+    tipo = db.Column(db.Text) # autor, editor, compilador, etc.
+    es_anonimo = db.Column(db.Boolean, default=False)
+    orden = db.Column(db.Integer, default=0)
+
+    def __repr__(self):
+        return f"<AutorPublicacion {self.apellido}, {self.nombre}>"
+
+class AutorBio(db.Model):
+    __tablename__ = "autor_bio"
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.Text)
+    apellido = db.Column(db.Text)
+    seudonimo = db.Column(db.Text)
+    fecha_nacimiento = db.Column(db.Text)
+    lugar_nacimiento = db.Column(db.Text)
+    fecha_defuncion = db.Column(db.Text)
+    lugar_defuncion = db.Column(db.Text)
+    nacionalidad = db.Column(db.Text)
+    foto = db.Column(db.Text) # Path a la imagen
+    
+    # Contexto y Trayectoria
+    formacion_academica = db.Column(db.Text)
+    ocupaciones_secundarias = db.Column(db.Text)
+    movimiento_literario = db.Column(db.Text)
+    influencias = db.Column(db.Text)
+    
+    # Producción Literaria
+    generos_literarios = db.Column(db.Text)
+    obras_principales = db.Column(db.Text)
+    tematicas_recurrentes = db.Column(db.Text)
+    estilo = db.Column(db.Text)
+    
+    # Reconocimientos y Legado
+    premios = db.Column(db.Text)
+    impacto = db.Column(db.Text)
+    
+    # Información Adicional
+    bibliografia = db.Column(db.Text)
+    citas = db.Column(db.Text)
+    enlaces = db.Column(db.Text)
+    
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id", ondelete="CASCADE"))
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+
+    proyecto = db.relationship("Proyecto", backref=db.backref("autores_bio", lazy=True))
+
+    def calcular_completitud(self):
+        """Calcula el porcentaje de campos rellenados."""
+        campos_clave = [
+            'nombre', 'apellido', 'seudonimo', 'fecha_nacimiento', 'lugar_nacimiento',
+            'fecha_defuncion', 'lugar_defuncion', 'nacionalidad', 'foto',
+            'formacion_academica', 'ocupaciones_secundarias', 'movimiento_literario',
+            'influencias', 'generos_literarios', 'obras_principales', 'tematicas_recurrentes',
+            'estilo', 'premios', 'impacto', 'bibliografia', 'citas', 'enlaces'
+        ]
+        rellenados = 0
+        for campo in campos_clave:
+            val = getattr(self, campo)
+            if val and str(val).strip() and val != '-':
+                rellenados += 1
+        
+        return int((rellenados / len(campos_clave)) * 100)
+
+    @property
+    def fechas_vida(self):
+        if not self.fecha_nacimiento and not self.fecha_defuncion:
+            return None
+        birth = self.fecha_nacimiento if self.fecha_nacimiento else "?"
+        death = self.fecha_defuncion if self.fecha_defuncion else ""
+        if death:
+            return f"{birth} — {death}"
+        return birth
+
+    def to_dict(self):
+        d = {c.name: getattr(self, c.name) for c in self.__table__.columns if c.name != 'creado_en'}
+        if self.proyecto:
+            d['proyecto_nombre'] = self.proyecto.nombre
+        d['completitud'] = self.calcular_completitud()
+        return d
+
 class Prensa(db.Model):
     __tablename__ = "prensa"
     id = db.Column(db.Integer, primary_key=True)
@@ -322,6 +435,8 @@ class Prensa(db.Model):
     nombre_autor = db.Column(db.Text)
     apellido_autor = db.Column(db.Text)
     tipo_autor = db.Column(db.Text)
+    pseudonimo = db.Column(db.Text)
+    coleccion = db.Column(db.Text)
     idioma = db.Column(db.Text)
     licencia = db.Column(db.String(120), nullable=True, default="CC BY 4.0")
     fuente_condiciones = db.Column(db.Text)
@@ -345,6 +460,14 @@ class Prensa(db.Model):
     isbn = db.Column(db.Text)
     doi = db.Column(db.Text)
     pais_publicacion = db.Column(db.Text)
+    escenas = db.Column(db.Text)
+    reparto = db.Column(db.Text)
+    
+    # Datos teatrales globales (heredados o manuales)
+    actos_totales = db.Column(db.Text)
+    escenas_totales = db.Column(db.Text)
+    reparto_total = db.Column(db.Text)
+
     formato_fuente = db.Column(db.Text)
     referencias_relacionadas = db.Column(db.Text)
     archivo_pdf = db.Column(db.Text)
@@ -357,6 +480,10 @@ class Prensa(db.Model):
     imagen_scan = db.Column(db.Text)
     texto_original = db.Column(db.Text)
     descripcion_publicacion = db.Column(db.Text)  # Descripción de la publicación/medio
+    
+    # Campos específicos para Prensa/Folleto
+    tipo_publicacion = db.Column(db.Text)  # Diario, Revista, etc.
+    periodicidad = db.Column(db.Text)     # Diaria, Semanal, etc.
 
     # Campos para investigador y universidad
     nombre_investigador = db.Column(db.Text)
@@ -366,6 +493,11 @@ class Prensa(db.Model):
     # Relación profesional para múltiples imágenes
     imagenes = db.relationship(
         "ImagenPrensa", backref="prensa", lazy="dynamic", cascade="all, delete-orphan"
+    )
+
+    # Relación para múltiples autores
+    autores = db.relationship(
+        "AutorPrensa", backref="prensa", cascade="all, delete-orphan", order_by="AutorPrensa.orden"
     )
 
     @property
@@ -381,12 +513,24 @@ class Prensa(db.Model):
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    @property
+    @hybrid_property
     def autor(self):
         """Propiedad de compatibilidad que combina nombre y apellido."""
         if self.apellido_autor and self.nombre_autor:
             return f"{self.apellido_autor}, {self.nombre_autor}"
         return self.apellido_autor or self.nombre_autor or ""
+
+    @autor.expression
+    def autor(cls):
+        # Concatenación robusta para búsqueda (Apellido, Nombre) con unaccent
+        from sqlalchemy import func
+        return func.public.unaccent(case(
+            (and_(cls.apellido_autor != None, cls.nombre_autor != None),
+             cls.apellido_autor + ", " + cls.nombre_autor),
+            (cls.apellido_autor != None, cls.apellido_autor),
+            (cls.nombre_autor != None, cls.nombre_autor),
+            else_=""
+        ))
 
     @autor.setter
     def autor(self, value):

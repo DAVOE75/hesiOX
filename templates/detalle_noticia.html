@@ -246,7 +246,7 @@ Detalle de noticia
   }
 
   .news-body p, .news-body ul, .news-body li, .news-body blockquote {
-    margin-bottom: 1.2rem;
+    margin-bottom: 0.3rem;
     overflow: visible !important;
   }
 
@@ -419,16 +419,13 @@ Detalle de noticia
   mark.highlight-lugar {
     background-color: #ff9800 !important;
     color: #000 !important;
-    padding: 0 2px;
+    padding: 1px 3px;
     border-radius: 2px;
     font-weight: bold;
     box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
     transition: all 0.3s ease;
-    position: relative;
-    cursor: default;
-    display: inline-block;
-    line-height: 1.2;
-    z-index: 50; /* Aumentado para asegurar que los botones flotantes estén al frente */
+    cursor: pointer;
+    display: inline;
   }
 
   mark.highlight-lugar.active-scroll {
@@ -436,117 +433,49 @@ Detalle de noticia
     outline-offset: 2px;
   }
 
-  .highlight-delete-btn {
-    position: absolute;
-    top: -12px;
-    right: -10px;
-    width: 16px;
-    height: 16px;
-    background: #c62828;
-    color: white;
-    border-radius: 50%;
-    display: flex;
+  /* Floating action panel for location highlights */
+  #highlight-action-panel {
+    position: fixed;
+    display: none;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    cursor: pointer;
-    border: 1px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    line-height: 1;
-    transition: transform 0.2s;
+    gap: 6px;
+    z-index: 99999;
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 24px;
+    padding: 5px 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    pointer-events: auto;
+    white-space: nowrap;
+    min-width: max-content;
   }
 
-  .highlight-delete-btn:hover {
-    background: #e53935;
+  #highlight-action-panel .panel-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    transition: transform 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+
+  #highlight-action-panel .panel-btn:hover {
     transform: scale(1.2);
   }
 
-  .highlight-gps-btn {
-    position: absolute;
-    top: -12px;
-    right: 8px;
-    width: 16px;
-    height: 16px;
-    background: #ff9800;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    cursor: pointer;
-    border: 1px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    line-height: 1;
-    transition: transform 0.2s;
-  }
-
-  .highlight-gps-btn:hover {
-    background: #ffa726;
-    transform: scale(1.2);
-  }
-
-  .highlight-vincular-btn {
-    position: absolute;
-    top: -12px;
-    right: 44px;
-    width: 16px;
-    height: 16px;
-    background: #16a34a;
-    /* Green when linked, orange when unlinked */
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    cursor: pointer;
-    border: 1px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    line-height: 1;
-    transition: transform 0.2s, background-color 0.2s;
-  }
-
-  .highlight-vincular-btn:hover {
-    transform: scale(1.2);
-  }
-
-  .highlight-vincular-btn.desvinculada {
-    background: #ff9800;
-  }
-
-  .highlight-vincular-btn.desvinculada:hover {
-    background: #f57c00;
-  }
-
-  .highlight-search-btn {
-    position: absolute;
-    top: -12px;
-    right: 26px;
-    width: 16px;
-    height: 16px;
-    background: #294a60;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    cursor: pointer;
-    border: 1px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    line-height: 1;
-    transition: transform 0.2s;
-  }
-
-  .highlight-search-btn:hover {
-    background: #294a60;
-    transform: scale(1.2);
-  }
+  #highlight-action-panel .btn-vincular  { background: #16a34a; }
+  #highlight-action-panel .btn-vincular.desvinculada { background: #f97316; }
+  #highlight-action-panel .btn-search   { background: #294a60; }
+  #highlight-action-panel .btn-gps      { background: #1565c0; }
+  #highlight-action-panel .btn-delete   { background: #c62828; }
 
   /* Custom Context Menu */
   .custom-context-menu {
@@ -1148,6 +1077,13 @@ Detalle de noticia
     <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
 
     <div class="fiche-item">
+      <span class="fiche-label">Pseudónimo:</span>
+      <span class="fiche-value">{{ noticia.pseudonimo or '—' }}</span>
+    </div>
+
+    <div class="vr bg-secondary opacity-25 mx-2" style="height: 16px;"></div>
+
+    <div class="fiche-item">
       <span class="fiche-label">Idioma:</span>
       <span class="fiche-value">{{ noticia.idioma|upper if noticia.idioma else 'ES' }}</span>
     </div>
@@ -1238,9 +1174,21 @@ Detalle de noticia
           <span class="d-flex gap-2 flex-wrap" id="list-titulo-ubicaciones"></span>
         </div>
         <div class="meta-item">
-          <i class="fa-solid fa-feather"></i>
-          <span>{{ (noticia.nombre_autor ~ ' ' ~ noticia.apellido_autor).strip() if (noticia.nombre_autor or
-            noticia.apellido_autor) else 'Autor anónimo' }}</span>
+          <i class="fa-solid fa-feather" title="Autor(es)"></i>
+          <span>
+            {% if noticia.autores %}
+              {% for autor in noticia.autores|sort(attribute='orden') %}
+                {% if autor.es_anonimo %}
+                  <span class="text-muted italic">Anónimo</span>
+                {% else %}
+                  {{ (autor.nombre ~ ' ' ~ autor.apellido).strip() }}
+                {% endif %}
+                {% if not loop.last %} • {% endif %}
+              {% endfor %}
+            {% else %}
+              {{ (noticia.nombre_autor ~ ' ' ~ noticia.apellido_autor).strip() if (noticia.nombre_autor or noticia.apellido_autor) else 'Autor anónimo' }}
+            {% endif %}
+          </span>
         </div>
         {% if noticia.url %}
         <div class="meta-item ms-auto">
@@ -1380,6 +1328,169 @@ Detalle de noticia
       id="ctx-selection-text-map" class="ms-1"></b>
   </div>
 </div>
+
+<!-- Floating Action Panel for Highlighted Locations (appended to body, position:fixed) -->
+<div id="highlight-action-panel" style="display:none; position:fixed; z-index:999999; pointer-events:auto;"></div>
+
+<script>
+(function () {
+  const panel = document.getElementById('highlight-action-panel');
+  let currentMark = null;
+  let hideTimer = null;
+
+  // Build panel inner HTML with 4 action buttons
+  panel.innerHTML = `
+    <div id="hap-vincular" title="Vincular/Desvincular" style="
+        width:26px;height:26px;border-radius:50%;background:#16a34a;
+        color:#fff;display:inline-flex;align-items:center;justify-content:center;
+        font-size:11px;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);
+        flex-shrink:0;transition:transform .15s;">
+      <i class="fa-solid fa-link"></i>
+    </div>
+    <div id="hap-search" title="Buscar y Mapear" style="
+        width:26px;height:26px;border-radius:50%;background:#294a60;
+        color:#fff;display:inline-flex;align-items:center;justify-content:center;
+        font-size:11px;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);
+        flex-shrink:0;transition:transform .15s;">
+      <i class="fa-solid fa-magnifying-glass-location"></i>
+    </div>
+    <div id="hap-gps" title="Ver en mapa" style="
+        width:26px;height:26px;border-radius:50%;background:#1565c0;
+        color:#fff;display:inline-flex;align-items:center;justify-content:center;
+        font-size:11px;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);
+        flex-shrink:0;transition:transform .15s;">
+      <i class="fa-solid fa-location-arrow"></i>
+    </div>
+    <div id="hap-delete" title="Eliminar ubicación" style="
+        width:26px;height:26px;border-radius:50%;background:#c62828;
+        color:#fff;display:inline-flex;align-items:center;justify-content:center;
+        font-size:12px;cursor:pointer;border:1.5px solid rgba(255,255,255,0.5);
+        flex-shrink:0;transition:transform .15s;">
+      <i class="fa-solid fa-xmark"></i>
+    </div>
+  `;
+
+  // Base panel styles (set once)
+  Object.assign(panel.style, {
+    display: 'none',
+    position: 'fixed',
+    zIndex: '999999',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '5px 10px',
+    background: 'rgba(10,10,10,0.95)',
+    border: '1px solid rgba(255,255,255,0.25)',
+    borderRadius: '20px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+    pointerEvents: 'auto',
+    whiteSpace: 'nowrap'
+  });
+
+  // Hover effects on buttons
+  panel.querySelectorAll('[id^="hap-"]').forEach(btn => {
+    btn.addEventListener('mouseenter', () => btn.style.transform = 'scale(1.2)');
+    btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+  });
+
+  function showPanel(mark) {
+    if (!panel || !mark) return;
+    clearTimeout(hideTimer);
+    currentMark = mark;
+
+    // Step 1: make visible off-screen to measure dimensions
+    Object.assign(panel.style, {
+      visibility: 'hidden',
+      display: 'flex',
+      top: '-9999px',
+      left: '-9999px'
+    });
+
+    // Step 2: after browser lays out, calculate correct position
+    requestAnimationFrame(() => {
+      const rect = mark.getBoundingClientRect();
+      const pw = panel.offsetWidth || 160;
+      const ph = panel.offsetHeight || 36;
+
+      let left = rect.left + rect.width / 2 - pw / 2;
+      let top = rect.top - ph - 8;
+
+      // Clamp within viewport
+      left = Math.max(4, Math.min(left, window.innerWidth - pw - 4));
+      if (top < 4) top = rect.bottom + 4; // flip below if too close to top edge
+
+      Object.assign(panel.style, {
+        left: left + 'px',
+        top: top + 'px',
+        visibility: 'visible'
+      });
+
+      // Update vincular button
+      const frecDesvinc = parseInt(mark.dataset.desvinculadas || '0');
+      const vincBtn = document.getElementById('hap-vincular');
+      if (vincBtn) {
+        if (frecDesvinc > 0) {
+          vincBtn.style.background = '#f97316';
+          vincBtn.querySelector('i').className = 'fa-solid fa-link-slash';
+          vincBtn.title = `Re-vincular (${frecDesvinc} desvinculadas)`;
+        } else {
+          vincBtn.style.background = '#16a34a';
+          vincBtn.querySelector('i').className = 'fa-solid fa-link';
+          vincBtn.title = 'Desvincular del proyecto';
+        }
+      }
+    });
+  }
+
+  function hidePanel() {
+    hideTimer = setTimeout(() => {
+      Object.assign(panel.style, { display: 'none', visibility: 'hidden' });
+      currentMark = null;
+    }, 250);
+  }
+
+  // Keep panel visible when hovering it
+  panel.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  panel.addEventListener('mouseleave', hidePanel);
+
+  // Show on mark hover (event delegation on document)
+  document.addEventListener('mouseover', e => {
+    const mark = e.target.closest('mark.highlight-lugar');
+    if (mark) showPanel(mark);
+  });
+
+  document.addEventListener('mouseout', e => {
+    const mark = e.target.closest('mark.highlight-lugar');
+    if (mark) hidePanel();
+  });
+
+  // Wire button actions
+  document.getElementById('hap-vincular').addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentMark && typeof vincularLugarDesdeResaltado === 'function')
+      vincularLugarDesdeResaltado(currentMark, e);
+  });
+
+  document.getElementById('hap-search').addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentMark && typeof abrirModalMapear === 'function')
+      abrirModalMapear(currentMark.dataset.nombre, e);
+  });
+
+  document.getElementById('hap-gps').addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentMark && typeof irALugarEnMapa === 'function')
+      irALugarEnMapa(currentMark.dataset.nombre, e);
+  });
+
+  document.getElementById('hap-delete').addEventListener('click', e => {
+    e.stopPropagation();
+    if (currentMark && typeof borrarLugarDesdeResaltado === 'function')
+      borrarLugarDesdeResaltado(currentMark.dataset.nombre, e);
+  });
+})();
+</script>
 
 <!-- Modal Editar Lugar (Preservado) -->
 <div class="modal fade" id="modalEditarLugar" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
@@ -1592,12 +1703,8 @@ Detalle de noticia
     const frec = lugarData?.frecuencia || 1;
     const hasDesvinculadas = frecDesvinc > 0;
     const vinculada = lugarData?.vinculada !== false;
-    const vinculadaClass = hasDesvinculadas ? ' desvinculada' : '';
-    const vinculadaIcon = hasDesvinculadas ? 'fa-link-slash' : 'fa-link';
-    const vincCount = frec - frecDesvinc;
-    const vinculadaTitle = `Frec: ${vincCount} vinc / ${frecDesvinc} desvinc (click para ${hasDesvinculadas ? 're-vincular' : 'desvincular'} 1 del proyecto)`;
-
-    const markerHTML = `<mark class="highlight-lugar" data-nombre="${nombre}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}">$1<div class="highlight-vincular-btn${vinculadaClass}" onclick="vincularLugarDesdeResaltado(this.closest('mark'), event)" title="${vinculadaTitle}"><i class="fa-solid ${vinculadaIcon}"></i></div><div class="highlight-search-btn" onclick="abrirModalMapear(this.closest('mark').dataset.nombre, event)" title="Buscar y Mapear Ubicación"><i class="fa-solid fa-magnifying-glass-location"></i></div><div class="highlight-gps-btn" onclick="irALugarEnMapa(this.closest('mark').dataset.nombre, event)" title="Ver en mapa"><i class="fa-solid fa-location-arrow"></i></div><div class="highlight-delete-btn" onclick="borrarLugarDesdeResaltado(this.closest('mark').dataset.nombre, event)" title="Eliminar esta ubicación">&times;</div></mark>`;
+    
+    const markerHTML = `<mark class="highlight-lugar" data-nombre="${nombre}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}" data-desvinculadas="${frecDesvinc}">$1</mark>`;
 
     container.innerHTML = container.innerHTML.replace(regex, markerHTML);
     if (titleContainer) titleContainer.innerHTML = titleContainer.innerHTML.replace(regex, markerHTML);
@@ -1721,11 +1828,7 @@ Detalle de noticia
         const frec = lugarData?.frecuencia || 1;
         const hasDesvinculadas = frecDesvinc > 0;
         const vinculada = lugarData?.vinculada !== false;
-        const vinculadaClass = hasDesvinculadas ? ' desvinculada' : '';
-        const vinculadaIcon = hasDesvinculadas ? 'fa-link-slash' : 'fa-link';
-        const vincCount = frec - frecDesvinc;
-        const vinculadaTitle = `Frec: ${vincCount} vinc / ${frecDesvinc} desvinc (click para ${hasDesvinculadas ? 're-vincular' : 'desvincular'} 1 del proyecto)`;
-        return `<mark class="highlight-lugar" data-nombre="${realName}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}">${match}<div class="highlight-vincular-btn${vinculadaClass}" onclick="vincularLugarDesdeResaltado(this.closest('mark'), event)" title="${vinculadaTitle}"><i class="fa-solid ${vinculadaIcon}"></i></div><div class="highlight-search-btn" onclick="abrirModalMapear(this.closest('mark').dataset.nombre, event)" title="Buscar y Mapear Ubicación"><i class="fa-solid fa-magnifying-glass-location"></i></div><div class="highlight-gps-btn" onclick="irALugarEnMapa(this.closest('mark').dataset.nombre, event)" title="Ver en mapa"><i class="fa-solid fa-location-arrow"></i></div><div class="highlight-delete-btn" onclick="borrarLugarDesdeResaltado(this.closest('mark').dataset.nombre, event)" title="Eliminar esta ubicación">&times;</div></mark>`;
+        return `<mark class="highlight-lugar" data-nombre="${realName}" data-ubicacion-id="${ubicacionId}" data-vinculada="${vinculada}" data-desvinculadas="${frecDesvinc}">${match}</mark>`;
       };
 
       container.innerHTML = container.innerHTML.replace(regex, markerTpl);

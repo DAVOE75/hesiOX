@@ -101,16 +101,8 @@ def ordenar_por_fecha(query, descendente=False):
     
     orden_sql = text(f"""
         CASE
-            WHEN fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{{2,4}}$'
-            THEN (
-                CASE
-                    WHEN split_part(fecha_original, '/', 2)::int BETWEEN 1 AND 12
-                        AND split_part(fecha_original, '/', 1)::int BETWEEN 1 AND 31
-                        AND split_part(fecha_original, '/', 3)::int BETWEEN 1800 AND 2100
-                    THEN to_date(fecha_original, 'DD/MM/YYYY')
-                    ELSE NULL
-                END
-            )
+            WHEN fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(fecha_original, 'DD/MM/YYYY')
+            WHEN fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(fecha_original, 'YYYY-MM-DD')
             ELSE NULL
         END {"DESC" if descendente else "ASC"} NULLS LAST,
         publicacion ASC

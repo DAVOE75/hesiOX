@@ -1,0 +1,248 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Nuevo Autor — Proyecto Sirio{% endblock %}
+{% block page_title %}Registrar Nuevo Autor{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión de Autoría</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important; 
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    
+    .header-actions-wrapper > * {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+    
+    .header-actions-wrapper .btn-sirio {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        align-items: center !important;
+    }
+</style>
+{% endblock %}
+
+{% block top_actions %}
+<button type="button" id="btnIAExpandirNuevo" class="btn-sirio active me-2" title="Completar campos vacíos usando IA">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+    <span class="btn-text">IA COMPLETAR</span>
+</button>
+
+<label for="submit-btn-autor" class="btn-sirio active mb-0" title="Guardar Autor" style="cursor: pointer;">
+    <i class="fa-solid fa-save"></i>
+    <span class="btn-text">GUARDAR</span>
+</label>
+
+<div class="vr mx-1 opacity-25"></div>
+
+<a href="{{ url_for('lista_autores') }}" class="btn-sirio" title="Volver al listado">
+    <i class="fa-solid fa-arrow-left"></i>
+    <span class="btn-text">VOLVER</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="container" style="max-width: 90%;">
+
+        <form id="formAutorNuevo">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="submit" id="submit-btn-autor" style="display: none;">
+            
+            <div class="card-panel">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-user-pen me-2"></i> Ficha Biográfica Completa
+                </div>
+                <div class="p-4">
+                    {% include 'form_autor_bio_fields.html' %}
+                </div>
+            </div>
+            
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.2"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formAutorNuevo');
+        if (form) {
+            
+            // IA Expandir en Nuevo Autor
+            const btnIA = document.getElementById('btnIAExpandirNuevo');
+            if (btnIA) {
+                btnIA.addEventListener('click', async function() {
+                    const nombre = form.querySelector('[name="nombre"]').value;
+                    const apellido = form.querySelector('[name="apellido"]').value;
+                    
+                    if (!nombre) {
+                        Swal.fire('Error', 'Debe indicar al menos el nombre para usar la IA', 'warning');
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Consultando a la IA...',
+                        text: 'Generando información biográfica detallada...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    try {
+                        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
+                        const response = await fetch('/autor/bio/ia_expand', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ nombre: nombre, apellido: apellido, bio_data: {} })
+                        });
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            const bio = data.expanded;
+                            console.log("[HesiOX IA] Datos recibidos:", bio);
+                            
+                            // Mapeo detallado de campos (Key en JSON -> Name/ID en el formulario)
+                            const fieldMap = {
+                                'seudonimo': 'seudonimo',
+                                'lugar_nacimiento': 'lugar_nacimiento',
+                                'fecha_nacimiento': 'fecha_nacimiento',
+                                'lugar_defuncion': 'lugar_defuncion',
+                                'fecha_defuncion': 'fecha_defuncion',
+                                'nacionalidad': 'nacionalidad',
+                                'formacion_academica': 'formacion_academica',
+                                'ocupaciones_secundarias': 'ocupaciones_secundarias',
+                                'movimiento_literario': 'movimiento_literario',
+                                'influencias': 'influencias',
+                                'generos_literarios': 'generos_literarios',
+                                'tematicas_recurrentes': 'tematicas_recurrentes',
+                                'obras_principales': 'obras_principales',
+                                'estilo': 'estilo',
+                                'premios': 'premios',
+                                'impacto': 'impacto',
+                                'bibliografia': 'bibliografia',
+                                'citas': 'citas',
+                                'enlaces': 'enlaces'
+                            };
+
+                            let fieldsFilled = 0;
+                            for (const [bioKey, formName] of Object.entries(fieldMap)) {
+                                if (!bio[bioKey]) continue;
+
+                                // Estrategia 1: Buscar por atributo name dentro del formulario
+                                let field = form.querySelector(`[name="${formName}"]`);
+                                
+                                // Estrategia 2: Buscar por ID (con o sin prefijo bio_)
+                                if (!field) field = document.getElementById(`bio_${formName}`) || document.getElementById(formName);
+                                
+                                // Estrategia 3: Buscar globalmente por name si todo lo anterior falla
+                                if (!field) field = document.querySelector(`[name="${formName}"]`);
+
+                                if (field) {
+                                    console.log(`[HesiOX IA] Rellenando campo: ${formName}`);
+                                    field.value = bio[bioKey];
+                                    fieldsFilled++;
+                                } else {
+                                    console.warn(`[HesiOX IA] No se encontró el campo para: ${formName}`);
+                                }
+                            }
+                            console.log(`[HesiOX IA] Éxito: Se han completado ${fieldsFilled} campos.`);
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Completado!',
+                                text: 'Información enriquecida por la IA',
+                                background: '#1a1a1a',
+                                color: '#fff',
+                                confirmButtonColor: '#ff9800'
+                            });
+                        } else {
+                            Swal.fire('Atención', data.message || 'No se pudo obtener información adicional', 'info');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        Swal.fire('Error', 'No se pudo conectar con el servicio de IA', 'error');
+                    }
+                });
+            }
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.content;
+                
+                Swal.fire({
+                    title: 'Guardando...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                fetch('/autor/bio/save', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Guardado!',
+                            text: 'El autor ha sido registrado correctamente.',
+                            background: '#1a1a1a',
+                            color: '#fff',
+                            confirmButtonColor: '#ff9800',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = "{{ url_for('lista_autores') }}";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo guardar el autor.',
+                            background: '#1a1a1a',
+                            color: '#fff'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Hubo un problema al conectar con el servidor.', 'error');
+                });
+            });
+        }
+    });
+
+    // Re-usar preview de foto si es necesario
+    function previewBioFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('bio_avatar_container');
+                if (container) {
+                    container.innerHTML = `<img src="${e.target.result}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

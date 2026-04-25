@@ -1,0 +1,192 @@
+<!-- Modal Biografía del Autor -->
+<div class="modal fade" id="modalAutorBio" tabindex="-1" aria-labelledby="modalAutorBioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="modalAutorBioLabel">
+                    <i class="fa-solid fa-book-open me-2 text-warning"></i>Ficha Biográfica del Autor/a
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom-scrollbar" style="max-height: 80vh; overflow-y: auto;">
+                <form id="formAutorBio" style="padding: 15px;">
+                    {% include 'form_autor_bio_fields.html' %}
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnGuardarBio" class="btn-sirio">
+                    <i class="fa-solid fa-save me-1"></i>GUARDAR FICHA
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #modalAutorBio .section-title {
+        letter-spacing: 1px;
+        font-family: var(--ds-font-ui, monospace);
+    }
+    #modalAutorBio textarea {
+        resize: none;
+    }
+    #modalAutorBio .form-control-sirio {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    #modalAutorBio .form-control-sirio:focus {
+        background: rgba(255, 255, 255, 0.07);
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    /* Estilos temáticos para el Avatar de Biografía */
+    .bio-avatar-sirio {
+        width: 110px;
+        height: 110px;
+        font-size: 2.2rem;
+        background: #ff9800; /* Naranja Sirio (Dark Mode default) */
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .bio-avatar-sirio {
+        background: #294a60 !important; /* Azul Sirio (Light Mode) */
+        border-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .bio-camera-btn {
+        background: #1a1a1a;
+        border: 1px solid #ff9800;
+        transition: all 0.3s ease;
+    }
+
+    .bio-camera-btn i {
+        color: #ff9800;
+    }
+
+    [data-theme="light"] .bio-camera-btn {
+        background: #f8f9fa !important;
+        border-color: #294a60 !important;
+    }
+
+    [data-theme="light"] .bio-camera-btn i {
+        color: #294a60 !important;
+    }
+
+    /* Evitar que aparezcan contadores de caracteres globales en este modal */
+    #formAutorBio .char-counter {
+        display: none !important;
+    }
+
+    /* --- Flatpickr Adaptativo (Sincronizado con Sirio System) --- */
+    
+    /* Configuración Base (Dark Mode por defecto) */
+    .flatpickr-calendar {
+        background: #1e1e1e !important;
+        border: 1px solid rgba(255, 152, 0, 0.3) !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6) !important;
+        color: #fff !important;
+        z-index: 999999 !important;
+    }
+
+    .flatpickr-day.selected {
+        background: #ff9800 !important;
+        border-color: #ff9800 !important;
+        color: #000 !important;
+        font-weight: bold;
+    }
+
+    .flatpickr-day:hover {
+        background: rgba(255, 152, 0, 0.2) !important;
+    }
+
+    .flatpickr-current-month, .flatpickr-monthDropdown-months {
+        color: #fff !important;
+        fill: #fff !important;
+    }
+
+    .flatpickr-weekday {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    /* Override para MODO CLARO [data-theme="light"] */
+    [data-theme="light"] .flatpickr-calendar {
+        background: #ffffff !important;
+        border: 1px solid #294a60 !important;
+        box-shadow: 0 10px 25px rgba(41, 74, 96, 0.15) !important;
+        color: #294a60 !important;
+    }
+
+    [data-theme="light"] .flatpickr-day {
+        color: #333 !important;
+    }
+
+    [data-theme="light"] .flatpickr-day.selected {
+        background: #294a60 !important;
+        border-color: #294a60 !important;
+        color: #fff !important;
+    }
+
+    [data-theme="light"] .flatpickr-day:hover {
+        background: rgba(41, 74, 96, 0.1) !important;
+    }
+
+    [data-theme="light"] .flatpickr-current-month, 
+    [data-theme="light"] .flatpickr-monthDropdown-months {
+        color: #294a60 !important;
+        fill: #294a60 !important;
+    }
+
+    [data-theme="light"] .flatpickr-months .flatpickr-month {
+        background: #f8f9fa !important;
+    }
+
+    [data-theme="light"] .flatpickr-months .flatpickr-prev-month,
+    [data-theme="light"] .flatpickr-months .flatpickr-next-month {
+        color: #294a60 !important;
+        fill: #294a60 !important;
+    }
+
+    [data-theme="light"] .flatpickr-calendar .cur-year,
+    [data-theme="light"] .flatpickr-calendar .flatpickr-monthDropdown-months {
+        color: inherit !important;
+        background: transparent !important;
+    }
+
+    [data-theme="light"] .flatpickr-current-month .numInputWrapper span.arrowUp:after {
+        border-bottom-color: #294a60 !important;
+    }
+    [data-theme="light"] .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+        border-top-color: #294a60 !important;
+    }
+
+    [data-theme="light"] .flatpickr-weekday {
+        color: rgba(41, 74, 96, 0.6) !important;
+    }
+
+    [data-theme="light"] .flatpickr-today-btn {
+        background: #294a60 !important;
+        color: #fff !important;
+    }
+</style>
+
+<script>
+    function previewBioFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('bio_avatar_container');
+                container.innerHTML = `<img src="${e.target.result}" alt="Avatar">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

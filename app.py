@@ -12,6 +12,7 @@ import os
 import re
 from collections import Counter
 from datetime import datetime
+import time
 import ast
 from io import BytesIO
 from itertools import combinations
@@ -320,7 +321,7 @@ def eximir_csrf_api():
 from models import (
     Usuario, Proyecto, Hemeroteca, Publicacion, Prensa, 
     ImagenPrensa, GeoPlace, ServicioIDE, VectorLayer, SQL_PRENSA_DATE,
-    BlogPost, BlogSubscription
+    BlogPost, BlogSubscription, AutorBio
 )
 
 # 🔐 Configuración de Flask-Login
@@ -491,19 +492,11 @@ def ordenar_por_fecha(query, descendente=False):
     # Protección contra fechas inválidas en BD (ej: 15/13/1908)
     # Usa split_part para extraer día/mes/año y validar ANTES de to_date
     orden_sql = text(f"""
-        CASE
-            WHEN fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{{2,4}}$'
-            THEN (
                 CASE
-                    WHEN split_part(fecha_original, '/', 2)::int BETWEEN 1 AND 12
-                        AND split_part(fecha_original, '/', 1)::int BETWEEN 1 AND 31
-                        AND split_part(fecha_original, '/', 3)::int BETWEEN 1800 AND 2100
-                    THEN to_date(fecha_original, 'DD/MM/YYYY')
+                    WHEN fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(fecha_original, 'DD/MM/YYYY')
+                    WHEN fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(fecha_original, 'YYYY-MM-DD')
                     ELSE NULL
-                END
-            )
-            ELSE NULL
-        END {"DESC" if descendente else "ASC"} NULLS LAST,
+                END {"DESC" if descendente else "ASC"} NULLS LAST,
         publicacion ASC
     """)
     return query.order_by(orden_sql)
@@ -1900,6 +1893,9 @@ def actualizar_lote():
         "seccion",
         "volumen",
         "palabras_clave",
+        "pseudonimo",
+        "tipo_publicacion",
+        "periodicidad",
     ]
 
     payload_prensa = {}
@@ -1966,9 +1962,12 @@ def actualizar_lote():
             with open("/opt/hesiox/debug_batch.log", "a") as f:
                 f.write(f"Updated Count: {updated_count}\n")
 
-        # 2. ACTUALIZAR TABLA PUBLICACION (Descripción del medio)
+        # 2. ACTUALIZAR TABLA PUBLICACION (Descripción, Tipo y Periodicidad del medio)
         desc_pub = updates.get("descripcion_publicacion")
-        if desc_pub:
+        tipo_pub = updates.get("tipo_publicacion")
+        peri_pub = updates.get("periodicidad")
+
+        if desc_pub or tipo_pub or peri_pub:
             # Buscamos los IDs de publicación asociados a las noticias seleccionadas
             ids_pubs_asociados = (
                 db.session.query(Prensa.id_publicacion)
@@ -1981,12 +1980,19 @@ def actualizar_lote():
             lista_ids_pub = [r[0] for r in ids_pubs_asociados if r[0] is not None]
 
             if lista_ids_pub:
-                # Actualizamos la descripción en la tabla Publicacion
-                Publicacion.query.filter(
-                    Publicacion.id_publicacion.in_(lista_ids_pub)
-                ).update(
-                    {Publicacion.descripcion: desc_pub}, synchronize_session="fetch"
-                )
+                updates_pub = {}
+                if desc_pub:
+                    updates_pub[Publicacion.descripcion] = desc_pub
+                if tipo_pub:
+                    updates_pub[Publicacion.tipo_publicacion] = tipo_pub
+                if peri_pub:
+                    updates_pub[Publicacion.periodicidad] = peri_pub
+
+                if updates_pub:
+                    # Actualizamos la tabla Publicacion
+                    Publicacion.query.filter(
+                        Publicacion.id_publicacion.in_(lista_ids_pub)
+                    ).update(updates_pub, synchronize_session="fetch")
 
         db.session.commit()
         flash(
@@ -1999,6 +2005,368 @@ def actualizar_lote():
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
 
+
+@app.route("/autor/bio/editar/<int:id>")
+@login_required
+def editar_autor_bio_page(id):
+    autor = AutorBio.query.get_or_404(id)
+    # Solo permitir editar si es del proyecto actual o es admin
+    if autor.proyecto_id != session.get('proyecto_id') and current_user.rol != 'admin':
+        flash("No tienes permiso para editar este autor en este proyecto.", "warning")
+        return redirect(url_for("lista_autores"))
+    
+    return render_template("autor_bio_editor.html", autor=autor)
+
+@app.route("/autor/bio/get", methods=["GET"])
+@login_required
+def get_autor_bio():
+    nombre = request.args.get("nombre", "").strip()
+    apellido = request.args.get("apellido", "").strip()
+    
+    if not nombre and not apellido:
+        return jsonify({"status": "not_found", "message": "Parámetros vacíos"}), 200
+        
+    proyecto_activo = get_proyecto_activo()
+    
+    # Robustez: Si el nombre contiene una coma y el apellido está vacío, intentar dividirlos
+    # Esto ayuda cuando el frontend envía "Apellido, Nombre" en un solo campo
+    if nombre and "," in nombre and not apellido:
+        partes = nombre.split(",", 1)
+        apellido = partes[0].strip()
+        nombre = partes[1].strip()
+        
+    user_project_ids = [p.id for p in current_user.proyectos]
+    query = AutorBio.query.filter(AutorBio.proyecto_id.in_(user_project_ids))
+    
+    # Búsqueda por nombre y apellido
+    autor = query.filter(
+        AutorBio.nombre.ilike(f"%{nombre}%"),
+        AutorBio.apellido.ilike(f"%{apellido}%")
+    ).first()
+    
+    # Fallback si no encuentra combinación exacta, buscar seudónimo
+    if not autor:
+        autor = query.filter(
+            or_(
+                AutorBio.seudonimo.ilike(f"%{nombre}%"),
+                AutorBio.seudonimo.ilike(f"%{apellido}%")
+            )
+        ).first()
+    
+    if autor:
+        return jsonify({"status": "success", "bio": autor.to_dict()})
+    return jsonify({"status": "not_found"})
+
+@app.route("/autor/bio/ia_expand", methods=["POST"])
+@login_required
+def ia_expand_bio():
+    from services.ai_service import AIService
+    
+    nombre = request.json.get("nombre")
+    apellido = request.json.get("apellido")
+    current_bio = request.json.get("bio_data", {})
+    
+    prompt = f"""
+    Eres un experto en investigación biográfica y prosopografía. Tu tarea es completar TODOS los campos de una ficha técnica para el autor: {nombre} {apellido}.
+    
+    INSTRUCCIONES:
+    1. Busca y genera información verídica y detallada para cada punto.
+    2. Si el autor es una figura histórica conocida, rellena todos los campos con precisión.
+    3. Para fechas, usa estrictamente el formato DD/MM/AAAA.
+    4. Para campos de texto largo (trayectoria, estilo, impacto), sé descriptivo y analítico (mínimo 3-4 líneas).
+    5. NO dejes campos vacíos. Si el dato es totalmente desconocido, usa el contexto histórico para inferir el dato más probable o deja una nota breve.
+    
+    ESTRUCTURA DE RESPUESTA (Responde EXCLUSIVAMENTE con este objeto JSON):
+    {{
+        "seudonimo": "Nombre literario o alias conocidos",
+        "lugar_nacimiento": "Ciudad, Región, País",
+        "fecha_nacimiento": "DD/MM/AAAA",
+        "lugar_defuncion": "Ciudad, País",
+        "fecha_defuncion": "DD/MM/AAAA",
+        "nacionalidad": "Nacionalidad principal",
+        "formacion_academica": "Resumen detallado de su educación, formación y trayectoria vital temprana",
+        "ocupaciones_secundarias": "Otras profesiones o cargos desempeñados",
+        "movimiento_literario": "Escuelas o movimientos literarios vinculados",
+        "influencias": "Autores o corrientes que marcaron su pensamiento",
+        "generos_literarios": "Lista de géneros practicados",
+        "tematicas_recurrentes": "Análisis de sus temas constantes",
+        "obras_principales": "Bibliografía fundamental con años de publicación",
+        "estilo": "Análisis técnico de su lenguaje, recursos y tono literario",
+        "premios": "Menciones, premios y honores recibidos",
+        "impacto": "Trascendencia en la literatura universal y legado",
+        "bibliografia": "Libros de referencia sobre el autor",
+        "citas": "Frases célebres representativas",
+        "enlaces": "Sitios web de referencia o archivos"
+    }}
+    """
+    
+    ai = AIService(provider='gemini', model='1.5-pro', user=current_user)
+    try:
+        raw_response = ai.generate_content(prompt, temperature=0.1)
+        # Log para depuración en el servidor
+        print(f"[HesiOX IA] Respuesta de {nombre} {apellido}: {raw_response[:200]}...")
+        data = ai._extract_json_from_text(raw_response)
+        if data:
+            return jsonify({"status": "success", "expanded": data})
+        return jsonify({"status": "error", "message": "No se pudo estructurar la respuesta de la IA"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+@app.route("/autor/bio/save", methods=["POST"])
+@login_required
+def save_autor_bio():
+    try:
+        # Soporte para FormData (multipart/form-data)
+        data = request.form
+        proyecto_activo = get_proyecto_activo()
+        
+        nombre = (data.get("nombre") or data.get("bio_nombre", "")).strip()
+        apellido = (data.get("apellido") or data.get("bio_apellido", "")).strip()
+        
+        # Robustez: Si el nombre tiene coma y el apellido está vacío, dividir
+        if nombre and "," in nombre and not apellido:
+            partes = nombre.split(",", 1)
+            apellido = partes[0].strip()
+            nombre = partes[1].strip()
+            
+        if not nombre and not apellido:
+            return jsonify({"status": "error", "message": "Nombre o Apellido son obligatorios"}), 400
+            
+        autor_id = data.get("autor_id") or data.get("bio_autor_id")
+        
+        if autor_id:
+            autor = AutorBio.query.get(autor_id)
+        else:
+            autor = AutorBio.query.filter_by(
+                nombre=nombre, 
+                apellido=apellido,
+                proyecto_id=proyecto_activo.id if proyecto_activo else None
+            ).first()
+        
+        if not autor:
+            autor = AutorBio(
+                nombre=nombre, 
+                apellido=apellido,
+                proyecto_id=proyecto_activo.id if proyecto_activo else None
+            )
+            db.session.add(autor)
+            db.session.flush() # Para tener el ID
+            
+        # Actualizar campos de texto
+        for key in data.keys():
+            # Mapear nombres de campos del modal a campos del modelo si es necesario
+            model_key = key.replace('bio_', '')
+            if hasattr(autor, model_key) and model_key not in ['id', 'proyecto_id', 'creado_en', 'foto']:
+                setattr(autor, model_key, data.get(key))
+                
+        # Manejar subida de Retrato/Foto
+        if 'foto_file' in request.files:
+            file = request.files['foto_file']
+            if file and file.filename:
+                import time
+                from werkzeug.utils import secure_filename
+                filename = secure_filename(f"autor_{autor.id}_{int(time.time())}_{file.filename}")
+                upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')
+                upload_path = os.path.join(upload_folder, 'autores')
+                os.makedirs(upload_path, exist_ok=True)
+                file.save(os.path.join(upload_path, filename))
+                autor.foto = filename
+                
+        db.session.commit()
+        return jsonify({"status": "success", "success": True, "id": autor.id})
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        app.logger.error(f"Error al guardar biografía de autor: {str(e)}")
+        return jsonify({"status": "error", "success": False, "message": str(e)}), 500
+
+@app.route("/autores")
+@login_required
+def lista_autores():
+    proyecto = get_proyecto_activo()
+    if not proyecto:
+        flash("⚠️ Selecciona un proyecto primero", "warning")
+        return redirect(url_for("proyectos.listar"))
+    
+    q = request.args.get('q', '').strip()
+    siglo = request.args.get('siglo', '').strip()
+    user_project_ids = [p.id for p in current_user.proyectos]
+    
+    # Base query: si hay búsqueda o filtro de siglo, buscar en todos los proyectos del usuario
+    if q or siglo:
+        query = AutorBio.query.filter(AutorBio.proyecto_id.in_(user_project_ids))
+    else:
+        # Solo en el proyecto actual si no hay filtros activos
+        query = AutorBio.query.filter_by(proyecto_id=proyecto.id)
+
+    if q:
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                AutorBio.nombre.ilike(f"%{q}%"),
+                AutorBio.apellido.ilike(f"%{q}%"),
+                AutorBio.seudonimo.ilike(f"%{q}%")
+            )
+        )
+    
+    if siglo:
+        if siglo == '18':
+            query = query.filter(AutorBio.fecha_nacimiento.ilike('%/17%')).filter(AutorBio.fecha_nacimiento.ilike('%/18%') == False) # Simplificado para demo
+            # Mejor: buscar años 1701-1800
+            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/17%'), AutorBio.fecha_nacimiento.ilike('%17%')))
+        elif siglo == '19':
+            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/18%'), AutorBio.fecha_nacimiento.ilike('%18%')))
+        elif siglo == '20':
+            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/19%'), AutorBio.fecha_nacimiento.ilike('%19%')))
+        elif siglo == '21':
+            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/20%'), AutorBio.fecha_nacimiento.ilike('%20%')))
+
+    autores = query.order_by(AutorBio.apellido, AutorBio.nombre).all()
+    return render_template("autores_lista.html", autores=autores, q=q, siglo=siglo, proyecto=proyecto)
+
+@app.route("/autor/nuevo")
+@login_required
+def nuevo_autor_page():
+    proyecto = get_proyecto_activo()
+    if not proyecto:
+        flash("⚠️ Selecciona un proyecto primero", "warning")
+        return redirect(url_for("proyectos.listar"))
+    return render_template("autor_nuevo.html", proyecto=proyecto)
+
+@app.route("/autor/bio/delete/<int:id>", methods=["POST"])
+@login_required
+def delete_autor_bio(id):
+    try:
+        autor = AutorBio.query.get_or_404(id)
+        proyecto_activo = get_proyecto_activo()
+        if autor.proyecto_id != proyecto_activo.id:
+             return jsonify({"success": False, "message": "No tienes permiso para eliminar este autor"}), 403
+             
+        db.session.delete(autor)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route("/autores/repositorio")
+@login_required
+def repositorio_global_autores():
+    proyecto_actual = get_proyecto_activo()
+    q = request.args.get('q', '').strip()
+    
+    # Obtener IDs de todos los proyectos del usuario
+    proyecto_ids = [p.id for p in current_user.proyectos]
+    
+    # Buscar autores en esos proyectos que NO sean del proyecto actual
+    query = AutorBio.query.filter(AutorBio.proyecto_id.in_(proyecto_ids))
+    query = query.filter(AutorBio.proyecto_id != proyecto_actual.id)
+    
+    if q:
+        from sqlalchemy import or_
+        query = query.filter(
+            or_(
+                AutorBio.nombre.ilike(f"%{q}%"),
+                AutorBio.apellido.ilike(f"%{q}%"),
+                AutorBio.seudonimo.ilike(f"%{q}%")
+            )
+        )
+    
+    autores = query.order_by(AutorBio.apellido, AutorBio.nombre).all()
+    total_globales = query.count()
+    
+    return render_template("repositorio_autores.html", 
+                           autores=autores, 
+                           total_globales=total_globales, 
+                           q=q, 
+                           proyecto=proyecto_actual)
+
+@app.route("/autor/importar/<int:id>", methods=["POST"])
+@login_required
+def importar_autor_bio(id):
+    proyecto_actual = get_proyecto_activo()
+    if not proyecto_actual:
+        flash("Selecciona un proyecto primero", "warning")
+        return redirect(url_for('proyectos.listar'))
+        
+    autor_original = AutorBio.query.get_or_404(id)
+    
+    # Verificar que el autor original pertenece a uno de los proyectos del usuario
+    if autor_original.proyecto_id not in [p.id for p in current_user.proyectos]:
+        flash("No tienes permiso para importar este autor", "danger")
+        return redirect(url_for('repositorio_global_autores'))
+        
+    # Crear copia
+    nuevo_autor = AutorBio()
+    # Copiar campos manualmente para evitar problemas con relaciones/IDs
+    exclude = ['id', 'proyecto_id', 'created_at', 'updated_at', 'proyecto']
+    for column in autor_original.__table__.columns:
+        if column.name not in exclude:
+            setattr(nuevo_autor, column.name, getattr(autor_original, column.name))
+    
+    nuevo_autor.proyecto_id = proyecto_actual.id
+    
+    try:
+        db.session.add(nuevo_autor)
+        db.session.commit()
+        flash(f"✅ Autor '{nuevo_autor.nombre} {nuevo_autor.apellido}' importado correctamente", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Error al importar: {str(e)}", "danger")
+        
+@app.route("/autor/importar/masivo", methods=["POST"])
+@login_required
+def importar_autor_bio_masivo():
+    proyecto_actual = get_proyecto_activo()
+    if not proyecto_actual:
+        return jsonify({"status": "error", "message": "Selecciona un proyecto primero"}), 400
+        
+    data = request.get_json()
+    ids = data.get('ids', [])
+    
+    if not ids:
+        return jsonify({"status": "error", "message": "No se han seleccionado autores"}), 400
+        
+    exito = 0
+    errores = 0
+    
+    # Obtener IDs de proyectos del usuario para validación
+    user_project_ids = [p.id for p in current_user.proyectos]
+    
+    for autor_id in ids:
+        try:
+            autor_original = AutorBio.query.get(autor_id)
+            if not autor_original or autor_original.proyecto_id not in user_project_ids:
+                errores += 1
+                continue
+                
+            # Evitar duplicados en el mismo proyecto (basado en nombre/apellido/seudonimo)
+            # Podríamos ser más estrictos, pero por ahora permitimos si el usuario lo pide
+            
+            # Crear copia
+            nuevo_autor = AutorBio()
+            exclude = ['id', 'proyecto_id', 'created_at', 'updated_at', 'proyecto']
+            for column in autor_original.__table__.columns:
+                if column.name not in exclude:
+                    setattr(nuevo_autor, column.name, getattr(autor_original, column.name))
+            
+            nuevo_autor.proyecto_id = proyecto_actual.id
+            db.session.add(nuevo_autor)
+            exito += 1
+        except:
+            errores += 1
+            
+    try:
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": f"Se han importado {exito} autores correctamente. {f'Errores: {errores}' if errores else ''}"
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+    return redirect(url_for('lista_autores'))
 
 @app.route("/nueva", methods=["GET", "POST"])
 def nueva():
@@ -2017,8 +2385,12 @@ def nueva():
         fecha_original = (request.form.get("fecha_original") or "").strip()
         fecha_consulta = (request.form.get("fecha_consulta") or "").strip()
 
-        # Validar fecha_original
-        valida, error_msg = validar_fecha_ddmmyyyy(fecha_original)
+        # Validar fecha_original (relajado para libros: permite Mes/Año)
+        if request.form.get("tipo_recurso") == "libro":
+            valida, error_msg = True, None
+        else:
+            valida, error_msg = validar_fecha_ddmmyyyy(fecha_original)
+            
         if not valida:
             flash(f"⚠️ Fecha Original inválida: {error_msg}", "danger")
             # Re-render preservando datos del formulario
@@ -2189,28 +2561,51 @@ def nueva():
                 precargados=precargados_form,
             )
 
-        # 1. GESTIÓN DE AUTOR
-        nombre = (request.form.get("nombre_autor") or "").strip()
-        apellido = (request.form.get("apellido_autor") or "").strip()
-        es_anonimo = request.form.get("anonimo") == "on"
-
-        if es_anonimo:
-            autor_final = None
-            nombre_autor_db = None
-            apellido_autor_db = None
-        elif apellido or nombre:
-            if apellido and nombre:
-                autor_final = f"{apellido}, {nombre}"
-            elif apellido:
-                autor_final = apellido
-            else:
-                autor_final = nombre
-            nombre_autor_db = nombre
-            apellido_autor_db = apellido
-        else:
-            autor_final = None
-            nombre_autor_db = None
-            apellido_autor_db = None
+        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        pseudonimo = (request.form.get("pseudonimo") or "").strip()
+        nombres_lista = request.form.getlist("nombre_autor[]")
+        apellidos_lista = request.form.getlist("apellido_autor[]")
+        tipos_lista = request.form.getlist("tipo_autor[]")
+        # El checkbox solo envía 'on' si está marcado. Para una lista de checkboxes dinámicos,
+        # es más fiable usar un patrón de IDs o procesar por índice.
+        # En el JS, 'anonimo_autor[]' se envía por cada fila.
+        anonimos_raw = request.form.getlist("anonimo_autor[]")
+        
+        # Para compatibilidad con columnas nombre_autor / apellido_autor originales (primer autor)
+        nombre_autor_db = None
+        apellido_autor_db = None
+        autor_final = None
+        
+        # Procesamos la lista de autores
+        autores_objs = []
+        for i in range(len(nombres_lista)):
+            nom = (nombres_lista[i] or "").strip()
+            ape = (apellidos_lista[i] or "").strip()
+            tip = tipos_lista[i] if i < len(tipos_lista) else "firmado"
+            # Un truco para los checkboxes en listas de Flask: 
+            # Si el checkbox no está marcado, no se envía nada en getlist.
+            # Pero en nuestro JS, podemos asegurar que se envíe algo o inferir.
+            # Alternativa: el JS marca anónimo si el check está activo.
+            es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "on")
+            
+            autores_objs.append(AutorPrensa(
+                nombre=nom if not es_anon else None,
+                apellido=ape if not es_anon else None,
+                tipo=tip,
+                es_anonimo=es_anon,
+                orden=i
+            ))
+            
+            # El primero se guarda en la tabla Prensa para compatibilidad
+            if i == 0:
+                nombre_autor_db = nom if not es_anon else None
+                apellido_autor_db = ape if not es_anon else None
+                if es_anon:
+                    autor_final = "Anónimo"
+                else:
+                    if ape and nom: autor_final = f"{ape}, {nom}"
+                    elif ape: autor_final = ape
+                    else: autor_final = nom
 
         # 2. GESTIÓN DE PUBLICACIÓN (MEDIO)
         nombre_pub = (request.form.get("publicacion") or "").strip()
@@ -2242,6 +2637,28 @@ def nueva():
                 if valor and (getattr(pub, campo) is None or getattr(pub, campo) == ""):
                     setattr(pub, campo, valor)
 
+            # HERENCIA DE AUTORÍA: Si no se enviaron autores en el form, heredar de la publicación
+            form_has_authors = any(n.strip() or a.strip() for n, a in zip(nombres_lista, apellidos_lista))
+            if not form_has_authors and pub and pub.autores:
+                autores_objs = []
+                for i, aut_pub in enumerate(pub.autores):
+                    autores_objs.append(AutorPrensa(
+                        nombre=aut_pub.nombre,
+                        apellido=aut_pub.apellido,
+                        tipo=aut_pub.tipo,
+                        es_anonimo=aut_pub.es_anonimo,
+                        orden=aut_pub.orden
+                    ))
+                    if i == 0:
+                        nombre_autor_db = aut_pub.nombre
+                        apellido_autor_db = aut_pub.apellido
+                        if aut_pub.es_anonimo:
+                            autor_final = "Anónimo"
+                        else:
+                            if aut_pub.apellido and aut_pub.nombre: autor_final = f"{aut_pub.apellido}, {aut_pub.nombre}"
+                            elif aut_pub.apellido: autor_final = aut_pub.apellido
+                            else: autor_final = aut_pub.nombre
+
         nuevo = Prensa(
             proyecto_id=proyecto.id,  # ASIGNAR PROYECTO ACTIVO
             titulo=request.form.get("titulo"),
@@ -2260,8 +2677,9 @@ def nueva():
             autor=autor_final,
             nombre_autor=nombre_autor_db,
             apellido_autor=apellido_autor_db,
+            pseudonimo=pseudonimo,
             idioma=request.form.get("idioma"),
-            tipo_autor=request.form.get("tipo_autor"),
+            tipo_autor=request.form.get("tipo_autor") or (autores_objs[0].tipo if autores_objs else "firmado"),
             fuente_condiciones=request.form.get("fuente_condiciones"),
             temas=", ".join(request.form.getlist("temas")),
             notas=request.form.get("notas"),
@@ -2291,9 +2709,20 @@ def nueva():
             archivo_pdf=request.form.get("archivo_pdf"),
             imagen_scan=None,  # Este campo queda obsoleto
             es_referencia=(request.form.get("es_referencia") == "si"),
+            # Campos teatrales
+            actos_totales=request.form.get("actos_totales"),
+            escenas_totales=request.form.get("escenas_totales"),
+            reparto_total=request.form.get("reparto_total"),
+            escenas=request.form.get("escenas"),
+            reparto=request.form.get("reparto"),
         )
         db.session.add(nuevo)
         db.session.flush()  # Obtener ID del nuevo registro
+
+        # 2.5 GUARDAR AUTORES RELACIONADOS
+        for aut in autores_objs:
+            aut.prensa_id = nuevo.id
+            db.session.add(aut)
 
         # 3. GUARDAR MÚLTIPLES IMÁGENES
         imagenes = request.files.getlist("imagen_scan")
@@ -2400,6 +2829,31 @@ def nueva():
 
 
 # =========================================================
+# API PARA HERENCIA DE DATOS TEATRALES
+# =========================================================
+@app.route("/api/publicacion/details/<nombre>")
+@login_required
+def api_publicacion_details(nombre):
+    proyecto = get_proyecto_activo()
+    if not proyecto:
+        return jsonify({"error": "No hay proyecto activo"}), 400
+    
+    pub = Publicacion.query.filter_by(nombre=nombre, proyecto_id=proyecto.id).first()
+    if not pub:
+        return jsonify({"error": "Publicación no encontrada"}), 404
+    
+    return jsonify({
+        "actos_totales": pub.actos_totales or "",
+        "escenas_totales": pub.escenas_totales or "",
+        "reparto_total": pub.reparto_total or "",
+        "tipo_recurso": pub.tipo_recurso or "",
+        "tipo_publicacion": pub.tipo_publicacion or "",
+        "periodicidad": pub.periodicidad or "",
+        "lugar_publicacion": pub.lugar_publicacion or ""
+    })
+
+
+# =========================================================
 # EDITAR NOTICIA / RECURSO
 # =========================================================
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
@@ -2419,25 +2873,45 @@ def editar(id):
         ]
 
     if request.method == "POST":
-        nombre = (request.form.get("nombre_autor") or "").strip()
-        apellido = (request.form.get("apellido_autor") or "").strip()
-        es_anonimo = request.form.get("anonimo") == "on"
+        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        ref.pseudonimo = (request.form.get("pseudonimo") or "").strip()
+        
+        nombres_lista = request.form.getlist("nombre_autor[]")
+        apellidos_lista = request.form.getlist("apellido_autor[]")
+        tipos_lista = request.form.getlist("tipo_autor[]")
+        anonimos_raw = request.form.getlist("anonimo_autor[]")
 
-        # Guardar nombre y apellido por separado
-        if es_anonimo:
-            ref.autor = None
-            ref.nombre_autor = None
-            ref.apellido_autor = None
-        elif apellido or nombre:  # Solo actualizar si se proporcionó algún dato
-            if apellido and nombre:
-                ref.autor = f"{apellido}, {nombre}"
-            elif apellido:
-                ref.autor = apellido
-            elif nombre:
-                ref.autor = nombre
-            ref.nombre_autor = nombre
-            ref.apellido_autor = apellido
-        # Si no se marca anónimo NI se proporciona nombre/apellido, mantener valor original
+        # Limpiar autores antiguos
+        for aut_old in ref.autores:
+            db.session.delete(aut_old)
+        
+        # Procesamos la nueva lista
+        for i in range(len(nombres_lista)):
+            nom = (nombres_lista[i] or "").strip()
+            ape = (apellidos_lista[i] or "").strip()
+            tip = tipos_lista[i] if i < len(tipos_lista) else "firmado"
+            es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "on")
+            
+            nuevo_aut = AutorPrensa(
+                prensa_id=ref.id,
+                nombre=nom if not es_anon else None,
+                apellido=ape if not es_anon else None,
+                tipo=tip,
+                es_anonimo=es_anon,
+                orden=i
+            )
+            db.session.add(nuevo_aut)
+            
+            # Sincronizar el primero para compatibilidad
+            if i == 0:
+                ref.nombre_autor = nom if not es_anon else None
+                ref.apellido_autor = ape if not es_anon else None
+                if es_anon:
+                    ref.autor = "Anónimo"
+                else:
+                    if ape and nom: ref.autor = f"{ape}, {nom}"
+                    elif ape: ref.autor = ape
+                    else: ref.autor = nom
 
         nombre_pub = (request.form.get("publicacion") or "").strip()
         pub = None
@@ -2456,12 +2930,45 @@ def editar(id):
                 "formato_fuente": request.form.get("formato_fuente"),
                 "pais_publicacion": request.form.get("pais_publicacion"),
                 "editorial": request.form.get("editorial"),
+                "actos_totales": request.form.get("actos_totales"),
+                "escenas_totales": request.form.get("escenas_totales"),
+                "reparto_total": request.form.get("reparto_total"),
+                "tipo_publicacion": request.form.get("tipo_publicacion"),
+                "periodicidad": request.form.get("periodicidad"),
+                "lugar_publicacion": request.form.get("lugar_publicacion"),
             }
             for campo, valor in campos_pub.items():
                 if valor is not None:
                     setattr(pub, campo, valor)
 
             db.session.flush()
+
+            # HERENCIA DE AUTORÍA EN EDICIÓN: Si no se enviaron autores en el form, heredar de la publicación
+            form_has_authors = any(n.strip() or a.strip() for n, a in zip(nombres_lista, apellidos_lista))
+            if not form_has_authors and pub and pub.autores:
+                # Limpiar lo que se haya procesado antes (que estarían vacíos según form_has_authors)
+                for aut_added in ref.autores:
+                    db.session.delete(aut_added)
+                
+                for i, aut_pub in enumerate(pub.autores):
+                    nuevo_aut = AutorPrensa(
+                        prensa_id=ref.id,
+                        nombre=aut_pub.nombre,
+                        apellido=aut_pub.apellido,
+                        tipo=aut_pub.tipo,
+                        es_anonimo=aut_pub.es_anonimo,
+                        orden=aut_pub.orden
+                    )
+                    db.session.add(nuevo_aut)
+                    if i == 0:
+                        ref.nombre_autor = aut_pub.nombre
+                        ref.apellido_autor = aut_pub.apellido
+                        if aut_pub.es_anonimo:
+                            ref.autor = "Anónimo"
+                        else:
+                            if aut_pub.apellido and aut_pub.nombre: ref.autor = f"{aut_pub.apellido}, {aut_pub.nombre}"
+                            elif aut_pub.apellido: ref.autor = aut_pub.apellido
+                            else: ref.autor = aut_pub.nombre
 
         # Asignar campos principales de la noticia desde el formulario
         campo_map = [
@@ -2493,6 +3000,14 @@ def editar(id):
             "lugar_publicacion",
             "seccion",
             "palabras_clave",
+            "pseudonimo",
+            "actos_totales",
+            "escenas_totales",
+            "reparto_total",
+            "escenas",
+            "reparto",
+            "tipo_publicacion",
+            "periodicidad",
         ]
         for campo in campo_map:
             if campo == "temas":
@@ -2515,8 +3030,12 @@ def editar(id):
         fecha_original = (request.form.get("fecha_original") or "").strip()
         fecha_consulta = (request.form.get("fecha_consulta") or "").strip()
 
-        # Validar fecha_original
-        valida, error_msg = validar_fecha_ddmmyyyy(fecha_original)
+        # Validar fecha_original (relajado para libros: permite Mes/Año)
+        if request.form.get("tipo_recurso") == "libro":
+            valida, error_msg = True, None
+        else:
+            valida, error_msg = validar_fecha_ddmmyyyy(fecha_original)
+            
         if not valida:
             flash(f"⚠️ Fecha Original inválida: {error_msg}", "danger")
             return render_template(
@@ -2620,6 +3139,12 @@ def editar(id):
         next_url=normalizar_next(request.args.get("next")),
         nombre_autor_val=nombre_autor_val,
         apellido_autor_val=apellido_autor_val,
+        autores_json=json.dumps([{
+            'nombre': a.nombre or '',
+            'apellido': a.apellido or '',
+            'tipo': a.tipo or 'firmado',
+            'es_anonimo': a.es_anonimo
+        } for a in ref.autores])
     )
 
 
@@ -2996,10 +3521,10 @@ def exportar():
                 # Lógica de fechas (simplificada pero compatible con los formatos de /filtrar)
                 query = query.filter(Prensa.fecha_original.ilike(f"%{v}%"))
             elif k == "fecha_desde":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} >= :d").params(d=v))
             elif k == "fecha_hasta":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} <= :h").params(h=v))
             else:
                 query = query.filter(getattr(Prensa, k).ilike(f"%{v}%"))
@@ -6231,6 +6756,18 @@ def api_publicacion_info(nombre):
         "hemeroteca_nombre": nombre_hemeroteca,
         "edicion": pub.frecuencia or "",
         "institucion": fuente_final,
+        # Nuevos campos teatrales
+        "actos_totales": pub.actos_totales or "",
+        "escenas_totales": pub.escenas_totales or "",
+        "reparto_total": pub.reparto_total or "",
+        "pseudonimo": getattr(pub, 'pseudonimo', ''),
+        "coleccion": getattr(pub, 'coleccion', ''),
+        "autores": [{
+            "nombre": a.nombre,
+            "apellido": a.apellido,
+            "tipo": a.tipo,
+            "es_anonimo": a.es_anonimo
+        } for a in (pub.autores if hasattr(pub, 'autores') else [])]
     }
     return jsonify(datos)
 
@@ -6329,6 +6866,30 @@ def api_autocomplete(field):
             {"value": r.autor, "count": r.count}
             for r in results
             if query in r.autor.lower()
+        ]
+
+    elif field == "autores_bio":
+        # Búsqueda en la base de datos central de autores (AutorBio)
+        results = (
+            db.session.query(AutorBio)
+            .filter(
+                or_(
+                    AutorBio.nombre.ilike(f"%{query}%"),
+                    AutorBio.apellido.ilike(f"%{query}%"),
+                    AutorBio.seudonimo.ilike(f"%{query}%")
+                )
+            )
+            .limit(limit)
+            .all()
+        )
+        suggestions = [
+            {
+                "value": f"{r.apellido}, {r.nombre}" if r.apellido else r.nombre,
+                "nombre": r.nombre,
+                "apellido": r.apellido,
+                "pseudonimo": r.seudonimo
+            }
+            for r in results
         ]
 
     elif field == "temas":

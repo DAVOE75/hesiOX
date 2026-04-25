@@ -1,0 +1,295 @@
+<!-- Modal Visor de Biografía (Estilo Premium Dossier HesiOX) -->
+<div class="modal fade" id="modalAutorVisor" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content card-panel bg-dark text-light border-secondary shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            
+            <!-- Cabecera Premium -->
+            <div class="modal-header card-header-panel d-flex justify-content-between align-items-center py-3 px-4" style="background: linear-gradient(90deg, #1a2a3a 0%, #0d1520 100%); border-bottom: 2px solid var(--ds-accent-primary, #ff9800);">
+                <div class="d-flex align-items-center">
+                    <div class="header-icon-box me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,152,0,0.1); border-radius: 8px; border: 1px solid rgba(255,152,0,0.2);">
+                        <i class="fa-solid fa-file-invoice text-sirio" style="font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-uppercase tracking-wider" style="font-size: 0.9rem; letter-spacing: 1px; color: #fff;">Dossier Biográfico de Autor</h5>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <div class="progress rounded-pill" style="width: 60px; height: 4px; background-color: rgba(255,255,255,0.1);">
+                                <div id="visor_progreso_bar" class="progress-bar bg-sirio" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <span id="visor_progreso_texto" class="fw-bold text-sirio" style="font-size: 0.65rem;">0%</span>
+                            <span class="opacity-50 mx-1" style="font-size: 0.6rem;">•</span>
+                            <span class="small opacity-50" style="font-size: 0.6rem;">REGISTRO CERTIFICADO IA</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Cuerpo del Visor (Dossier Layout) -->
+            <div class="modal-body p-0 custom-scrollbar" style="max-height: 85vh; overflow-y: auto; background: #0b0f14;">
+                
+                <!-- Hero Section: Identificación Principal -->
+                <div class="hero-dossier px-4 pt-4 pb-3" style="background: radial-gradient(circle at top right, rgba(255,152,0,0.05) 0%, transparent 70%);">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="visor-avatar-wrapper p-1" style="border: 2px solid rgba(255,152,0,0.3); border-radius: 50%; background: rgba(0,0,0,0.3);">
+                                <div class="visor-avatar-dossier-inner shadow-lg d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; background: #1a1a1a;">
+                                    <i class="fa-solid fa-user-tie" style="font-size: 3.5rem; color: #333;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h2 id="visor_nombre_completo" class="display-6 fw-bold text-sirio mb-0" style="letter-spacing: -1px;"></h2>
+                            <div id="visor_seudonimo" class="h5 fst-italic text-warning opacity-75 mb-2" style="font-family: 'Playfair Display', serif;"></div>
+                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                <span class="badge rounded-pill bg-dark border border-secondary border-opacity-50 px-3 py-2">
+                                    <i class="fa-solid fa-earth-americas me-2 text-sirio"></i> <span id="visor_nacionalidad"></span>
+                                </span>
+                                <span class="badge rounded-pill bg-dark border border-secondary border-opacity-50 px-3 py-2" id="visor_proyecto_badge">
+                                    <i class="fa-solid fa-database me-2 text-sirio"></i> <span id="visor_proyecto_nombre"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenido Dividido en Secciones -->
+                <div class="px-4 pb-5">
+                    
+                    <!-- Bloque 1: Identificación Cronológica -->
+                    <div class="dossier-section mb-5">
+                        <div class="section-label mb-3 d-flex align-items-center">
+                            <span class="badge bg-sirio me-2">1</span>
+                            <span class="text-uppercase fw-bold tracking-widest text-light opacity-50" style="font-size: 0.7rem; letter-spacing: 2px;">Cronología y Origen</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">NACIMIENTO</div>
+                                    <div class="h6 mb-0 text-light" id="visor_nacimiento"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">DEFUNCIÓN</div>
+                                    <div class="h6 mb-0 text-light" id="visor_defuncion"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 2: Contexto Intelectual -->
+                    <div class="dossier-section mb-5">
+                        <div class="section-label mb-3 d-flex align-items-center">
+                            <span class="badge bg-sirio me-2">2</span>
+                            <span class="text-uppercase fw-bold tracking-widest text-light opacity-50" style="font-size: 0.7rem; letter-spacing: 2px;">Formación e Influencias</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">TRAYECTORIA Y FORMACIÓN</div>
+                                    <div class="text-light opacity-90" style="line-height: 1.6; font-size: 0.95rem; text-align: justify;" id="visor_trayectoria"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">MOVIMIENTO LITERARIO</div>
+                                    <div class="h6 mb-0 text-warning" id="visor_movimiento"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">INFLUENCIAS CLAVE</div>
+                                    <div class="h6 mb-0 text-light" id="visor_influencias"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">OCUPACIONES SECUNDARIAS</div>
+                                    <div class="h6 mb-0 text-light opacity-75" id="visor_ocupaciones"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 3: Producción Artística -->
+                    <div class="dossier-section mb-5">
+                        <div class="section-label mb-3 d-flex align-items-center">
+                            <span class="badge bg-sirio me-2">3</span>
+                            <span class="text-uppercase fw-bold tracking-widest text-light opacity-50" style="font-size: 0.7rem; letter-spacing: 2px;">Cuerpo de Obra y Estilo</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,152,0,0.03); border: 1px solid rgba(255,152,0,0.1);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">GÉNEROS LITERARIOS</div>
+                                    <div class="h6 mb-0 text-sirio fw-bold" id="visor_generos"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">TEMÁTICAS RECURRENTES</div>
+                                    <div class="h6 mb-0 text-light" id="visor_tematicas"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid var(--s-accent);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">ESTÉTICA Y ESTILO TÉCNICO</div>
+                                    <div class="text-light opacity-90" style="line-height: 1.6; font-size: 0.95rem;" id="visor_estilo"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: #000; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-3 d-flex align-items-center" style="font-size: 0.65rem;">
+                                        <i class="fa-solid fa-list-ul me-2"></i>OBRAS PRINCIPALES Y BIBLIOGRAFÍA
+                                    </div>
+                                    <div class="text-light font-monospace" style="font-size: 0.85rem; line-height: 1.8;" id="visor_obras"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 4: Reconocimientos -->
+                    <div class="dossier-section mb-5">
+                        <div class="section-label mb-3 d-flex align-items-center">
+                            <span class="badge bg-sirio me-2">4</span>
+                            <span class="text-uppercase fw-bold tracking-widest text-light opacity-50" style="font-size: 0.7rem; letter-spacing: 2px;">Reconocimientos y Legado</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded h-100" style="background: linear-gradient(135deg, rgba(255,152,0,0.05) 0%, transparent 100%); border: 1px solid rgba(255,152,0,0.1);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">PREMIOS Y GALARDONES</div>
+                                    <div class="h6 mb-0 text-light" id="visor_premios"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">IMPACTO Y TRASCENDENCIA HISTÓRICA</div>
+                                    <div class="text-light opacity-90" style="line-height: 1.6; font-size: 0.9rem;" id="visor_impacto"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloque 5: Adicional -->
+                    <div class="dossier-section">
+                        <div class="section-label mb-3 d-flex align-items-center">
+                            <span class="badge bg-sirio me-2">5</span>
+                            <span class="text-uppercase fw-bold tracking-widest text-light opacity-50" style="font-size: 0.7rem; letter-spacing: 2px;">Anexos y Referencias</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="data-card p-4 rounded text-center fst-italic" style="background: #111; border: 1px dashed rgba(255,255,255,0.1); position: relative;">
+                                    <i class="fa-solid fa-quote-left text-sirio opacity-25" style="position: absolute; top: 15px; left: 15px; font-size: 1.5rem;"></i>
+                                    <div class="text-light h6 mb-0 px-4" id="visor_citas" style="font-family: 'Georgia', serif; line-height: 1.6;"></div>
+                                    <i class="fa-solid fa-quote-right text-sirio opacity-25" style="position: absolute; bottom: 15px; right: 15px; font-size: 1.5rem;"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">BIBLIOGRAFÍA RECOMENDADA</div>
+                                    <div class="small text-light opacity-75" id="visor_fuentes"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">ENLACES DE INTERÉS</div>
+                                    <div class="small text-info text-decoration-underline" id="visor_enlaces"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="data-card p-3 rounded" style="background: rgba(255,152,0,0.02); border: 1px solid rgba(255,152,0,0.05);">
+                                    <div class="small text-sirio text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">NOTAS DE INVESTIGACIÓN</div>
+                                    <div class="small text-light opacity-50" id="visor_notas"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- Footer con Acciones Centralizadas -->
+            <div class="modal-footer px-4 py-3 d-flex justify-content-between" style="background: #0d1520; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button type="button" class="btn btn-sirio-outline btn-sm px-4" data-bs-dismiss="modal">CERRAR DOSSIER</button>
+                <div class="d-flex gap-2">
+                    <button type="button" id="btnEditarDesdeVisor" class="btn btn-sirio active btn-sm px-4">
+                        <i class="fa-solid fa-pen-nib me-2"></i>EDITAR FICHA COMPLETA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos Premium para el Visor */
+    #modalAutorVisor .card-header-panel {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+    
+    #modalAutorVisor .text-sirio {
+        color: var(--ds-accent-primary, #ff9800) !important;
+    }
+    
+    #modalAutorVisor .bg-sirio {
+        background-color: var(--ds-accent-primary, #ff9800) !important;
+    }
+    
+    #modalAutorVisor .btn-sirio-outline {
+        border: 1px solid rgba(255,255,255,0.1);
+        background: transparent;
+        color: #fff;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+    
+    #modalAutorVisor .btn-sirio-outline:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    #modalAutorVisor .visor-avatar-dossier-inner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    #modalAutorVisor .section-label .badge {
+        font-size: 0.7rem;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    #modalAutorVisor .tracking-widest {
+        letter-spacing: 2px;
+    }
+
+    #modalAutorVisor .data-card {
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    #modalAutorVisor #visor_enlaces a {
+        color: #00bcd4;
+        text-decoration: underline;
+        word-break: break-all;
+    }
+
+    /* Scrollbar */
+    #modalAutorVisor .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+    #modalAutorVisor .custom-scrollbar::-webkit-scrollbar-track {
+        background: #0b0f14;
+    }
+    #modalAutorVisor .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255,152,0,0.2);
+        border-radius: 10px;
+    }
+</style>

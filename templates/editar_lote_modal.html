@@ -60,6 +60,38 @@
             </div>
 
             <div class="col-md-6">
+              <label class="form-label text-warning">Tipo de Publicación</label>
+              <select class="form-select bg-dark text-light border-secondary" name="tipo_publicacion">
+                <option value="">(No cambiar)</option>
+                <option value="Periódico">Periódico</option>
+                <option value="Diario">Diario</option>
+                <option value="Semanario">Semanario</option>
+                <option value="Revista">Revista</option>
+                <option value="Magazine">Magazine</option>
+                <option value="Boletín">Boletín</option>
+                <option value="Gaceta">Gaceta</option>
+                <option value="Anuario">Anuario</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label text-warning">Periodicidad</label>
+              <select class="form-select bg-dark text-light border-secondary" name="periodicidad">
+                <option value="">(No cambiar)</option>
+                <option value="Diaria">Diaria</option>
+                <option value="Semanal">Semanal</option>
+                <option value="Quincenal">Quincenal</option>
+                <option value="Mensual">Mensual</option>
+                <option value="Bimestral">Bimestral</option>
+                <option value="Trimestral">Trimestral</option>
+                <option value="Semestral">Semestral</option>
+                <option value="Anual">Anual</option>
+                <option value="Irregular">Irregular</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
               <label class="form-label text-warning">Ciudad</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="ciudad"
                 placeholder="(No cambiar)">
@@ -205,6 +237,12 @@
             <div class="col-md-6">
               <label class="form-label text-warning">Apellido Autor</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="apellido_autor"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-warning">Pseudónimo(s)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="pseudonimo"
                 placeholder="(No cambiar)">
             </div>
 

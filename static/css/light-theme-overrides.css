@@ -180,6 +180,32 @@
 
 [data-theme="light"] {
 
+    /* === TABLES & ACTIONS === */
+    .btn-admin-action:hover {
+        background-color: #294a60 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-admin-action i {
+        color: inherit !important;
+    }
+
+    .btn-admin-action-success:hover {
+        background-color: #2e7d32 !important;
+    }
+
+    .btn-admin-action-warning:hover {
+        background-color: #f57c00 !important;
+    }
+
+    .btn-admin-action-danger:hover {
+        background-color: #c62828 !important;
+    }
+
+    .btn-admin-action-info:hover {
+        background-color: #294a60 !important;
+    }
+
     /* === SIDEBAR === */
     .desktop-sidebar {
         background: #f5f5f5 !important;
@@ -1403,12 +1429,12 @@
         color: #666 !important;
     }
 
-    /* Border utilities */
+    /* Border utilities
     .border-top {
         border-top-color: #d0d0d0 !important;
         background-color: #ffffff !important;
     }
-
+    */
     .border-bottom {
         border-bottom-color: #d0d0d0 !important;
     }
@@ -4295,4 +4321,110 @@
     padding: 12px 16px;
     border-radius: 0;
     font-weight: 600;
+    /* === BIOGRAPHY VISOR LIGHT MODE === */
+    #modalAutorVisor .modal-content {
+        background-color: #ffffff !important;
+        border-color: #d0d0d0 !important;
+    }
+
+    #modalAutorVisor .modal-header {
+        background: #294a60 !important; /* Mantener azul institucional en cabecera */
+        border-bottom: 2px solid #ff9800 !important;
+    }
+
+    #modalAutorVisor .modal-header h5,
+    #modalAutorVisor .modal-header span,
+    #modalAutorVisor .modal-header i {
+        color: #ffffff !important;
+    }
+
+    #modalAutorVisor .modal-body {
+        background-color: #ffffff !important;
+    }
+
+    #modalAutorVisor .hero-dossier {
+        background: radial-gradient(circle at top right, rgba(41, 74, 96, 0.03) 0%, transparent 70%) !important;
+    }
+
+    #modalAutorVisor .text-sirio {
+        color: #294a60 !important;
+    }
+
+    #modalAutorVisor .bg-sirio {
+        background-color: #294a60 !important;
+    }
+
+    /* Forzar que todas las cajas sean claras */
+    #modalAutorVisor .data-card {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        color: #212121 !important;
+    }
+
+    /* Corregir bloques específicos que tenían fondo negro inline */
+    #modalAutorVisor .data-card[style*="background: #000"],
+    #modalAutorVisor .data-card[style*="background: #111"] {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+    }
+
+    #modalAutorVisor .text-light,
+    #modalAutorVisor #visor_obras,
+    #modalAutorVisor #visor_trayectoria,
+    #modalAutorVisor #visor_estilo,
+    #modalAutorVisor #visor_impacto {
+        color: #212121 !important;
+        opacity: 1 !important;
+    }
+
+    #modalAutorVisor .badge.bg-dark {
+        background-color: #f0f0f0 !important;
+        border-color: #d0d0d0 !important;
+        color: #294a60 !important;
+    }
+
+    #modalAutorVisor .section-label .text-light {
+        color: #666 !important;
+        opacity: 1 !important;
+    }
+
+    /* Citas en modo claro */
+    #modalAutorVisor #visor_citas {
+        color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    #modalAutorVisor .fa-quote-left,
+    #modalAutorVisor .fa-quote-right {
+        color: #294a60 !important;
+        opacity: 0.2 !important;
+    }
+
+    #modalAutorVisor .modal-footer {
+        background-color: #f8f9fa !important;
+        border-top: 1px solid #dee2e6 !important;
+    }
+
+    #modalAutorVisor .btn-sirio-outline {
+        border: 1px solid #d0d0d0 !important;
+        color: #212121 !important;
+    }
+
+    #modalAutorVisor .btn-sirio-outline:hover {
+        background: #e9ecef !important;
+    }
+
+    #modalAutorVisor .visor-avatar-wrapper {
+        background: #ffffff !important;
+        border-color: #ff9800 !important;
+    }
+
+    #modalAutorVisor .visor-avatar-dossier-inner {
+        background: #f0f0f0 !important;
+    }
+
+    /* Barra de progreso en modo claro */
+    #modalAutorVisor .progress {
+        background-color: rgba(0,0,0,0.1) !important;
+    }
 }

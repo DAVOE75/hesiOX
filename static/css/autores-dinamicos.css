@@ -1,0 +1,104 @@
+/* Autocomplete para Autores (Base de Datos Central) - Premium Aesthetics */
+.autor-autocomplete {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: rgba(26, 26, 26, 0.98);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+    border-radius: 8px;
+    animation: fadeInSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.autor-autocomplete.show {
+    display: block;
+}
+
+.autor-autocomplete .autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.autor-autocomplete .autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autor-autocomplete .autocomplete-item:hover {
+    background: rgba(255, 152, 0, 0.1);
+    color: #fff;
+    padding-left: 20px;
+}
+
+.bio-avatar-sirio {
+    width: 110px;
+    height: 110px;
+    background: var(--ds-color-accent, #ff9800);
+    border-radius: 50%;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+[data-theme="light"] .autor-autocomplete {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .autor-autocomplete .autocomplete-item {
+    color: #1e293b;
+    border-bottom-color: #f1f5f9;
+}
+
+[data-theme="light"] .autor-autocomplete .autocomplete-item:hover {
+    background: #f8f9fa;
+    color: #000;
+}
+
+/* Estilos para los botones de acción en las filas de autores */
+.btn-bio-autor-direct i, .btn-bio-autor i {
+    color: #ff9800 !important; /* Naranja Sirio en modo oscuro */
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.btn-bio-autor-direct:hover i, .btn-bio-autor:hover i {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px rgba(255, 152, 0, 0.6));
+}
+
+.btn-remove-autor i, .btn-outline-danger i {
+    color: #ff4b5c !important; /* Rojo vibrante */
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.btn-remove-autor:hover i, .btn-outline-danger:hover i {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px rgba(255, 75, 92, 0.6));
+}
+
+/* Ajustes para modo claro */
+[data-theme="light"] .btn-bio-autor-direct i, [data-theme="light"] .btn-bio-autor i {
+    color: #294a60 !important; /* Azul Sirio en modo claro */
+}
+
+[data-theme="light"] .btn-bio-autor-direct:hover i, [data-theme="light"] .btn-bio-autor:hover i {
+    filter: drop-shadow(0 0 8px rgba(41, 74, 96, 0.4));
+}

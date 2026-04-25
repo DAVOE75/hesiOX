@@ -29,16 +29,20 @@
     .prose {
         font-family: 'Merriweather', serif;
         font-size: 1.15rem;
-        /* Increased from inherit */
         line-height: 1.8;
         color: var(--ds-text-main);
         max-width: 900px;
         margin: 0 auto;
-        white-space: pre-wrap;
+        white-space: pre-line;
     }
 
     .prose p {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.6rem;
+    }
+
+    /* Colapsar saltos de línea múltiples y bloques vacíos */
+    .prose br + br {
+        display: none;
     }
 
     .big-text {

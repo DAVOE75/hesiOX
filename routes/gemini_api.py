@@ -112,8 +112,11 @@ def correct_ocr_text_advanced():
         })
 
     except Exception as e:
+        import traceback
+        err_msg = traceback.format_exc()
+        print(f"[CRITICAL] Error en endpoint OCR-IA:\n{err_msg}", file=sys.stderr)
         app_logger.error(f"Error en endpoint OCR-IA: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e), 'traceback': err_msg}), 500
 
 @gemini_bp.route('/api/gemini/extract_locations', methods=['POST'])
 @login_required

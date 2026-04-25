@@ -6,7 +6,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Hemeroteca, Publicacion, Proyecto, Prensa, Tema
+from models import Hemeroteca, Publicacion, Proyecto, Prensa, Tema, AutorPublicacion
+import json
 from utils import geocode_city
 
 hemerotecas_bp = Blueprint('hemerotecas', __name__)
@@ -485,6 +486,13 @@ def nueva_publicacion():
         return redirect(url_for("proyectos.listar"))
     
     if request.method == "POST":
+        with open("/opt/hesiox/debug_post.log", "a") as f:
+            f.write(f"\n[HEMEROTECAS] POST Data (Nueva):\n")
+            for k, v in request.form.items():
+                f.write(f"  {k}: {v}\n")
+            f.write(f"  coleccion (get): {request.form.get('coleccion')}\n")
+            f.write(f"  pseudonimo (get): {request.form.get('pseudonimo')}\n")
+
         nombre = request.form.get("nombre", "").strip()
         
         if not nombre:
@@ -518,8 +526,39 @@ def nueva_publicacion():
             editorial=request.form.get("editorial", "").strip(),
             url_publi=request.form.get("url_publi", "").strip(),
             frecuencia=request.form.get("frecuencia", "").strip(),
-            proyecto_id=proyecto.id
+            proyecto_id=proyecto.id,
+            actos_totales=request.form.get("actos_totales", "").strip(),
+            escenas_totales=request.form.get("escenas_totales", "").strip(),
+            reparto_total=request.form.get("reparto_total", "").strip(),
+            coleccion=request.form.get("coleccion", "").strip(),
+            pseudonimo=request.form.get("pseudonimo", "").strip()
         )
+        
+        # 2.5 GUARDAR AUTORES RELACIONADOS
+        nombres_lista = request.form.getlist("nombre_autor[]")
+        apellidos_lista = request.form.getlist("apellido_autor[]")
+        tipos_lista = request.form.getlist("tipo_autor[]")
+        anonimos_raw = request.form.getlist("es_anonimo_raw[]")
+
+        for i in range(len(tipos_lista)):
+            nom = (nombres_lista[i] if i < len(nombres_lista) else "").strip()
+            ape = (apellidos_lista[i] if i < len(apellidos_lista) else "").strip()
+            tip = tipos_lista[i]
+            es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "si")
+            
+            nuevo_aut = AutorPublicacion(
+                nombre=nom if not es_anon else None,
+                apellido=ape if not es_anon else None,
+                tipo=tip,
+                es_anonimo=es_anon,
+                orden=i
+            )
+            nueva_pub.autores.append(nuevo_aut)
+            
+            # Sincronizar el primero para compatibilidad
+            if i == 0:
+                nueva_pub.nombre_autor = nom if not es_anon else None
+                nueva_pub.apellido_autor = ape if not es_anon else None
         
         # Asociar a hemeroteca si se seleccionó
         hemeroteca_id = request.form.get("hemeroteca_id")
@@ -532,10 +571,20 @@ def nueva_publicacion():
         flash(f"✅ Publicación '{nombre}' creada correctamente", "success")
         return redirect(url_for("hemerotecas.lista_publicaciones"))
     
-    # Obtener hemerotecas para el formulario
+    # Serializar datos de hemerotecas para el frontend
     hemerotecas = Hemeroteca.query.filter_by(proyecto_id=proyecto.id).order_by(Hemeroteca.nombre).all()
-    
-    return render_template("nueva_publicacion.html", hemerotecas=hemerotecas, proyecto=proyecto)
+    hemerotecas_data = {}
+    for h in hemerotecas:
+        hemerotecas_data[h.id] = {
+            "id": h.id,
+            "nombre": h.nombre,
+            "institucion": h.institucion or h.nombre,
+            "ciudad": h.ciudad or "",
+            "provincia": h.provincia or "",
+            "pais": h.pais or ""
+        }
+
+    return render_template("nueva_publicacion.html", hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data)
 
 
 @hemerotecas_bp.route("/publicacion/editar/<int:id>", methods=["GET", "POST"])
@@ -554,7 +603,9 @@ def editar_publicacion(id):
             f.write(f"\n[HEMEROTECAS] POST Data for ID {id}:\n")
             for k, v in request.form.items():
                 f.write(f"  {k}: {v}\n")
-            f.write(f"  tema: {request.form.get('tema')}\n")
+            f.write(f"  tema (get): {request.form.get('tema')}\n")
+            f.write(f"  coleccion (get): {request.form.get('coleccion')}\n")
+            f.write(f"  pseudonimo (get): {request.form.get('pseudonimo')}\n")
 
         nuevo_nombre = request.form.get("nombre", "").strip()
         # Validar unicidad del nombre (ignorando la publicación actual)
@@ -563,9 +614,14 @@ def editar_publicacion(id):
             flash(f"❌ Ya existe otra publicación con el nombre '{nuevo_nombre}'. Elige un nombre diferente.", "danger")
             proyecto = get_proyecto_activo()
             hemerotecas = Hemeroteca.query.filter_by(proyecto_id=proyecto.id).order_by(Hemeroteca.nombre).all()
-            return render_template("editar_publicacion.html", pub=publicacion, hemerotecas=hemerotecas, proyecto=proyecto)
+            # Serializar datos para el frontend en caso de error
+            hemerotecas_data = {h.id: {"id": h.id, "nombre": h.nombre, "institucion": h.institucion or h.nombre, "ciudad": h.ciudad or "", "provincia": h.provincia or "", "pais": h.pais or ""} for h in hemerotecas}
+            autores_data = [{"nombre": a.nombre, "apellido": a.apellido, "tipo": a.tipo, "es_anonimo": a.es_anonimo} for a in publicacion.autores]
+            return render_template("editar_publicacion.html", pub=publicacion, hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data, autores_json=json.dumps(autores_data))
 
         publicacion.nombre = nuevo_nombre
+        with open("/opt/hesiox/debug_post.log", "a") as f:
+            f.write(f"  NAME CHECK PASSED: {nuevo_nombre}\n")
         publicacion.descripcion = request.form.get("descripcion", "").strip()
         publicacion.tipo_recurso = request.form.get("tipo_recurso", "").strip()
         publicacion.ciudad = request.form.get("ciudad", "").strip()
@@ -580,6 +636,51 @@ def editar_publicacion(id):
         publicacion.editorial = request.form.get("editorial", "").strip()
         publicacion.url_publi = request.form.get("url_publi", "").strip()
         publicacion.frecuencia = request.form.get("frecuencia", "").strip()
+        
+        # Campos teatrales
+        publicacion.actos_totales = request.form.get("actos_totales", "").strip()
+        publicacion.escenas_totales = request.form.get("escenas_totales", "").strip()
+        publicacion.reparto_total = request.form.get("reparto_total", "").strip()
+        publicacion.coleccion = request.form.get("coleccion", "").strip()
+        publicacion.pseudonimo = request.form.get("pseudonimo", "").strip()
+
+        try:
+            # 1. GESTIÓN DE MÚLTIPLES AUTORES
+            nombres_lista = request.form.getlist("nombre_autor[]")
+            apellidos_lista = request.form.getlist("apellido_autor[]")
+            tipos_lista = request.form.getlist("tipo_autor[]")
+            anonimos_raw = request.form.getlist("es_anonimo_raw[]")
+
+            # Limpiar autores antiguos usando la relación (delete-orphan se encargará de borrarlos de la DB)
+            publicacion.autores = []
+            db.session.flush()
+            
+            # Procesamos la nueva lista
+            for i in range(len(tipos_lista)):
+                nom = (nombres_lista[i] if i < len(nombres_lista) else "").strip()
+                ape = (apellidos_lista[i] if i < len(apellidos_lista) else "").strip()
+                tip = tipos_lista[i]
+                es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "si")
+                
+                nuevo_aut = AutorPublicacion(
+                    publicacion_id=publicacion.id_publicacion,
+                    nombre=nom if not es_anon else None,
+                    apellido=ape if not es_anon else None,
+                    tipo=tip,
+                    es_anonimo=es_anon,
+                    orden=i
+                )
+                publicacion.autores.append(nuevo_aut)
+                
+                # Sincronizar el primero para compatibilidad
+                if i == 0:
+                    publicacion.nombre_autor = nom if not es_anon else None
+                    publicacion.apellido_autor = ape if not es_anon else None
+        except Exception as e:
+            with open("/opt/hesiox/debug_post.log", "a") as f:
+                f.write(f"  ERROR IN AUTHORS LOOP: {str(e)}\n")
+            raise e
+
 
         # Actualizar hemeroteca
         old_hemeroteca_id = publicacion.hemeroteca_id
@@ -597,7 +698,26 @@ def editar_publicacion(id):
         # ---------------------------------------------------------
         propagar = request.form.get("propagar") == "on"
 
+        db.session.add(publicacion) # Asegurar que está en sesión
+        db.session.flush()
+        
+        with open("/opt/hesiox/debug_post.log", "a") as f:
+            f.write(f"  STATE BEFORE COMMIT (ID {publicacion.id_publicacion}):\n")
+            f.write(f"    nombre: {publicacion.nombre}\n")
+            f.write(f"    coleccion: {publicacion.coleccion}\n")
+            f.write(f"    pseudonimo: {publicacion.pseudonimo}\n")
+            f.write(f"    actos_totales: {publicacion.actos_totales}\n")
+
         db.session.commit()
+        db.session.refresh(publicacion)
+        
+        with open("/opt/hesiox/debug_post.log", "a") as f:
+            f.write(f"  AFTER COMMIT (ID {publicacion.id_publicacion}):\n")
+            f.write(f"    coleccion in DB: {publicacion.coleccion}\n")
+            f.write(f"    pseudonimo in DB: {publicacion.pseudonimo}\n")
+            f.write(f"    autores count in DB: {len(publicacion.autores)}\n")
+            for a in publicacion.autores:
+                f.write(f"      - {a.nombre} {a.apellido} ({a.tipo})\n")
 
         # Si el usuario marcó la opción de propagar cambios
         count_updated = 0
@@ -609,16 +729,25 @@ def editar_publicacion(id):
             if publicacion.nombre:
                 update_payload['publicacion'] = publicacion.nombre
                 
+            # Propagar autoría principal (compatibilidad)
+            if publicacion.nombre_autor is not None:
+                update_payload['nombre_autor'] = publicacion.nombre_autor
+            if publicacion.apellido_autor is not None:
+                update_payload['apellido_autor'] = publicacion.apellido_autor
+            
             # Propagar ciudad
             if publicacion.ciudad:
                 update_payload['ciudad'] = publicacion.ciudad
+            
+            if publicacion.coleccion:
+                update_payload['coleccion'] = publicacion.coleccion
+            
+            if publicacion.pseudonimo:
+                update_payload['pseudonimo'] = publicacion.pseudonimo
                 
             if publicacion.pais_publicacion:
                 update_payload['pais_publicacion'] = publicacion.pais_publicacion
 
-            # NOTA: Provincia no se propaga a Prensa porque Prensa no tiene campo provincia (lo eliminamos o no lo tiene).
-            # El mapa de coropletas ahora lee de Publicacion.provincia, así que no hace falta propagarlo a las noticias individualmente.
-                
             # Propagar fuente (desde hemeroteca o campo directo)
             fuente_a_propagar = None
             if publicacion.hemeroteca_id:
@@ -649,11 +778,38 @@ def editar_publicacion(id):
             
             if update_payload:
                 try:
+                    # 1. Actualizar campos directos en la tabla Prensa
                     updated_rows = Prensa.query.filter_by(id_publicacion=publicacion.id_publicacion).update(update_payload)
+                    
+                    # 2. Sincronizar relación de autores (tabla autores_prensa)
+                    prensa_ids_query = db.session.query(Prensa.id).filter_by(id_publicacion=publicacion.id_publicacion).all()
+                    prensa_ids = [p[0] for p in prensa_ids_query]
+                    
+                    if prensa_ids:
+                        # Eliminar autores actuales de esas noticias
+                        AutorPrensa.query.filter(AutorPrensa.prensa_id.in_(prensa_ids)).delete(synchronize_session=False)
+                        
+                        # Preparar inserción masiva de los nuevos autores (copiados de la publicación)
+                        nuevos_autores_data = []
+                        for aut_pub in publicacion.autores:
+                            for p_id in prensa_ids:
+                                nuevos_autores_data.append({
+                                    'prensa_id': p_id,
+                                    'nombre': aut_pub.nombre,
+                                    'apellido': aut_pub.apellido,
+                                    'tipo': aut_pub.tipo,
+                                    'es_anonimo': aut_pub.es_anonimo,
+                                    'orden': aut_pub.orden
+                                })
+                        
+                        if nuevos_autores_data:
+                            db.session.execute(AutorPrensa.__table__.insert(), nuevos_autores_data)
+                    
                     db.session.commit()
                     count_updated = updated_rows
                 except Exception as e:
                     db.session.rollback()
+                    app.logger.error(f"Error propagando cambios de autoría: {e}")
                     print(f"Error propagando cambios: {e}")
 
         msg_extra = ""
@@ -678,7 +834,15 @@ def editar_publicacion(id):
             "pais": h.pais or ""
         }
 
-    return render_template("editar_publicacion.html", pub=publicacion, hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data)
+    autores_json = json.dumps([{
+        'nombre': a.nombre or '',
+        'apellido': a.apellido or '',
+        'tipo': a.tipo or 'autor',
+        'es_anonimo': a.es_anonimo,
+        'orden': a.orden
+    } for a in publicacion.autores])
+
+    return render_template("editar_publicacion.html", pub=publicacion, hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data, autores_json=autores_json)
 
 
 @hemerotecas_bp.route("/publicacion/borrar/<int:id>", methods=["POST"])

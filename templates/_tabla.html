@@ -81,7 +81,7 @@
 
     <tbody>
       {% for r in registros %}
-      <tr data-id="{{ r.id }}" data-titulo="{{ (r.titulo or '[Sin título]')|e }}"
+      <tr id="noticia-{{ r.id }}" data-id="{{ r.id }}" data-titulo="{{ (r.titulo or '[Sin título]')|e }}"
         data-publicacion="{{ (r.publicacion or '')|e }}"
         data-fecha="{% if r.fecha_original and r.fecha_original|length == 10 and '-' in r.fecha_original %}{{ r.fecha_original[8:10] }}/{{ r.fecha_original[5:7] }}/{{ r.fecha_original[0:4] }}{% else %}{{ (r.fecha_original or '')|e }}{% endif %}"
         data-autor="{{ (r.autor or '')|e }}" data-ciudad="{{ (r.ciudad or '')|e }}" data-temas="{{ (r.temas or '')|e }}"
@@ -333,6 +333,7 @@
       <option value="100" {% if noticias_por_pagina==100 %}selected{% endif %}>100</option>
       <option value="150" {% if noticias_por_pagina==150 %}selected{% endif %}>150</option>
       <option value="300" {% if noticias_por_pagina==300 %}selected{% endif %}>300</option>
+      <option value="999999" {% if noticias_por_pagina==999999 %}selected{% endif %}>TODOS</option>
     </select>
   </div>
 </div>

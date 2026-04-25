@@ -35,6 +35,29 @@
     transform: translateY(-50%);
 }
 
+/* Estilo global para etiquetas tipo Sirio */
+label, .sirio-label, [aria-labelledby] {
+    font-family: var(--ds-font-ui, monospace) !important;
+    font-size: 0.85rem !important; /* Un punto más pequeño que el estándar 1rem/16px */
+    letter-spacing: 0.3px;
+}
+
+.sirio-option {
+    transition: background 0.2s;
+    font-family: var(--ds-font-ui, monospace);
+    font-size: 0.9rem;
+}
+
+.sirio-option:hover {
+    background: #294a60 !important; /* Azul Sirio */
+    color: #fff !important;
+}
+
+.sirio-option.selected {
+    background: #ff9800 !important; /* Naranja Sirio */
+    color: #000 !important;
+}
+
 .header-center {
     flex-grow: 1 !important;
     min-width: 0;

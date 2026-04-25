@@ -756,6 +756,28 @@
                 }, 300);
             }
         });
+
+        // --- Lógica de Resaltado (Highlight ID) ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const highlightId = urlParams.get('highlight_id');
+        if (highlightId) {
+            const row = document.getElementById('noticia-' + highlightId);
+            if (row) {
+                // Scroll suave a la fila
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Efecto de parpadeo/resaltado
+                row.style.transition = 'background-color 0.5s ease';
+                row.style.backgroundColor = 'rgba(255, 152, 0, 0.3)';
+                
+                setTimeout(() => {
+                    row.style.backgroundColor = 'rgba(255, 152, 0, 0.15)';
+                    setTimeout(() => {
+                        row.style.backgroundColor = '';
+                    }, 2000);
+                }, 1000);
+            }
+        }
     });
 </script>
 

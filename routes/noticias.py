@@ -1,12 +1,13 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app, abort, send_file
+import json
 from flask_login import login_required, current_user
-from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema
+from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa
 from extensions import db, csrf
 from utils import get_proyecto_activo, get_nlp, limpieza_profunda_ocr, clean_location_name
 from cache_config import cache
 from datetime import datetime
-from sqlalchemy import or_, and_, cast, String, text
+from sqlalchemy import or_, and_, cast, String, text, func
 from analisis_cache import cache as analisis_cache_instance
 from collections import Counter
 import re
@@ -200,16 +201,8 @@ def ordenar_por_fecha_prensa(query, descendente=False):
     # Enhanced for PostgreSQL to handle multiple formats: DD/MM/YYYY and YYYY-MM-DD
     orden_sql = text(f"""
         CASE
-            WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{{2,4}}$'
-                 AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12
-                 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31
-                 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100
-            THEN to_date(prensa.fecha_original, 'DD/MM/YYYY')
-            WHEN prensa.fecha_original ~ '^[0-9]{{4}}-[0-1]?[0-9]-[0-3]?[0-9]$'
-                 AND split_part(prensa.fecha_original, '-', 2)::int BETWEEN 1 AND 12
-                 AND split_part(prensa.fecha_original, '-', 3)::int BETWEEN 1 AND 31
-                 AND split_part(prensa.fecha_original, '-', 1)::int BETWEEN 1800 AND 2100
-            THEN to_date(prensa.fecha_original, 'YYYY-MM-DD')
+            WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{{2,4}}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY')
+            WHEN prensa.fecha_original ~ '^[0-9]{{4}}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD')
             ELSE NULL
         END {"DESC" if descendente else "ASC"} ,
         prensa.id {"DESC" if descendente else "ASC"}
@@ -465,42 +458,60 @@ def cartografia_noticia_add_location(id):
     existe = LugarNoticia.query.filter_by(noticia_id=noticia.id, nombre=nombre, borrado=False).first()
     try:
         logger.info(f'Geocodificando con nombre de búsqueda: {nombre_busqueda}')
-        resp = requests.get('https://nominatim.openstreetmap.org/search', params={
-            'q': nombre_busqueda,
-            'format': 'json',
-            'limit': 1
-        }, headers={'User-Agent': 'app-hesiox/1.0'})
-        data_geo = resp.json()
-        logger.info(f'Respuesta Nominatim: {data_geo}')
-        
         lat, lon = None, None
-        
-        if data_geo:
-            lat = float(data_geo[0]['lat'])
-            lon = float(data_geo[0]['lon'])
-            tipo_lugar = data_geo[0].get('type', 'unknown')  # Capturar tipo geográfico
-        else:
-            logger.info(f'Nominatim falló para "{nombre_busqueda}". Intentando con IA Gemini...')
+        tipo_lugar = 'unknown'
+
+        # --- Detectar si el usuario pegó coordenadas directamente (ej: "38.695, -0.47") ---
+        coord_match = re.match(
+            r'^\s*(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)\s*$',
+            nombre_busqueda.replace('°', '').strip()
+        )
+        if coord_match:
+            lat = float(coord_match.group(1))
+            lon = float(coord_match.group(2))
+            logger.info(f'Coordenadas detectadas directamente: {lat}, {lon}')
+            # Reverse geocoding para obtener el tipo de lugar
             try:
-                from services.gemini_service import geocode_with_ai
-                # Proporcionamos contexto de la noticia para ayudar a la IA a desambiguar
-                # Ej: "Santiago" en noticia sobre Cuba -> Santiago de Cuba
-                contexto_geo = {
-                    "titulo": noticia.titulo,
-                    "periódico": noticia.publicacion,
-                    "contenido_snippet": noticia.contenido[:5000] if noticia.contenido else "",
-                    "mensaje": "DESAMBIGUACIÓN CRÍTICA: Identifica cuál de los posibles lugares con este nombre es el más probable según el texto."
-                }
-                res_ai = geocode_with_ai(nombre_busqueda, contexto_geo)
-                if res_ai and res_ai.get('found'):
-                    lat = res_ai.get('lat')
-                    lon = res_ai.get('lon')
-                    # Si la IA sugiere un nombre canónico más preciso (ej: Santiago de Chile), lo usamos
-                    if res_ai.get('name_canonical'):
-                        nombre = res_ai.get('name_canonical')
-                    logger.info(f'Gemini desambiguó "{nombre_busqueda}" -> "{nombre}": {lat}, {lon} ({res_ai.get("explanation")})')
-            except Exception as e_ai:
-                logger.error(f"Error en geocoding fallback IA: {e_ai}")
+                rev = requests.get('https://nominatim.openstreetmap.org/reverse', params={
+                    'lat': lat, 'lon': lon, 'format': 'json'
+                }, headers={'User-Agent': 'app-hesiox/1.0'}, timeout=10)
+                rev_data = rev.json()
+                tipo_lugar = rev_data.get('type', 'unknown')
+            except Exception:
+                pass
+        else:
+            resp = requests.get('https://nominatim.openstreetmap.org/search', params={
+                'q': nombre_busqueda,
+                'format': 'json',
+                'limit': 1
+            }, headers={'User-Agent': 'app-hesiox/1.0'}, timeout=10)
+            data_geo = resp.json()
+            logger.info(f'Respuesta Nominatim: {data_geo}')
+
+            if data_geo:
+                lat = float(data_geo[0]['lat'])
+                lon = float(data_geo[0]['lon'])
+                tipo_lugar = data_geo[0].get('type', 'unknown')
+            else:
+                logger.info(f'Nominatim falló para "{nombre_busqueda}". Intentando con IA Gemini...')
+                try:
+                    from services.gemini_service import geocode_with_ai
+                    contexto_geo = {
+                        "titulo": noticia.titulo,
+                        "periódico": noticia.publicacion,
+                        "contenido_snippet": noticia.contenido[:5000] if noticia.contenido else "",
+                        "mensaje": "DESAMBIGUACIÓN CRÍTICA: Identifica cuál de los posibles lugares con este nombre es el más probable según el texto."
+                    }
+                    res_ai = geocode_with_ai(nombre_busqueda, contexto_geo)
+                    if res_ai and res_ai.get('found'):
+                        lat = res_ai.get('lat')
+                        lon = res_ai.get('lon')
+                        if res_ai.get('name_canonical'):
+                            nombre = res_ai.get('name_canonical')
+                        logger.info(f'Gemini desambiguó "{nombre_busqueda}" -> "{nombre}": {lat}, {lon} ({res_ai.get("explanation")})')
+                except Exception as e_ai:
+                    logger.error(f"Error en geocoding fallback IA: {e_ai}")
+
 
         # Si tras Nominatim e IA seguimos sin coordenadas, permitimos añadir con 0,0 para que el usuario corrija
         if lat is None or lon is None:
@@ -4382,13 +4393,8 @@ def api_valores_filtrados():
                 continue  # No filtrar por la misma columna
             
             if k == 'autor':
-                # Buscar en nombre_autor O apellido_autor
-                autor_lower = normalizar_valor(v)
-                q = q.filter(or_(
-                    func.lower(func.trim(Prensa.nombre_autor)) == autor_lower,
-                    func.lower(func.trim(Prensa.apellido_autor)) == autor_lower,
-                    func.lower(func.concat(func.trim(Prensa.nombre_autor), ' ', func.trim(Prensa.apellido_autor))) == autor_lower
-                ))
+                # Usar hybrid_property Prensa.autor para búsqueda exacta normalizada
+                q = q.filter(func.lower(func.trim(Prensa.autor)) == normalizar_valor(v))
             elif k in ["publicacion", "ciudad", "pais_publicacion", "fecha_original"]:
                 q = q.filter(func.lower(func.trim(getattr(Prensa, k))) == normalizar_valor(v))
             elif k == 'temas':
@@ -4448,12 +4454,8 @@ def api_valores_filtrados():
         
         autores_set = set()
         for r in q.all():
-            if r.nombre_autor and r.apellido_autor:
-                autores_set.add(f"{r.nombre_autor} {r.apellido_autor}")
-            elif r.nombre_autor:
-                autores_set.add(r.nombre_autor)
-            elif r.apellido_autor:
-                autores_set.add(r.apellido_autor)
+            if r.autor:
+                autores_set.add(r.autor)
         
         return sorted(list(autores_set), key=lambda x: x.lower())
 
@@ -4637,7 +4639,7 @@ def api_map_distribution():
     filtros = {k: request.args.get(k) for k in request.args.keys()}
     
     if filtros.get('autor'):
-         query = query.filter(Prensa.nombre_autor.ilike(f"%{filtros['autor']}%"))
+         query = query.filter(Prensa.autor.ilike(f"%{filtros['autor']}%"))
     if filtros.get('temas'):
          query = query.filter(Prensa.temas.ilike(f"%{filtros['temas']}%"))
 
@@ -4664,6 +4666,11 @@ def api_map_distribution():
 @noticias_bp.route('/filtrar', methods=['GET'])
 @login_required
 def filtrar():
+    # Si la petición no es AJAX (por ejemplo, al volver atrás en el navegador), 
+    # redirigimos a la vista completa de la lista con los mismos parámetros.
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest' and request.args.get('ajax') != '1':
+        return redirect(url_for('noticias.listar', **request.args))
+
     print(f"[DEBUG] /filtrar args: {request.args}")
     """Filtrar noticias de prensa y devolver tabla (HTML) y filtros (JSON)"""
     from flask import jsonify
@@ -4711,8 +4718,15 @@ def filtrar():
             elif k == "ciudad":
                 query = query.filter(Prensa.ciudad == v)
             elif k == "autor":
-                query = query.filter(
-                    or_(Prensa.nombre_autor.ilike(f"%{v}%"), Prensa.apellido_autor.ilike(f"%{v}%"))
+                # Filtro robusto por autores (tabla autores_prensa o legacy)
+                query = query.outerjoin(AutorPrensa).filter(
+                    or_(
+                        Prensa.autor.ilike(f"%{v}%"),
+                        AutorPrensa.apellido.ilike(f"%{v}%"),
+                        AutorPrensa.nombre.ilike(f"%{v}%"),
+                        db.func.concat(AutorPrensa.apellido, ", ", AutorPrensa.nombre).ilike(f"%{v}%"),
+                        func.public.unaccent(Prensa.autor).ilike(func.public.unaccent(f"%{v}%"))
+                    )
                 )
             elif k == "fecha_original":
                 # Generate all date format variants (same logic as /listar)
@@ -4752,14 +4766,14 @@ def filtrar():
                 palabras = [normaliza(p) for p in v.replace(',', ' ').split() if p.strip()]
                 condiciones = []
                 for palabra in palabras:
-                    condiciones.append(db.func.lower(db.func.unaccent(Prensa.palabras_clave)).ilike(f"%{palabra}%"))
+                    condiciones.append(func.lower(func.public.unaccent(Prensa.palabras_clave)).ilike(f"%{palabra}%"))
                 if condiciones:
                     query = query.filter(or_(*condiciones))
             elif k == "fecha_desde":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} >= :d").params(d=v))
             elif k == "fecha_hasta":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} <= :h").params(h=v))
             else:
                 query = query.filter(getattr(Prensa, k).ilike(f"%{v}%"))
@@ -4771,7 +4785,7 @@ def filtrar():
                     cast(Prensa.titulo, String).ilike(term),
                     cast(Prensa.contenido, String).ilike(term),
                     cast(Prensa.texto_original, String).ilike(term),
-                    cast(Prensa.nombre_autor, String).ilike(term),
+                    cast(Prensa.autor, String).ilike(term),
                     cast(Prensa.publicacion, String).ilike(term),
                     cast(Prensa.resumen, String).ilike(term),
                     cast(Prensa.palabras_clave, String).ilike(term),
@@ -4786,6 +4800,8 @@ def filtrar():
         query = query.filter(Prensa.incluido.is_(False))
     # Ordenar por fecha de menos reciente a más reciente (ascendente)
     query = ordenar_por_fecha_prensa(query, descendente=False)
+    # Evitar duplicados por joins agrupando por el ID primario
+    query = query.group_by(Prensa.id)
     total = query.count()
     hay_filtros = any(filtros.get(k) for k in filtros if k != 'incluido') or filtros.get('incluido') != 'todos'
     noticias_por_pagina_raw = request.args.get("noticias_por_pagina", "50").strip()
@@ -4827,9 +4843,7 @@ def filtrar():
             elif k == "ciudad":
                 query_base = query_base.filter(Prensa.ciudad == v)
             elif k == "autor":
-                query_base = query_base.filter(
-                    or_(Prensa.nombre_autor.ilike(f"%{v}%"), Prensa.apellido_autor.ilike(f"%{v}%"))
-                )
+                query_base = query_base.filter(Prensa.autor.ilike(f"%{v}%"))
             elif k == "fecha_original":
                 query_base = query_base.filter(Prensa.fecha_original == v)
             elif k == "temas":
@@ -4842,6 +4856,7 @@ def filtrar():
     def valores_filtrados(columna):
         """Obtiene valores únicos de una columna en la query filtrada (sin ORDER BY)"""
         valores = set()
+        # Usamos distinct(columna) para obtener valores únicos reales
         for r in query_base.with_entities(columna).distinct().all():
             val = r[0]
             if val and str(val).strip():
@@ -4850,16 +4865,7 @@ def filtrar():
     
     # Valores dinámicos basados en los filtros actuales
     # Get authors in "Apellido, Nombre" format from filtered results
-    autores_set = set()
-    for r in query_base.with_entities(Prensa.apellido_autor, Prensa.nombre_autor).distinct().all():
-        apellido, nombre = r
-        if apellido and apellido.strip():
-            if nombre and nombre.strip():
-                autores_set.add(f"{apellido.strip()}, {nombre.strip()}")
-            else:
-                autores_set.add(apellido.strip())
-        elif nombre and nombre.strip():
-            autores_set.add(nombre.strip())
+    autores_set = {r[0] for r in query_base.with_entities(Prensa.autor).distinct().all() if r[0]}
     autores_filtrados = sorted(list(autores_set), key=lambda x: x.lower())
     publicaciones_filtradas = valores_filtrados(Prensa.publicacion)
     ciudades_filtradas = valores_filtrados(Prensa.ciudad)
@@ -5015,7 +5021,7 @@ def listar():
                 palabras = [normaliza(p) for p in v.replace(',', ' ').split() if p.strip()]
                 condiciones = []
                 for palabra in palabras:
-                    condiciones.append(db.func.lower(db.func.unaccent(Prensa.palabras_clave)).ilike(f"%{palabra}%"))
+                    condiciones.append(func.lower(func.public.unaccent(Prensa.palabras_clave)).ilike(f"%{palabra}%"))
                 if condiciones:
                     query = query.filter(or_(*condiciones))
             elif k == "fecha_original":
@@ -5053,16 +5059,29 @@ def listar():
 
                 query = query.filter(or_(*condiciones))
             elif k == "fecha_desde":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} >= :d").params(d=v))
             elif k == "fecha_hasta":
-                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' AND split_part(prensa.fecha_original, '/', 2)::int BETWEEN 1 AND 12 AND split_part(prensa.fecha_original, '/', 1)::int BETWEEN 1 AND 31 AND split_part(prensa.fecha_original, '/', 3)::int BETWEEN 1800 AND 2100 THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') ELSE NULL END"
+                sql_date = "CASE WHEN prensa.fecha_original ~ '^[0-3]?[0-9]/[0-1]?[0-9]/[0-9]{2,4}$' THEN to_date(prensa.fecha_original, 'DD/MM/YYYY') WHEN prensa.fecha_original ~ '^[0-9]{4}-[0-1]?[0-9]-[0-3]?[0-9]$' THEN to_date(prensa.fecha_original, 'YYYY-MM-DD') ELSE NULL END"
                 query = query.filter(text(f"{sql_date} <= :h").params(h=v))
+            elif k == "autor":
+                # Filtro robusto por autores (tabla autores_prensa o legacy)
+                query = query.outerjoin(AutorPrensa).filter(
+                    or_(
+                        Prensa.autor.ilike(f"%{v}%"),
+                        AutorPrensa.apellido.ilike(f"%{v}%"),
+                        AutorPrensa.nombre.ilike(f"%{v}%"),
+                        db.func.concat(AutorPrensa.apellido, ", ", AutorPrensa.nombre).ilike(f"%{v}%"),
+                        func.public.unaccent(Prensa.autor).ilike(func.public.unaccent(f"%{v}%"))
+                    )
+                )
             else:
                 query = query.filter(getattr(Prensa, k).ilike(f"%{v}%"))
     print("[DEBUG] Query SQL:", str(query.statement.compile(compile_kwargs={"literal_binds": True})))
     sys.stdout.flush()
     if filtros["busqueda"]:
+        # Join con AutorPrensa para búsqueda global
+        query = query.outerjoin(AutorPrensa)
         for p in filtros["busqueda"].split():
             term = f"%{p}%"
             query = query.filter(
@@ -5070,13 +5089,15 @@ def listar():
                     cast(Prensa.titulo, String).ilike(term),
                     cast(Prensa.contenido, String).ilike(term),
                     cast(Prensa.texto_original, String).ilike(term),
-                    cast(Prensa.nombre_autor, String).ilike(term),
+                    cast(Prensa.autor, String).ilike(term),
                     cast(Prensa.publicacion, String).ilike(term),
                     cast(Prensa.resumen, String).ilike(term),
                     cast(Prensa.palabras_clave, String).ilike(term),
                     cast(Prensa.temas, String).ilike(term),
                     cast(Prensa.notas, String).ilike(term),
                     cast(Prensa.fuente, String).ilike(term),
+                    AutorPrensa.nombre.ilike(term),
+                    AutorPrensa.apellido.ilike(term)
                 )
             )
     if filtros["incluido"] == "si":
@@ -5085,6 +5106,8 @@ def listar():
         query = query.filter(Prensa.incluido.is_(False))
     # Forzar ordenamiento por fecha y publicación
     query = ordenar_por_fecha_prensa(query, descendente=False)
+    # Evitar duplicados por joins agrupando por el ID primario
+    query = query.group_by(Prensa.id)
     total = query.count()
     hay_filtros = any(filtros.get(k) for k in filtros if k != 'incluido') or filtros.get('incluido') != 'todos'
     noticias_por_pagina_raw = request.args.get("noticias_por_pagina", "50").strip()
@@ -5092,14 +5115,9 @@ def listar():
         noticias_por_pagina = int(noticias_por_pagina_raw) if noticias_por_pagina_raw else 50
     except (ValueError, TypeError):
         noticias_por_pagina = 50
-    if hay_filtros:
-        registros_raw = query.all()
-        total_paginas = 1
-        page = 1
-    else:
-        por_pagina = noticias_por_pagina
-        registros_raw = query.offset((page - 1) * por_pagina).limit(por_pagina).all()
-        total_paginas = (total // por_pagina) + (1 if total % por_pagina else 0)
+    por_pagina = noticias_por_pagina
+    registros_raw = query.offset((page - 1) * por_pagina).limit(por_pagina).all()
+    total_paginas = (total // por_pagina) + (1 if total % por_pagina else 0)
     registros = []
     for r in registros_raw:
         try:
@@ -5143,23 +5161,21 @@ def listar():
     # Eliminar duplicados visuales conservando orden
     fechas = list(dict.fromkeys(fechas))
     
-    # Get authors in "Apellido, Nombre" format
-    autores_query = db.session.query(
-        Prensa.apellido_autor, 
-        Prensa.nombre_autor
-    ).filter(
-        Prensa.proyecto_id == proyecto.id
-    ).distinct()
+    # Get authors from both legacy and new tables in "Apellido, Nombre" format
+    autores_set = {r[0] for r in db.session.query(Prensa.autor).filter(Prensa.proyecto_id == proyecto.id).distinct().all() if r[0]}
     
-    autores_set = set()
-    for apellido, nombre in autores_query.all():
-        if apellido and apellido.strip():
-            if nombre and nombre.strip():
-                autores_set.add(f"{apellido.strip()}, {nombre.strip()}")
-            else:
-                autores_set.add(apellido.strip())
-        elif nombre and nombre.strip():
-            autores_set.add(nombre.strip())
+    # Usar func.concat para evitar resultados NULL si falta nombre o apellido
+    autores_nuevos = db.session.query(
+        db.func.concat(
+            db.func.coalesce(AutorPrensa.apellido, ""), 
+            ", ", 
+            db.func.coalesce(AutorPrensa.nombre, "")
+        )
+    ).join(Prensa).filter(Prensa.proyecto_id == proyecto.id).distinct().all()
+    
+    for r in autores_nuevos:
+        if r[0] and r[0].strip() != ",":
+            autores_set.add(r[0].strip())
     
     autores = sorted(list(autores_set), key=lambda x: x.lower())
     
@@ -5202,6 +5218,40 @@ def listar():
     )
 
 # --- Crear noticia de prensa ---
+def save_base64_image(b64_string, noticia_id):
+    """Guarda una imagen en Base64 proveniente del OCR como un archivo físico y devuelve el nombre del archivo."""
+    if not b64_string:
+        return None
+    try:
+        import base64
+        import uuid
+        
+        # Eliminar cabecera si existe (data:image/png;base64,...)
+        if ',' in b64_string:
+            header, data = b64_string.split(',', 1)
+        else:
+            data = b64_string
+            
+        img_data = base64.b64decode(data)
+        # Generar nombre único con ID de noticia para rastreo
+        filename = f"ocr_vinculado_{noticia_id}_{uuid.uuid4().hex[:6]}.png"
+        upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
+        
+        # Asegurar que el directorio existe
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder, exist_ok=True)
+            
+        ruta = os.path.join(upload_folder, filename)
+        
+        with open(ruta, 'wb') as f:
+            f.write(img_data)
+            
+        print(f"[DEBUG] Imagen OCR guardada correctamente: {filename}")
+        return filename
+    except Exception as e:
+        print(f"[ERROR] Error al guardar imagen Base64 del OCR: {e}")
+        return None
+
 @noticias_bp.route("/nueva", methods=["GET", "POST"])
 @login_required
 def crear():
@@ -5209,6 +5259,7 @@ def crear():
     return crear_noticia_view(get_proyecto_activo)
 
 def crear_noticia_view(get_proyecto_activo_func):
+    from models import AutorPrensa
     pub = None
     proyecto = get_proyecto_activo_func()
     if not proyecto:
@@ -5217,6 +5268,38 @@ def crear_noticia_view(get_proyecto_activo_func):
     precargados = {key: request.args.get(key) for key in request.args}
     
     if request.method == "POST":
+        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        pseudonimo = (request.form.get("pseudonimo") or "").strip()
+        nombres_lista = request.form.getlist("nombre_autor[]")
+        apellidos_lista = request.form.getlist("apellido_autor[]")
+        tipos_lista = request.form.getlist("tipo_autor[]")
+        anonimos_raw = request.form.getlist("es_anonimo_raw[]")
+        
+        # Para compatibilidad con columnas nombre_autor / apellido_autor originales (primer autor)
+        nombre_autor_db = None
+        apellido_autor_db = None
+        
+        # Procesamos la lista de autores
+        autores_objs = []
+        for i in range(len(tipos_lista)):
+            nom = (nombres_lista[i] if i < len(nombres_lista) else "").strip()
+            ape = (apellidos_lista[i] if i < len(apellidos_lista) else "").strip()
+            tip = tipos_lista[i]
+            es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "si")
+            
+            autores_objs.append(AutorPrensa(
+                nombre=nom if not es_anon else None,
+                apellido=ape if not es_anon else None,
+                tipo=tip,
+                es_anonimo=es_anon,
+                orden=i
+            ))
+            
+            # El primero se guarda en la tabla Prensa para compatibilidad
+            if i == 0:
+                nombre_autor_db = nom if not es_anon else None
+                apellido_autor_db = ape if not es_anon else None
+
         with open("/opt/hesiox/debug_post.log", "a") as f:
             f.write(f"\n[NOTICIAS] POST Data (Nueva):\n")
             for k in request.form.keys():
@@ -5286,6 +5369,9 @@ def crear_noticia_view(get_proyecto_activo_func):
                 "formato_fuente": request.form.get("formato_fuente") or pub.formato_fuente,
                 "pais_publicacion": request.form.get("pais_publicacion") or pub.pais_publicacion,
                 "tipo_recurso": request.form.get("tipo_recurso") or pub.tipo_recurso,
+                "nombre_autor": request.form.get("nombre_autor") or pub.nombre_autor,
+                "apellido_autor": request.form.get("apellido_autor") or pub.apellido_autor,
+                "pseudonimo": request.form.get("pseudonimo") or pub.pseudonimo,
             }
             # Heredar fuente/institución de la hemeroteca asociada a la publicación
             if pub.hemeroteca_id:
@@ -5335,6 +5421,7 @@ def crear_noticia_view(get_proyecto_activo_func):
             titulo=request.form.get("titulo"),
             publicacion=nombre_pub,
             id_publicacion=pub.id_publicacion if pub else None,
+            coleccion=request.form.get("coleccion"),
             ciudad=request.form.get("ciudad"),
             fecha_original=fecha_original,
             anio=int(request.form.get("anio")) if request.form.get("anio") and str(request.form.get("anio")).isdigit() else None,
@@ -5344,9 +5431,10 @@ def crear_noticia_view(get_proyecto_activo_func):
             paginas=request.form.get("paginas"),
             url=request.form.get("url"),
             fecha_consulta=fecha_consulta,
-            nombre_autor=nombre,
-            apellido_autor=apellido,
-            tipo_autor=request.form.get("tipo_autor"),
+            nombre_autor=nombre_autor_db or campos_pub.get("nombre_autor"),
+            apellido_autor=apellido_autor_db or campos_pub.get("apellido_autor"),
+            pseudonimo=pseudonimo or campos_pub.get("pseudonimo"),
+            tipo_autor=request.form.get("tipo_autor") or (autores_objs[0].tipo if autores_objs else "firmado"),
             idioma=campos_pub["idioma"],
             licencia=campos_pub["licencia"],
             fuente_condiciones=request.form.get("fuente_condiciones"),
@@ -5374,10 +5462,21 @@ def crear_noticia_view(get_proyecto_activo_func):
             imagen_scan=request.form.get("imagen_scan"),
             texto_original=request.form.get("texto_original"),
             descripcion_publicacion=request.form.get("descripcion_publicacion"),
+            tipo_publicacion=request.form.get("tipo_publicacion"),
+            periodicidad=request.form.get("periodicidad"),
+            actos_totales=request.form.get("actos_totales"),
+            escenas_totales=request.form.get("escenas_totales"),
+            reparto_total=request.form.get("reparto_total"),
             edicion=request.form.get("edicion"),
+            escenas=request.form.get("escenas"),
+            reparto=request.form.get("reparto"),
         )
         db.session.add(nuevo)
         db.session.flush()  # Para obtener el ID de la noticia antes de commit
+
+        # 2.5 GUARDAR AUTORES RELACIONADOS
+        for aut in autores_objs:
+            nuevo.autores.append(aut)
         # Guardar imágenes adjuntas (múltiples)
         imagenes_files = request.files.getlist("imagen_scan")
         from models import ImagenPrensa
@@ -5405,13 +5504,41 @@ def crear_noticia_view(get_proyecto_activo_func):
             nuevo.temas_rel = temas_objs
 
         db.session.commit()
-        # Invalidate analysis cache
-        # Invalidate analysis cache (DISABLED to prevent 502 timeouts)
-        # try: analisis_cache_instance.limpiar_todo()
-        # except: pass
+
+        # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
+        ocr_b64 = request.form.get("ocr_image_base64")
+        if ocr_b64:
+            filename_ocr = save_base64_image(ocr_b64, nuevo.id)
+            if filename_ocr:
+                nueva_img_ocr = ImagenPrensa(prensa_id=nuevo.id, filename=filename_ocr)
+                db.session.add(nueva_img_ocr)
+                db.session.commit()
+                print(f"[OCR] Imagen vinculada persistida para noticia {nuevo.id}")
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
+            return jsonify({
+                "success": True,
+                "message": "Referencia guardada correctamente.",
+                "id": nuevo.id
+            })
+
         flash("✅ Noticia guardada correctamente.", "success")
-        return redirect(url_for("noticias.detalle_noticia", id=nuevo.id))
+        return redirect(url_for("noticias.listar", highlight_id=nuevo.id))
     next_url = None
+    autores_json = "[]"
+    if precargados.get("publicacion"):
+        pub_obj = Publicacion.query.filter_by(nombre=precargados.get("publicacion"), proyecto_id=proyecto.id).first()
+        if pub_obj and hasattr(pub_obj, 'autores') and pub_obj.autores:
+            aut_list = []
+            for a in pub_obj.autores:
+                aut_list.append({
+                    'nombre': a.nombre or '',
+                    'apellido': a.apellido or '',
+                    'tipo': a.tipo or 'firmado',
+                    'es_anonimo': a.es_anonimo
+                })
+            autores_json = json.dumps(aut_list)
+
     return render_template(
         "new.html",
         **form_data,
@@ -5419,6 +5546,7 @@ def crear_noticia_view(get_proyecto_activo_func):
         next_url=next_url,
         precargados=precargados,
         publicacion_rel=pub,
+        autores_json=autores_json
     )
 
 # --- Editar noticia de prensa ---
@@ -5443,8 +5571,19 @@ def editar(id):
         return redirect(url_for("noticias.listar"))
     if request.method == "POST":
         noticia.titulo = request.form.get("titulo")
-        noticia.publicacion = request.form.get("publicacion")
+        nombre_pub = (request.form.get("publicacion") or "").strip()
+        noticia.publicacion = nombre_pub
+        if nombre_pub:
+            pub_obj = Publicacion.query.filter_by(nombre=nombre_pub, proyecto_id=noticia.proyecto_id).first()
+            if not pub_obj:
+                pub_obj = Publicacion(nombre=nombre_pub, proyecto_id=noticia.proyecto_id)
+                db.session.add(pub_obj)
+                db.session.flush()
+            noticia.id_publicacion = pub_obj.id_publicacion
+        else:
+            noticia.id_publicacion = None
         noticia.ciudad = request.form.get("ciudad")
+        noticia.coleccion = request.form.get("coleccion")
         
         fecha_orig = (request.form.get("fecha_original") or "").strip()
         anio_val = (request.form.get("anio") or "").strip()
@@ -5462,16 +5601,49 @@ def editar(id):
         noticia.paginas = request.form.get("paginas")
         noticia.url = request.form.get("url")
         noticia.fecha_consulta = request.form.get("fecha_consulta")
-        nombre = (request.form.get("nombre_autor") or "").strip()
-        apellido = (request.form.get("apellido_autor") or "").strip()
-        es_anonimo = "anonimo" in request.form
-        if es_anonimo:
-            noticia.nombre_autor = None
-            noticia.apellido_autor = None
-        else:
-            noticia.nombre_autor = nombre
-            noticia.apellido_autor = apellido
-        noticia.tipo_autor = request.form.get("tipo_autor")
+        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        noticia.pseudonimo = (request.form.get("pseudonimo") or "").strip()
+        
+        nombres_lista = request.form.getlist("nombre_autor[]")
+        apellidos_lista = request.form.getlist("apellido_autor[]")
+        tipos_lista = request.form.getlist("tipo_autor[]")
+        anonimos_raw = request.form.getlist("es_anonimo_raw[]")
+
+        # Limpiar autores antiguos usando la relación
+        noticia.autores = []
+        db.session.flush()
+        
+        # Procesamos la nueva lista (usamos tipos_lista como base porque siempre tiene un valor por fila)
+        for i in range(len(tipos_lista)):
+            nom = (nombres_lista[i] if i < len(nombres_lista) else "").strip()
+            ape = (apellidos_lista[i] if i < len(apellidos_lista) else "").strip()
+            tip = tipos_lista[i]
+            es_anon = (i < len(anonimos_raw) and anonimos_raw[i] == "si")
+            
+            nuevo_aut = AutorPrensa(
+                prensa_id=noticia.id,
+                nombre=nom if not es_anon else None,
+                apellido=ape if not es_anon else None,
+                tipo=tip,
+                es_anonimo=es_anon,
+                orden=i
+            )
+            noticia.autores.append(nuevo_aut)
+            
+            # Sincronizar el primero para compatibilidad
+            if i == 0:
+                noticia.nombre_autor = nom if not es_anon else None
+                noticia.apellido_autor = ape if not es_anon else None
+                if es_anon:
+                    noticia.autor = "Anónimo"
+                else:
+                    if ape and nom: noticia.autor = f"{ape}, {nom}"
+                    elif ape: noticia.autor = ape
+                    else: noticia.autor = nom
+        
+        # Recargar autores para asegurar que el flush() posterior los vea
+        db.session.flush()
+        noticia.tipo_autor = request.form.get("tipo_autor") or (tipos_lista[0] if tipos_lista else "firmado")
         noticia.idioma = request.form.get("idioma")
         noticia.licencia = request.form.get("licencia")
         noticia.fuente_condiciones = request.form.get("fuente_condiciones")
@@ -5529,6 +5701,7 @@ def editar(id):
         noticia.volumen = request.form.get("volumen")
         noticia.seccion = request.form.get("seccion")
         noticia.palabras_clave = request.form.get("palabras_clave")
+        noticia.pseudonimo = request.form.get("pseudonimo")
         noticia.resumen = request.form.get("resumen")
         noticia.editorial = request.form.get("editorial")
         noticia.isbn = request.form.get("isbn")
@@ -5538,7 +5711,14 @@ def editar(id):
         noticia.referencias_relacionadas = request.form.get("referencias_relacionadas")
         noticia.archivo_pdf = request.form.get("archivo_pdf")
         noticia.fuente = request.form.get("fuente")
+        noticia.tipo_publicacion = request.form.get("tipo_publicacion")
+        noticia.periodicidad = request.form.get("periodicidad")
+        noticia.actos_totales = request.form.get("actos_totales")
+        noticia.escenas_totales = request.form.get("escenas_totales")
+        noticia.reparto_total = request.form.get("reparto_total")
         noticia.edicion = request.form.get("edicion")
+        noticia.escenas = request.form.get("escenas")
+        noticia.reparto = request.form.get("reparto")
         noticia.texto_original = request.form.get("texto_original")
         noticia.descripcion_publicacion = request.form.get("descripcion_publicacion")
         # Guardar imágenes adjuntas (múltiples)
@@ -5553,11 +5733,33 @@ def editar(id):
                 nueva_img = ImagenPrensa(prensa_id=noticia.id, filename=filename)
                 db.session.add(nueva_img)
         db.session.commit()
+
+        # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
+        ocr_b64 = request.form.get("ocr_image_base64")
+        if ocr_b64:
+            filename_ocr = save_base64_image(ocr_b64, noticia.id)
+            if filename_ocr:
+                nueva_img_ocr = ImagenPrensa(prensa_id=noticia.id, filename=filename_ocr)
+                db.session.add(nueva_img_ocr)
+                db.session.commit()
+                print(f"[OCR] Imagen vinculada persistida para noticia {noticia.id}")
+
         # Invalidate analysis cache
-        try: analisis_cache_instance.limpiar_todo()
-        except: pass
+        try:
+            from analisis_cache import cache as analisis_cache_instance
+            analisis_cache_instance.limpiar_todo()
+        except:
+            pass
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
+            return jsonify({
+                "success": True,
+                "message": "Referencia actualizada correctamente.",
+                "id": noticia.id
+            })
+
         flash("✅ Noticia actualizada correctamente.", "success")
-        return redirect(url_for("noticias.listar"))
+        return redirect(url_for("noticias.listar", highlight_id=noticia.id))
     # GET o fallback: mostrar formulario con datos actuales
     form_data = get_form_data_for_templates_noticias()
     
@@ -5570,6 +5772,13 @@ def editar(id):
         apellido_autor_val=noticia.apellido_autor,
         temas_sel=[t.strip() for t in (noticia.temas or "").split(",") if t.strip()],
         next_url=request.args.get("next"),
+        autores_json=json.dumps([{
+            'nombre': a.nombre or '',
+            'apellido': a.apellido or '',
+            'tipo': a.tipo or 'firmado',
+            'es_anonimo': a.es_anonimo,
+            'orden': a.orden
+        } for a in db.session.query(AutorPrensa).filter_by(prensa_id=noticia.id).order_by(AutorPrensa.orden).all()])
     )
 
 @noticias_bp.route('/duplicar/<int:noticia_id>', methods=['GET'], endpoint='noticia_duplicar')
@@ -5590,6 +5799,24 @@ def noticia_duplicar(noticia_id):
         datos['proyecto_id'] = proyecto_activo.id
     copia = Prensa(**datos)
     db.session.add(copia)
+    db.session.flush() # Obtener id de la copia
+
+    # Copiar autores
+    for a in original.autores:
+        nueva_aut = AutorPrensa(
+            prensa_id=copia.id,
+            nombre=a.nombre,
+            apellido=a.apellido,
+            tipo=a.tipo,
+            es_anonimo=a.es_anonimo,
+            orden=a.orden
+        )
+        db.session.add(nueva_aut)
+
+    # Copiar relación con temas
+    if original.temas_rel:
+        copia.temas_rel = list(original.temas_rel)
+
     db.session.commit()
     # Invalidate analysis cache
     try: analisis_cache_instance.limpiar_todo()

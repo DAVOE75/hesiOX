@@ -97,9 +97,28 @@
                     <tr class="fila-medio">
                         <td>
                             <strong class="text-white d-block" style="font-size: 13px;">{{ p.nombre }}</strong>
-                            {% if p.tipo %}
-                            <span class="badge bg-dark border border-secondary text-muted rounded-0"
-                                style="font-size: 9px; padding: 2px 4px;">{{ p.tipo|upper }}</span>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                {% if p.tipo %}
+                                <span class="badge bg-dark border border-secondary text-muted rounded-0"
+                                    style="font-size: 9px; padding: 2px 4px;">{{ p.tipo|upper }}</span>
+                                {% endif %}
+                                {% if p.coleccion %}
+                                <span class="badge bg-dark border border-info text-info rounded-0"
+                                    style="font-size: 9px; padding: 2px 4px;" title="Colección: {{ p.coleccion }}">{{ p.coleccion|upper }}</span>
+                                {% endif %}
+                            </div>
+                            {% if p.autores %}
+                            <div class="small text-muted mt-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-user-pen opacity-50 me-1"></i>
+                                {% for a in p.autores %}
+                                    {% if a.es_anonimo %}
+                                        <span class="fst-italic">Anónimo</span>
+                                    {% else %}
+                                        {{ a.nombre }} {{ a.apellido }}
+                                    {% endif %}
+                                    {% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </td>
                         <td>
@@ -147,14 +166,18 @@
                             {% endif %}
                         </td>
                         <td class="text-end pe-3">
-                            <div class="btn-group">
+                            <div class="d-flex justify-content-end gap-1">
                                 <a href="{{ url_for('hemerotecas.editar_publicacion', id=p.id_publicacion) }}"
-                                    class="p-1 px-2" title="Editar">
+                                    class="btn-admin-action btn-admin-action-success" title="Editar" style="width: 28px;">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <form action="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Borrar esta publicación?')">
+                                <form action="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}" method="POST" style="display:inline;" 
+                                      id="form-borrar-{{ p.id_publicacion }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="p-1 px-2 hover-danger bg-transparent border-0" title="Borrar" style="color: inherit;">
+                                    <button type="button" class="btn-admin-action btn-admin-action-danger btn-borrar-pub" 
+                                            data-id="{{ p.id_publicacion }}" data-nombre="{{ p.nombre }}"
+                                            onclick="confirmarBorradoPublicacion(event, this.dataset.id, this.dataset.nombre)"
+                                            title="Borrar" style="width: 28px;">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </form>
@@ -182,6 +205,29 @@
                 row.style.display = "none";
             }
         });
+    }
+
+    function confirmarBorradoPublicacion(event, id, nombre) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        if (typeof window.hesioxConfirm === 'function') {
+            window.hesioxConfirm({
+                title: '¿Eliminar publicación?',
+                text: `¿Estás seguro de que deseas eliminar "${nombre}"? Esta acción no se puede deshacer y fallará si tiene artículos asociados.`,
+                confirmText: 'ELIMINAR'
+            }).then(confirmed => {
+                if (confirmed) {
+                    document.getElementById(`form-borrar-${id}`).submit();
+                }
+            });
+        } else {
+            if (confirm(`¿Borrar la publicación "${nombre}"?`)) {
+                document.getElementById(`form-borrar-${id}`).submit();
+            }
+        }
     }
 </script>
 

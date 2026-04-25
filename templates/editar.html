@@ -63,13 +63,29 @@
         line-height: 1.6;
     }
 
-    .ql-snow .ql-stroke { stroke: #bbb !important; }
-    .ql-snow .ql-fill { fill: #bbb !important; }
-    .ql-snow .ql-picker { color: #bbb !important; }
+    .ql-snow .ql-stroke {
+        stroke: #bbb !important;
+    }
 
-    [data-theme="light"] .ql-snow .ql-stroke { stroke: #444 !important; }
-    [data-theme="light"] .ql-snow .ql-fill { fill: #444 !important; }
-    [data-theme="light"] .ql-snow .ql-picker { color: #444 !important; }
+    .ql-snow .ql-fill {
+        fill: #bbb !important;
+    }
+
+    .ql-snow .ql-picker {
+        color: #bbb !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-stroke {
+        stroke: #444 !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-fill {
+        fill: #444 !important;
+    }
+
+    [data-theme="light"] .ql-snow .ql-picker {
+        color: #444 !important;
+    }
 
     /* Estilos específicos para la cabecera del editor */
 
@@ -81,13 +97,8 @@
         padding: 0 20px !important;
     }
 
-    /* Hacer que el contenido se estire hasta el footer */
-    .container-fluid {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: calc(100vh - 120px);
-    }
+
+
 
     .header-center {
         flex: 1;
@@ -116,8 +127,8 @@
     }
 
     /* Ambas columnas se estiran igual */
-    .col-lg-4,
-    .col-lg-8 {
+    #row-principal > .col-lg-4,
+    #row-principal > .col-lg-8 {
         padding: 12px;
         display: flex;
         flex-direction: column;
@@ -144,7 +155,7 @@
         flex: 0 0 auto;
     }
 
-    .row.g-3 {
+    #row-principal {
         display: flex;
         flex: 1;
         margin: 0 -12px;
@@ -215,23 +226,44 @@
     .header-actions-wrapper .dropdown-toggle::after {
         vertical-align: middle !important;
     }
+
+    .form-section-sirio {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-section-sirio:first-of-type {
+        border-top: none;
+        margin-top: 0;
+        padding-top: 0;
+    }
+
+    .section-header-sirio {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: var(--ds-color-accent, #ff9800);
+        letter-spacing: 1.2px;
+        margin-bottom: 1.2rem;
+        text-transform: uppercase;
+        opacity: 0.8;
+        font-family: var(--ds-font-ui, monospace);
+    }
+
+    #traduccion-tab.active,
+    #original-tab.active {
+        border-bottom: 2px solid var(--ds-color-accent, #ff9800) !important;
+        color: #fff !important;
+    }
+
+    [data-theme="light"] #traduccion-tab.active,
+    [data-theme="light"] #original-tab.active {
+        color: #333 !important;
+    }
 </style>
 {% endblock %}
 
 {% block top_actions %}
-<!-- Edit Status Badge -->
-<div class="d-flex align-items-center gap-2 me-1">
-    <span class="badge bg-warning text-dark fw-bold px-2 d-inline-flex align-items-center"
-        style="font-size: 10px; letter-spacing: 0.5px; height: 32px !important; border-radius: 4px;">
-        <i class="fa-solid fa-pen-to-square me-1"></i> EDITANDO
-    </span>
-    <span class="text-secondary small d-none d-xl-inline" style="font-size: 10px;">
-        ID: <span class="text-accent fw-bold">#{{ ref.id }}</span>
-    </span>
-</div>
-
-<div class="vr mx-1 opacity-25"></div>
-
 <!-- Actions Group -->
 <button type="submit" form="form-ficha" class="btn-sirio active" title="Guardar cambios">
     <i class="fa-solid fa-save"></i>
@@ -298,7 +330,7 @@
 
 {% block content %}
 <div class="container-fluid py-2">
-    <div class="container" style="max-width: 100%;">
+    <div>
 
         <div class="row justify-content-center mb-2">
             <div class="col-12">
@@ -315,22 +347,31 @@
                                 <span class="input-group-text"><i class="fa-solid fa-robot"></i></span>
                                 <select name="ocr_engine" id="ocrEngineSelect" class="form-select form-select-sirio">
                                     <option value="tesseract">Tesseract (local, rápido)</option>
-                                    <option value="ocrspace" selected
-                                        style="background-color:#e6f7ff;font-weight:bold;">OCR.space (web, máxima
-                                        calidad)</option>
+                                    <option value="ocrspace">OCR.space (web, máxima calidad)</option>
                                     <option value="paddle">PaddleOCR (IA, multilingüe)</option>
                                     <option value="yolo">YOLO Layout (IA, estructurado)</option>
+                                    <option value="hybrid" selected style="background-color:#e6f7ff;font-weight:bold;">
+                                        Híbrido (Doble Paso + Reconciliación IA)</option>
                                 </select>
                             </div>
                             <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
                                 <i class="fa-solid fa-circle-info me-1"></i>
-                                <strong>Recomendado:</strong> Para documentos complejos o antiguos, usa <span style="color:#294a60;font-weight:bold;">PaddleOCR</span> o <span style="color:#294a60;font-weight:bold;">OCR.space</span>. Para prensa estructurada y tablas, <span style="color:#294a60;font-weight:bold;">YOLO Layout</span> ofrece el mejor segmentado. Refina siempre con <span style="color:#8e44ad;font-weight:bold;">IA Gemini/GPT-4</span> y el <strong>Arquetipo de Transcriptor Paleográfico</strong>.<br>
-                                <span class="text-muted">Tesseract es la opción local rápida para textos sencillos y modernos.</span>
+                                <strong>Recomendado:</strong> Para documentos complejos o antiguos, usa <span
+                                    style="color:#ffffff;font-weight:bold;">PaddleOCR</span> o <span
+                                    style="color:#ffffff;font-weight:bold;">OCR.space</span>. Para prensa estructurada y
+                                tablas, <span style="color:#ffffff;font-weight:bold;">YOLO Layout</span> ofrece el mejor
+                                segmentado. Refina siempre con <span
+                                    style="color:lch(80.18% 72.13 85.49);font-weight:bold;">IA
+                                    Gemini/GPT-4</span> y el <strong>Arquetipo de Transcriptor
+                                    Paleográfico</strong>.<br>
+                                <span class="text-muted">Tesseract es la opción local rápida para textos sencillos y
+                                    modernos.</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="text-muted small flex-grow-1">
-                                Sube una imagen o PDF para extraer texto automáticamente con Tesseract OCR.
+                                Arrastra o selecciona un documento (Imagen o PDF) para iniciar la extracción avanzada
+                                con Deep Vision IA.
                             </div>
                             <input type="file" id="fileInputOCR" class="d-none" accept="image/*,application/pdf">
                             <button class="btn btn-sirio" onclick="document.getElementById('fileInputOCR').click()"
@@ -439,6 +480,13 @@
                                             <i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado
                                         </button>
                                     </div>
+                                    <div class="mb-2">
+                                        <button id="btn-vincular-imagen-ocr" type="button"
+                                            class="btn btn-sm btn-outline-info w-100" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada como
+                                            Material Adjunto
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -449,185 +497,267 @@
 
         <form method="POST" enctype="multipart/form-data" id="form-ficha">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="row g-3">
+            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64" />
+            <div class="row g-3" id="row-principal">
                 <div class="col-lg-4">
                     <div class="card-panel">
                         <div class="card-header-panel">
                             <span><i class="fa-solid fa-book-bookmark me-2"></i> Datos Hemerográficos</span>
                         </div>
                         <div class="p-3">
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Publicación / Medio <span
-                                        class="text-danger">*</span></label>
-                                <input list="lista_publicaciones" name="publicacion" id="input-publicacion"
-                                    autocomplete="off"
-                                    class="form-control form-control-sirio w-100 publicacion-medio-input"
-                                    value="{{ ref.publicacion or '' }}" required
-                                    placeholder="Nombre del periódico o revista">
-                                <datalist id="lista_publicaciones">
-                                    {% for p in publicaciones %}
-                                    <option value="{{ p }}">
-                                        {% endfor %}
-                                </datalist>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-5">
-                                    <label class="form-label-sirio">Fecha Publicación <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" name="fecha_original"
-                                        class="form-control form-control-sirio validate-date"
-                                        value="{% if ref.fecha_original and ref.fecha_original|length == 10 and '-' in ref.fecha_original %}{{ ref.fecha_original[8:10] }}/{{ ref.fecha_original[5:7] }}/{{ ref.fecha_original[0:4] }}{% else %}{{ ref.fecha_original or '' }}{% endif %}"
-                                        placeholder="DD/MM/AAAA" onkeyup="autoformatearFecha(event)" required>
-                                </div>
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Año</label>
-                                    <input type="number" name="anio" class="form-control form-control-sirio"
-                                        value="{{ ref.anio or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Núm/Vol</label>
-                                    <input type="text" name="numero" class="form-control form-control-sirio"
-                                        value="{{ ref.numero or '' }}" placeholder="Número de edición">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Edición</label>
-                                <select name="edicion" id="selectEdicion" class="form-select form-control-sirio"
-                                    data-value="{{ ref.edicion or '' }}">
-                                    <option value="">Cargando ediciones...</option>
+                            <!-- Bloque: Identificación de la Obra -->
+                            <div class="mb-4">
+                                <label class="form-label-sirio">Tipo de Recurso</label>
+                                <select name="tipo_recurso" id="selectRecurso" class="form-select form-control-sirio">
+                                    {% set tr = ref.tipo_recurso or 'prensa' %}
+                                    <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
+                                    <option value="folleto" {{ 'selected' if tr=='folleto' else '' }}>Folleto</option>
+                                    <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
+                                    <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
+                                        Académico</option>
+                                    <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra
+                                        Teatral</option>
+                                    <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
+                                    <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
+                                    <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>Fotografía
+                                    </option>
+                                    <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
                                 </select>
                             </div>
-                            <div class="mb-1">
-                                <label class="form-label-sirio">Autor(es)</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <input type="text" name="nombre_autor" class="form-control form-control-sirio"
-                                            placeholder="Nombre" value="{{ nombre_autor_val or '' }}" id="inpNombre">
+
+                            <div class="form-section-sirio">
+                                <div class="section-header-sirio">Identificación de la Obra</div>
+                                <div class="mb-3">
+                                    <label class="form-label-sirio">Publicación / Medio / Colección</label>
+                                    <input list="lista_publicaciones" name="publicacion" id="input-publicacion"
+                                        autocomplete="off" class="form-control form-control-sirio w-100"
+                                        value="{{ ref.publicacion or '' }}"
+                                        placeholder="Nombre del periódico, revista o colección">
+                                    <datalist id="lista_publicaciones">
+                                        {% for p in publicaciones %}<option value="{{ p }}">{% endfor %}
+                                    </datalist>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Idioma</label>
+                                        <select name="idioma" class="form-select form-control-sirio">
+                                            <option value="">-</option>
+                                            {% for i in idiomas %}
+                                            <option value="{{ i }}" {% if ref.idioma==i %}selected{% endif %}>{{ i|upper
+                                                }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-                                    <div class="col-6">
-                                        <input type="text" name="apellido_autor" class="form-control form-control-sirio"
-                                            placeholder="Apellido" value="{{ apellido_autor_val or '' }}"
-                                            id="inpApellido">
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">Ciudad</label>
+                                        <input type="text" name="ciudad" class="form-control form-control-sirio"
+                                            value="{{ ref.ciudad or '' }}">
                                     </div>
-                                </div>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="anonimo" id="anonimo" {{ 'checked'
-                                    if not nombre_autor_val and not apellido_autor_val else '' }}>
-                                <label class="form-check-label text-secondary small" for="anonimo">Es anónimo</label>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Ciudad</label>
-                                    <input type="text" name="ciudad" class="form-control form-control-sirio"
-                                        value="{{ ref.ciudad or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">País</label>
-                                    <input type="text" name="pais_publicacion" class="form-control form-control-sirio"
-                                        value="{{ ref.pais_publicacion or '' }}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label-sirio">Idioma</label>
-                                    <select name="idioma" class="form-select form-control-sirio">
-                                        <option value="">-</option>
-                                        {% for i in idiomas %}
-                                        <option value="{{ i }}" {% if ref.idioma==i %}selected{% endif %}>{{ i|upper }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <!-- Fila: Fuente / Institución -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-12">
-                                    <label class="form-label-sirio">Fuente / Institución</label>
-                                    <input type="text" name="fuente"
-                                        class="form-control form-control-sirio bg-dark text-light w-100 fuente-institucion-input"
-                                        value="{{ ref.fuente or (publicacion_rel.fuente if publicacion_rel else '') or (publicacion_rel.hemeroteca_rel.institucion if publicacion_rel and publicacion_rel.hemeroteca_rel else '') }}"
-                                        placeholder="Archivo, Biblioteca o Institución de origen">
-                                </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Pág. Ini</label>
-                                    <input type="text" name="pagina_inicio" class="form-control form-control-sirio"
-                                        value="{{ ref.pagina_inicio or '' }}">
-                                </div>
-                                <div class="col-3">
-                                    <label class="form-label-sirio">Pág. Fin</label>
-                                    <input type="text" name="pagina_fin" class="form-control form-control-sirio"
-                                        value="{{ ref.pagina_fin or '' }}">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Tipo Recurso</label>
-                                    <select name="tipo_recurso" id="selectRecurso"
-                                        class="form-select form-control-sirio">
-                                        {% set tr = (ref.tipo_recurso or 'prensa') %}
-                                        <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
-                                        <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
-                                        <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
-                                            Académico</option>
-                                        <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra Teatral</option>
-                                        <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
-                                        <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
-                                        <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>
-                                            Fotografía</option>
-                                        <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
-                                    </select>
+                                    <div class="col-4">
+                                        <label class="form-label-sirio">País</label>
+                                        <input type="text" name="pais_publicacion"
+                                            class="form-control form-control-sirio"
+                                            value="{{ ref.pais_publicacion or '' }}">
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- CAMPOS ESPECÍFICOS PARA LIBROS / ARTÍCULOS (Inicialmente ocultos) -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Editorial</label>
-                                    <input type="text" name="editorial" class="form-control form-control-sirio"
-                                        value="{{ ref.editorial or '' }}">
+                            <div class="form-section-sirio">
+                                <div class="section-header-sirio">Autoría</div>
+                                <div class="mb-1 d-flex justify-content-between align-items-center">
+                                    <label class="form-label-sirio mb-0">AUTOR/A (ES)</label>
+                                    <button type="button" class="btn-sirio" id="btn-add-autor"
+                                        title="Añadir otro autor">
+                                        <i class="fa-solid fa-plus me-1"></i>AÑADIR
+                                    </button>
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Lugar de Pub.</label>
-                                    <input type="text" name="lugar_publicacion" class="form-control form-control-sirio"
-                                        value="{{ ref.lugar_publicacion or '' }}">
+                                <div id="autores-container" class="mt-2"
+                                    data-initial='{{ autores_json|safe if autores_json else "[]" }}'>
                                 </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">ISBN</label>
-                                    <input type="text" name="isbn" class="form-control form-control-sirio"
-                                        value="{{ ref.isbn or '' }}">
+                                <div class="mt-3">
+                                    <label class="form-label-sirio">Pseudónimo(s)</label>
+                                    <input type="text" name="pseudonimo" class="form-control form-control-sirio"
+                                        placeholder="Ej: Fígaro, El Curioso Parlante..."
+                                        value="{{ ref.pseudonimo or '' }}">
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">ISSN</label>
-                                    <input type="text" name="issn" class="form-control form-control-sirio"
-                                        value="{{ ref.issn or '' }}">
-                                </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Volumen / Tomo / Escenas</label>
-                                    <input type="text" name="volumen" class="form-control form-control-sirio"
-                                        value="{{ ref.volumen or '' }}">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">DOI</label>
-                                    <input type="text" name="doi" class="form-control form-control-sirio"
-                                        value="{{ ref.doi or '' }}">
+                                <div class="mt-3">
+                                    <label class="form-label-sirio">Colección</label>
+                                    <input type="text" name="coleccion" class="form-control form-control-sirio"
+                                        placeholder="Ej: Colección Clásicos Castellanos"
+                                        value="{{ ref.coleccion or '' }}">
                                 </div>
                             </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Sección / Actos</label>
-                                    <input type="text" name="seccion" class="form-control form-control-sirio"
-                                        value="{{ ref.seccion or '' }}">
+                                
+                                <!-- Bloque: Publicación y Fecha / Puesta en Escena -->
+                                <div class="form-section-sirio mt-5" id="section-escena">
+                                    <div class="section-header-sirio pt-3 border-top" id="header-section-3">Publicación y Fecha</div>
+                                
+                                <!-- Datos Hemerográficos (Siempre visibles) -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Tipo de Publicación</label>
+                                        <select name="tipo_publicacion" id="selectTipoPublicacion" class="form-select form-select-sirio" data-value="{{ ref.tipo_publicacion or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Periodicidad</label>
+                                        <select name="periodicidad" id="selectPeriodicidad" class="form-select form-select-sirio" data-value="{{ ref.periodicidad or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                            <option value="Diaria" {% if ref.periodicidad == 'Diaria' %}selected{% endif %}>Diaria</option>
+                                            <option value="Semanal" {% if ref.periodicidad == 'Semanal' %}selected{% endif %}>Semanal</option>
+                                            <option value="Quincenal" {% if ref.periodicidad == 'Quincenal' %}selected{% endif %}>Quincenal</option>
+                                            <option value="Mensual" {% if ref.periodicidad == 'Mensual' %}selected{% endif %}>Mensual</option>
+                                            <option value="Bimensual" {% if ref.periodicidad == 'Bimensual' %}selected{% endif %}>Bimensual</option>
+                                            <option value="Trimestral" {% if ref.periodicidad == 'Trimestral' %}selected{% endif %}>Trimestral</option>
+                                            <option value="Semestral" {% if ref.periodicidad == 'Semestral' %}selected{% endif %}>Semestral</option>
+                                            <option value="Anual" {% if ref.periodicidad == 'Anual' %}selected{% endif %}>Anual</option>
+                                            <option value="Bianual" {% if ref.periodicidad == 'Bianual' %}selected{% endif %}>Bianual</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label class="form-label-sirio">Palabras Clave / Reparto</label>
-                                    <input type="text" name="palabras_clave" class="form-control form-control-sirio"
-                                        value="{{ ref.palabras_clave or '' }}">
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label-sirio">Fecha de Publicación <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="fecha_original"
+                                            class="form-control form-control-sirio validate-date"
+                                            value="{% if ref.fecha_original and ref.fecha_original|length == 10 and '-' in ref.fecha_original %}{{ ref.fecha_original[8:10] }}/{{ ref.fecha_original[5:7] }}/{{ ref.fecha_original[0:4] }}{% else %}{{ ref.fecha_original or '' }}{% endif %}"
+                                            placeholder="DD/MM/AAAA" onkeyup="autoformatearFecha(event)" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label-sirio">Año</label>
+                                        <input type="number" name="anio" class="form-control form-control-sirio"
+                                            value="{{ ref.anio or '' }}" placeholder="AAAA">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label-sirio">Lugar de Publicación / Teatro</label>
+                                        <input type="text" name="lugar_publicacion"
+                                            class="form-control form-control-sirio"
+                                            value="{{ ref.lugar_publicacion or '' }}"
+                                            placeholder="Ciudad, Teatro, etc...">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label-sirio">Edición</label>
+                                        <select name="edicion" id="selectEdicion" class="form-select form-control-sirio" data-value="{{ ref.edicion or '' }}">
+                                            <option value="">(Seleccionar)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label-sirio">Volumen</label>
+                                        <input type="text" name="volumen" class="form-control form-control-sirio"
+                                            value="{{ ref.volumen or '' }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label-sirio">Número</label>
+                                        <input type="text" name="numero" class="form-control form-control-sirio"
+                                            value="{{ ref.numero or '' }}">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio" id="label-editorial">Compañía / Productora / Editorial</label>
+                                        <input type="text" name="editorial" class="form-control form-control-sirio"
+                                            value="{{ ref.editorial or '' }}"
+                                            placeholder="Nombre de la compañía o editorial...">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">Páginas (Inicio - Fin)</label>
+                                        <div class="input-group flex-nowrap">
+                                            <input type="text" name="pagina_inicio"
+                                                class="form-control form-control-sirio"
+                                                value="{{ ref.pagina_inicio or '' }}" placeholder="Ini">
+                                            <input type="text" name="pagina_fin" class="form-control form-control-sirio"
+                                                value="{{ ref.pagina_fin or '' }}" placeholder="Fin">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <hr class="border-secondary my-3 opacity-25">
+
+                            <div class="form-section-sirio" id="section-dramatico">
+                                <div class="section-header-sirio">Estructura y Contenido Dramático</div>
+
+                                <div class="mb-3 p-2 border border-secondary border-opacity-10 rounded">
+                                    <label class="form-label-sirio text-info small mb-2"><i
+                                            class="fa-solid fa-clapperboard me-1"></i> Totales de la Obra
+                                        (Global)</label>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Actos (Totales)</label>
+                                            <input type="text" name="actos_totales"
+                                                class="form-control form-control-sirio form-control-sm"
+                                                value="{{ ref.actos_totales or '' }}" placeholder="Ej: 3 Actos">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Escenas (Totales)</label>
+                                            <input type="text" name="escenas_totales"
+                                                class="form-control form-control-sirio form-control-sm"
+                                                value="{{ ref.escenas_totales or '' }}" placeholder="Ej: 24 Escenas">
+                                        </div>
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label-sirio small opacity-75">Reparto Completo (Obra)</label>
+                                        <textarea name="reparto_total"
+                                            class="form-control form-control-sirio form-control-sm" rows="2"
+                                            placeholder="Lista completa de personajes de la obra...">{{ ref.reparto_total or '' }}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label class="form-label-sirio text-warning small mb-2"><i
+                                            class="fa-solid fa-bookmark me-1"></i> Contenido de la Referencia
+                                        (Fragmento)</label>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Acto(s) en este
+                                                documento</label>
+                                            <input type="text" name="seccion" class="form-control form-control-sirio"
+                                                value="{{ ref.seccion or '' }}" placeholder="Ej: Acto I">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label-sirio small opacity-75">Escena(s) en este
+                                                documento</label>
+                                            <input type="text" name="escenas" class="form-control form-control-sirio"
+                                                value="{{ ref.escenas or '' }}" placeholder="Ej: Escena III">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-sirio small opacity-75">Personajes en este
+                                            fragmento</label>
+                                        <textarea name="reparto" class="form-control form-control-sirio" rows="3"
+                                            placeholder="Personajes que aparecen en este texto...">{{ ref.reparto or '' }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section-sirio">
+                                <!-- Bloque: Datos de Archivo y Localización Física -->
+                                <div class="section-header-sirio">Datos de Archivo y Localización Física</div>
+                                <div class="mb-3">
+                                    <label class="form-label-sirio">Archivo / Fondo</label>
+                                    <input type="text" name="fuente" class="form-control form-control-sirio"
+                                        value="{{ ref.fuente or '' }}" placeholder="Archivo o Institución">
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">ISBN / ISSN</label>
+                                        <input type="text" name="isbn" class="form-control form-control-sirio"
+                                            value="{{ ref.isbn or ref.issn or '' }}" placeholder="Código">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-sirio">DOI</label>
+                                        <input type="text" name="doi" class="form-control form-control-sirio"
+                                            value="{{ ref.doi or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-secondary my-4 opacity-10">
 
                             <div class="mb-3">
                                 <label class="form-label-sirio text-accent">URL / Enlace</label>
@@ -740,12 +870,17 @@
                 </div>
                 <div class="col-lg-8">
                     <div class="card-panel mb-4">
+                        <div class="card-header-panel">
+                            <span><i class="fa-solid fa-heading me-2"></i> Título y Contenido Principal</span>
+                        </div>
                         <div class="p-3">
-                            <div class="mb-3">
-                                <label class="form-label-sirio">Titulo de la Noticia</label>
-                                <input type="text" name="titulo" class="form-control form-control-sirio fw-bold"
-                                    style="font-size: 1.1rem;" value="{{ ref.titulo or '' }}"
-                                    placeholder="Ingrese el titular...">
+                            <div class="mb-4">
+                                <label class="form-label-sirio">Título de la Noticia / Texto <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="titulo" id="input-titulo-principal"
+                                    class="form-control form-control-sirio form-control-lg fw-bold"
+                                    value="{{ ref.titulo or '' }}" required
+                                    placeholder="Título completo o titular de la noticia">
                             </div>
 
                             <hr class="my-4" style="opacity: 0.15;">
@@ -777,11 +912,10 @@
 
                                 <li class="nav-item">
                                     <button
-                                        class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 rounded-0 ps-0 pe-3"
+                                        class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 border-bottom border-2 border-warning rounded-0 ps-0 pe-3"
                                         id="traduccion-tab" data-bs-toggle="tab" data-bs-target="#traduccion"
-                                        type="button" style="white-space: nowrap; flex-shrink: 0;">Español /
-                                        Traducción</button>
-
+                                        type="button" style="white-space: nowrap; flex-shrink: 0;">ESPAÑOL /
+                                        TRADUCCIÓN</button>
                                 </li>
                                 <li class="nav-item">
                                     <button
@@ -791,20 +925,37 @@
 
                                 </li>
                             </ul>
+                            <!-- AI Progress Bar (Global for both editors) -->
+                            <div id="ai-progress-container" class="w-100 mb-3 d-none">
+                                <div class="progress"
+                                    style="height: 6px; background-color: rgba(255,152,0,0.05); border-radius: 3px; overflow: hidden;">
+                                    <div id="ai-progress-bar"
+                                        class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+                                        role="progressbar" style="width: 0%; transition: width 0.4s ease;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <span class="small text-warning fw-bold" id="ai-progress-text">Analizando documento
+                                        con IA...</span>
+                                    <span class="small text-muted" style="font-size: 10px;">hesiOX IA Motor v4.2</span>
+                                </div>
+                            </div>
+
                             <div class="tab-content pt-3 flex-grow-1 d-flex flex-column">
                                 <div class="tab-pane fade show active flex-grow-1 d-flex flex-column" id="traduccion">
                                     <div id="toolbar-contenido"></div>
                                     <div id="contenido-editor" class="quill-editor flex-grow-1"></div>
-                                    <textarea name="contenido" id="contenido" class="d-none">{{ ref.contenido or '' }}</textarea>
+                                    <textarea name="contenido" id="contenido"
+                                        class="d-none">{{ ref.contenido or '' }}</textarea>
                                 </div>
                                 <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="original">
                                     <div id="toolbar-texto_original"></div>
                                     <div id="texto_original_editor" class="quill-editor flex-grow-1"></div>
-                                    <textarea name="texto_original" id="texto_original" class="d-none">{{ ref.texto_original or '' }}</textarea>
+                                    <textarea name="texto_original" id="texto_original"
+                                        class="d-none">{{ ref.texto_original or '' }}</textarea>
                                 </div>
                             </div>
 
-                            <!-- Barra de Herramientas de Contenido -->
+                            <!-- Bloque: Estructura y Contenido Dramático -->
                             <div class="small text-muted mb-1 mt-3">
                                 <i class="fa-solid fa-circle-info me-1"></i> Recomendación: Para un mejor refinamiento
                                 del texto, aplica primero la 'Limpieza' y luego la 'Revisión por IA'.
@@ -941,7 +1092,7 @@
 <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="{{ url_for('static', filename='js/citation-generator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ocr-processor.js') }}?v=fix400"></script>
-<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fix400"></script>
+<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fixFinal_v2"></script>
 <script src="{{ url_for('static', filename='js/form-validator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-counter.js') }}"></script>
@@ -1071,7 +1222,23 @@
                 }
 
                 // IMPORTANTE: Obtener texto puro desde data-ocr-text (sin metadatos)
-                const extractedText = ocrTextPreview.getAttribute('data-ocr-text') || ocrTextPreview.textContent || '';
+                let extractedText = ocrTextPreview.getAttribute('data-ocr-text') || ocrTextPreview.textContent || '';
+
+                // --- LIMPIEZA DE MARCADORES PALEOGRÁFICOS ---
+                // Eliminamos etiquetas estructurales para que no ensucien el texto de investigación
+                extractedText = extractedText.replace(/\[CABECERA\]/gi, '');
+                extractedText = extractedText.replace(/\[COLUMNA\s+\d+\]/gi, '');
+                extractedText = extractedText.replace(/\[PÁGINA\s+\d+\]/gi, '');
+                extractedText = extractedText.replace(/\[Grabado:.*?\]/gi, '');
+                extractedText = extractedText.replace(/\[Continúa en.*?\]/gi, '');
+                extractedText = extractedText.replace(/\[NOTICIA\]/gi, '');
+                extractedText = extractedText.replace(/\[ANUNCIO\]/gi, '');
+                extractedText = extractedText.replace(/\[SECCIÓN.*?\]/gi, '');
+                extractedText = extractedText.replace(/\[METADATOS.*?\]/gi, '');
+
+                // Limpiar saltos de línea múltiples y espacios sobrantes
+                extractedText = extractedText.replace(/\n\s*\n/g, '\n\n').trim();
+
                 const destination = selectedDestination.value;
 
                 if (!extractedText.trim()) {
@@ -1369,6 +1536,42 @@
         document.addEventListener('click', function () {
             setTimeout(calcularProgreso, 100);
         });
+
+        // Lógica dinámica para mostrar/ocultar secciones según Tipo de Recurso
+        const selectRecurso = document.getElementById('selectRecurso');
+        const sectionEscena = document.getElementById('section-escena');
+        const sectionDramatico = document.getElementById('section-dramatico');
+        const headerSection3 = document.getElementById('header-section-3');
+        const groupTituloSidebar = document.getElementById('group-titulo-sidebar');
+        const inputTituloSidebar = document.getElementById('input-titulo-sidebar');
+
+        function toggleTeatro() {
+            if (!selectRecurso) return;
+            const val = selectRecurso.value;
+
+            // Visibilidad de secciones teatrales
+            if (val === 'obra_teatral') {
+                if (sectionEscena) sectionEscena.style.display = 'block';
+                if (sectionDramatico) sectionDramatico.style.display = 'block';
+                if (headerSection3) headerSection3.textContent = 'Puesta en Escena / Representación';
+            } else {
+                if (sectionEscena) sectionEscena.style.display = 'block';
+                if (sectionDramatico) sectionDramatico.style.display = 'none';
+
+                if (val === 'prensa' || val === 'folleto') {
+                    if (headerSection3) headerSection3.textContent = 'Publicación y Fecha';
+                } else if (val === 'libro') {
+                    if (headerSection3) headerSection3.textContent = 'Edición y Publicación';
+                } else {
+                    if (headerSection3) headerSection3.textContent = 'Datos de Publicación / Fecha';
+                }
+            }
+        }
+
+        if (selectRecurso) {
+            selectRecurso.addEventListener('change', toggleTeatro);
+            toggleTeatro();
+        }
     });
 
     // El manejador de eventos para btn-correct-gemini ahora reside exclusivamente
@@ -1457,6 +1660,67 @@
                 alert('Error al eliminar la imagen: ' + error.message);
             });
     }
+    // --- AJAX SAVE FOR MAIN FORM ---
+    document.getElementById('form-ficha').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const formData = new FormData(form);
+        const btnSave = document.querySelector('button[form="form-ficha"]');
+        const originalBtnHTML = btnSave.innerHTML;
+        
+        // Visual feedback
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> GUARDANDO...';
+        
+        fetch(form.action + '?ajax=1', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en el servidor');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Guardado!',
+                    text: data.message || 'Cambios guardados correctamente.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    background: '#294a60',
+                    color: '#fff',
+                    iconColor: '#4caf50'
+                }).then(() => {
+                    // Redirigir al listado resaltando la noticia editada
+                    window.location.href = "{{ url_for('noticias.listar') }}?highlight_id=" + data.id;
+                });
+            } else {
+                throw new Error(data.message || 'Error al guardar');
+            }
+        })
+        .catch(error => {
+            console.error('[ERROR] Error al guardar:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar la referencia: ' + error.message,
+                background: '#294a60',
+                color: '#fff'
+            });
+        })
+        .finally(() => {
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalBtnHTML;
+        });
+    });
+
     // Inicializar ThemeManager con URLs dinámicas
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof ThemeManager !== 'undefined') {
@@ -1471,4 +1735,7 @@
     });
 </script>
 
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
+
+{% include 'modal_autor_bio.html' %}
 {% endblock %}

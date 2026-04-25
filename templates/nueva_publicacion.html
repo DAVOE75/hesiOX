@@ -10,10 +10,10 @@
 
 
 {% block top_actions %}
-<button type="submit" form="form-publicacion" class="btn-sirio active" title="Crear Publicación">
+<label for="submit-btn-publicacion" class="btn-sirio active mb-0" title="Crear Publicación" style="cursor: pointer;">
     <i class="fa-solid fa-save"></i>
     <span class="btn-text">GUARDAR</span>
-</button>
+</label>
 
 <div class="vr mx-1 opacity-25"></div>
 
@@ -68,9 +68,9 @@
         {% endif %}
         {% endwith %}
 
-        <form id="form-publicacion" method="POST"
-            action="{{ url_for('hemerotecas.nueva_publicacion', proyecto_id=proyecto_activo.id if proyecto_activo else 0) }}">
+        <form id="form-publicacion" method="POST" action="{{ url_for('hemerotecas.nueva_publicacion') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="submit" id="submit-btn-publicacion" style="display: none;">
 
             <!-- DATOS PRINCIPALES -->
             <div class="card-panel">
@@ -86,6 +86,11 @@
                         </div>
 
                         <div class="col-12">
+                            <label class="form-label-sirio">Colección</label>
+                            <input type="text" class="form-control form-control-sirio" id="coleccion" name="coleccion"
+                                placeholder="Ej: Colección Clásicos Castellanos">
+                        </div>
+                        <div class="col-12">
                             <label class="form-label-sirio">URL de la publicación</label>
                             <input type="url" class="form-control form-control-sirio" id="url_publi" name="url_publi"
                                 placeholder="https://ejemplo.com">
@@ -94,12 +99,31 @@
                         <div class="col-md-6">
                             <label class="form-label-sirio">Tipo de Publicación</label>
                             <select class="form-select form-select-sirio" id="tipo_recurso_select" name="tipo_recurso">
-                                <option value="diario">Diario</option>
-                                <option value="revista">Revista</option>
-                                <option value="semanario">Semanario</option>
-                                <option value="boletin">Boletín</option>
+                                <option value="Periódico">Periódico</option>
+                                <option value="Diario">Diario</option>
+                                <option value="Semanario">Semanario</option>
+                                <option value="Revista">Revista</option>
+                                <option value="Magazine">Magazine</option>
+                                <option value="Boletín">Boletín</option>
+                                <option value="Libro">Libro</option>
+                                <option value="Colección de libros">Colección de libros</option>
+                                <option value="Mapa">Mapa</option>
+                                <option value="Colección de mapas">Colección de mapas</option>
+                                <option value="Manuscrito">Manuscrito</option>
+                                <option value="Legajo">Legajo</option>
+                                <option value="Expediente">Expediente</option>
+                                <option value="Gaceta">Gaceta</option>
+                                <option value="Anuario">Anuario</option>
+                                <option value="Fascículo">Fascículo</option>
+                                <option value="Otro">Otro</option>
+                                <option value="Expediente / Archivo">Expediente / Archivo</option>
+                                <option value="Documento histórico">Documento histórico</option>
+                                <option value="Manuscrito">Manuscrito</option>
+                                <option value="Atlas">Atlas</option>
+                                <option value="Grabado / Estampa">Grabado / Estampa</option>
+                                <option value="Partitura">Partitura</option>
                                 <option value="obra_teatral">Obra Teatral</option>
-                                <option value="otro">Otro</option>
+                                <option value="Otro">Otro</option>
                             </select>
                         </div>
 
@@ -118,6 +142,49 @@
                                 <option value="bianual">Bianual</option>
                             </select>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN TEATRAL (Condicional) -->
+            <div class="card-panel" id="seccion-teatral-global" style="display: none;">
+                <div class="card-header-panel">
+                    <i class="fa-solid fa-masks-theater me-2"></i> Datos Teatrales Globales (Solo para Obras)
+                </div>
+                <div class="p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Actos (Totales de la Obra)</label>
+                            <input type="text" class="form-control form-control-sirio" name="actos_totales" placeholder="Ej: 3 Actos">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-sirio">Escenas (Totales de la Obra)</label>
+                            <input type="text" class="form-control form-control-sirio" name="escenas_totales" placeholder="Ej: 24 Escenas">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-sirio">Reparto Completo / Personajes de la Obra</label>
+                            <textarea class="form-control form-control-sirio" name="reparto_total" rows="4" placeholder="Lista completa de personajes de la obra teatral (separados por comas)..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GESTIÓN DE AUDITORÍA (AUTORÍA) -->
+            <div class="card-panel">
+                <div class="card-header-panel d-flex justify-content-between align-items-center">
+                    <div><i class="fa-solid fa-user-pen me-2"></i> Gestión de Autoría</div>
+                    <button type="button" class="btn-sirio btn-sm" id="btn-add-autor" title="Añadir otro autor">
+                        <i class="fa-solid fa-plus me-1"></i>AÑADIR
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div id="autores-container" class="mt-2" data-initial='{{ autores_json|safe if autores_json else "[]" }}'>
+                        <!-- Las filas de autores se cargarán aquí vía JS -->
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label-sirio">Pseudónimo(s)</label>
+                        <input type="text" name="pseudonimo" class="form-control form-control-sirio"
+                            placeholder="Ej: Fígaro, El Curioso Parlante...">
                     </div>
                 </div>
             </div>
@@ -240,21 +307,24 @@
                 </div>
             </div>
 
-            <div style="height: 100px;"></div>
-
         </form>
     </div>
 </div>
+{% endblock %}
 
+{% block modals %}
+<!-- Modal para añadir Biografía de Autor -->
+{% include 'modal_autor_bio.html' %}
 {% endblock %}
 
 
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
 <script src="{{ url_for('static', filename='js/form-editor.js') }}"></script>
 <script>
     // Datos de hemerotecas para autocompletado via backend JSON serialization
-    window.HEMEROTECAS_DATA = {{ hemerotecas_data | default ({}) | tojson | safe }};
+    window.HEMEROTECAS_DATA = {{ hemerotecas_data|default({})|tojson|safe }};
     console.log("DEBUG: Hemerotecas Data Loaded", window.HEMEROTECAS_DATA);
 </script>
 
@@ -328,9 +398,24 @@
         const initialSelect = document.getElementById('hemeroteca_id');
         if (initialSelect && initialSelect.value) {
             // updateHemerotecaFields(initialSelect); 
-            // Nota: En edición, evitamos sobreescribir al cargar para respetar lo guardado,
-            // pero si es nueva y hay preselección, podría ser útil. 
-            // Por prudencia, requerimos interacción del usuario.
+        }
+
+        // Funcionalidad para mostrar/ocultar Datos Teatrales
+        const tipoRecursoSelect = document.getElementById('tipo_recurso_select');
+        const seccionTeatral = document.getElementById('seccion-teatral-global');
+
+        function toggleSeccionTeatral() {
+            if (tipoRecursoSelect.value === 'obra_teatral' || tipoRecursoSelect.value === 'Obra Teatral') {
+                seccionTeatral.style.display = 'block';
+            } else {
+                seccionTeatral.style.display = 'none';
+            }
+        }
+
+        if (tipoRecursoSelect && seccionTeatral) {
+            tipoRecursoSelect.addEventListener('change', toggleSeccionTeatral);
+            // Estado inicial
+            toggleSeccionTeatral();
         }
     });
 </script>

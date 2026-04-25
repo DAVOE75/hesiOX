@@ -1,0 +1,278 @@
+{% extends 'base_desktop.html' %}
+
+{% block title %}Diccionario de Autores — Proyecto Sirio{% endblock %}
+{% block page_title %}Diccionario de Autores{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Gestión de Contenidos</span>
+{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('nuevo_autor_page') }}" class="btn-sirio d-flex align-items-center justify-content-center text-decoration-none">
+    <i class="fa-solid fa-user-plus me-1"></i>NUEVO AUTOR
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Metrics Strip (Panel de Repositorio) -->
+    <div class="p-3 pb-0 flex-shrink-0">
+        <div class="metric-strip" style="max-width: 800px; margin-bottom: 2rem;">
+            <div class="metric-compact">
+                <div>
+                    <span class="metric-label">Autores Registrados</span>
+                    <span class="metric-value">{{ autores|length }}</span>
+                </div>
+                <i class="fa-solid fa-user-pen metric-icon"></i>
+            </div>
+            <div class="metric-compact">
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="text-muted small" style="line-height: 1.2;">
+                        <i class="fa-solid fa-circle-info text-warning me-1"></i>
+                        Diccionario Biográfico Universal
+                    </span>
+                    <span class="text-muted extra-small opacity-75">Prosopografía y perfiles compartidos entre proyectos.</span>
+                    <span class="text-muted extra-small mt-1">
+                        ¿Buscas más? <a href="{{ url_for('repositorio_global_autores') }}"
+                            class="text-warning text-decoration-none border-bottom border-warning">Importa desde el
+                            repositorio global</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-panel">
+        <div class="mb-4">
+            <form method="GET" class="row g-2 align-items-center">
+                <div class="col-md-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-warning">
+                            <i class="fa-solid fa-search"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control form-control-sirio" 
+                               style="width: 40%;"
+                               placeholder="Buscar por nombre, apellido o seudónimo..." value="{{ q or '' }}">
+                        
+                        <select name="siglo" class="form-select form-control-sirio" style="max-width: 200px; border-left: none;">
+                            <option value="">Todos los siglos</option>
+                            <option value="18" {% if siglo == '18' %}selected{% endif %}>Siglo XVIII</option>
+                            <option value="19" {% if siglo == '19' %}selected{% endif %}>Siglo XIX</option>
+                            <option value="20" {% if siglo == '20' %}selected{% endif %}>Siglo XX</option>
+                            <option value="21" {% if siglo == '21' %}selected{% endif %}>Siglo XXI</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-sirio">BUSCAR / FILTRAR</button>
+                        {% if q or siglo %}
+                        <a href="{{ url_for('lista_autores') }}" class="btn btn-outline-secondary d-flex align-items-center">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABLA DE AUTORES -->
+        <div class="table-responsive">
+            <table class="table table-sirio align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th style="width: 60px;">Foto</th>
+                        <th>Nombre y Apellido(s)</th>
+                        <th>Seudónimo</th>
+                        <th>Fechas</th>
+                        <th>Estilo/Tema</th>
+                        <th>% Completo</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for autor in autores %}
+                    <tr>
+                        <td class="text-muted small">#{{ autor.id }}</td>
+                        <td>
+                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center overflow-hidden" 
+                                 style="width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.1);">
+                                {% if autor.foto %}
+                                <img src="{{ url_for('static', filename='uploads/autores/' + autor.foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <i class="fa-solid fa-user text-secondary" style="font-size: 0.8rem;"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ autor.apellido or '' }}, {{ autor.nombre or '' }}</span>
+                            {% if autor.proyecto_id != proyecto.id %}
+                            <span class="badge bg-dark border border-warning text-warning ms-2" style="font-size: 0.6rem;">UNIVERSAL</span>
+                            <div class="extra-small text-muted italic">Desde: {{ autor.proyecto.nombre }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-warning small">{{ autor.seudonimo or '-' }}</span>
+                        </td>
+                        <td class="small text-muted">
+                            {{ autor.fechas_vida or '-' }}
+                        </td>
+                        <td style="max-width: 300px;">
+                            <div class="text-truncate" title="{{ autor.estilo }}">
+                                <span class="badge bg-dark border border-secondary text-light fw-normal">{{ autor.estilo or '-' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% set compl = autor.calcular_completitud() %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(255,255,255,0.05);">
+                                    <div class="progress-bar {% if compl < 40 %}bg-danger{% elif compl < 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                                         role="progressbar" style="width: {{ compl }}%" aria-valuenow="{{ compl }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <span class="fw-bold small {% if compl < 40 %}text-danger{% elif compl < 80 %}text-warning{% else %}text-success{% endif %}" style="font-size: 0.7rem; min-width: 30px;">{{ compl }}%</span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-outline-warning btn-sm border-0 btn-view-bio" 
+                                        data-nombre="{{ autor.nombre }}" data-apellido="{{ autor.apellido }}" title="Ver Ficha Completa">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                {% if autor.proyecto_id == proyecto.id %}
+                                <button type="button" class="btn btn-outline-info btn-sm border-0 btn-bio-autor-direct" 
+                                        data-nombre="{{ autor.nombre }}" data-apellido="{{ autor.apellido }}" title="Editar Biografía">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm border-0 btn-delete-autor-direct" 
+                                        data-id="{{ autor.id }}" 
+                                        data-nombre="{{ autor.nombre }} {{ autor.apellido or '' }}" 
+                                        title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                                {% else %}
+                                <form action="{{ url_for('importar_autor_bio', id=autor.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sirio btn-sm py-1 px-3">
+                                        <i class="fa-solid fa-download me-1"></i> IMPORTAR
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa-solid fa-user-slash fa-3x mb-3 opacity-25"></i>
+                                <p>No se encontraron autores en este proyecto.</p>
+                                {% if q %}
+                                <a href="{{ url_for('lista_autores') }}" class="btn btn-sirio btn-sm">VER TODOS</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modales de Biografía -->
+{% include 'modal_autor_bio.html' %}
+{% include 'modal_autor_visor.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.1"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manejar parámetro 'add' para abrir modal automáticamente
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('add') === '1') {
+            if (window.openBioModal) {
+                window.openBioModal(null, '', '');
+            }
+        }
+
+        // Manejar apertura de biografía desde el listado (Modo Edición)
+        document.querySelectorAll('.btn-bio-autor-direct').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const nombre = this.dataset.nombre;
+                const apellido = this.dataset.apellido;
+                if (window.openBioModal) {
+                    window.openBioModal(null, nombre, apellido);
+                }
+            });
+        });
+
+        // Manejar apertura de visor (Modo Lectura)
+        document.querySelectorAll('.btn-view-bio').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const nombre = this.dataset.nombre;
+                const apellido = this.dataset.apellido;
+                if (window.openVisorModal) {
+                    window.openVisorModal(nombre, apellido);
+                }
+            });
+        });
+
+        // Manejar eliminación desde el listado
+        document.querySelectorAll('.btn-delete-autor-direct').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+                if (window.eliminarAutorDirecto) {
+                    window.eliminarAutorDirecto(id, nombre);
+                }
+            });
+        });
+
+        // Escuchar el guardado exitoso para recargar
+        document.addEventListener('bioSaved', function() {
+            window.location.reload();
+        });
+    });
+
+    // Función para añadir uno en blanco (Global)
+    window.addBlankAutor = function() {
+        if (window.openBioModal) {
+            // Limpiar modal y abrir
+            window.openBioModal(null, '', '');
+        }
+    };
+
+    window.eliminarAutorDirecto = function(id, nombre) {
+        Swal.fire({
+            title: '¿Eliminar autor?',
+            text: `Se eliminará el perfil de "${nombre}". Esto no borrará sus textos asociados, pero sí su información biográfica central.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'SÍ, ELIMINAR',
+            cancelButtonText: 'CANCELAR',
+            background: '#1a1a1a',
+            color: '#fff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/autor/bio/delete/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Eliminado', 'El autor ha sido eliminado correctamente.', 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message || 'No se pudo eliminar el autor.', 'error');
+                    }
+                });
+            }
+        });
+    };
+</script>
+{% endblock %}
