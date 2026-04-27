@@ -15,6 +15,41 @@ class ConditionalFields {
         this.currentRecordId = this.getRecordId();
         this.tipoRecursoSelect = document.getElementById('selectRecurso') || document.querySelector('select[name="tipo_recurso"]');
         this.edicionesCache = {};
+        
+        // Mapeo de valores de tipo_recurso a sus configuraciones base
+        this.tipoMapping = {
+            'Periódico': 'prensa',
+            'Diario': 'prensa',
+            'Semanario': 'prensa',
+            'Revista': 'prensa',
+            'Magazine': 'prensa',
+            'Boletín': 'prensa',
+            'Gaceta': 'prensa',
+            'Anuario': 'prensa',
+            'Fascículo': 'prensa',
+            'Suplemento': 'prensa',
+            'Manuscrito': 'prensa',
+            'Legajo': 'prensa',
+            'Expediente': 'prensa',
+            'Expediente / Archivo': 'prensa',
+            'Documento histórico': 'prensa',
+            'Libro': 'libro',
+            'Colección de libros': 'libro',
+            'Mapa': 'mapa',
+            'Colección de mapas': 'mapa',
+            'Atlas': 'mapa',
+            'Grabado / Estampa': 'fotografia',
+            'Partitura': 'libro',
+            'obra_teatral': 'obra_teatral',
+            'prensa': 'prensa',
+            'folleto': 'folleto',
+            'libro': 'libro',
+            'articulo': 'articulo',
+            'tesis': 'tesis',
+            'fotografia': 'fotografia',
+            'mapa': 'mapa',
+            'otros': 'otros'
+        };
 
         // Mapeo de campos condicionales por tipo de recurso
         this.fieldsConfig = {
@@ -87,7 +122,7 @@ class ConditionalFields {
                 hide: ['isbn', 'issn', 'doi', 'numero', 'pagina_inicio', 'pagina_fin'],
                 required: ['publicacion', 'fecha_original'],
                 hints: {
-                    'publicacion': 'Título de la Obra Teatral',
+                    'publicacion': 'Género/Recurso Literario',
                     'editorial': 'Compañía Teatral / Productora',
                     'lugar_publicacion': 'Teatro / Recinto de representación',
                     'seccion': 'Acto(s) en este documento',
@@ -142,50 +177,31 @@ class ConditionalFields {
 
                 console.log('[Inheritance] Data received:', data);
 
-                // Solo autocompletar si el tipo de recurso es obra_teatral o si la publicación es obra_teatral
-                const tipoActual = this.tipoRecursoSelect ? this.tipoRecursoSelect.value : '';
-                
-                if (data.tipo_recurso === 'obra_teatral') {
-                    // Si la publicación es una obra teatral, forzamos el tipo de recurso a obra_teatral
-                    if (this.tipoRecursoSelect && tipoActual !== 'obra_teatral') {
-                        this.tipoRecursoSelect.value = 'obra_teatral';
-                        this.applyFieldsConfig('obra_teatral');
-                    }
-
-                    // Rellenar campos globales si están vacíos
-                    const campos = {
-                        'actos_totales': data.actos_totales,
-                        'escenas_totales': data.escenas_totales,
-                        'reparto_total': data.reparto_total,
-                        'tipo_publicacion': data.tipo_publicacion,
-                        'periodicidad': data.periodicidad,
-                        'lugar_publicacion': data.lugar_publicacion
-                    };
-
-                    Object.keys(campos).forEach(id => {
-                        const field = document.querySelector(`[name="${id}"]`);
-                        if (field && (!field.value || field.value.trim() === "")) {
-                            field.value = campos[id];
-                            field.style.backgroundColor = '#294a6022'; // Efecto sutil de autocompletado
-                            setTimeout(() => field.style.backgroundColor = '', 2000);
-                        }
-                    });
-                } else if (data.tipo_publicacion || data.periodicidad) {
-                    // Si no es teatro pero tiene datos hemerográficos, rellenarlos también
-                    const campos = {
-                        'tipo_publicacion': data.tipo_publicacion,
-                        'periodicidad': data.periodicidad,
-                        'lugar_publicacion': data.lugar_publicacion
-                    };
-                    Object.keys(campos).forEach(id => {
-                        const field = document.querySelector(`[name="${id}"]`);
-                        if (field && (!field.value || field.value.trim() === "")) {
-                            field.value = campos[id];
-                            field.style.backgroundColor = '#294a6011';
-                            setTimeout(() => field.style.backgroundColor = '', 2000);
-                        }
-                    });
+                // Heredar tipo de recurso
+                if (data.tipo_recurso && this.tipoRecursoSelect) {
+                    this.tipoRecursoSelect.value = data.tipo_recurso;
+                    this.applyFieldsConfig(data.tipo_recurso);
                 }
+
+                // Rellenar campos si están vacíos
+                const campos = {
+                    'actos_totales': data.actos_totales,
+                    'escenas_totales': data.escenas_totales,
+                    'reparto_total': data.reparto_total,
+                    'tipo_publicacion': data.tipo_publicacion,
+                    'periodicidad': data.periodicidad,
+                    'lugar_publicacion': data.lugar_publicacion,
+                    'licencia': data.licencia
+                };
+
+                Object.keys(campos).forEach(id => {
+                    const field = document.querySelector(`[name="${id}"]`);
+                    if (field && (!field.value || field.value.trim() === "")) {
+                        field.value = campos[id];
+                        field.style.backgroundColor = '#294a6022';
+                        setTimeout(() => field.style.backgroundColor = '', 2000);
+                    }
+                });
             } catch (err) {
                 console.error('[Inheritance] Error:', err);
             }
@@ -477,7 +493,9 @@ class ConditionalFields {
         console.log('[Conditional Fields] Sistema de tipo recurso inicializado');
     }
 
-    applyFieldsConfig(tipoRecurso) {
+    applyFieldsConfig(tipoRecursoRaw) {
+        // Normalizar el tipo de recurso usando el mapeo
+        const tipoRecurso = this.tipoMapping[tipoRecursoRaw] || tipoRecursoRaw;
         const config = this.fieldsConfig[tipoRecurso] || this.fieldsConfig['otros'];
 
         // Obtener todos los nombres de campo únicos
@@ -711,10 +729,11 @@ class ConditionalFields {
                 'anio': 'Año de la Toma'
             },
             'obra_teatral': {
-                'publicacion': 'Título de la Obra',
+                'publicacion': 'Género/Recurso Literario',
                 'fecha_original': 'Fecha de Estreno',
                 'anio': 'Año',
-                'lugar_publicacion': 'Teatro / Recinto'
+                'lugar_publicacion': 'Teatro / Recinto',
+                'tipo_publicacion': 'Subgénero Literario'
             },
             'otros': {
                 'publicacion': 'Título / Referencia'
@@ -862,72 +881,18 @@ class ConditionalFields {
         });
     }
 
-    updateTipoPublicacionOptions(tipoRecurso) {
+    async updateTipoPublicacionOptions(tipoRecurso) {
         const tipoSelect = document.getElementById('selectTipoPublicacion') || document.querySelector('select[name="tipo_publicacion"]');
         if (!tipoSelect) return;
 
-        // Guardar valor actual para intentar restaurarlo
+        // El usuario prefiere ver todos los subgéneros agrupados por optgroup (renderizados en el HTML)
+        // en lugar de filtrar restrictivamente. Solo nos aseguramos de que el valor actual sea válido.
         const currentValue = tipoSelect.getAttribute('data-value') || tipoSelect.value;
-        const cleanTipo = tipoRecurso.split(':')[0];
-
-        // Mapeo de tipos de publicación según el recurso principal
-        const config = {
-            'prensa': [
-                { value: 'Periódico', text: 'Periódico' },
-                { value: 'Diario', text: 'Diario' },
-                { value: 'Semanario', text: 'Semanario' },
-                { value: 'Revista', text: 'Revista' },
-                { value: 'Magazine', text: 'Magazine' },
-                { value: 'Suplemento', text: 'Suplemento' },
-                { value: 'Cómic', text: 'Cómic / Tebeo' },
-                { value: 'Hoja suelta', text: 'Hoja suelta' },
-                { value: 'Boletín', text: 'Boletín' },
-                { value: 'Gaceta', text: 'Gaceta' },
-                { value: 'Anuario', text: 'Anuario' },
-                { value: 'Otros', text: 'Otros' }
-            ],
-            'folleto': [
-                { value: 'Panfleto', text: 'Panfleto' },
-                { value: 'Programa', text: 'Programa (Teatro/Evento)' },
-                { value: 'Libelo', text: 'Libelo' },
-                { value: 'Manifiesto', text: 'Manifiesto' },
-                { value: 'Catálogo', text: 'Catálogo' },
-                { value: 'Circular', text: 'Circular' }
-            ],
-            'libro': [
-                { value: 'Monografía', text: 'Monografía' },
-                { value: 'Ensayo', text: 'Ensayo' },
-                { value: 'Antología', text: 'Antología' },
-                { value: 'Manual', text: 'Manual' },
-                { value: 'Tratado', text: 'Tratado' }
-            ],
-            'obra_teatral': [
-                { value: 'Drama', text: 'Drama' },
-                { value: 'Comedia', text: 'Comedia' },
-                { value: 'Tragedia', text: 'Tragedia' },
-                { value: 'Sainete', text: 'Sainete' },
-                { value: 'Auto sacramental', text: 'Auto sacramental' },
-                { value: 'Libreto', text: 'Libreto' },
-                { value: 'Zarzuela', text: 'Zarzuela' },
-                { value: 'Entremés', text: 'Entremés' }
-            ],
-            'articulo': [
-                { value: 'Artículo original', text: 'Artículo original' },
-                { value: 'Revisión', text: 'Revisión' },
-                { value: 'Nota técnica', text: 'Nota técnica' },
-                { value: 'Reseña', text: 'Reseña' }
-            ],
-            'tesis': [
-                { value: 'Doctoral', text: 'Tesis Doctoral' },
-                { value: 'Maestría', text: 'Tesis de Maestría' },
-                { value: 'Licenciatura', text: 'Tesis de Licenciatura' }
-            ]
-        };
-
-        const options = config[cleanTipo] || [{ value: 'Otro', text: 'Otro' }];
+        if (currentValue) {
+            tipoSelect.value = currentValue;
+        }
         
-        // Reutilizamos el renderizador de opciones
-        this.renderSelectOptions(tipoSelect, options, currentValue);
+        console.log('[ConditionalFields] Subgéneros mantenidos (todos visibles por petición del usuario)');
     }
 }
 

@@ -1,0 +1,102 @@
+<!-- Modal para Gestión Dinámica de Metadatos -->
+<div class="modal fade" id="modalMetadataManager" tabindex="-1" aria-labelledby="modalMetadataManagerLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-darker text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="modalMetadataManagerLabel">
+                    <i class="fa-solid fa-tags me-2 text-accent"></i>
+                    Gestión de <span id="metadata-category-title">Opciones</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formulario para añadir/editar -->
+                <div class="card bg-black bg-opacity-25 border-secondary mb-4">
+                    <div class="card-body p-3">
+                        <h6 class="small text-uppercase fw-bold text-muted mb-3" id="metadata-form-title">Añadir Nueva Opción</h6>
+                        <form id="metadata-option-form">
+                            <input type="hidden" id="metadata-id" name="id">
+                            <input type="hidden" id="metadata-categoria" name="categoria">
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Etiqueta (lo que se ve)</label>
+                                    <input type="text" class="form-control form-control-sm bg-darker text-light border-secondary" 
+                                           id="metadata-etiqueta" name="etiqueta" required placeholder="Ej: Novela">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Valor (interno/slug)</label>
+                                    <input type="text" class="form-control form-control-sm bg-darker text-light border-secondary" 
+                                           id="metadata-valor" name="valor" placeholder="Ej: novela (opcional)">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Grupo (opcional)</label>
+                                    <input type="text" class="form-control form-control-sm bg-darker text-light border-secondary" 
+                                           id="metadata-grupo" name="grupo" placeholder="Ej: Narrativa">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Orden</label>
+                                    <input type="number" class="form-control form-control-sm bg-darker text-light border-secondary" 
+                                           id="metadata-orden" name="orden" value="0">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-sm btn-sirio w-100 fw-bold" id="btn-save-metadata">
+                                        <i class="fa-solid fa-plus me-1"></i> GUARDAR
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary w-100 fw-bold d-none" id="btn-cancel-edit-metadata">
+                                        CANCELAR
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Lista de opciones actuales -->
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table-sirio w-100">
+                        <thead>
+                            <tr>
+                                <th>ORDEN</th>
+                                <th>ETIQUETA</th>
+                                <th>VALOR</th>
+                                <th>GRUPO</th>
+                                <th class="text-end">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metadata-options-list">
+                            <!-- Se carga vía JS -->
+                            <tr>
+                                <td colspan="5" class="text-center p-4 text-muted italic">Cargando opciones...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">CERRAR</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #modalMetadataManager .bg-darker {
+        background-color: #121212;
+    }
+    #modalMetadataManager .table-sirio {
+        font-size: 0.85rem;
+    }
+    #modalMetadataManager .table-sirio th {
+        background: rgba(255,255,255,0.05);
+        color: var(--app-accent, #ff9800);
+        padding: 8px 12px;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+    }
+    #modalMetadataManager .table-sirio td {
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+</style>

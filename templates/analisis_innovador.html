@@ -2,7 +2,7 @@
 
 {% block title %}Laboratorio de IA — Proyecto Sirio{% endblock %}
 {% block page_title %}Laboratorio de IA <span class="badge"
-    style="font-size: 12px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6; vertical-align: middle; margin-left: 10px;">SECCIÓN
+    style="font-size: 11px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6; vertical-align: middle; margin-left: 15px; margin-right: 20px;">SECCIÓN
     EN DESARROLLO</span>{% endblock %}
 
 {% block main_class %}immersive-layout{% endblock %}
@@ -720,7 +720,7 @@
         const chatSendBtn = document.getElementById('btn-sirio-chat-send');
         const chatBox = document.getElementById('sirio-chat-box');
 
-        function addMessage(content, isBot = false, docs = null) {
+        function addMessage(content, isBot = false, docs = null, fallbackMode = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${isBot ? 'bot' : 'user'} mb-3`;
 
@@ -728,6 +728,7 @@
                 <div class="message-content p-2 rounded ${isBot ? 'bg-accent bg-opacity-10 border border-accent border-opacity-20' : 'bg-secondary bg-opacity-20'} text-white small">
                     ${isBot ? '<i class="fa-solid fa-robot me-2"></i><b>Corpus IA:</b> ' : '<i class="fa-solid fa-user me-2"></i><b>Tú:</b> '}
                     ${content}
+                    ${fallbackMode === 'keyword' ? '<div class="mt-2 text-warning small border-top border-warning border-opacity-20 pt-1" style="font-style: italic;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Modo de emergencia: Búsqueda por palabras clave (Cuota IA agotada)</div>' : ''}
                 </div>
             `;
 
@@ -735,7 +736,8 @@
             if (docs && docs.length > 0) {
                 html += '<div class="mt-2 ms-3"><small class="text-white opacity-75"><i class="fa-solid fa-book me-1"></i>Documentos consultados:</small><ul class="small text-white opacity-50 mt-1 mb-0">';
                 docs.forEach(doc => {
-                    html += `<li><a href="${doc.url}" class="text-info" target="_blank">ID ${doc.id}: ${doc.titulo}</a> (${doc.similitud}% similitud)</li>`;
+                    const simText = doc.similitud !== null ? ` (${doc.similitud}% similitud)` : '';
+                    html += `<li><a href="${doc.url}" class="text-info" target="_blank">ID ${doc.id}: ${doc.titulo}</a>${simText}</li>`;
                 });
                 html += '</ul></div>';
             }
@@ -782,6 +784,13 @@
                 // Obtener valores de los filtros
                 const modeloIA = document.getElementById('filtro-modelo-ia')?.value || 'gemini-2.0-flash';
                 const temperatura = parseFloat(document.getElementById('filtro-temperatura')?.value || 0.3);
+                
+                // Filtros de metadatos (unificados con el sistema de análisis)
+                const tema = document.getElementById('filtro-tema')?.value || null;
+                const publicacion_id = document.getElementById('filtro-publicacion')?.value || null;
+                const pais = document.getElementById('filtro-pais')?.value || null;
+                const fecha_desde = document.getElementById('filtro-fecha-desde')?.value || null;
+                const fecha_hasta = document.getElementById('filtro-fecha-hasta')?.value || null;
 
                 const response = await fetch('/api/analisis/innovador/corpus_chat', {
                     method: 'POST',
@@ -792,7 +801,13 @@
                         pregunta: pregunta,
                         modelo: modeloIA,
                         temperatura: temperatura,
-                        num_documentos: 5
+                        num_documentos: 5,
+                        // Añadir filtros al payload
+                        tema: tema,
+                        publicacion_id: publicacion_id,
+                        pais: pais,
+                        fecha_desde: fecha_desde,
+                        fecha_hasta: fecha_hasta
                     })
                 });
 
@@ -801,7 +816,7 @@
                 removeTypingIndicator();
 
                 if (data.exito) {
-                    addMessage(data.respuesta, true, data.documentos_usados);
+                    addMessage(data.respuesta, true, data.documentos_usados, data.fallback_mode);
                 } else {
                     addMessage(`❌ Error: ${data.error}`, true);
                 }

@@ -541,11 +541,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 btn.style.cursor = 'pointer';
                                 btn.innerHTML = `
                                     <div class="d-flex justify-content-between align-items-center w-100 p-1">
-                                        <div style="color: ${isLight ? '#294a60' : '#ff9800'} !important; font-weight: 700 !important; font-family: monospace;">
+                                        <div style="color: #294a60 !important; font-weight: 700 !important; font-family: monospace;">
                                             ${(aut.apellido || '').toUpperCase()}, ${aut.nombre || ''}
-                                            ${aut.pseudonimo ? '<br><span class="text-muted small" style="font-size: 0.7rem;">(' + aut.pseudonimo + ')</span>' : ''}
+                                            ${aut.pseudonimo ? '<br><span class="text-muted small">(' + aut.pseudonimo + ')</span>' : ''}
                                         </div>
-                                        <span class="badge ${aut.origen && aut.origen.includes('Este proyecto') ? 'bg-primary' : 'bg-secondary'} ms-2" style="font-size: 0.6rem; opacity: 1; min-width: 80px;">
+                                        <span class="badge ${aut.origen === 'Este proyecto' ? 'bg-primary' : 'bg-secondary'} ms-2" style="font-size: 0.6rem; opacity: 1; min-width: 80px;">
                                             ${aut.origen || 'Global'}
                                         </span>
                                     </div>

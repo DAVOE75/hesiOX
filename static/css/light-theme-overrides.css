@@ -182,8 +182,10 @@
 
     /* === TABLES & ACTIONS === */
     .btn-admin-action:hover {
-        background-color: #294a60 !important;
-        color: #ffffff !important;
+        background: none !important;
+        background-color: transparent !important;
+        color: #294a60 !important;
+        transform: scale(1.2);
     }
 
     .btn-admin-action i {
@@ -198,8 +200,13 @@
         background-color: #f57c00 !important;
     }
 
-    .btn-admin-action-danger:hover {
-        background-color: #c62828 !important;
+    .btn-admin-action-danger:hover,
+    .btn-outline-danger:hover {
+        background: none !important;
+        background-color: transparent !important;
+        color: #c62828 !important;
+        transform: scale(1.2);
+        box-shadow: none !important;
     }
 
     .btn-admin-action-info:hover {
@@ -669,15 +676,24 @@
     }
 
     .btn-outline-warning:hover {
-        background-color: #294a60 !important;
-        border-color: #294a60 !important;
-        color: #ffffff !important;
+        background: none !important;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        color: #294a60 !important;
         box-shadow: none !important;
+        transform: scale(1.2);
     }
 
     .btn-outline-warning:focus,
-    .btn-outline-warning:active {
-        box-shadow: 0 0 0 0.25rem rgba(41, 74, 96, 0.25) !important;
+    .btn-outline-warning:active,
+    .btn-outline-info:hover,
+    .btn-outline-info:focus,
+    .btn-outline-info:active {
+        background: none !important;
+        background-color: transparent !important;
+        color: #294a60 !important;
+        box-shadow: none !important;
+        transform: scale(1.2);
     }
 
     .btn-warning {

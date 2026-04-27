@@ -17,6 +17,7 @@ import ast
 from io import BytesIO
 from itertools import combinations
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from xml.sax.saxutils import escape as xml_escape
 
 import networkx as nx
 import numpy as np
@@ -67,7 +68,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Importamos cast y String para solucionar el error de tipos en PostgreSQL
-from sqlalchemy import String, cast, func, or_, text
+from sqlalchemy import String, Integer, cast, func, or_, and_, text
 
 # 🔐 NUEVOS IMPORTS PARA USUARIOS Y LOGIN
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -116,10 +117,14 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'           # Mejorar estabilidad de
 if not os.getenv("FLASK_ENV") == "development":
     app.config['SESSION_COOKIE_SECURE'] = True          # Solo en producción (HTTPS)
 
-# Redirección retrocompatible de /listados a /noticias/listar (debe ir después de app = Flask(__name__))
+# Redirecciones retrocompatibles para rutas antiguas del listado de noticias.
+@app.route('/noticias/listar')
+def redirect_noticias_listar():
+    return redirect(url_for('noticias.listar', **request.args), code=302)
+
 @app.route('/listados')
 def redirect_listados():
-    # Redirige a /noticias/listar manteniendo los parámetros
+    # Redirige a la ruta real del listado manteniendo los parámetros
     args = request.query_string.decode()
     # Mapea parámetros antiguos a los nuevos si es necesario
     # fecha -> fecha_original, keyword -> palabras_clave
@@ -134,7 +139,7 @@ def redirect_listados():
     for k, v in params.items():
         if k not in ['fecha', 'keyword']:
             new_params[k] = v[0]
-    url = '/noticias/listar'
+    url = url_for('noticias.listar')
     if new_params:
         url += '?' + urlencode(new_params)
     return redirect(url, code=302)
@@ -318,10 +323,12 @@ def eximir_csrf_api():
 # y se inicializa con db.init_app(app) para evitar importaciones circulares
 
 # Importar modelos DESPUÉS de inicializar db
+
+
 from models import (
     Usuario, Proyecto, Hemeroteca, Publicacion, Prensa, 
     ImagenPrensa, GeoPlace, ServicioIDE, VectorLayer, SQL_PRENSA_DATE,
-    BlogPost, BlogSubscription, AutorBio
+    BlogPost, BlogSubscription, AutorBio, Ciudad, MetadataOption
 )
 
 # 🔐 Configuración de Flask-Login
@@ -1570,8 +1577,16 @@ def index():
             "noticias_por_pagina": noticias_por_pagina
         })
     else:
+        # Obtener opciones de metadatos dinámicas
+        opciones_genero = MetadataOption.query.filter_by(categoria='tipo_recurso').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+        opciones_subgenero = MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+        opciones_frecuencia = MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+
         return render_template(
             "list.html",
+            opciones_genero=opciones_genero,
+            opciones_subgenero=opciones_subgenero,
+            opciones_frecuencia=opciones_frecuencia,
             registros=registros,
             proyecto=proyecto,  # Pasar proyecto al template
             total=total,
@@ -1896,6 +1911,13 @@ def actualizar_lote():
         "pseudonimo",
         "tipo_publicacion",
         "periodicidad",
+        "pagina_inicio",
+        "pagina_fin",
+        "actos_totales",
+        "escenas_totales",
+        "reparto_total",
+        "escenas",
+        "reparto",
     ]
 
     payload_prensa = {}
@@ -1959,6 +1981,32 @@ def actualizar_lote():
             updated_count = db.session.query(Prensa).filter(Prensa.id.in_(ids)).update(
                 payload_prensa, synchronize_session=False
             )
+            
+            # 1.1 ACTUALIZAR RELACIÓN AutorPrensa (para el nuevo sistema de autoría)
+            # Solo si se han proporcionado datos de autor
+            nombre_batch = updates.get("nombre_autor")
+            apellido_batch = updates.get("apellido_autor")
+            
+            if nombre_batch or apellido_batch:
+                # Nota: Para evitar inconsistencias en el lote, borramos autores previos
+                # y creamos un único autor principal para cada registro del lote.
+                from models import AutorPrensa
+                
+                # Borrar autores previos para estos registros
+                db.session.query(AutorPrensa).filter(AutorPrensa.prensa_id.in_(ids)).delete(synchronize_session=False)
+                
+                # Crear nuevos autores
+                for n_id in ids:
+                    nuevo_aut = AutorPrensa(
+                        prensa_id=n_id,
+                        nombre=nombre_batch or "",
+                        apellido=apellido_batch or "",
+                        tipo="firmado",
+                        es_anonimo=False,
+                        orden=0
+                    )
+                    db.session.add(nuevo_aut)
+            
             with open("/opt/hesiox/debug_batch.log", "a") as f:
                 f.write(f"Updated Count: {updated_count}\n")
 
@@ -2191,17 +2239,11 @@ def lista_autores():
     
     q = request.args.get('q', '').strip()
     siglo = request.args.get('siglo', '').strip()
-    user_project_ids = [p.id for p in current_user.proyectos]
     
-    # Base query: si hay búsqueda o filtro de siglo, buscar en todos los proyectos del usuario
-    if q or siglo:
-        query = AutorBio.query.filter(AutorBio.proyecto_id.in_(user_project_ids))
-    else:
-        # Solo en el proyecto actual si no hay filtros activos
-        query = AutorBio.query.filter_by(proyecto_id=proyecto.id)
+    # Base query: SOLO autores de este proyecto para el listado principal
+    query = AutorBio.query.filter_by(proyecto_id=proyecto.id)
 
     if q:
-        from sqlalchemy import or_
         query = query.filter(
             or_(
                 AutorBio.nombre.ilike(f"%{q}%"),
@@ -2211,16 +2253,22 @@ def lista_autores():
         )
     
     if siglo:
-        if siglo == '18':
-            query = query.filter(AutorBio.fecha_nacimiento.ilike('%/17%')).filter(AutorBio.fecha_nacimiento.ilike('%/18%') == False) # Simplificado para demo
-            # Mejor: buscar años 1701-1800
-            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/17%'), AutorBio.fecha_nacimiento.ilike('%17%')))
-        elif siglo == '19':
-            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/18%'), AutorBio.fecha_nacimiento.ilike('%18%')))
-        elif siglo == '20':
-            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/19%'), AutorBio.fecha_nacimiento.ilike('%19%')))
-        elif siglo == '21':
-            query = query.filter(or_(AutorBio.fecha_nacimiento.ilike('%/20%'), AutorBio.fecha_nacimiento.ilike('%20%')))
+        try:
+            s_num = int(siglo)
+            start_year = (s_num - 1) * 100 + 1
+            end_year = s_num * 100
+            
+            # Extraemos el año (último segmento separado por '/' o el texto completo si no hay '/')
+            # PostgreSQL: reverse(split_part(reverse(campo), '/', 1))
+            year_part = func.reverse(func.split_part(func.reverse(AutorBio.fecha_nacimiento), '/', 1))
+            
+            # Filtramos por rango numérico (cast a Integer para PostgreSQL)
+            # Primero nos aseguramos de que sea numérico para evitar errores de cast
+            query = query.filter(year_part.op('~')('^[0-9]+$'))
+            query = query.filter(cast(year_part, Integer).between(start_year, end_year))
+        except Exception as e:
+            app.logger.error(f"Error al filtrar por siglo {siglo}: {e}")
+            pass
 
     autores = query.order_by(AutorBio.apellido, AutorBio.nombre).all()
     return render_template("autores_lista.html", autores=autores, q=q, siglo=siglo, proyecto=proyecto)
@@ -2258,12 +2306,11 @@ def repositorio_global_autores():
     # Obtener IDs de todos los proyectos del usuario
     proyecto_ids = [p.id for p in current_user.proyectos]
     
-    # Buscar autores en esos proyectos que NO sean del proyecto actual
-    query = AutorBio.query.filter(AutorBio.proyecto_id.in_(proyecto_ids))
-    query = query.filter(AutorBio.proyecto_id != proyecto_actual.id)
+    # Base query: Todos los autores de otros proyectos + Universales, excluyendo los del proyecto actual
+    query = AutorBio.query.filter(or_(AutorBio.proyecto_id.in_(proyecto_ids), AutorBio.proyecto_id == None))
+    query = query.filter(or_(AutorBio.proyecto_id != proyecto_actual.id, AutorBio.proyecto_id == None))
     
     if q:
-        from sqlalchemy import or_
         query = query.filter(
             or_(
                 AutorBio.nombre.ilike(f"%{q}%"),
@@ -2272,14 +2319,31 @@ def repositorio_global_autores():
             )
         )
     
-    autores = query.order_by(AutorBio.apellido, AutorBio.nombre).all()
-    total_globales = query.count()
+    all_autores = query.order_by(AutorBio.apellido, AutorBio.nombre).all()
+    
+    # Lógica de desduplicación inteligente: si existe una versión con proyecto y una universal, preferir la de proyecto
+    autores_dict = {}
+    for a in all_autores:
+        key = (a.nombre, a.apellido, a.seudonimo)
+        if key not in autores_dict:
+            autores_dict[key] = a
+        else:
+            if autores_dict[key].proyecto_id is None and a.proyecto_id is not None:
+                autores_dict[key] = a
+                
+    autores = sorted(autores_dict.values(), key=lambda x: (x.apellido or '', x.nombre or ''))
+    total_globales = len(autores)
+    
+    # Obtener nombres de autores ya presentes en el proyecto actual para marcarlos en la UI
+    autores_locales = AutorBio.query.filter_by(proyecto_id=proyecto_actual.id).all()
+    nombres_locales = {f"{a.nombre}|{a.apellido}" for a in autores_locales}
     
     return render_template("repositorio_autores.html", 
                            autores=autores, 
                            total_globales=total_globales, 
                            q=q, 
-                           proyecto=proyecto_actual)
+                           proyecto=proyecto_actual,
+                           nombres_locales=nombres_locales)
 
 @app.route("/autor/importar/<int:id>", methods=["POST"])
 @login_required
@@ -2291,10 +2355,12 @@ def importar_autor_bio(id):
         
     autor_original = AutorBio.query.get_or_404(id)
     
-    # Verificar que el autor original pertenece a uno de los proyectos del usuario
-    if autor_original.proyecto_id not in [p.id for p in current_user.proyectos]:
-        flash("No tienes permiso para importar este autor", "danger")
-        return redirect(url_for('repositorio_global_autores'))
+    # Verificar que el autor original pertenece a uno de los proyectos del usuario, es Universal o el usuario es Admin
+    if current_user.rol != 'admin':
+        user_p_ids = [p.id for p in current_user.proyectos]
+        if autor_original.proyecto_id is not None and autor_original.proyecto_id not in user_p_ids:
+            flash("No tienes permiso para importar este autor", "danger")
+            return redirect(url_for('repositorio_global_autores'))
         
     # Crear copia
     nuevo_autor = AutorBio()
@@ -2313,6 +2379,8 @@ def importar_autor_bio(id):
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Error al importar: {str(e)}", "danger")
+        
+    return redirect(url_for('lista_autores'))
         
 @app.route("/autor/importar/masivo", methods=["POST"])
 @login_required
@@ -2336,9 +2404,16 @@ def importar_autor_bio_masivo():
     for autor_id in ids:
         try:
             autor_original = AutorBio.query.get(autor_id)
-            if not autor_original or autor_original.proyecto_id not in user_project_ids:
+            if not autor_original:
                 errores += 1
                 continue
+            
+            # Verificar permiso (pertenece a sus proyectos, es Universal o es Admin)
+            if current_user.rol != 'admin':
+                user_project_ids = [p.id for p in current_user.proyectos]
+                if autor_original.proyecto_id is not None and autor_original.proyecto_id not in user_project_ids:
+                    errores += 1
+                    continue
                 
             # Evitar duplicados en el mismo proyecto (basado en nombre/apellido/seudonimo)
             # Podríamos ser más estrictos, pero por ahora permitimos si el usuario lo pide
@@ -2848,8 +2923,9 @@ def api_publicacion_details(nombre):
         "reparto_total": pub.reparto_total or "",
         "tipo_recurso": pub.tipo_recurso or "",
         "tipo_publicacion": pub.tipo_publicacion or "",
-        "periodicidad": pub.periodicidad or "",
-        "lugar_publicacion": pub.lugar_publicacion or ""
+        "periodicidad": pub.frecuencia or pub.periodicidad or "",
+        "lugar_publicacion": pub.lugar_publicacion or "",
+        "licencia": pub.licencia or ""
     })
 
 
@@ -3128,6 +3204,27 @@ def editar(id):
     temas_all = valores_unicos(Prensa.temas, proyecto.id)
     temas_sel = [t.strip() for t in (ref.temas or "").split(",") if t.strip()]
 
+    autores_data = []
+    for a in ref.autores:
+        n_clean = (a.nombre or "").strip()
+        a_clean = (a.apellido or "").strip()
+        
+        # Búsqueda robusta en AutorBio (ignorar espacios y mayúsculas)
+        bio = AutorBio.query.filter(
+            func.trim(AutorBio.nombre).ilike(n_clean),
+            func.trim(AutorBio.apellido).ilike(a_clean),
+            AutorBio.proyecto_id == proyecto.id
+        ).first()
+        
+        autores_data.append({
+            'nombre': a.nombre or '',
+            'apellido': a.apellido or '',
+            'tipo': a.tipo or 'firmado',
+            'es_anonimo': a.es_anonimo,
+            'pseudonimo': bio.seudonimo if bio else ''
+        })
+    autores_json = json.dumps(autores_data)
+
     return render_template(
         "editar.html",
         ref=ref,
@@ -3139,12 +3236,7 @@ def editar(id):
         next_url=normalizar_next(request.args.get("next")),
         nombre_autor_val=nombre_autor_val,
         apellido_autor_val=apellido_autor_val,
-        autores_json=json.dumps([{
-            'nombre': a.nombre or '',
-            'apellido': a.apellido or '',
-            'tipo': a.tipo or 'firmado',
-            'es_anonimo': a.es_anonimo
-        } for a in ref.autores])
+        autores_json=autores_json
     )
 
 
@@ -3291,6 +3383,29 @@ def ver_cita(id):
 # =========================================================
 # IMPRIMIR / EXPORTAR PDF
 # =========================================================
+def _strip_html(value):
+    """Elimina etiquetas HTML del texto de forma robusta para el PDF."""
+    if not value:
+        return ""
+    # Reemplazar etiquetas de bloque (apertura y cierre) por saltos de línea
+    value = re.sub(r'</?(p|br|div|h[1-6]|li|tr|blockquote)[^>]*>', '\n', value, flags=re.IGNORECASE)
+    # Eliminar el resto de etiquetas (como <span>, <a>, <img>, etc.)
+    clean = re.compile('<[^>]*>')
+    value = re.sub(clean, '', value)
+    # Colapsar múltiples saltos de línea (máximo 2 para párrafos)
+    value = re.sub(r'\n\s*\n+', '\n\n', value)
+    return value.strip()
+
+def _safe_text(value):
+    """Escapa texto dinámico para evitar errores del parser XML de ReportLab."""
+    from xml.sax.saxutils import escape as xml_escape
+    return xml_escape(str(value or ""), {'"': "&quot;", "'": "&#39;"})
+
+def _safe_text_with_breaks(value):
+    # Primero quitamos HTML, luego escapamos para XML y finalmente preservamos saltos de línea
+    text = _strip_html(value)
+    return _safe_text(text).replace("\n", "<br/>")
+
 @app.route("/imprimir/<int:id>")
 def imprimir_pdf(id):
     ref = db.session.get(Prensa, id)
@@ -3333,14 +3448,15 @@ def imprimir_pdf(id):
 
     story = []
 
-    membrete_path = os.path.join(app.static_folder, "img", "sirio_membrete1.png")
+    membrete_path = os.path.join(app.static_folder, "img", "hesiox_cabecera.png")
     if os.path.exists(membrete_path):
-        story.append(Image(membrete_path, width=5 * cm, height=2.8 * cm))
+        # Ajustamos el tamaño para que se vea bien como cabecera (más ancho, menos alto)
+        story.append(Image(membrete_path, width=7 * cm, height=2.5 * cm))
         story.append(Spacer(1, 12))
 
-    story.append(Paragraph(f"<b>{ref.titulo or '[Sin título]'}</b>", styles["Titulo"]))
+    story.append(Paragraph(f"<b>{_safe_text(ref.titulo or '[Sin título]')}</b>", styles["Titulo"]))
     if ref.autor:
-        story.append(Paragraph(f"<i>{ref.autor}</i>", styles["Campo"]))
+        story.append(Paragraph(f"<i>{_safe_text(ref.autor)}</i>", styles["Campo"]))
     story.append(Spacer(1, 10))
 
     # [MODIFICADO] Insertar Imagen en PDF Individual
@@ -3379,7 +3495,7 @@ def imprimir_pdf(id):
 
     for campo, valor in campos:
         if valor:
-            story.append(Paragraph(f"<b>{campo}:</b> {valor}", styles["Campo"]))
+            story.append(Paragraph(f"<b>{_safe_text(campo)}:</b> {_safe_text(valor)}", styles["Campo"]))
 
     story.append(Spacer(1, 10))
 
@@ -3391,13 +3507,11 @@ def imprimir_pdf(id):
 
     if descripcion_medio:
         story.append(Paragraph("<b>Descripción del medio:</b>", styles["Campo"]))
-        story.append(Paragraph(descripcion_medio, styles["Contenido"]))
+        story.append(Paragraph(_safe_text_with_breaks(descripcion_medio), styles["Contenido"]))
 
     if ref.contenido:
         story.append(Paragraph("<b>Contenido / Resumen:</b>", styles["Campo"]))
-        story.append(
-            Paragraph(ref.contenido.replace("\n", "<br/>"), styles["Contenido"])
-        )
+        story.append(Paragraph(_safe_text_with_breaks(ref.contenido), styles["Contenido"]))
         story.append(Spacer(1, 10))
 
     # [MODIFICADO] TEXTO ORIGINAL EN PDF
@@ -3405,19 +3519,17 @@ def imprimir_pdf(id):
         story.append(
             Paragraph("<b>Texto Original (Idioma Nativo):</b>", styles["Campo"])
         )
-        story.append(
-            Paragraph(ref.texto_original.replace("\n", "<br/>"), styles["Contenido"])
-        )
+        story.append(Paragraph(_safe_text_with_breaks(ref.texto_original), styles["Contenido"]))
         story.append(Spacer(1, 10))
 
     if ref.notas:
         story.append(Paragraph("<b>Notas personales:</b>", styles["Campo"]))
-        story.append(Paragraph(ref.notas, styles["Contenido"]))
+        story.append(Paragraph(_safe_text_with_breaks(ref.notas), styles["Contenido"]))
         story.append(Spacer(1, 10))
 
     story.append(Spacer(1, 20))
     fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
-    pie = f"<i>Exportado desde el Proyecto S.S. Sirio — {fecha_actual}</i>"
+    pie = f"<i>Exportado desde el Proyecto HESIOX — {fecha_actual}</i>"
     story.append(Paragraph(pie, styles["Pie"]))
 
     doc.build(story)
@@ -3435,27 +3547,49 @@ def imprimir_pdf(id):
 def imprimir_lote():
     ids = request.json.get("ids", [])
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+    )
     story = []
     styles = getSampleStyleSheet()
+    
+    # Estilos personalizados
+    styles.add(ParagraphStyle(name='TituloLote', parent=styles['Heading1'], fontSize=16, spaceAfter=12))
+    styles.add(ParagraphStyle(name='ContenidoLote', parent=styles['Normal'], fontSize=10, leading=14, alignment=TA_JUSTIFY))
 
-    for id in ids:
+
+
+    for idx, id in enumerate(ids):
         ref = db.session.get(Prensa, id)
         if ref:
-            story.append(Paragraph(f"<b>{ref.titulo}</b>", styles["Title"]))
-            story.append(Paragraph(ref.contenido or "", styles["BodyText"]))
+            # Logo HesiOX en cada inicio de noticia del lote
+            logo_path = os.path.join(app.static_folder, "img", "hesiox_cabecera.png")
+            if os.path.exists(logo_path):
+                story.append(Image(logo_path, width=7 * cm, height=2.5 * cm))
+                story.append(Spacer(1, 0.5 * cm))
+            
+            story.append(Paragraph(_safe_text(ref.titulo), styles["TituloLote"]))
+            
+            if ref.contenido:
+                story.append(Paragraph(_safe_text_with_breaks(ref.contenido), styles["ContenidoLote"]))
+            
             if ref.texto_original:
-                story.append(Paragraph("<b>Original:</b>", styles["Heading4"]))
-                story.append(Paragraph(ref.texto_original, styles["BodyText"]))
+                story.append(Paragraph("<b>Texto Original:</b>", styles["Heading4"]))
+                story.append(Paragraph(_safe_text_with_breaks(ref.texto_original), styles["ContenidoLote"]))
+                
             if ref.imagen_scan:
                 img_path = os.path.join(app.config["UPLOAD_FOLDER"], ref.imagen_scan)
                 if os.path.exists(img_path):
-                    story.append(
-                        Image(
-                            img_path, width=5 * cm, height=5 * cm, kind="proportional"
-                        )
-                    )
-            story.append(PageBreak())
+                    story.append(Spacer(1, 0.5 * cm))
+                    story.append(Image(img_path, width=10 * cm, height=10 * cm, kind="proportional"))
+            
+            if idx < len(ids) - 1:
+                story.append(PageBreak())
 
     doc.build(story)
     buffer.seek(0)
@@ -3463,7 +3597,7 @@ def imprimir_lote():
         buffer,
         mimetype="application/pdf",
         as_attachment=True,
-        download_name="dossier.pdf",
+        download_name="dossier_hesiox.pdf",
     )
 
 
@@ -5261,6 +5395,160 @@ def map_api():
     return response
 
 
+@app.route("/mapa_autores")
+@login_required
+def mapa_autores():
+    proyecto = get_proyecto_activo()
+    
+    # Obtener listas para filtros
+    nacionalidades = db.session.query(AutorBio.nacionalidad).distinct().all()
+    nacionalidades = sorted([n[0] for n in nacionalidades if n[0]])
+    
+    from models import AutorPrensa
+    publicaciones_query = db.session.query(Prensa.publicacion).join(AutorPrensa, Prensa.id == AutorPrensa.prensa_id).distinct().all()
+    publicaciones = sorted([p[0] for p in publicaciones_query if p[0]])
+    
+    return render_template("mapa_autores.html", 
+                         proyecto=proyecto, 
+                         nacionalidades=nacionalidades, 
+                         publicaciones=publicaciones)
+
+
+
+@app.route("/api/autores/map-data")
+@login_required
+def api_autores_map_data():
+    proyecto_activo = get_proyecto_activo()
+
+    def normalizar_texto(valor):
+        import unicodedata
+        texto = ' '.join((valor or '').split()).strip().casefold()
+        return ''.join(
+            c for c in unicodedata.normalize('NFKD', texto)
+            if not unicodedata.combining(c)
+        )
+
+    # Obtener parámetros de filtro
+    nacionalidad = request.args.get('nacionalidad')
+    ciudad_filtro = request.args.get('ciudad')
+    siglo = request.args.get('siglo')
+    publicacion = request.args.get('publicacion')
+    
+    # Query base
+    query = AutorBio.query
+    
+    # Filtro por nacionalidad
+    if nacionalidad:
+        query = query.filter(AutorBio.nacionalidad.ilike(f"%{nacionalidad}%"))
+        
+    # Filtro por ciudad (lugar de nacimiento)
+    if ciudad_filtro:
+        query = query.filter(AutorBio.lugar_nacimiento.ilike(f"%{ciudad_filtro}%"))
+        
+    # Filtro por siglo
+    if siglo:
+        try:
+            s_num = int(siglo)
+            start_year = (s_num - 1) * 100 + 1
+            end_year = s_num * 100
+            year_part = func.reverse(func.split_part(func.reverse(AutorBio.fecha_nacimiento), '/', 1))
+            query = query.filter(year_part.op('~')('^[0-9]+$'))
+            query = query.filter(cast(year_part, Integer).between(start_year, end_year))
+        except:
+            pass
+            
+    # Filtro por publicación
+    if publicacion:
+        from models import AutorPrensa
+        # Join explícito por nombre/apellido ya que no hay FK directa
+        query = query.join(AutorPrensa, (AutorBio.nombre == AutorPrensa.nombre) & (AutorBio.apellido == AutorPrensa.apellido)) \
+                     .join(Prensa, Prensa.id == AutorPrensa.prensa_id) \
+                     .filter(Prensa.publicacion == publicacion).distinct()
+    
+    # Obtener autores con lugar de nacimiento
+    autores = query.filter(AutorBio.lugar_nacimiento.isnot(None), AutorBio.lugar_nacimiento != '').all()
+    
+    from collections import defaultdict
+    from models import AutorPrensa
+
+    # Obtener proyectos accesibles para el usuario
+    user_proyectos = [p.id for p in current_user.proyectos]
+    
+    # Pre-obtener todas las publicaciones de los autores en los proyectos del usuario
+    all_pubs = db.session.query(AutorPrensa.nombre, AutorPrensa.apellido, Prensa.publicacion) \
+                 .join(Prensa, Prensa.id == AutorPrensa.prensa_id) \
+                 .filter(Prensa.proyecto_id.in_(user_proyectos)) \
+                 .distinct().all()
+    
+    author_pubs_map = defaultdict(list)
+    for nom, ape, pub in all_pubs:
+        if pub:
+            author_pubs_map[(nom, ape)].append(pub)
+
+    autores_proyecto_activo = set()
+    if proyecto_activo:
+        autores_locales = AutorBio.query.filter_by(proyecto_id=proyecto_activo.id).all()
+        autores_proyecto_activo = {
+            (normalizar_texto(a.nombre), normalizar_texto(a.apellido))
+            for a in autores_locales
+        }
+
+    marcadores = []
+    autores_vistos = set()
+    ciudades_cache = {} 
+    
+    for a in autores:
+        # Evitar duplicados visuales en el mapa
+        auth_key = f"{a.nombre}|{a.apellido}|{a.lugar_nacimiento}".lower()
+        if auth_key in autores_vistos:
+            continue
+        autores_vistos.add(auth_key)
+        lugar = a.lugar_nacimiento.strip()
+        nombre_ciudad = lugar.split(',')[0].strip()
+        
+        coords = None
+        if nombre_ciudad in ciudades_cache:
+            coords = ciudades_cache[nombre_ciudad]
+        else:
+            coords = ciudades_coords.get(nombre_ciudad)
+            if not coords:
+                c_obj = Ciudad.query.filter(Ciudad.name.ilike(nombre_ciudad)).first()
+                if c_obj and c_obj.lat and c_obj.lon:
+                    coords = [c_obj.lat, c_obj.lon]
+            
+            if coords:
+                ciudades_cache[nombre_ciudad] = coords
+
+        if coords:
+            publicaciones = author_pubs_map.get((a.nombre, a.apellido), [])
+            clave_nombre = (normalizar_texto(a.nombre), normalizar_texto(a.apellido))
+            clave_invertida = (normalizar_texto(a.apellido), normalizar_texto(a.nombre))
+            es_local = False
+            if proyecto_activo:
+                es_local = (
+                    a.proyecto_id == proyecto_activo.id or
+                    clave_nombre in autores_proyecto_activo or
+                    clave_invertida in autores_proyecto_activo
+                )
+            
+            marcadores.append({
+                "id": a.id,
+                "nombre": a.nombre,
+                "apellido": a.apellido,
+                "seudonimo": a.seudonimo,
+                "proyecto_id": a.proyecto_id,
+                "es_proyecto_activo": es_local,
+                "lugar_nacimiento": a.lugar_nacimiento,
+                "fechas_vida": a.fechas_vida,
+                "foto": url_for('static', filename='uploads/autores/' + a.foto) if a.foto else None,
+                "lat": coords[0],
+                "lon": coords[1],
+                "publicaciones": sorted(list(set(publicaciones)))
+            })
+            
+    return jsonify(marcadores)
+
+
 # =========================================================
 # ⏳ LÍNEA DE TIEMPO
 # =========================================================
@@ -6748,6 +7036,8 @@ def api_publicacion_info(nombre):
     datos = {
         "descripcion_publicacion": pub.descripcion,
         "tipo_recurso": pub.tipo_recurso,
+        "tipo_publicacion": pub.tipo_publicacion,
+        "periodicidad": pub.periodicidad,
         "ciudad": pub.ciudad,
         "pais_publicacion": pub.pais_publicacion,
         "idioma": pub.idioma,
@@ -6762,13 +7052,29 @@ def api_publicacion_info(nombre):
         "reparto_total": pub.reparto_total or "",
         "pseudonimo": getattr(pub, 'pseudonimo', ''),
         "coleccion": getattr(pub, 'coleccion', ''),
-        "autores": [{
+        "autores": []
+    }
+    
+    # Enriquecer autores con sus pseudónimos desde AutorBio
+    for a in (pub.autores if hasattr(pub, 'autores') else []):
+        n_clean = (a.nombre or "").strip()
+        a_clean = (a.apellido or "").strip()
+        
+        # Búsqueda robusta en AutorBio (ignorar espacios y mayúsculas)
+        bio = AutorBio.query.filter(
+            func.trim(AutorBio.nombre).ilike(n_clean),
+            func.trim(AutorBio.apellido).ilike(a_clean),
+            AutorBio.proyecto_id == proyecto.id
+        ).first()
+        
+        datos["autores"].append({
             "nombre": a.nombre,
             "apellido": a.apellido,
             "tipo": a.tipo,
-            "es_anonimo": a.es_anonimo
-        } for a in (pub.autores if hasattr(pub, 'autores') else [])]
-    }
+            "es_anonimo": a.es_anonimo,
+            "pseudonimo": bio.seudonimo if bio else ""
+        })
+        
     return jsonify(datos)
 
 # =========================================================
@@ -6870,7 +7176,7 @@ def api_autocomplete(field):
 
     elif field == "autores_bio":
         # Búsqueda en la base de datos central de autores (AutorBio)
-        results = (
+        raw_results = (
             db.session.query(AutorBio)
             .filter(
                 or_(
@@ -6879,18 +7185,52 @@ def api_autocomplete(field):
                     AutorBio.seudonimo.ilike(f"%{query}%")
                 )
             )
-            .limit(limit)
             .all()
         )
-        suggestions = [
-            {
+        
+        processed = {}
+        target_project_id = str(proyecto.id) if proyecto else "NONE"
+        
+        for r in raw_results:
+            nombre_norm = (r.nombre or "").strip().lower()
+            apellido_norm = (r.apellido or "").strip().lower()
+            key = (nombre_norm, apellido_norm)
+            
+            r_project_id = str(r.proyecto_id) if r.proyecto_id else "NONE"
+            
+            # Lógica de prioridad:
+            if key not in processed:
+                processed[key] = r
+            else:
+                existing = processed[key]
+                ex_project_id = str(existing.proyecto_id) if existing.proyecto_id else "NONE"
+                
+                # Prioridad 1: Mi proyecto actual
+                if r_project_id == target_project_id:
+                    processed[key] = r
+                # Prioridad 2: Global (si el que hay es de otro proyecto)
+                elif r_project_id == "NONE" and ex_project_id != target_project_id:
+                    processed[key] = r
+        
+        suggestions = []
+        final_list = sorted(processed.values(), key=lambda x: (x.apellido or "").lower())
+        
+        for r in final_list[:limit]:
+            r_pid = str(r.proyecto_id) if r.proyecto_id else "NONE"
+            if r_pid == target_project_id:
+                label = "Este proyecto"
+            elif r_pid == "NONE":
+                label = "Global"
+            else:
+                label = "Repositorio"
+            
+            suggestions.append({
                 "value": f"{r.apellido}, {r.nombre}" if r.apellido else r.nombre,
                 "nombre": r.nombre,
                 "apellido": r.apellido,
-                "pseudonimo": r.seudonimo
-            }
-            for r in results
-        ]
+                "pseudonimo": r.seudonimo,
+                "origen": label
+            })
 
     elif field == "temas":
         # Obtener todos los temas, separar por comas y contar
@@ -6920,6 +7260,9 @@ def api_autocomplete(field):
 
 
 # =========================================================
+
+
+
 # API: Obtener último registro creado
 # =========================================================
 @app.route("/api/ultimo_registro")
@@ -8619,7 +8962,7 @@ def desactivar_proyecto(id):
     if proyecto_activo_id == proyecto.id:
         session.pop("proyecto_activo_id", None)
         flash(
-            f'📌 Proyecto "{proyecto.nombre}" desactivado. No hay proyecto activo actualmente.',
+            f'📌 Proyecto "{proyecto.nombre|upper}" desactivado. No hay proyecto activo actualmente.',
             "info",
         )
     else:
@@ -9266,7 +9609,7 @@ def calcular_palabras_totales(secciones):
                 texto_plano = re.sub(r'<[^>]+>', '', contenido_html)
                 palabras = len([p for p in texto_plano.split() if p.strip()])
                 total += palabras
-                
+        
     return total
 
 
@@ -9340,32 +9683,38 @@ def noticia_exportar_pdf(noticia_id):
         ))
         
         story = []
+
+        # Logo HesiOX
+        logo_path = os.path.join(app.root_path, "static", "img", "hesiox_logo2.png")
+        if os.path.exists(logo_path):
+            story.append(Image(logo_path, width=4*cm, height=5.5*cm))
+            story.append(Spacer(1, 0.5*cm))
         
         # Título
         titulo = noticia.titulo or "Sin título"
-        story.append(Paragraph(titulo, styles['TituloNoticia']))
+        story.append(Paragraph(_safe_text(titulo), styles['TituloNoticia']))
         story.append(Spacer(1, 0.5*cm))
         
         # Metadatos en tabla
         meta_data = []
         if noticia.publicacion:
-            meta_data.append(['Publicación:', noticia.publicacion])
+            meta_data.append(['Publicación:', _safe_text(noticia.publicacion)])
         if noticia.fecha_original:
-            meta_data.append(['Fecha:', str(noticia.fecha_original)])
+            meta_data.append(['Fecha:', _safe_text(noticia.fecha_original)])
         if noticia.ciudad:
-            meta_data.append(['Ciudad:', noticia.ciudad])
+            meta_data.append(['Ciudad:', _safe_text(noticia.ciudad)])
         if noticia.pais_publicacion:
-            meta_data.append(['País:', noticia.pais_publicacion])
+            meta_data.append(['País:', _safe_text(noticia.pais_publicacion)])
         if noticia.nombre_autor or noticia.apellido_autor:
             autor = f"{noticia.nombre_autor or ''} {noticia.apellido_autor or ''}".strip()
-            meta_data.append(['Autor:', autor])
+            meta_data.append(['Autor:', _safe_text(autor)])
         if noticia.seccion:
-            meta_data.append(['Sección:', noticia.seccion])
+            meta_data.append(['Sección:', _safe_text(noticia.seccion)])
         if noticia.pagina_inicio:
             paginas = str(noticia.pagina_inicio)
             if noticia.pagina_fin:
                 paginas += f"-{noticia.pagina_fin}"
-            meta_data.append(['Páginas:', paginas])
+            meta_data.append(['Páginas:', _safe_text(paginas)])
         
         if meta_data:
             meta_table = Table(meta_data, colWidths=[3*cm, 13*cm])
@@ -9387,38 +9736,31 @@ def noticia_exportar_pdf(noticia_id):
         # Contenido principal
         if noticia.contenido:
             story.append(Paragraph("Contenido", styles['Seccion']))
-            # Limpiar HTML y convertir saltos de línea
-            contenido = noticia.contenido
-            contenido = re.sub(r'<br\s*/?>', '<br/>', contenido)
-            contenido = re.sub(r'<p>', '', contenido)
-            contenido = re.sub(r'</p>', '<br/><br/>', contenido)
-            story.append(Paragraph(contenido, styles['Contenido']))
+            story.append(Paragraph(_safe_text_with_breaks(noticia.contenido), styles['Contenido']))
         
         # Texto original (si existe)
         if noticia.texto_original:
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph("Texto Original", styles['Seccion']))
-            texto_orig = noticia.texto_original
-            texto_orig = re.sub(r'<br\s*/?>', '<br/>', texto_orig)
-            story.append(Paragraph(texto_orig, styles['Contenido']))
+            story.append(Paragraph(_safe_text_with_breaks(noticia.texto_original), styles['Contenido']))
         
         # Resumen (si existe)
         if noticia.resumen:
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph("Resumen", styles['Seccion']))
-            story.append(Paragraph(noticia.resumen, styles['Contenido']))
+            story.append(Paragraph(_safe_text_with_breaks(noticia.resumen), styles['Contenido']))
         
         # Notas (si existen)
         if noticia.notas:
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph("Notas", styles['Seccion']))
-            story.append(Paragraph(noticia.notas, styles['Contenido']))
+            story.append(Paragraph(_safe_text_with_breaks(noticia.notas), styles['Contenido']))
         
         # Palabras clave
         if noticia.palabras_clave:
             story.append(Spacer(1, 0.5*cm))
             story.append(Paragraph("Palabras clave", styles['Seccion']))
-            story.append(Paragraph(noticia.palabras_clave, styles['Contenido']))
+            story.append(Paragraph(_safe_text_with_breaks(noticia.palabras_clave), styles['Contenido']))
         
         # URL de la fuente
         if noticia.url:

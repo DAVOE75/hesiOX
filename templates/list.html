@@ -441,6 +441,56 @@
                     </button>
                 </div>
             </div>
+            <!-- ROW 3: Dynamic Metadata Filters -->
+            <div class="d-flex w-100 gap-4 flex-wrap" style="position: relative; z-index: 5;">
+                <!-- Género / Recurso -->
+                <div style="flex: 1 1 180px;">
+                    <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Género / Recurso</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="tipo_recurso" id="selectFiltroRecurso" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todos)</option>
+                            {% for opt in opciones_genero %}
+                            <option value="{{ opt.valor }}" {% if request.args.get('tipo_recurso') == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Subgénero -->
+                <div style="flex: 1 1 180px;">
+                    <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Subgénero</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="tipo_publicacion" id="selectFiltroTipoPublicacion" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todos)</option>
+                            {% set last_group = None %}
+                            {% for opt in opciones_subgenero %}
+                                {% if opt.grupo != last_group %}
+                                    {% if last_group is not none %}</optgroup>{% endif %}
+                                    {% if opt.grupo %}
+                                        <optgroup label="{{ opt.grupo }}">
+                                    {% endif %}
+                                    {% set last_group = opt.grupo %}
+                                {% endif %}
+                                <option value="{{ opt.valor }}" {% if request.args.get('tipo_publicacion') == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                            {% endfor %}
+                            {% if last_group is not none %}</optgroup>{% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Periodicidad -->
+                <div style="flex: 1 1 180px;">
+                    <label class="d-block text-secondary fw-bold mb-1 small text-uppercase letter-spacing-1">Periodicidad</label>
+                    <div class="sirio-select-wrapper">
+                        <select name="periodicidad" id="selectFiltroPeriodicidad" class="{{ filter_style }} sirio-select">
+                            <option value="">(Todas)</option>
+                            {% for opt in opciones_frecuencia %}
+                            <option value="{{ opt.valor }}" {% if request.args.get('periodicidad') == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 

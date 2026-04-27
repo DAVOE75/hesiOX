@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app, abort, send_file
 import json
 from flask_login import login_required, current_user
-from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa
+from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa, MetadataOption
 from extensions import db, csrf
 from utils import get_proyecto_activo, get_nlp, limpieza_profunda_ocr, clean_location_name
 from cache_config import cache
@@ -247,6 +247,9 @@ def get_form_data_for_templates_noticias():
         "licencias": licencias,
         "formatos": formatos,
         "paises": paises,
+        "opciones_genero": MetadataOption.query.filter_by(categoria='tipo_recurso').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
+        "opciones_subgenero": MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
+        "opciones_frecuencia": MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
     }
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app
 from flask_login import login_required, current_user
@@ -418,10 +421,34 @@ def cartografia_noticia_add_location(id):
         return jsonify({'success': False, 'error': 'JSON inválido'}), 400
     logger.info('--- DEBUG add_location ---')
     logger.info(f'DATA RECIBIDA: {data}')
-    from services.gemini_service import clean_location_name
-    nombre = clean_location_name(data.get('nombre')) if data else None
-    nombre_busqueda = clean_location_name(data.get('nombre_busqueda') or nombre)  # Use correct name for geocoding
-    input_frecuencia = int(data.get('frecuencia', 1)) if data else 1
+    raw_nombre = data.get('nombre') if data else None
+    raw_busqueda = data.get('nombre_busqueda') or raw_nombre
+    
+    # Si parece una coordenada, no limpiar (evitar que strip('.,;') rompa el formato)
+    # Usamos re.search para ser más permisivos con posibles caracteres invisibles al inicio
+    is_coord_format = re.search(r'(-?\d+\.?\d*)\s*[,\s/|]\s*(-?\d+\.?\d*)', str(raw_busqueda))
+    
+    # DEBUG LOG
+    with open('/opt/hesiox/debug_geo.log', 'a') as f:
+        import datetime
+        f.write(f"\n--- {datetime.datetime.now()} ---\n")
+        f.write(f"ID: {id}, DATA: {data}\n")
+        f.write(f"RAW_NOMBRE: {raw_nombre}, RAW_BUSQUEDA: {raw_busqueda}\n")
+        f.write(f"IS_COORD: {bool(is_coord_format)}\n")
+
+    if is_coord_format:
+        nombre = clean_location_name(raw_nombre)
+        nombre_busqueda = str(raw_busqueda).strip()
+        logger.info(f"Formato de coordenadas detectado: {nombre_busqueda}")
+    else:
+        nombre = clean_location_name(raw_nombre)
+        nombre_busqueda = clean_location_name(raw_busqueda)
+    
+    try:
+        input_frecuencia = int(data.get('frecuencia', 1)) if data and data.get('frecuencia') else 1
+    except (ValueError, TypeError):
+        input_frecuencia = 1
+        
     en_titulo = bool(data.get('en_titulo')) if data else False
     en_contenido = bool(data.get('en_contenido')) if data else False
 
@@ -454,22 +481,54 @@ def cartografia_noticia_add_location(id):
     if frecuencia < 1:
         logger.warning(f'Frecuencia resultante inválida: {frecuencia}')
         return jsonify({'success': False, 'error': 'Frecuencia inválida'}), 400
-    # No permitir duplicados en la misma noticia
-    existe = LugarNoticia.query.filter_by(noticia_id=noticia.id, nombre=nombre, borrado=False).first()
+    # No permitir duplicados en la misma noticia - Búsqueda ROBUSTA (ilike)
+    duplicados = LugarNoticia.query.filter(
+        LugarNoticia.noticia_id == noticia.id,
+        LugarNoticia.nombre.ilike(nombre),
+        LugarNoticia.borrado == False
+    ).all()
+    
+    existe = duplicados[0] if duplicados else None
+    
+    # Si hay más de uno (duplicados accidentales), los fusionamos ahora mismo
+    if len(duplicados) > 1:
+        logger.warning(f"FUSIONANDO {len(duplicados)} DUPLICADOS para '{nombre}' en noticia {noticia.id}")
+        for extra in duplicados[1:]:
+            existe.frecuencia += extra.frecuencia
+            existe.frec_titulo += (extra.frec_titulo or 0)
+            existe.frec_contenido += (extra.frec_contenido or 0)
+            db.session.delete(extra)
+        db.session.commit()
     try:
         logger.info(f'Geocodificando con nombre de búsqueda: {nombre_busqueda}')
         lat, lon = None, None
         tipo_lugar = 'unknown'
 
-        # --- Detectar si el usuario pegó coordenadas directamente (ej: "38.695, -0.47") ---
-        coord_match = re.match(
-            r'^\s*(-?\d+\.?\d*)\s*[,\s]\s*(-?\d+\.?\d*)\s*$',
-            nombre_busqueda.replace('°', '').strip()
-        )
+        # --- Detectar si el usuario pegó coordenadas directamente ---
+        # Usamos re.search para mayor robustez
+        coord_match = re.search(r'(-?\d+\.?\d*)\s*[,\s/|]\s*(-?\d+\.?\d*)', nombre_busqueda.replace('°', ''))
+        
         if coord_match:
-            lat = float(coord_match.group(1))
-            lon = float(coord_match.group(2))
-            logger.info(f'Coordenadas detectadas directamente: {lat}, {lon}')
+            try:
+                lat = float(coord_match.group(1))
+                lon = float(coord_match.group(2))
+                logger.info(f'Coordenadas detectadas exitosamente: {lat}, {lon}')
+            except (ValueError, TypeError) as e_float:
+                logger.error(f"Error al convertir coordenadas a float: {e_float}")
+        
+        # Fallback manual si el regex falló pero is_coord_format era cierto
+        if (lat is None or lon is None) and is_coord_format:
+            try:
+                # Intentar partir por coma si existe
+                if ',' in nombre_busqueda:
+                    parts = nombre_busqueda.split(',')
+                    lat = float(re.findall(r'-?\d+\.?\d*', parts[0])[0])
+                    lon = float(re.findall(r'-?\d+\.?\d*', parts[1])[0])
+                    logger.info(f'Coordenadas extraídas por split manual: {lat}, {lon}')
+            except:
+                pass
+
+        if lat is not None and lon is not None:
             # Reverse geocoding para obtener el tipo de lugar
             try:
                 rev = requests.get('https://nominatim.openstreetmap.org/reverse', params={
@@ -480,20 +539,31 @@ def cartografia_noticia_add_location(id):
             except Exception:
                 pass
         else:
-            resp = requests.get('https://nominatim.openstreetmap.org/search', params={
-                'q': nombre_busqueda,
-                'format': 'json',
-                'limit': 1
-            }, headers={'User-Agent': 'app-hesiox/1.0'}, timeout=10)
-            data_geo = resp.json()
-            logger.info(f'Respuesta Nominatim: {data_geo}')
+            try:
+                resp = requests.get('https://nominatim.openstreetmap.org/search', params={
+                    'q': nombre_busqueda,
+                    'format': 'json',
+                    'limit': 1
+                }, headers={'User-Agent': 'HesiOX-App-v2/1.1'}, timeout=10)
+                
+                if resp.status_code == 200:
+                    data_geo = resp.json()
+                    logger.info(f'Respuesta Nominatim: {data_geo}')
 
-            if data_geo:
-                lat = float(data_geo[0]['lat'])
-                lon = float(data_geo[0]['lon'])
-                tipo_lugar = data_geo[0].get('type', 'unknown')
-            else:
-                logger.info(f'Nominatim falló para "{nombre_busqueda}". Intentando con IA Gemini...')
+                    if isinstance(data_geo, list) and len(data_geo) > 0:
+                        lat = float(data_geo[0]['lat'])
+                        lon = float(data_geo[0]['lon'])
+                        tipo_lugar = data_geo[0].get('type', 'unknown')
+                    else:
+                        logger.warning(f'Nominatim no devolvió resultados válidos para "{nombre_busqueda}": {data_geo}')
+                else:
+                    logger.error(f'Nominatim error {resp.status_code}: {resp.text}')
+            except Exception as e_nom:
+                logger.error(f"Excepción en petición a Nominatim: {e_nom}")
+
+            # Fallback a Gemini si Nominatim falló o no dio resultados
+            if lat is None or lon is None:
+                logger.info(f'Intentando geocodificación con IA Gemini para "{nombre_busqueda}"...')
                 try:
                     from services.gemini_service import geocode_with_ai
                     contexto_geo = {
@@ -506,42 +576,60 @@ def cartografia_noticia_add_location(id):
                     if res_ai and res_ai.get('found'):
                         lat = res_ai.get('lat')
                         lon = res_ai.get('lon')
-                        if res_ai.get('name_canonical'):
-                            nombre = res_ai.get('name_canonical')
-                        logger.info(f'Gemini desambiguó "{nombre_busqueda}" -> "{nombre}": {lat}, {lon} ({res_ai.get("explanation")})')
+                        # No sobreescribimos 'nombre' para mantener el texto original de la noticia
+                        logger.info(f'Gemini desambiguó "{nombre_busqueda}" -> Coordenadas: {lat}, {lon} ({res_ai.get("explanation")})')
                 except Exception as e_ai:
                     logger.error(f"Error en geocoding fallback IA: {e_ai}")
+
 
 
         # Si tras Nominatim e IA seguimos sin coordenadas, permitimos añadir con 0,0 para que el usuario corrija
         if lat is None or lon is None:
             # --- NUEVA LÓGICA DE UNIFICACIÓN/DESAMBIGUACIÓN (LOCAL CACHE) ---
-            # Antes de rendirse, buscamos si existe una entrada manual o verificada en la tabla Ciudad
-            # Esto permite que si el usuario ya mapeó "Benalcázar" -> Belalcázar una vez, se use siempre.
-            c_manual = Ciudad.query.filter(Ciudad.name.ilike(nombre_busqueda)).first()
-            if c_manual and c_manual.lat is not None and c_manual.lon is not None:
-                lat, lon = c_manual.lat, c_manual.lon
-                logger.info(f'Unificación encontrada en tabla Ciudad para "{nombre_busqueda}": {lat}, {lon}')
-            else:
+            # Solo buscamos en el caché local si NO es un formato de coordenadas explícito
+            if not is_coord_format:
+                c_manual = Ciudad.query.filter(Ciudad.name.ilike(nombre_busqueda)).first()
+                if c_manual and c_manual.lat is not None and c_manual.lon is not None:
+                    lat, lon = c_manual.lat, c_manual.lon
+                    logger.info(f'Unificación encontrada en tabla Ciudad para "{nombre_busqueda}": {lat}, {lon}')
+            
+            if lat is None or lon is None:
                 logger.warning(f'No se pudo geocodificar "{nombre}". Añadiendo con (0,0) para corrección manual.')
                 lat, lon = 0.0, 0.0
 
+        with open('/opt/hesiox/debug_geo.log', 'a') as f:
+            f.write(f"RESULT - LAT: {lat}, LON: {lon}, TIPO: {tipo_lugar}\n")
+            f.write(f"EXISTE: {bool(existe)}, NOMBRE_MATCH: {nombre}\n")
+
         if existe:
-            logger.info('Ya existe, sumando frecuencia y actualizando lat/lon')
-            existe.lat = lat
-            existe.lon = lon
-            existe.frecuencia += frecuencia
+            logger.info(f'Ya existe el lugar "{nombre}", actualizando...')
+            # SOLO actualizar lat/lon si hemos encontrado algo válido (distinto de 0,0)
+            # O si el usuario ha pegado coordenadas explícitamente (is_coord_format)
+            if (lat != 0.0 or lon != 0.0) or is_coord_format:
+                with open('/opt/hesiox/debug_geo.log', 'a') as f:
+                    f.write(f"UPDATING EXISTE ID {existe.id} FROM ({existe.lat}, {existe.lon}) TO ({lat}, {lon})\n")
+                logger.info(f'Actualizando coordenadas de "{nombre}" a: {lat}, {lon}')
+                existe.lat = lat
+                existe.lon = lon
+            else:
+                logger.info(f'Geocodificación fallida para "{nombre}", preservando coordenadas existentes: {existe.lat}, {existe.lon}')
+            
+            # Si estamos re-mapeando, actualizamos la frecuencia con el valor detectado/proporcionado
+            # en lugar de sumarlo, para evitar duplicados en el conteo.
+            logger.info(f'Actualizando frecuencia de {existe.frecuencia} a {frecuencia}')
+            existe.frecuencia = frecuencia
             existe.tipo = 'manual'
             if 'tipo_lugar' in locals():
                 existe.tipo_lugar = tipo_lugar
             existe.borrado = False
             existe.en_titulo = en_titulo
             existe.en_contenido = en_contenido
-            # Actualizar frecuencias específicas
             existe.frec_titulo = matches_titulo
             existe.frec_contenido = matches_contenido
             lugar = existe
         else:
+            with open('/opt/hesiox/debug_geo.log', 'a') as f:
+                f.write(f"CREATING NEW LUGAR: {nombre}\n")
             nombre = nombre.strip()
             lugar = LugarNoticia(
                 noticia_id=noticia.id,
@@ -558,7 +646,7 @@ def cartografia_noticia_add_location(id):
                 frec_contenido=matches_contenido
             )
             db.session.add(lugar)
-            logger.info(f'Lugar añadido: {lugar}')
+            logger.info(f'Lugar añadido exitosamente a la noticia {noticia.id}')
         db.session.commit()
         ciudad = {
             'nombre': nombre,
@@ -643,27 +731,50 @@ def cartografia_noticia_edit_location(id):
             db.session.commit()
             return jsonify({'success': True, 'fusion': True})
         
-        # 2. AUTODETECCION COORDENADAS: Si no existe en la noticia, buscar en tabla Ciudad (Global)
-        # Si cambiamos el nombre, intentamos traer las coordenadas de la base de referencia (case-insensitive)
-        ciudad_db = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
-        if ciudad_db and ciudad_db.lat is not None and ciudad_db.lon is not None:
-             # Usamos las coordenadas de la DB global
-             lugar.lat = ciudad_db.lat
-             lugar.lon = ciudad_db.lon
-        elif 'lat' in data and 'lon' in data and data['lat'] and data['lon']:
-             # Si no está en DB global, usamos las enviadas (si existen)
-             try:
-                lugar.lat = float(data['lat'])
-                lugar.lon = float(data['lon'])
-             except: pass
+        # 2. COORDINADAS: Prioridad al input manual, luego caché global Ciudad
+        new_lat = None
+        new_lon = None
+        
+        # Intentar obtener de los datos enviados (manual)
+        try:
+            if 'lat' in data and data['lat'] is not None and str(data['lat']).strip() != '':
+                new_lat = float(data['lat'])
+            if 'lon' in data and data['lon'] is not None and str(data['lon']).strip() != '':
+                new_lon = float(data['lon'])
+        except: pass
+
+        if new_lat is not None and new_lon is not None:
+            lugar.lat = new_lat
+            lugar.lon = new_lon
+            logger.info(f"Usando coordenadas manuales para {nombre}: {new_lat}, {new_lon}")
+        else:
+            # Si no hay manuales, buscar en tabla Ciudad (Global)
+            ciudad_db = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
+            if ciudad_db and ciudad_db.lat is not None and ciudad_db.lon is not None:
+                lugar.lat = ciudad_db.lat
+                lugar.lon = ciudad_db.lon
+                logger.info(f"Usando coordenadas de caché global para {nombre}: {lugar.lat}, {lugar.lon}")
+
     else:
-        # Si NO cambiamos de nombre, solo actualizamos coordenadas si se envían
-        if 'lat' in data and 'lon' in data:
-            try:
+        # Si NO cambiamos de nombre, actualizamos coordenadas si se envían
+        try:
+            if 'lat' in data and data['lat'] is not None and str(data['lat']).strip() != '':
                 lugar.lat = float(data['lat'])
+            if 'lon' in data and data['lon'] is not None and str(data['lon']).strip() != '':
                 lugar.lon = float(data['lon'])
-            except (ValueError, TypeError):
-                pass
+        except: pass
+
+    # --- PERSISTENCIA GLOBAL ---
+    # Si las coordenadas finales son válidas y no son (0,0), actualizamos la tabla Ciudad
+    # para que este cambio sea persistente en todo el sistema.
+    if lugar.lat != 0.0 or lugar.lon != 0.0:
+        c_persist = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
+        if not c_persist:
+            c_persist = Ciudad(name=nombre, lat=lugar.lat, lon=lugar.lon)
+            db.session.add(c_persist)
+        else:
+            c_persist.lat = lugar.lat
+            c_persist.lon = lugar.lon
 
     lugar.nombre = nombre
     lugar.frecuencia = frecuencia
@@ -4693,6 +4804,9 @@ def filtrar():
             "busqueda",
             "fecha_desde",
             "fecha_hasta",
+            "tipo_recurso",
+            "tipo_publicacion",
+            "periodicidad",
         ]
     }
     filtros["incluido"] = request.args.get("incluido", "todos")
@@ -4953,6 +5067,9 @@ def listar():
             "lugar",
             "fecha_desde",
             "fecha_hasta",
+            "tipo_recurso",
+            "tipo_publicacion",
+            "periodicidad",
         ]
     }
     # Alias: q también sirve como búsqueda

@@ -690,13 +690,22 @@ def limpieza_profunda_ocr(texto):
 def clean_location_name(name):
     if not name: return ""
     import re
+    # Lista de prefijos a eliminar (insensible a mayúsculas, solo al inicio seguido de espacio)
     prefijos = [
         r'^á\s+', r'^a\s+', r'^en\s+', r'^de\s+', r'^desde\s+', 
-        r'^hasta\s+', r'^hacia\s+', r'^por\s+'
+        r'^hasta\s+', r'^hacia\s+', r'^por\s+', r'^para\s+', r'^sobre\s+',
+        r'^del\s+', r'^al\s+'
     ]
     cleaned = name.strip()
+    # Algunas IAs devuelven comillas o puntos al final, o el usuario selecciona con ":" al inicio
+    cleaned = re.sub(r'^[:"\'«´‘\s]+', '', cleaned)
+    cleaned = re.sub(r'["\'»´’\s]+$', '', cleaned)
+    cleaned = cleaned.strip(' .,;')
+
     for p in prefijos:
         cleaned = re.sub(p, '', cleaned, flags=re.IGNORECASE).strip()
+    
     if cleaned and cleaned[0].islower():
         cleaned = cleaned[0].upper() + cleaned[1:]
+    
     return cleaned

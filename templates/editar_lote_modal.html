@@ -44,50 +44,42 @@
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label text-warning">Tipo de Recurso</label>
+              <label class="form-label text-warning">Género/Recurso Literario</label>
               <select class="form-select bg-dark text-light border-secondary" name="tipo_recurso"
                 id="selectLoteRecurso">
                 <option value="">(No cambiar)</option>
-                <option value="prensa">Prensa</option>
-                <option value="libro">Libro</option>
-                <option value="articulo">Artículo Académico</option>
-                <option value="tesis">Tesis</option>
-                <option value="mapa">Mapa</option>
-                <option value="fotografia">Fotografía</option>
-                <option value="obra_teatral">Obra Teatral</option>
-                <option value="otros">Otros</option>
+                {% for opt in opciones_genero %}
+                <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                {% endfor %}
               </select>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label text-warning">Tipo de Publicación</label>
-              <select class="form-select bg-dark text-light border-secondary" name="tipo_publicacion">
+              <label class="form-label text-warning">Subgénero</label>
+              <select class="form-select bg-dark text-light border-secondary" name="tipo_publicacion" id="selectLoteTipoPublicacion">
                 <option value="">(No cambiar)</option>
-                <option value="Periódico">Periódico</option>
-                <option value="Diario">Diario</option>
-                <option value="Semanario">Semanario</option>
-                <option value="Revista">Revista</option>
-                <option value="Magazine">Magazine</option>
-                <option value="Boletín">Boletín</option>
-                <option value="Gaceta">Gaceta</option>
-                <option value="Anuario">Anuario</option>
-                <option value="Otros">Otros</option>
+                {% set last_group = None %}
+                {% for opt in opciones_subgenero %}
+                    {% if opt.grupo != last_group %}
+                        {% if last_group is not none %}</optgroup>{% endif %}
+                        {% if opt.grupo %}
+                            <optgroup label="{{ opt.grupo }}">
+                        {% endif %}
+                        {% set last_group = opt.grupo %}
+                    {% endif %}
+                    <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                {% endfor %}
+                {% if last_group is not none %}</optgroup>{% endif %}
               </select>
             </div>
 
             <div class="col-md-6">
               <label class="form-label text-warning">Periodicidad</label>
-              <select class="form-select bg-dark text-light border-secondary" name="periodicidad">
+              <select class="form-select bg-dark text-light border-secondary" name="periodicidad" id="selectLotePeriodicidad">
                 <option value="">(No cambiar)</option>
-                <option value="Diaria">Diaria</option>
-                <option value="Semanal">Semanal</option>
-                <option value="Quincenal">Quincenal</option>
-                <option value="Mensual">Mensual</option>
-                <option value="Bimestral">Bimestral</option>
-                <option value="Trimestral">Trimestral</option>
-                <option value="Semestral">Semestral</option>
-                <option value="Anual">Anual</option>
-                <option value="Irregular">Irregular</option>
+                {% for opt in opciones_frecuencia %}
+                <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                {% endfor %}
               </select>
             </div>
 
@@ -122,6 +114,18 @@
                 placeholder="Ej: 20/08/1930">
             </div>
 
+            <div class="col-md-3">
+              <label class="form-label text-warning">Año</label>
+              <input type="number" class="form-control bg-dark text-light border-secondary" name="anio"
+                placeholder="AAAA">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label text-warning">Número</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="numero"
+                placeholder="(No cambiar)">
+            </div>
+
             <div class="col-md-6">
               <label class="form-label text-warning">Fecha de Consulta</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="fecha_consulta"
@@ -132,10 +136,15 @@
               <label class="form-label text-warning">Licencia</label>
               <select class="form-select bg-dark text-light border-secondary" name="licencia">
                 <option value="">(No cambiar)</option>
-                <option value="CC BY 4.0">CC BY 4.0</option>
-                <option value="CC BY-SA 4.0">CC BY-SA 4.0</option>
-                <option value="Dominio Público">Dominio Público</option>
+                <option value="CC BY 4.0">CC BY 4.0 (Atribución)</option>
+                <option value="CC BY-SA 4.0">CC BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                <option value="CC BY-ND 4.0">CC BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                <option value="CC BY-NC 4.0">CC BY-NC 4.0 (Atribución-NoComercial)</option>
+                <option value="CC BY-NC-SA 4.0">CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)</option>
+                <option value="CC BY-NC-ND 4.0">CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)</option>
+                <option value="CC0">CC0 (Dominio Público)</option>
                 <option value="Copyright">Copyright (Todos los derechos reservados)</option>
+                <option value="Unknown">Desconocida</option>
               </select>
             </div>
 
@@ -168,25 +177,78 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label text-warning">Teatro / Recinto</label>
+              <label class="form-label text-warning">Lugar de Publicación / Teatro</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="lugar_publicacion"
+                placeholder="Ciudad, Teatro, etc...">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label text-warning">Página Inicio</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="pagina_inicio"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label text-warning">Página Fin</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary" name="pagina_fin"
                 placeholder="(No cambiar)">
             </div>
 
             <div class="col-md-6">
-              <label class="form-label text-warning">Actos</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" name="seccion"
-                placeholder="(No cambiar)">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label text-warning">Escenas</label>
+              <label class="form-label text-warning">Volumen</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="volumen"
                 placeholder="(No cambiar)">
             </div>
 
+            <!-- Datos Teatrales Globales -->
+            <div class="col-12 mt-2">
+              <hr class="border-secondary opacity-25">
+              <label class="form-label text-info small"><i class="fa-solid fa-masks-theater me-1"></i> DATOS TEATRALES GLOBALES (OBRA)</label>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Actos (Totales)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="actos_totales"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Escenas (Totales)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="escenas_totales"
+                placeholder="(No cambiar)">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Reparto Completo (Obra)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="reparto_total"
+                placeholder="(No cambiar)">
+            </div>
+
+            <!-- Datos del Fragmento -->
+            <div class="col-12 mt-2">
+              <label class="form-label text-warning small"><i class="fa-solid fa-bookmark me-1"></i> CONTENIDO DEL FRAGMENTO</label>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Acto(s)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="seccion"
+                placeholder="Ej: Acto I">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Escena(s)</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="escenas"
+                placeholder="Ej: Escena III">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label text-warning small">Personajes / Reparto</label>
+              <input type="text" class="form-control bg-dark text-light border-secondary form-control-sm" name="reparto"
+                placeholder="(No cambiar)">
+            </div>
+
             <div class="col-12">
-              <label class="form-label text-warning">Reparto / Personajes</label>
+              <label class="form-label text-warning">Palabras Clave / Temas</label>
               <input type="text" class="form-control bg-dark text-light border-secondary" name="palabras_clave"
                 placeholder="(No cambiar)">
             </div>
@@ -228,22 +290,25 @@
             </div>
 
             <hr class="border-secondary opacity-25">
-
-            <div class="col-md-6">
-              <label class="form-label text-warning">Nombre Autor</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" name="nombre_autor"
-                placeholder="(No cambiar)">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label text-warning">Apellido Autor</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" name="apellido_autor"
-                placeholder="(No cambiar)">
-            </div>
-
             <div class="col-12">
-              <label class="form-label text-warning">Pseudónimo(s)</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" name="pseudonimo"
-                placeholder="(No cambiar)">
+              <label class="form-label text-warning d-block">Autoría Principal (Batch)</label>
+              <div class="input-group">
+                  <input type="text" class="form-control bg-dark text-light border-secondary" id="lote-autor-display" 
+                         placeholder="Buscar autor..." readonly style="cursor: default;">
+                  <button class="btn btn-outline-warning" type="button" id="btn-buscar-autor-lote" title="Buscar en Base de Datos">
+                      <i class="fa-solid fa-user-plus"></i> SELECCIONAR
+                  </button>
+                  <button class="btn btn-outline-danger" type="button" id="btn-limpiar-autor-lote" title="Limpiar selección">
+                      <i class="fa-solid fa-trash-can"></i>
+                  </button>
+              </div>
+              <div class="form-text text-light opacity-50 small">
+                Al seleccionar un autor, se actualizarán los campos nombre, apellido y pseudónimo en el lote.
+              </div>
+              <!-- Campos ocultos que se enviarán al servidor -->
+              <input type="hidden" name="nombre_autor" id="lote-nombre-autor">
+              <input type="hidden" name="apellido_autor" id="lote-apellido-autor">
+              <input type="hidden" name="pseudonimo" id="lote-pseudonimo">
             </div>
 
             <div class="col-12">
@@ -336,6 +401,9 @@
       }
     }
 
+    // Subgéneros para Lote (Mantenemos todos visibles por petición del usuario)
+    const selectLoteTipoPublicacion = document.getElementById('selectLoteTipoPublicacion');
+
     // Inicializar validaciones si existe FormValidator
     if (typeof FormValidator !== 'undefined') {
       const modal = document.getElementById('batchEditModal');
@@ -353,6 +421,94 @@
           }
         });
       }
+    }
+    // --- LÓGICA DE SELECTOR DE AUTOR PARA LOTE ---
+    const btnBuscarAutor = document.getElementById('btn-buscar-autor-lote');
+    const btnLimpiarAutor = document.getElementById('btn-limpiar-autor-lote');
+    const displayAutor = document.getElementById('lote-autor-display');
+    const inputNombre = document.getElementById('lote-nombre-autor');
+    const inputApellido = document.getElementById('lote-apellido-autor');
+    const inputPseudo = document.getElementById('lote-pseudonimo');
+
+    if (btnBuscarAutor) {
+      btnBuscarAutor.addEventListener('click', () => {
+        if (typeof Swal === 'undefined') {
+          alert('Error: SweetAlert2 no está cargado.');
+          return;
+        }
+
+        Swal.fire({
+          title: 'Seleccionar Autor para Lote',
+          html: `
+            <div class="mb-3 text-start">
+                <label class="form-label text-muted small">Buscar Autor/a en Base de Datos</label>
+                <input id="swal-batch-autor-search" class="form-control form-control-sirio" placeholder="Escribe nombre o apellido..." autocomplete="off">
+            </div>
+            <div id="swal-batch-autor-results" class="list-group text-start custom-scrollbar border border-secondary border-opacity-25 rounded" style="max-height: 200px; overflow-y: auto; background: #111; display: none;"></div>
+          `,
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'Cancelar',
+          background: '#1a1a1a',
+          color: '#fff',
+          didOpen: () => {
+            const searchInput = document.getElementById('swal-batch-autor-search');
+            const resultsContainer = document.getElementById('swal-batch-autor-results');
+            let timeout = null;
+
+            const performSearch = (query) => {
+              fetch('/api/autocomplete/autores_bio?q=' + encodeURIComponent(query) + '&limit=15')
+                .then(res => res.json())
+                .then(data => {
+                  resultsContainer.innerHTML = '';
+                  resultsContainer.style.display = 'block';
+
+                  if (data.length > 0) {
+                    data.forEach(aut => {
+                      const btn = document.createElement('button');
+                      btn.className = 'list-group-item list-group-item-action bg-transparent text-light border-bottom border-secondary border-opacity-25';
+                      btn.style.cursor = 'pointer';
+                      btn.innerHTML = `<strong>${aut.apellido || ''}</strong>, ${aut.nombre || ''} ${aut.pseudonimo ? '<span class="text-warning small ms-2">(' + aut.pseudonimo + ')</span>' : ''}`;
+                      btn.onclick = () => {
+                        displayAutor.value = `${aut.apellido || ''}, ${aut.nombre || ''}`;
+                        inputNombre.value = aut.nombre || '';
+                        inputApellido.value = aut.apellido || '';
+                        inputPseudo.value = aut.pseudonimo || '';
+                        Swal.close();
+                      };
+                      resultsContainer.appendChild(btn);
+                    });
+                  } else {
+                    resultsContainer.innerHTML = '<div class="p-3 text-muted small text-center">No se encontraron autores.</div>';
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  resultsContainer.innerHTML = '<div class="p-3 text-danger small text-center">Error de conexión.</div>';
+                });
+            };
+
+            performSearch('');
+
+            searchInput.addEventListener('input', function() {
+              clearTimeout(timeout);
+              const query = this.value.trim();
+              timeout = setTimeout(() => performSearch(query), 300);
+            });
+
+            setTimeout(() => searchInput.focus(), 100);
+          }
+        });
+      });
+    }
+
+    if (btnLimpiarAutor) {
+      btnLimpiarAutor.addEventListener('click', () => {
+        displayAutor.value = '';
+        inputNombre.value = '';
+        inputApellido.value = '';
+        inputPseudo.value = '';
+      });
     }
   });
 </script>

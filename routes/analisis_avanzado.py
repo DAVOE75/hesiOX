@@ -270,7 +270,12 @@ def publicacion_to_dict(pub):
         'tipo': pub.tipo_recurso or '',
         'seccion': pub.seccion or '',
         'volumen': pub.volumen or '',
-        'palabras_clave': pub.palabras_clave or ''
+        'palabras_clave': pub.palabras_clave or '',
+        'reparto_total': getattr(pub, 'reparto_total', '') or '',
+        'actos_totales': getattr(pub, 'actos_totales', '') or '',
+        'escenas_totales': getattr(pub, 'escenas_totales', '') or '',
+        'actos': pub.seccion or '',
+        'escenas': pub.volumen or ''
     }
 
 
@@ -1949,15 +1954,46 @@ def corpus_chat():
         logger.info("[CORPUS_CHAT] Inicializando servicio de embeddings...")
         embedding_service = EmbeddingService(user=current_user)
         
-        # 2. Buscar documentos con embeddings
-        logger.info(f"[CORPUS_CHAT] Buscando documentos para proyecto ID {proyecto.id}...")
-        documentos_candidatos = db.session.query(Prensa).filter(
+        # 2. Buscar documentos con embeddings y aplicar filtros
+        logger.info(f"[CORPUS_CHAT] Buscando documentos filtrados para proyecto ID {proyecto.id}...")
+        
+        # Extraer filtros del request (reutilizando la lógica centralizada)
+        filtros = extraer_filtros(data)
+        
+        query = db.session.query(Prensa).filter(
             Prensa.proyecto_id == proyecto.id,
-            Prensa.embedding_vector.isnot(None)
-        ).limit(2000).all()
+            Prensa.embedding_vector.isnot(None),
+            Prensa.incluido == True
+        )
+        
+        # Aplicar filtros adicionales si existen
+        if filtros.get('tema'):
+            query = query.filter(Prensa.temas == filtros['tema'])
+        
+        if filtros.get('publicacion_id'):
+            try:
+                pub_id = int(filtros['publicacion_id'])
+                query = query.filter(Prensa.id_publicacion == pub_id)
+            except (ValueError, TypeError):
+                pass
+                
+        if filtros.get('pais'):
+            query = query.filter(Prensa.pais_publicacion == filtros['pais'])
+            
+        if filtros.get('fecha_desde'):
+            query = query.filter(text(f"({SQL_PRENSA_DATE}) >= :f_desde")).params(f_desde=filtros['fecha_desde'])
+            
+        if filtros.get('fecha_hasta'):
+            query = query.filter(text(f"({SQL_PRENSA_DATE}) <= :f_hasta")).params(f_hasta=filtros['fecha_hasta'])
+
+        documentos_candidatos = query.limit(2000).all()
         
         if not documentos_candidatos:
-            return jsonify({'exito': False, 'error': 'No hay documentos con embeddings en este proyecto. Por favor, genéralos primero.'}), 404
+            return jsonify({
+                'exito': False, 
+                'error': 'No se encontraron documentos con embeddings que coincidan con los filtros seleccionados.',
+                'ayuda': 'Prueba a relajar los filtros (fechas, temas, etc.) o asegúrate de haber generado los embeddings para este proyecto.'
+            }), 404
         
         # 3. Detectar dimensión y modelo
         actual_dim = 0
@@ -1991,53 +2027,90 @@ def corpus_chat():
             
         # 4. Generar embedding de la pregunta
         logger.info("[CORPUS_CHAT] Generando embedding de la pregunta...")
+        query_embedding = None
+        fallback_mode = None
+        
         try:
             query_embedding = embedding_service.generate_query_embedding(pregunta, model=target_model)
         except Exception as api_err:
             error_msg = str(api_err)
             if "insufficient_quota" in error_msg.lower() or "quota" in error_msg.lower() or "429" in error_msg:
-                # Caso especial de cuota agotada
+                # FALLBACK A BÚSQUEDA POR PALABRAS CLAVE
+                logger.warning(f"[CORPUS_CHAT] Quota excedida para {target_model}. Iniciando fallback por palabras clave.")
+                fallback_mode = "keyword"
+            else:
+                # Otros errores de API
                 return jsonify({
                     'exito': False, 
-                    'error': f"Error de Cuota IA: Tu clave de {target_model} no tiene crédito suficiente o ha expirado. Por favor, verifica tu plan de facturación en OpenAI o Google.",
-                    'detalles_tecnicos': error_msg
-                }), 402
-            # Otros errores de API
-            return jsonify({
-                'exito': False, 
-                'error': f'Error al generar embedding con {target_model}: {error_msg}'
-            }), 500
+                    'error': f'Error al generar embedding con {target_model}: {error_msg}'
+                }), 500
         
-        if not query_embedding:
+        if not query_embedding and not fallback_mode:
             logger.warning(f"[CORPUS_CHAT] No se pudo generar query_embedding para {target_model}")
             return jsonify({'exito': False, 'error': f'La IA no pudo generar un vector para esta pregunta ({target_model})'}), 500
         
-        # 5. Filtrar documentos compatibles
-        logger.info(f"[CORPUS_CHAT] Filtrando {len(documentos_candidatos)} candidatos...")
-        documentos = []
-        doc_embeddings = []
-        for doc in documentos_candidatos:
-            d_vec = doc.embedding_vector
-            if d_vec is None: continue
+        # 5. Búsqueda y Top-K
+        doc_scores = []
+        
+        if fallback_mode == "keyword":
+            # Búsqueda tradicional por palabras clave (Emergencia)
+            palabras = [p.strip() for p in pregunta.split() if len(p.strip()) > 3]
+            if not palabras: 
+                palabras = [p.strip() for p in pregunta.split() if p.strip()]
             
-            if isinstance(d_vec, str):
-                try:
-                    import json
-                    d_vec = json.loads(d_vec)
-                except: continue
+            # Construir filtros ILIKE (limitamos a las primeras 5 palabras para rendimiento)
+            condiciones_texto = []
+            for p in palabras[:5]:
+                condiciones_texto.append(Prensa.contenido.ilike(f"%{p}%"))
+                condiciones_texto.append(Prensa.titulo.ilike(f"%{p}%"))
+            
+            if condiciones_texto:
+                # Re-ejecutar el query filtrado pero sin obligar a tener embedding
+                query_fallback = db.session.query(Prensa).filter(
+                    Prensa.proyecto_id == proyecto.id,
+                    Prensa.incluido == True
+                )
                 
-            if isinstance(d_vec, (list, tuple)) and len(d_vec) == len(query_embedding):
-                documentos.append(doc)
-                doc_embeddings.append(d_vec)
+                # Aplicar los mismos filtros de metadatos
+                if filtros.get('tema'): query_fallback = query_fallback.filter(Prensa.temas == filtros['tema'])
+                if filtros.get('publicacion_id'):
+                    try: query_fallback = query_fallback.filter(Prensa.id_publicacion == int(filtros['publicacion_id']))
+                    except: pass
+                if filtros.get('pais'): query_fallback = query_fallback.filter(Prensa.pais_publicacion == filtros['pais'])
+                if filtros.get('fecha_desde'): query_fallback = query_fallback.filter(text(f"({SQL_PRENSA_DATE}) >= :f_desde")).params(f_desde=filtros['fecha_desde'])
+                if filtros.get('fecha_hasta'): query_fallback = query_fallback.filter(text(f"({SQL_PRENSA_DATE}) <= :f_hasta")).params(f_hasta=filtros['fecha_hasta'])
+                
+                docs_encontrados = query_fallback.filter(or_(*condiciones_texto)).limit(num_documentos).all()
+                doc_scores = [(d, 0.5) for d in docs_encontrados] # Score ficticio
+        else:
+            # Flujo normal: Similitud Coseno
+            logger.info(f"[CORPUS_CHAT] Filtrando {len(documentos_candidatos)} candidatos...")
+            documentos = []
+            doc_embeddings = []
+            for doc in documentos_candidatos:
+                d_vec = doc.embedding_vector
+                if d_vec is None: continue
+                
+                if isinstance(d_vec, str):
+                    try:
+                        import json
+                        d_vec = json.loads(d_vec)
+                    except: continue
+                    
+                if isinstance(d_vec, (list, tuple)) and len(d_vec) == len(query_embedding):
+                    documentos.append(doc)
+                    doc_embeddings.append(d_vec)
+            
+            if not documentos:
+                return jsonify({'exito': False, 'error': 'No se encontraron documentos compatibles con la configuración de IA actual.'}), 422
+            
+            similitudes = embedding_service.batch_cosine_similarity(query_embedding, doc_embeddings)
+            doc_scores = sorted(zip(documentos, similitudes), key=lambda x: x[1], reverse=True)[:num_documentos]
         
-        if not documentos:
-            return jsonify({'exito': False, 'error': 'No se encontraron documentos compatibles con la configuración de IA actual.'}), 422
-        
-        # 6. Similitud y Top-K
-        similitudes = embedding_service.batch_cosine_similarity(query_embedding, doc_embeddings)
-        doc_scores = sorted(zip(documentos, similitudes), key=lambda x: x[1], reverse=True)[:num_documentos]
-        
-        # 7. Preparar contexto
+        if not doc_scores:
+            return jsonify({'exito': False, 'error': 'No se encontraron documentos relevantes para tu pregunta con los filtros actuales.'}), 404
+            
+        # 6. Preparar contexto
         contexto_docs = []
         for doc, score in doc_scores:
             limit = 50000
@@ -2046,13 +2119,13 @@ def corpus_chat():
         
         contexto_texto = "\n".join(contexto_docs)
         
+        # 7. Generar respuesta con LLM
         prompt = f"""Responde la pregunta basándote en los documentos del corpus:
 PREGUNTA: {pregunta}
 DOCUMENTOS:
 {contexto_texto}
-Instrucciones: Cita por ID, sé conciso y fiel a los textos."""
+Instrucciones: Cita por ID, sé conciso y fiel a los textos. Si no encuentras la respuesta, dilo."""
         
-        # 8. Generar respuesta con LLM
         logger.info(f"[CORPUS_CHAT] Generando respuesta con LLM ({modelo_ia})...")
         
         # Detectar proveedor basado en el nombre del modelo
@@ -2061,6 +2134,7 @@ Instrucciones: Cita por ID, sé conciso y fiel a los textos."""
         elif 'claude' in modelo_ia.lower(): provider = 'anthropic'
         
         ai_service = AIService(provider=provider, model=modelo_ia, user=current_user)
+        # auto_fallback=True ya está por defecto en AIService.generate_content
         respuesta_ia = ai_service.generate_content(prompt, temperature=temperatura)
         
         if not respuesta_ia:
@@ -2068,20 +2142,22 @@ Instrucciones: Cita por ID, sé conciso y fiel a los textos."""
             return jsonify({'exito': False, 'error': 'La IA no pudo generar una respuesta.'}), 500
         
         logger.info("[CORPUS_CHAT] Respuesta generada con éxito")
-        # 9. Respuesta final
+        
+        # 8. Respuesta final
         return jsonify({
             'exito': True,
             'respuesta': respuesta_ia.strip(),
+            'fallback_mode': fallback_mode,
             'documentos_usados': [{
                 'id': doc.id,
                 'titulo': doc.titulo or "Sin título",
                 'fecha': formatear_fecha_para_ui(doc.fecha_original),
-                'similitud': round(score * 100, 1),
+                'similitud': round(score * 100, 1) if fallback_mode != 'keyword' else None,
                 'url': f"/noticias/lector?id={doc.id}"
             } for doc, score in doc_scores],
             'metadata': {
                 'modelo_ia': modelo_ia,
-                'modelo_embedding': target_model
+                'modelo_embedding': target_model if fallback_mode != 'keyword' else 'keyword_search'
             }
         })
         

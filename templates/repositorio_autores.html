@@ -1,11 +1,11 @@
 {% extends "base_desktop.html" %}
 
 {% block title %}Repositorio Biográfico Universal — hesiOX{% endblock %}
-{% block page_title %}Diccionario Biográfico Universal{% endblock %}
+{% block page_title %}Diccionario Biográfico Universal de Autores/as{% endblock %}
 
 {% block breadcrumb %}
 <span class="text-muted ms-2 small">/ <a href="{{ url_for('lista_autores') }}"
-        class="text-muted text-decoration-none">Autores</a> / Repositorio Universal</span>
+        class="text-muted text-decoration-none">Autores/as</a> / Repositorio Universal</span>
 {% endblock %}
 
 {% block extra_css %}
@@ -16,7 +16,52 @@
     }
     .autor-card-global {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    
+    [data-theme="dark"] .autor-card-global {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Estilos vinculados (con especificidad alta) */
+    .autor-card-global.card-vinculado {
+        border: 2.5px solid #ff9800 !important;
+        box-shadow: none !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    .badge-vinculado {
+        background-color: #ff9800 !important;
+        color: #000 !important;
+        font-weight: bold;
+    }
+    .btn-vinculado {
+        border: 2px solid #ff9800 !important;
+        color: #ff9800 !important;
+        background: transparent !important;
+    }
+    .autor-checkbox {
+        border: 2.5px solid #ff9800 !important;
+    }
+
+    [data-theme="light"] .autor-card-global.card-vinculado {
+        border: 2.5px solid #294a60 !important;
+        background-color: rgba(41, 74, 96, 0.05) !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    [data-theme="light"] .badge-vinculado {
+        background-color: #294a60 !important;
+        color: #ffffff !important;
+    }
+    [data-theme="light"] .btn-vinculado {
+        border: 2px solid #294a60 !important;
+        color: #294a60 !important;
+    }
+    [data-theme="light"] .autor-checkbox {
+        border: 2.5px solid #294a60 !important;
     }
     .autor-card-global:hover {
         transform: translateY(-2px);
@@ -28,6 +73,9 @@
 
 {% block top_actions %}
 <div class="d-flex gap-2">
+    <a href="{{ url_for('mapa_autores') }}" class="btn-sirio">
+        <i class="fa-solid fa-map-location-dot me-1"></i> MAPA DE AUTORES
+    </a>
     <a href="{{ url_for('lista_autores') }}" class="btn-sirio">
         <i class="fa-solid fa-arrow-left me-1"></i> VOLVER
     </a>
@@ -65,7 +113,7 @@
                     <i class="fa-solid fa-share-nodes me-2"></i>Prosopografía Colaborativa
                 </h6>
                 <p class="mb-0 small text-light opacity-90">
-                    Este repositorio contiene todos los autores registrados en tus diferentes proyectos de hesiOX. 
+                    Este repositorio contiene todos los/as autores/as registrados/as en tus diferentes proyectos de hesiOX. 
                     Puedes <strong>importar</strong> cualquier perfil para evitar duplicar el trabajo de investigación biográfica. 
                     Al importar, se creará una copia local en tu proyecto actual.
                 </p>
@@ -75,33 +123,33 @@
 
     <!-- Toolbar y Acciones Masivas -->
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <form method="GET" class="flex-grow-1" style="max-width: 600px;">
-            <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary text-warning">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </span>
-                <input type="text" id="buscador" name="q" class="form-control form-control-sirio" 
+        <form method="GET" class="d-flex align-items-center gap-2 flex-grow-1" style="max-width: 600px;">
+            <div class="position-relative flex-grow-1">
+                <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-warning opacity-75"></i>
+                <input type="text" id="buscador" name="q" class="form-control form-control-sirio ps-5" 
                        placeholder="Buscar por nombre, apellido o seudónimo..." value="{{ q or '' }}">
-                <button type="submit" class="btn btn-sirio">BUSCAR</button>
             </div>
+            <button type="submit" class="btn btn-sirio btn-sm fw-bold px-4 h-100" style="min-height: 38px;">BUSCAR</button>
         </form>
         
         <div id="bulkActions" class="d-none">
-            <button type="button" id="btnImportarMasivo" class="btn btn-warning fw-bold px-4">
-                <i class="fa-solid fa-download me-2"></i>IMPORTAR SELECCIONADOS (<span id="selectedCount">0</span>)
+            <button type="button" id="btnImportarMasivo" class="btn btn-sirio btn-sm fw-bold px-4">
+                <i class="fa-solid fa-download me-2"></i>IMPORTAR SELECCIONADOS/AS (<span id="selectedCount">0</span>)
             </button>
         </div>
     </div>
 
-    <!-- Grid de Autores -->
+    <!-- Grid de Autores/as -->
     <div class="row g-3">
         {% for h in autores %}
         <div class="col-xl-4 col-md-6">
-            <div class="card autor-card-global bg-dark text-light h-100 position-relative">
+            {% set key_local = h.nombre + '|' + h.apellido %}
+            {% set ya_importado = key_local in nombres_locales %}
+            <div class="card autor-card-global {% if ya_importado %}card-vinculado{% endif %} bg-dark text-light h-100 position-relative">
                 <!-- Checkbox Selección -->
                 <div class="position-absolute top-0 end-0 p-2" style="z-index: 10;">
                     <div class="form-check">
-                        <input class="form-check-input autor-checkbox" type="checkbox" value="{{ h.id }}" style="width: 20px; height: 20px; border-color: #ff9800;">
+                        <input class="form-check-input autor-checkbox" type="checkbox" value="{{ h.id }}" style="width: 20px; height: 20px;" {% if ya_importado %}disabled{% endif %}>
                     </div>
                 </div>
 
@@ -118,7 +166,10 @@
                         <div class="flex-grow-1 min-width-0">
                             <h6 class="mb-1 text-truncate text-warning">{{ h.apellido or '' }}, {{ h.nombre or '' }}</h6>
                             <div class="small text-muted mb-1">
-                                <i class="fa-solid fa-project-diagram me-1 opacity-50"></i> Proyecto: <strong>{{ h.proyecto.nombre if h.proyecto else 'Desconocido' }}</strong>
+                                <i class="fa-solid fa-project-diagram me-1 opacity-50"></i> Proyecto: <strong>{{ (h.proyecto.nombre if h.proyecto else 'Desconocido')|upper }}</strong>
+                                {% if ya_importado %}
+                                <span class="badge badge-vinculado ms-2" style="font-size: 0.6rem;">YA EN MI PROYECTO</span>
+                                {% endif %}
                             </div>
                             {% if h.seudonimo %}
                             <div class="small text-info mb-2 italic">"{{ h.seudonimo }}"</div>
@@ -131,21 +182,125 @@
                 </div>
                 <div class="card-footer bg-transparent border-top border-secondary py-2 d-flex justify-content-between align-items-center">
                     <span class="badge bg-dark border border-secondary text-muted extra-small">{{ h.nacionalidad or '-' }}</span>
+                    {% if ya_importado %}
+                    <button class="btn btn-vinculado btn-sm px-3 disabled" title="Este autor ya forma parte de tu proyecto activo">
+                        <i class="fa-solid fa-check me-1"></i> VINCULADO
+                    </button>
+                    {% else %}
                     <form action="{{ url_for('importar_autor_bio', id=h.id) }}" method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-sirio btn-sm px-3">
                             <i class="fa-solid fa-download me-1"></i> IMPORTAR
                         </button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% else %}
         <div class="col-12 text-center py-5">
             <i class="fa-solid fa-user-slash fa-3x text-secondary opacity-25 mb-3"></i>
-            <p class="text-muted">No se encontraron autores disponibles para importar.</p>
+            <p class="text-muted">No se encontraron autores/as disponibles para importar.</p>
         </div>
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.autor-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    const btnImportarMasivo = document.getElementById('btnImportarMasivo');
+
+    function updateSelection() {
+        const selected = Array.from(checkboxes).filter(cb => cb.checked);
+        selectedCount.textContent = selected.length;
+        if (selected.length > 0) {
+            bulkActions.classList.remove('d-none');
+        } else {
+            bulkActions.classList.add('d-none');
+        }
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelection);
+    });
+
+    btnImportarMasivo.addEventListener('click', function() {
+        const selectedIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        
+        if (selectedIds.length === 0) return;
+
+        Swal.fire({
+            title: '¿Importar autores/as?',
+            text: `Vas a importar ${selectedIds.length} perfiles biográficos a tu proyecto actual.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ff9800',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'SÍ, IMPORTAR',
+            cancelButtonText: 'CANCELAR',
+            background: '#1a1a1a',
+            color: '#fff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Importando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    background: '#1a1a1a',
+                    color: '#fff'
+                });
+
+                fetch("{{ url_for('importar_autor_bio_masivo') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: data.message,
+                            icon: 'success',
+                            background: '#1a1a1a',
+                            color: '#fff'
+                        }).then(() => {
+                            window.location.href = "{{ url_for('lista_autores') }}";
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error',
+                            background: '#1a1a1a',
+                            color: '#fff'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Ocurrió un error en la conexión',
+                        icon: 'error',
+                        background: '#1a1a1a',
+                        color: '#fff'
+                    });
+                });
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

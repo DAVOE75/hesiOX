@@ -9533,15 +9533,18 @@
         // Cachear heatPoints para reutilizar en toggle directo
         window._lastHeatPoints = heatPoints;
 
-        // Manejar heatmap: agregar si está activo, eliminar si no
-        if (showHeatmap) {
-          _heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 10 }).addTo(window._mapaCorpus);
-        } else if (_heatmapLayer && window._mapaCorpus.hasLayer(_heatmapLayer)) {
+        // Limpiar heatmap previo si existe para evitar duplicados
+        if (_heatmapLayer) {
           window._mapaCorpus.removeLayer(_heatmapLayer);
           if (_heatmapLayer._canvas && _heatmapLayer._canvas.parentNode) {
             _heatmapLayer._canvas.parentNode.removeChild(_heatmapLayer._canvas);
           }
           _heatmapLayer = null;
+        }
+
+        // Manejar heatmap: agregar si está activo
+        if (showHeatmap) {
+          _heatmapLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 10 }).addTo(window._mapaCorpus);
         }
 
         // Manejar capa temática (pie): agregar si está activo, eliminar si no

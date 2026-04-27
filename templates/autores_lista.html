@@ -1,16 +1,21 @@
 {% extends 'base_desktop.html' %}
 
-{% block title %}Diccionario de Autores — Proyecto Sirio{% endblock %}
-{% block page_title %}Diccionario de Autores{% endblock %}
+{% block title %}Diccionario de Autores/as — Proyecto Sirio{% endblock %}
+{% block page_title %}Diccionario de Autores/as{% endblock %}
 
 {% block breadcrumb %}
 <span class="text-muted ms-2 small">/ Gestión de Contenidos</span>
 {% endblock %}
 
 {% block top_actions %}
-<a href="{{ url_for('nuevo_autor_page') }}" class="btn-sirio d-flex align-items-center justify-content-center text-decoration-none">
-    <i class="fa-solid fa-user-plus me-1"></i>NUEVO AUTOR
-</a>
+<div class="d-flex gap-2">
+    <a href="{{ url_for('nuevo_autor_page') }}" class="btn-sirio d-flex align-items-center justify-content-center text-decoration-none">
+        <i class="fa-solid fa-user-plus me-1"></i>NUEVO AUTOR/A
+    </a>
+    <a href="{{ url_for('mapa_autores') }}" class="btn-sirio d-flex align-items-center justify-content-center text-decoration-none">
+        <i class="fa-solid fa-map-location-dot me-1"></i>MAPA DE AUTORES
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -20,7 +25,7 @@
         <div class="metric-strip" style="max-width: 800px; margin-bottom: 2rem;">
             <div class="metric-compact">
                 <div>
-                    <span class="metric-label">Autores Registrados</span>
+                    <span class="metric-label">Autores/as Registrados/as</span>
                     <span class="metric-value">{{ autores|length }}</span>
                 </div>
                 <i class="fa-solid fa-user-pen metric-icon"></i>
@@ -43,29 +48,41 @@
     </div>
 
     <div class="container-panel">
-        <div class="mb-4">
-            <form method="GET" class="row g-2 align-items-center">
-                <div class="col-md-12">
-                    <div class="input-group">
-                        <span class="input-group-text bg-dark border-secondary text-warning">
-                            <i class="fa-solid fa-search"></i>
-                        </span>
-                        <input type="text" name="q" class="form-control form-control-sirio" 
-                               style="width: 40%;"
-                               placeholder="Buscar por nombre, apellido o seudónimo..." value="{{ q or '' }}">
-                        
-                        <select name="siglo" class="form-select form-control-sirio" style="max-width: 200px; border-left: none;">
-                            <option value="">Todos los siglos</option>
-                            <option value="18" {% if siglo == '18' %}selected{% endif %}>Siglo XVIII</option>
-                            <option value="19" {% if siglo == '19' %}selected{% endif %}>Siglo XIX</option>
-                            <option value="20" {% if siglo == '20' %}selected{% endif %}>Siglo XX</option>
-                            <option value="21" {% if siglo == '21' %}selected{% endif %}>Siglo XXI</option>
-                        </select>
+        <!-- BUSCADOR Y FILTROS OPTIMIZADOS -->
+        <div class="search-box-container mb-4 p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                    <label class="form-label text-warning small fw-bold mb-1">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> BÚSQUEDA POR TEXTO
+                    </label>
+                    <input type="text" name="q" class="form-control form-control-sirio" 
+                           placeholder="Nombre, apellido o seudónimo..." value="{{ q or '' }}">
+                </div>
+                
+                <div class="col-lg-4">
+                    <label class="form-label text-warning small fw-bold mb-1">
+                        <i class="fa-solid fa-calendar-days me-1"></i> CRONOLOGÍA (SIGLO)
+                    </label>
+                    <select name="siglo" class="form-select form-control-sirio">
+                        <option value="">Todos los siglos</option>
+                        <option value="15" {% if siglo == '15' %}selected{% endif %}>Siglo XV</option>
+                        <option value="16" {% if siglo == '16' %}selected{% endif %}>Siglo XVI</option>
+                        <option value="17" {% if siglo == '17' %}selected{% endif %}>Siglo XVII</option>
+                        <option value="18" {% if siglo == '18' %}selected{% endif %}>Siglo XVIII</option>
+                        <option value="19" {% if siglo == '19' %}selected{% endif %}>Siglo XIX</option>
+                        <option value="20" {% if siglo == '20' %}selected{% endif %}>Siglo XX</option>
+                        <option value="21" {% if siglo == '21' %}selected{% endif %}>Siglo XXI</option>
+                    </select>
+                </div>
 
-                        <button type="submit" class="btn btn-sirio">BUSCAR / FILTRAR</button>
+                <div class="col-lg-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-sirio flex-grow-1 fw-bold">
+                            <i class="fa-solid fa-filter me-1"></i> FILTRAR
+                        </button>
                         {% if q or siglo %}
-                        <a href="{{ url_for('lista_autores') }}" class="btn btn-outline-secondary d-flex align-items-center">
-                            <i class="fa-solid fa-xmark"></i>
+                        <a href="{{ url_for('lista_autores') }}" class="btn btn-outline-secondary px-3" title="Limpiar">
+                            <i class="fa-solid fa-rotate-left"></i>
                         </a>
                         {% endif %}
                     </div>
@@ -73,7 +90,7 @@
             </form>
         </div>
 
-        <!-- TABLA DE AUTORES -->
+        <!-- TABLA DE AUTORES/AS -->
         <div class="table-responsive">
             <table class="table table-sirio align-middle">
                 <thead>
@@ -104,9 +121,11 @@
                         </td>
                         <td>
                             <span class="fw-bold">{{ autor.apellido or '' }}, {{ autor.nombre or '' }}</span>
-                            {% if autor.proyecto_id != proyecto.id %}
+                            {% if autor.proyecto_id|default(0)|int != proyecto.id|int %}
                             <span class="badge bg-dark border border-warning text-warning ms-2" style="font-size: 0.6rem;">UNIVERSAL</span>
-                            <div class="extra-small text-muted italic">Desde: {{ autor.proyecto.nombre }}</div>
+                            {% if autor.proyecto_id %}
+                            <div class="extra-small text-muted italic">Desde: {{ autor.proyecto.nombre|upper }}</div>
+                            {% endif %}
                             {% endif %}
                         </td>
                         <td>
@@ -163,7 +182,7 @@
                         <td colspan="7" class="text-center py-5">
                             <div class="text-muted">
                                 <i class="fa-solid fa-user-slash fa-3x mb-3 opacity-25"></i>
-                                <p>No se encontraron autores en este proyecto.</p>
+                                <p>No se encontraron autores/as en este proyecto.</p>
                                 {% if q %}
                                 <a href="{{ url_for('lista_autores') }}" class="btn btn-sirio btn-sm">VER TODOS</a>
                                 {% endif %}
@@ -243,7 +262,7 @@
 
     window.eliminarAutorDirecto = function(id, nombre) {
         Swal.fire({
-            title: '¿Eliminar autor?',
+            title: '¿Eliminar autor/a?',
             text: `Se eliminará el perfil de "${nombre}". Esto no borrará sus textos asociados, pero sí su información biográfica central.`,
             icon: 'warning',
             showCancelButton: true,
@@ -264,11 +283,11 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('Eliminado', 'El autor ha sido eliminado correctamente.', 'success').then(() => {
+                        Swal.fire('Eliminado', 'El/la autor/a ha sido eliminado/a correctamente.', 'success').then(() => {
                             window.location.reload();
                         });
                     } else {
-                        Swal.fire('Error', data.message || 'No se pudo eliminar el autor.', 'error');
+                        Swal.fire('Error', data.message || 'No se pudo eliminar el/la autor/a.', 'error');
                     }
                 });
             }

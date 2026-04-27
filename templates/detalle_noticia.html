@@ -42,6 +42,7 @@ Detalle de noticia
 <link
   href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Playfair+Display:wght@400;700;900&family=Roboto+Condensed:wght@400;700&display=swap"
   rel="stylesheet">
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 
 <style>
   /* --- LAYOUT GLOBAL & RESET --- */
@@ -239,14 +240,14 @@ Detalle de noticia
     color: #dcdcdc;
     text-align: justify;
     margin-bottom: 60px;
-    white-space: pre-wrap; /* Restaurado para compatibilidad con saltos de línea */
+    white-space: pre-wrap;
     overflow: visible;
     position: relative;
     z-index: 1;
   }
 
   .news-body p, .news-body ul, .news-body li, .news-body blockquote {
-    margin-bottom: 0.3rem;
+    margin-bottom: 1.25rem;
     overflow: visible !important;
   }
 
@@ -1426,7 +1427,7 @@ Detalle de noticia
         visibility: 'visible'
       });
 
-      // Update vincular button
+      // Update vincular button appearance based on state
       const frecDesvinc = parseInt(mark.dataset.desvinculadas || '0');
       const vincBtn = document.getElementById('hap-vincular');
       if (vincBtn) {
@@ -1442,6 +1443,29 @@ Detalle de noticia
       }
     });
   }
+
+  // Action Handlers for Floating Panel
+  document.getElementById('hap-vincular').onclick = (e) => {
+    if (currentMark) vincularLugarDesdeResaltado(currentMark, e);
+  };
+  document.getElementById('hap-search').onclick = (e) => {
+    if (currentMark) abrirModalMapear(currentMark.dataset.nombre, e);
+  };
+  document.getElementById('hap-gps').onclick = (e) => {
+    if (currentMark && window.mapaCartografia) {
+      const nombre = currentMark.dataset.nombre;
+      const lugar = window.currentLocationsData?.find(l => l.nombre.toLowerCase() === nombre.toLowerCase());
+      if (lugar && lugar.lat && lugar.lon) {
+        window.mapaCartografia.setView([lugar.lat, lugar.lon], 15);
+        document.getElementById('mapa-cartografia').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        alert('Esta ubicación no tiene coordenadas asignadas.');
+      }
+    }
+  };
+  document.getElementById('hap-delete').onclick = (e) => {
+    if (currentMark) borrarLugarDesdeResaltado(currentMark.dataset.nombre, e);
+  };
 
   function hidePanel() {
     hideTimer = setTimeout(() => {
@@ -2338,7 +2362,66 @@ Detalle de noticia
                   'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({ nombre: e.lugar })
-              }).then(() => window.renderTablaYMapaUltima());
+              }).then(() => {
+                  if (typeof limpiarResaltado === 'function') limpiarResaltado();
+                  window.renderTablaYMapaUltima();
+              });
+            };
+
+            // Listener Vincular/Desvincular
+            item.querySelector('.btn-vincular-lugar').onclick = function(event) {
+                event.stopPropagation();
+                const ubicacionId = this.dataset.ubicacionId;
+                const frecDesvinc = parseInt(this.dataset.frecuenciaDesvinculada || '0');
+                const willVincular = frecDesvinc > 0;
+                
+                fetch(`/api/ubicacion/${ubicacionId}/vincular`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ vinculada: willVincular })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (typeof limpiarResaltado === 'function') limpiarResaltado();
+                        window.renderTablaYMapaUltima();
+                    }
+                });
+            };
+
+            // Listener Verify
+            item.querySelector('.btn-verify-location').onclick = function(event) {
+                event.stopPropagation();
+                const ubicacionId = item.querySelector('.btn-vincular-lugar').dataset.ubicacionId;
+                const currentVerified = this.dataset.verified === 'true';
+                
+                fetch(`/api/ubicacion/${ubicacionId}/verificar`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ verified: !currentVerified })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.renderTablaYMapaUltima();
+                    }
+                });
+            };
+
+            // Listener Google Maps
+            item.querySelector('.btn-google-maps').onclick = function(event) {
+                event.stopPropagation();
+                const lat = this.dataset.lat;
+                const lon = this.dataset.lon;
+                if (lat && lon) {
+                    window.open(`https://www.google.com/maps?q=${lat},${lon}`, '_blank');
+                }
             };
 
             // Listener Copy Coordinates

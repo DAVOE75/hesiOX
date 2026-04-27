@@ -6,8 +6,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Hemeroteca, Publicacion, Proyecto, Prensa, Tema, AutorPublicacion
+from models import Hemeroteca, Publicacion, Proyecto, Prensa, Tema, AutorPublicacion, ArchivoPublicacion, MetadataOption, AutorPrensa
 import json
+import os
+from werkzeug.utils import secure_filename
+from datetime import datetime
 from utils import geocode_city
 
 hemerotecas_bp = Blueprint('hemerotecas', __name__)
@@ -515,6 +518,7 @@ def nueva_publicacion():
             nombre=nombre,
             descripcion=request.form.get("descripcion", "").strip(),
             tipo_recurso=request.form.get("tipo_recurso", "").strip(),
+            tipo_publicacion=request.form.get("tipo_publicacion", "").strip(),
             ciudad=request.form.get("ciudad", "").strip(),
             provincia=request.form.get("provincia", "").strip(),
             pais_publicacion=request.form.get("pais_publicacion", "").strip(),
@@ -566,6 +570,30 @@ def nueva_publicacion():
             nueva_pub.hemeroteca_id = int(hemeroteca_id)
         
         db.session.add(nueva_pub)
+        db.session.flush() # Para obtener el ID
+
+        # 3. PROCESAR ARCHIVOS ADJUNTOS
+        archivos = request.files.getlist('archivos[]')
+        if archivos:
+            from flask import current_app
+            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'publicaciones')
+            os.makedirs(upload_path, exist_ok=True)
+            
+            for f in archivos:
+                if f and f.filename:
+                    original_filename = f.filename
+                    ext = os.path.splitext(original_filename)[1]
+                    # Nombre único: pubID_timestamp_securename
+                    unique_name = f"{nueva_pub.id_publicacion}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(original_filename)}"
+                    f.save(os.path.join(upload_path, unique_name))
+                    
+                    nuevo_archivo = ArchivoPublicacion(
+                        publicacion_id=nueva_pub.id_publicacion,
+                        filename=unique_name,
+                        original_filename=original_filename
+                    )
+                    db.session.add(nuevo_archivo)
+        
         db.session.commit()
         
         flash(f"✅ Publicación '{nombre}' creada correctamente", "success")
@@ -584,7 +612,20 @@ def nueva_publicacion():
             "pais": h.pais or ""
         }
 
-    return render_template("nueva_publicacion.html", hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data)
+    # Obtener opciones dinámicas para los desplegables
+    opciones_genero = MetadataOption.query.filter_by(categoria='tipo_recurso').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+    opciones_subgenero = MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.grupo, MetadataOption.orden, MetadataOption.etiqueta).all()
+    opciones_frecuencia = MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+
+    return render_template(
+        "nueva_publicacion.html", 
+        hemerotecas=hemerotecas, 
+        proyecto=proyecto, 
+        hemerotecas_data=hemerotecas_data,
+        opciones_genero=opciones_genero,
+        opciones_subgenero=opciones_subgenero,
+        opciones_frecuencia=opciones_frecuencia
+    )
 
 
 @hemerotecas_bp.route("/publicacion/editar/<int:id>", methods=["GET", "POST"])
@@ -624,6 +665,7 @@ def editar_publicacion(id):
             f.write(f"  NAME CHECK PASSED: {nuevo_nombre}\n")
         publicacion.descripcion = request.form.get("descripcion", "").strip()
         publicacion.tipo_recurso = request.form.get("tipo_recurso", "").strip()
+        publicacion.tipo_publicacion = request.form.get("tipo_publicacion", "").strip()
         publicacion.ciudad = request.form.get("ciudad", "").strip()
         publicacion.provincia = request.form.get("provincia", "").strip()
         publicacion.pais_publicacion = request.form.get("pais_publicacion", "").strip()
@@ -709,6 +751,28 @@ def editar_publicacion(id):
             f.write(f"    actos_totales: {publicacion.actos_totales}\n")
 
         db.session.commit()
+
+        # PROCESAR NUEVOS ARCHIVOS ADJUNTOS
+        nuevos_archivos = request.files.getlist('archivos[]')
+        if nuevos_archivos:
+            from flask import current_app
+            upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'publicaciones')
+            os.makedirs(upload_path, exist_ok=True)
+            
+            for f in nuevos_archivos:
+                if f and f.filename:
+                    original_filename = f.filename
+                    unique_name = f"{publicacion.id_publicacion}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(original_filename)}"
+                    f.save(os.path.join(upload_path, unique_name))
+                    
+                    nuevo_archivo = ArchivoPublicacion(
+                        publicacion_id=publicacion.id_publicacion,
+                        filename=unique_name,
+                        original_filename=original_filename
+                    )
+                    db.session.add(nuevo_archivo)
+            db.session.commit()
+
         db.session.refresh(publicacion)
         
         with open("/opt/hesiox/debug_post.log", "a") as f:
@@ -735,20 +799,35 @@ def editar_publicacion(id):
             if publicacion.apellido_autor is not None:
                 update_payload['apellido_autor'] = publicacion.apellido_autor
             
-            # Propagar ciudad
+            # Propagar geografía y metadatos básicos
             if publicacion.ciudad:
                 update_payload['ciudad'] = publicacion.ciudad
-            
-            if publicacion.coleccion:
-                update_payload['coleccion'] = publicacion.coleccion
-            
-            if publicacion.pseudonimo:
-                update_payload['pseudonimo'] = publicacion.pseudonimo
-                
             if publicacion.pais_publicacion:
                 update_payload['pais_publicacion'] = publicacion.pais_publicacion
+            if publicacion.idioma:
+                update_payload['idioma'] = publicacion.idioma
+            if publicacion.lugar_publicacion:
+                update_payload['lugar_publicacion'] = publicacion.lugar_publicacion
+            
+            # Propagar identificación y temas
+            if publicacion.coleccion:
+                update_payload['coleccion'] = publicacion.coleccion
+            if publicacion.pseudonimo:
+                update_payload['pseudonimo'] = publicacion.pseudonimo
+            if publicacion.tema:
+                update_payload['temas'] = publicacion.tema
 
-            # Propagar fuente (desde hemeroteca o campo directo)
+            # Propagar clasificación (Género y Subgénero)
+            if publicacion.tipo_recurso:
+                update_payload['tipo_recurso'] = publicacion.tipo_recurso
+            if publicacion.tipo_publicacion:
+                update_payload['tipo_publicacion'] = publicacion.tipo_publicacion
+            
+            # Propagar periodicidad (mapeado desde frecuencia)
+            if publicacion.frecuencia:
+                update_payload['periodicidad'] = publicacion.frecuencia
+
+            # Propagar fuente y créditos
             fuente_a_propagar = None
             if publicacion.hemeroteca_id:
                 hem = Hemeroteca.query.get(publicacion.hemeroteca_id)
@@ -760,21 +839,24 @@ def editar_publicacion(id):
             if fuente_a_propagar:
                 update_payload['fuente'] = fuente_a_propagar
             
-            # Propagar licencia
             if publicacion.licencia:
                 update_payload['licencia'] = publicacion.licencia
-            
-            # Propagar formato_fuente
             if publicacion.formato_fuente:
                 update_payload['formato_fuente'] = publicacion.formato_fuente
-            
-            # Propagar editorial
             if publicacion.editorial:
                 update_payload['editorial'] = publicacion.editorial
             
-            # Propagar descripcion histórica de publicación a descripcion_publicacion de la noticia
+            # Propagar descripción
             if publicacion.descripcion:
                 update_payload['descripcion_publicacion'] = publicacion.descripcion
+            
+            # Propagar campos teatrales (Estructura dramática global)
+            if publicacion.actos_totales:
+                update_payload['actos_totales'] = publicacion.actos_totales
+            if publicacion.escenas_totales:
+                update_payload['escenas_totales'] = publicacion.escenas_totales
+            if publicacion.reparto_total:
+                update_payload['reparto_total'] = publicacion.reparto_total
             
             if update_payload:
                 try:
@@ -809,7 +891,8 @@ def editar_publicacion(id):
                     count_updated = updated_rows
                 except Exception as e:
                     db.session.rollback()
-                    app.logger.error(f"Error propagando cambios de autoría: {e}")
+                    from flask import current_app
+                    current_app.logger.error(f"Error propagando cambios de autoría: {e}")
                     print(f"Error propagando cambios: {e}")
 
         msg_extra = ""
@@ -842,7 +925,22 @@ def editar_publicacion(id):
         'orden': a.orden
     } for a in publicacion.autores])
 
-    return render_template("editar_publicacion.html", pub=publicacion, hemerotecas=hemerotecas, proyecto=proyecto, hemerotecas_data=hemerotecas_data, autores_json=autores_json)
+    # Obtener opciones dinámicas para los desplegables
+    opciones_genero = MetadataOption.query.filter_by(categoria='tipo_recurso').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+    opciones_subgenero = MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.grupo, MetadataOption.orden, MetadataOption.etiqueta).all()
+    opciones_frecuencia = MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
+
+    return render_template(
+        "editar_publicacion.html", 
+        pub=publicacion, 
+        hemerotecas=hemerotecas, 
+        proyecto=proyecto, 
+        hemerotecas_data=hemerotecas_data, 
+        autores_json=autores_json,
+        opciones_genero=opciones_genero,
+        opciones_subgenero=opciones_subgenero,
+        opciones_frecuencia=opciones_frecuencia
+    )
 
 
 @hemerotecas_bp.route("/publicacion/borrar/<int:id>", methods=["POST"])
@@ -992,3 +1090,28 @@ def migrar_publicacion():
         proyecto_destino_id=proyecto_destino_id,
         mensaje=mensaje,
     )
+
+@hemerotecas_bp.route("/publicacion/archivo/borrar/<int:id>", methods=["POST"])
+@login_required
+def borrar_archivo_publicacion(id):
+    """Eliminar un archivo adjunto de una publicación"""
+    archivo = ArchivoPublicacion.query.get_or_404(id)
+    
+    # Verificar que el usuario tiene permiso (pertenece al mismo proyecto)
+    proyecto = get_proyecto_activo()
+    if not proyecto or archivo.publicacion.proyecto_id != proyecto.id:
+        return jsonify({"success": False, "error": "No tienes permiso para eliminar este archivo"}), 403
+    
+    try:
+        # Eliminar el archivo físico
+        from flask import current_app
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], 'publicaciones', archivo.filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            
+        db.session.delete(archivo)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)})

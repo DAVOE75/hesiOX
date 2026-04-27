@@ -507,21 +507,18 @@
                         <div class="p-3">
                             <!-- Bloque: Identificación de la Obra -->
                             <div class="mb-4">
-                                <label class="form-label-sirio">Tipo de Recurso</label>
+                                <label class="form-label-sirio">
+                                    Género / Recurso Literario
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_recurso" title="Gestionar géneros">
+                                        <i class="fas fa-cog text-muted"></i>
+                                    </button>
+                                </label>
                                 <select name="tipo_recurso" id="selectRecurso" class="form-select form-control-sirio">
-                                    {% set tr = ref.tipo_recurso or 'prensa' %}
-                                    <option value="prensa" {{ 'selected' if tr=='prensa' else '' }}>Prensa</option>
-                                    <option value="folleto" {{ 'selected' if tr=='folleto' else '' }}>Folleto</option>
-                                    <option value="libro" {{ 'selected' if tr=='libro' else '' }}>Libro</option>
-                                    <option value="articulo" {{ 'selected' if tr=='articulo' else '' }}>Artículo
-                                        Académico</option>
-                                    <option value="obra_teatral" {{ 'selected' if tr=='obra_teatral' else '' }}>Obra
-                                        Teatral</option>
-                                    <option value="tesis" {{ 'selected' if tr=='tesis' else '' }}>Tesis</option>
-                                    <option value="mapa" {{ 'selected' if tr=='mapa' else '' }}>Mapa</option>
-                                    <option value="fotografia" {{ 'selected' if tr=='fotografia' else '' }}>Fotografía
-                                    </option>
-                                    <option value="otros" {{ 'selected' if tr=='otros' else '' }}>Otros</option>
+                                    <option value="">(Seleccionar)</option>
+                                    {% set tr_current = ref.tipo_recurso or 'prensa' %}
+                                    {% for opt in opciones_genero %}
+                                        <option value="{{ opt.valor }}" {{ 'selected' if tr_current == opt.valor or tr_current == opt.etiqueta else '' }}>{{ opt.etiqueta }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -595,24 +592,40 @@
                                 <!-- Datos Hemerográficos (Siempre visibles) -->
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
-                                        <label class="form-label-sirio">Tipo de Publicación</label>
+                                        <label class="form-label-sirio">
+                                            Subgénero Literario
+                                            <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_publicacion" title="Gestionar subgéneros">
+                                                <i class="fas fa-cog text-muted"></i>
+                                            </button>
+                                        </label>
                                         <select name="tipo_publicacion" id="selectTipoPublicacion" class="form-select form-select-sirio" data-value="{{ ref.tipo_publicacion or '' }}">
                                             <option value="">(Seleccionar)</option>
+                                            {% set last_group = None %}
+                                            {% for opt in opciones_subgenero %}
+                                                {% if opt.grupo != last_group %}
+                                                    {% if last_group is not none %}</optgroup>{% endif %}
+                                                    {% if opt.grupo %}
+                                                        <optgroup label="{{ opt.grupo }}">
+                                                    {% endif %}
+                                                    {% set last_group = opt.grupo %}
+                                                {% endif %}
+                                                <option value="{{ opt.valor }}" {{ 'selected' if ref.tipo_publicacion == opt.valor else '' }}>{{ opt.etiqueta }}</option>
+                                            {% endfor %}
+                                            {% if last_group is not none %}</optgroup>{% endif %}
                                         </select>
                                     </div>
                                     <div class="col-6">
-                                        <label class="form-label-sirio">Periodicidad</label>
+                                        <label class="form-label-sirio">
+                                            Periodicidad / Frecuencia
+                                            <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="frecuencia" title="Gestionar frecuencias">
+                                                <i class="fas fa-cog text-muted"></i>
+                                            </button>
+                                        </label>
                                         <select name="periodicidad" id="selectPeriodicidad" class="form-select form-select-sirio" data-value="{{ ref.periodicidad or '' }}">
                                             <option value="">(Seleccionar)</option>
-                                            <option value="Diaria" {% if ref.periodicidad == 'Diaria' %}selected{% endif %}>Diaria</option>
-                                            <option value="Semanal" {% if ref.periodicidad == 'Semanal' %}selected{% endif %}>Semanal</option>
-                                            <option value="Quincenal" {% if ref.periodicidad == 'Quincenal' %}selected{% endif %}>Quincenal</option>
-                                            <option value="Mensual" {% if ref.periodicidad == 'Mensual' %}selected{% endif %}>Mensual</option>
-                                            <option value="Bimensual" {% if ref.periodicidad == 'Bimensual' %}selected{% endif %}>Bimensual</option>
-                                            <option value="Trimestral" {% if ref.periodicidad == 'Trimestral' %}selected{% endif %}>Trimestral</option>
-                                            <option value="Semestral" {% if ref.periodicidad == 'Semestral' %}selected{% endif %}>Semestral</option>
-                                            <option value="Anual" {% if ref.periodicidad == 'Anual' %}selected{% endif %}>Anual</option>
-                                            <option value="Bianual" {% if ref.periodicidad == 'Bianual' %}selected{% endif %}>Bianual</option>
+                                            {% for opt in opciones_frecuencia %}
+                                                <option value="{{ opt.valor }}" {{ 'selected' if ref.periodicidad == opt.valor else '' }}>{{ opt.etiqueta }}</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                 </div>
@@ -785,8 +798,18 @@
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label-sirio">Licencia</label>
-                                    <input type="text" name="licencia" class="form-control form-control-sirio"
-                                        value="{{ ref.licencia or 'CC BY 4.0' }}">
+                                    <select name="licencia" class="form-select form-control-sirio">
+                                        {% set lic_val = ref.licencia or 'CC BY 4.0' %}
+                                        <option value="CC BY 4.0" {{ 'selected' if lic_val == 'CC BY 4.0' else '' }}>CC BY 4.0 (Atribución)</option>
+                                        <option value="CC BY-SA 4.0" {{ 'selected' if lic_val == 'CC BY-SA 4.0' else '' }}>CC BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                                        <option value="CC BY-ND 4.0" {{ 'selected' if lic_val == 'CC BY-ND 4.0' else '' }}>CC BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                                        <option value="CC BY-NC 4.0" {{ 'selected' if lic_val == 'CC BY-NC 4.0' else '' }}>CC BY-NC 4.0 (Atribución-NoComercial)</option>
+                                        <option value="CC BY-NC-SA 4.0" {{ 'selected' if lic_val == 'CC BY-NC-SA 4.0' else '' }}>CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)</option>
+                                        <option value="CC BY-NC-ND 4.0" {{ 'selected' if lic_val == 'CC BY-NC-ND 4.0' else '' }}>CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)</option>
+                                        <option value="CC0" {{ 'selected' if lic_val == 'CC0' else '' }}>CC0 (Dominio Público)</option>
+                                        <option value="Copyright" {{ 'selected' if lic_val == 'Copyright' else '' }}>Copyright (Todos los derechos reservados)</option>
+                                        <option value="Unknown" {{ 'selected' if lic_val == 'Unknown' else '' }}>Desconocida</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="mb-3 p-2">
@@ -1736,6 +1759,8 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
+<script src="{{ url_for('static', filename='js/metadata_manager.js') }}"></script>
 
 {% include 'modal_autor_bio.html' %}
+{% include 'modals/_modal_metadata.html' %}
 {% endblock %}

@@ -167,9 +167,9 @@ def clean_location_name(name):
     
     cleaned = name.strip()
     
-    # Algunas IAs devuelven comillas o puntos al final
-    cleaned = re.sub(r'^["\'«´‘]+', '', cleaned)
-    cleaned = re.sub(r'["\'»´’]+$', '', cleaned)
+    # Algunas IAs devuelven comillas o puntos al final, o el usuario selecciona con ":" al inicio
+    cleaned = re.sub(r'^[:"\'«´‘\s]+', '', cleaned)
+    cleaned = re.sub(r'["\'»´’\s]+$', '', cleaned)
     cleaned = cleaned.strip(' .,;')
 
     for p in prefijos:

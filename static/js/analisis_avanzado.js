@@ -3148,12 +3148,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     const ignoreKey = `ignored_${filtros.proyecto_id || 'default'}`;
     const ignoredChars = JSON.parse(localStorage.getItem(ignoreKey) || '[]');
     
-    // Filtrar data para el renderizado local
-    const filteredReparto = (data.reparto_detalle || []).filter(p => !ignoredChars.includes(p.nombre));
-    const filteredNodes = (data.nodos || []).filter(n => !ignoredChars.includes(n.id));
-    const filteredEdges = (data.enlaces || []).filter(e => !ignoredChars.includes(e.source) && !ignoredChars.includes(e.target));
-
-    // 1. Filtrar Datos
+    // 1. Filtrar Índices de Bloques (Segmentación)
     let indicesFiltrados = [];
     const filteredTension = (data.sentimiento_temporal || []).filter((s, idx) => {
         const matchesActo = filterActo === 'all' || String(s.acto) === filterActo;
@@ -3164,6 +3159,73 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             return true;
         }
         return false;
+    });
+
+    // 2. RE-AGREGACIÓN DINÁMICA (Protagonismo, Tácticas, Red, Heatmap)
+    const segmentStats = {};
+    const segmentCooc = new Map();
+    
+    indicesFiltrados.forEach(idx => {
+        const block = data.sentimiento_temporal[idx];
+        const presentes = new Set();
+        
+        (block.locuciones || []).forEach(l => {
+            const charName = l.p;
+            if (ignoredChars.includes(charName)) return;
+            
+            if (!segmentStats[charName]) {
+                segmentStats[charName] = { palabras: 0, intervenciones: 0, tacticas: {} };
+            }
+            
+            segmentStats[charName].intervenciones++;
+            const words = l.t ? l.t.trim().split(/\s+/).length : 0;
+            segmentStats[charName].palabras += words;
+            
+            const tac = l.tac || 'Informar';
+            segmentStats[charName].tacticas[tac] = (segmentStats[charName].tacticas[tac] || 0) + 1;
+            
+            presentes.add(charName);
+        });
+        
+        const presentesList = Array.from(presentes);
+        for (let i = 0; i < presentesList.length; i++) {
+            for (let j = i + 1; j < presentesList.length; j++) {
+                const par = [presentesList[i], presentesList[j]].sort().join('|');
+                segmentCooc.set(par, (segmentCooc.get(par) || 0) + 1);
+            }
+        }
+    });
+
+    // Filtrar y actualizar Reparto: Solo los que intervienen en el segmento
+    const filteredReparto = (data.reparto_detalle || [])
+        .filter(p => !ignoredChars.includes(p.nombre) && segmentStats[p.nombre])
+        .map(p => {
+            const s = segmentStats[p.nombre];
+            return {
+                ...p,
+                palabras: s.palabras,
+                intervenciones: s.intervenciones,
+                palabras_por_intervencion: s.intervenciones > 0 ? (s.palabras / s.intervenciones).toFixed(1) : 0,
+                perfil_tactico: s.tacticas
+            };
+        })
+        .sort((a, b) => b.palabras - a.palabras);
+
+    // Filtrar y actualizar Red
+    const activeCharNames = new Set(filteredReparto.map(p => p.nombre));
+    const filteredNodes = (data.nodos || [])
+        .filter(n => activeCharNames.has(n.id))
+        .map(n => ({
+            ...n,
+            influencia: segmentStats[n.id] ? segmentStats[n.id].intervenciones : 0
+        }));
+
+    const filteredEdges = [];
+    segmentCooc.forEach((value, key) => {
+        const [p1, p2] = key.split('|');
+        if (activeCharNames.has(p1) && activeCharNames.has(p2)) {
+            filteredEdges.push({ source: p1, target: p2, value: value });
+        }
     });
 
     const labels = filteredTension.map(s => s.label);
@@ -3407,9 +3469,13 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         }
     }
     
-    // 7. Heatmap de Interacciones
+    // 7. Heatmap de Interacciones (Re-calculado para el segmento)
     const heatmapTarget = document.getElementById('drama-heatmap-words');
-    const heatmapData = (data.interacciones_heatmap || []);
+    const heatmapData = [];
+    segmentCooc.forEach((value, key) => {
+        const [p1, p2] = key.split('|');
+        heatmapData.push({ p1, p2, valor: value });
+    });
     if (heatmapData.length > 0 && heatmapTarget && typeof vegaEmbed !== 'undefined') {
         const spec = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -3454,11 +3520,12 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         });
     }
 
-    // 9. Sincronía Emocional
+    // 9. Sincronía Emocional - Filtrar por personajes activos en el segmento
     const syncContainer = document.getElementById('sync-list');
     const syncHeatmap = document.getElementById('heatmap-sincronia');
     if (syncContainer && data.metricas_avanzadas) {
-        const rawSyncs = (data.metricas_avanzadas.sincronia_pares || []);
+        const rawSyncs = (data.metricas_avanzadas.sincronia_pares || [])
+            .filter(s => activeCharNames.has(s.p1) && activeCharNames.has(s.p2));
         const syncsMatrix = [];
         rawSyncs.forEach(s => { syncsMatrix.push(s); syncsMatrix.push({ p1: s.p2, p2: s.p1, score: s.score }); });
         [...new Set(rawSyncs.flatMap(s => [s.p1, s.p2]))].forEach(p => { syncsMatrix.push({ p1: p, p2: p, score: 1.0 }); });
@@ -3486,9 +3553,11 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         `).join('');
     }
 
-    // 10. Evolución del Flujo Táctico (Streamgraph)
+    // 10. Evolución del Flujo Táctico (Streamgraph) - Filtrado por segmento
     const tacticalStreamTarget = document.getElementById('drama-tactical-stream');
-    const tacticalData = (data.metricas_avanzadas || {}).flujo_tactico || [];
+    const labelsFiltrados = new Set(filteredTension.map(s => s.label));
+    const tacticalData = ((data.metricas_avanzadas || {}).flujo_tactico || [])
+        .filter(t => labelsFiltrados.has(t.Bloque));
     
     console.log("[DEBUG] Tactical Data for Streamgraph:", tacticalData);
 
@@ -3533,11 +3602,11 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         tacticalStreamTarget.innerHTML = '<div class="text-muted small italic opacity-50 p-5 text-center">No hay datos tácticos suficientes para generar el flujo.</div>';
     }
 
-    // 11. Perfiles Tácticos del Reparto (Radar)
+    // 11. Perfiles Tácticos del Reparto (Radar) - Usar reparto filtrado
     const radarContainer = document.getElementById('radar-containers');
     if (radarContainer) {
         radarContainer.innerHTML = '';
-        const topChars = (data.reparto_detalle || []).slice(0, 12);
+        const topChars = filteredReparto.slice(0, 12);
         
         // Categorías tácticas fijas para asegurar que el radar sea comparable
         const fixedLabels = ["Atacar", "Persuadir", "Seducir", "Manipular", "Informar"];

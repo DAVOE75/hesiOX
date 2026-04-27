@@ -710,7 +710,7 @@ body.theme-transitioning * {
 .sidebar-collapsed .sidebar-nav .nav-group-item > .nav-item,
 .sidebar-collapsed .sidebar-nav > .nav-item {
     justify-content: center;
-    padding: 10px 0 !important;
+    padding: 5px 0 !important;
     width: 100% !important;
 }
 
@@ -866,7 +866,7 @@ body.theme-transitioning * {
     height: 1px;
     width: 100%;
     background-color: #ffffff2c !important;
-    margin: 12px auto;
+    margin: 5px auto;
     opacity: 0.8;
 }
 

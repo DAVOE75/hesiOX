@@ -68,7 +68,7 @@
         {% endif %}
         {% endwith %}
 
-        <form id="form-publicacion" method="POST" action="{{ url_for('hemerotecas.nueva_publicacion') }}">
+        <form id="form-publicacion" method="POST" action="{{ url_for('hemerotecas.nueva_publicacion') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="submit" id="submit-btn-publicacion" style="display: none;">
 
@@ -96,50 +96,57 @@
                                 placeholder="https://ejemplo.com">
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label-sirio">Tipo de Publicación</label>
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Género / Recurso Literario
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_recurso" title="Gestionar géneros">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
                             <select class="form-select form-select-sirio" id="tipo_recurso_select" name="tipo_recurso">
-                                <option value="Periódico">Periódico</option>
-                                <option value="Diario">Diario</option>
-                                <option value="Semanario">Semanario</option>
-                                <option value="Revista">Revista</option>
-                                <option value="Magazine">Magazine</option>
-                                <option value="Boletín">Boletín</option>
-                                <option value="Libro">Libro</option>
-                                <option value="Colección de libros">Colección de libros</option>
-                                <option value="Mapa">Mapa</option>
-                                <option value="Colección de mapas">Colección de mapas</option>
-                                <option value="Manuscrito">Manuscrito</option>
-                                <option value="Legajo">Legajo</option>
-                                <option value="Expediente">Expediente</option>
-                                <option value="Gaceta">Gaceta</option>
-                                <option value="Anuario">Anuario</option>
-                                <option value="Fascículo">Fascículo</option>
-                                <option value="Otro">Otro</option>
-                                <option value="Expediente / Archivo">Expediente / Archivo</option>
-                                <option value="Documento histórico">Documento histórico</option>
-                                <option value="Manuscrito">Manuscrito</option>
-                                <option value="Atlas">Atlas</option>
-                                <option value="Grabado / Estampa">Grabado / Estampa</option>
-                                <option value="Partitura">Partitura</option>
-                                <option value="obra_teatral">Obra Teatral</option>
-                                <option value="Otro">Otro</option>
+                                <option value="">(Seleccionar)</option>
+                                {% for opt in opciones_genero %}
+                                    <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label-sirio">Frecuencia</label>
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Subgénero
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_publicacion" title="Gestionar subgéneros">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
+                            <select class="form-select form-select-sirio" id="tipo_publicacion" name="tipo_publicacion">
+                                <option value="">(Seleccionar)</option>
+                                {% set last_group = None %}
+                                {% for opt in opciones_subgenero %}
+                                    {% if opt.grupo != last_group %}
+                                        {% if last_group is not none %}</optgroup>{% endif %}
+                                        {% if opt.grupo %}
+                                            <optgroup label="{{ opt.grupo }}">
+                                        {% endif %}
+                                        {% set last_group = opt.grupo %}
+                                    {% endif %}
+                                    <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                                {% endfor %}
+                                {% if last_group is not none %}</optgroup>{% endif %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Frecuencia
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="frecuencia" title="Gestionar frecuencias">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
                             <select class="form-select form-control-sirio" id="frecuencia" name="frecuencia">
                                 <option value="">-- Selecciona frecuencia --</option>
-                                <option value="diaria">Diaria</option>
-                                <option value="semanal">Semanal</option>
-                                <option value="quincenal">Quincenal</option>
-                                <option value="mensual">Mensual</option>
-                                <option value="bimestral">Bimestral</option>
-                                <option value="trimestral">Trimestral</option>
-                                <option value="semestral">Semestral</option>
-                                <option value="anual">Anual</option>
-                                <option value="bianual">Bianual</option>
+                                {% for opt in opciones_frecuencia %}
+                                    <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -260,14 +267,13 @@
                 </div>
                 <div class="p-4">
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <label class="form-label-sirio text-info">Fuente / Institución (Archivo)</label>
                             <input type="text" class="form-control form-control-sirio border-info" id="fuente"
                                 name="fuente" placeholder="Ej: Biblioteca Nacional de España">
-                            <div class="form-text-sirio">Puedes introducir manualmente la fuente o seleccionar una
-                                hemeroteca para autocompletar.</div>
+                            <div class="form-text-sirio">Puedes introducir manualmente la fuente o seleccionar una hemeroteca.</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label-sirio">Formato Habitual</label>
                             <select class="form-select form-select-sirio border-warning" id="formato_fuente"
                                 name="formato_fuente">
@@ -275,6 +281,11 @@
                                 <option value="Impreso">Impreso / Físico</option>
                                 <option value="Microfilm">Microfilm</option>
                             </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-sirio text-warning">Archivos de la Publicación</label>
+                            <input type="file" class="form-control form-control-sirio border-warning" name="archivos[]" multiple accept=".pdf,.doc,.docx,.txt">
+                            <div class="form-text-sirio">Puedes subir uno o varios archivos adjuntos.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sirio">Editorial / Imprenta</label>
@@ -300,8 +311,17 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sirio">Licencia por defecto</label>
-                            <input type="text" class="form-control form-control-sirio" id="licencia" name="licencia"
-                                value="CC BY 4.0">
+                            <select class="form-select form-select-sirio" id="licencia" name="licencia">
+                                <option value="CC BY 4.0" selected>CC BY 4.0 (Atribución)</option>
+                                <option value="CC BY-SA 4.0">CC BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                                <option value="CC BY-ND 4.0">CC BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                                <option value="CC BY-NC 4.0">CC BY-NC 4.0 (Atribución-NoComercial)</option>
+                                <option value="CC BY-NC-SA 4.0">CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)</option>
+                                <option value="CC BY-NC-ND 4.0">CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)</option>
+                                <option value="CC0">CC0 (Dominio Público)</option>
+                                <option value="Copyright">Copyright (Todos los derechos reservados)</option>
+                                <option value="Unknown">Desconocida</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -322,6 +342,7 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
 <script src="{{ url_for('static', filename='js/form-editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/metadata_manager.js') }}"></script>
 <script>
     // Datos de hemerotecas para autocompletado via backend JSON serialization
     window.HEMEROTECAS_DATA = {{ hemerotecas_data|default({})|tojson|safe }};
@@ -419,4 +440,5 @@
         }
     });
 </script>
+{% include "modals/_modal_metadata.html" %}
 {% endblock %}

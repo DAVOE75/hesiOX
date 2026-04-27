@@ -25,6 +25,37 @@
 </a>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .publi-link-icon {
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none !important;
+    }
+    .publi-link-icon:hover {
+        transform: scale(1.15);
+    }
+    
+    /* Fix for light mode hover visibility */
+    [data-theme="light"] .publi-link-icon.text-info:hover {
+        color: #055160 !important; /* Darker info */
+    }
+    [data-theme="light"] .publi-link-icon.text-warning:hover {
+        color: #997404 !important; /* Darker warning */
+    }
+    
+    /* Dark mode hover (brighter) */
+    .publi-link-icon.text-info:hover {
+        color: #6edff6 !important;
+    }
+    .publi-link-icon.text-warning:hover {
+        color: #ffda6a !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid p-0 d-flex flex-column h-100 overflow-hidden">
 
@@ -145,14 +176,29 @@
                             {% else %}<span class="text-muted">-</span>{% endif %}
                         </td>
                         <td class="text-center">
-                            {% if p.url_publi %}
-                            <a href="{{ p.url_publi }}" target="_blank" rel="noopener" title="Ver publicación"
-                                class="text-info" style="font-size: 1rem;">
-                                <i class="fa-solid fa-paperclip"></i>
-                            </a>
-                            {% else %}
-                            <span class="text-muted">—</span>
-                            {% endif %}
+                            <div class="d-flex justify-content-center gap-1">
+                                {% if p.url_publi %}
+                                <a href="{{ p.url_publi }}" target="_blank" rel="noopener" title="Ver URL externa"
+                                    class="text-info publi-link-icon" style="font-size: 1rem; padding: 5px;">
+                                    <i class="fa-solid fa-paperclip"></i>
+                                </a>
+                                {% endif %}
+
+                                {% if p.archivos.count() > 0 %}
+                                <a href="{{ url_for('hemerotecas.editar_publicacion', id=p.id_publicacion) }}" 
+                                   title="Ver {{ p.archivos.count() }} archivos adjuntos"
+                                   class="text-warning publi-link-icon" style="font-size: 1rem; padding: 5px; position: relative;">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    {% if p.archivos.count() > 1 %}
+                                    <span style="font-size: 9px; position: absolute; top: 2px; right: 0px; background: #dc3545; color: white; padding: 0 3px; border-radius: 10px; line-height: 1.2;">{{ p.archivos.count() }}</span>
+                                    {% endif %}
+                                </a>
+                                {% endif %}
+
+                                {% if not p.url_publi and p.archivos.count() == 0 %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td class="text-center">
                             {% if p.articulos|length > 0 %}

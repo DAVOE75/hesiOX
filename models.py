@@ -261,6 +261,11 @@ class Publicacion(db.Model):
         "AutorPublicacion", backref="publicacion_rel_aut", cascade="all, delete-orphan", order_by="AutorPublicacion.orden"
     )
 
+    # Relación para archivos adjuntos (PDFs, etc.)
+    archivos = db.relationship(
+        "ArchivoPublicacion", backref="publicacion", lazy="dynamic", cascade="all, delete-orphan"
+    )
+
     
     @property
     def tipo(self):
@@ -342,6 +347,17 @@ class AutorPublicacion(db.Model):
 
     def __repr__(self):
         return f"<AutorPublicacion {self.apellido}, {self.nombre}>"
+
+class ArchivoPublicacion(db.Model):
+    __tablename__ = "archivos_publicacion"
+    id = db.Column(db.Integer, primary_key=True)
+    publicacion_id = db.Column(db.Integer, db.ForeignKey("publicaciones.id_publicacion", ondelete="CASCADE"), nullable=False)
+    filename = db.Column(db.Text, nullable=False) # Nombre en el sistema de archivos (secure_filename)
+    original_filename = db.Column(db.Text, nullable=False) # Nombre original subido por el usuario
+    fecha_subida = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<ArchivoPublicacion {self.id} {self.original_filename}>"
 
 class AutorBio(db.Model):
     __tablename__ = "autor_bio"
@@ -651,6 +667,31 @@ class SemanticConcept(db.Model):
     tema = db.Column(db.String(255), nullable=False)
     concepto = db.Column(db.Text, nullable=False)
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+
+class MetadataOption(db.Model):
+    """Modelo para gestionar opciones dinámicas de metadatos (Géneros, Subgéneros, Frecuencia)"""
+    __tablename__ = "metadata_options"
+
+    id = db.Column(db.Integer, primary_key=True)
+    categoria = db.Column(db.String(50), nullable=False, index=True) # tipo_recurso, tipo_publicacion, frecuencia
+    valor = db.Column(db.String(100), nullable=False)
+    etiqueta = db.Column(db.String(100), nullable=False)
+    grupo = db.Column(db.String(100), nullable=True) # Para optgroups
+    orden = db.Column(db.Integer, default=0)
+
+    def __repr__(self):
+        return f"<MetadataOption {self.categoria}: {self.etiqueta}>"
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'categoria': self.categoria,
+            'valor': self.valor,
+            'etiqueta': self.etiqueta,
+            'grupo': self.grupo,
+            'orden': self.orden
+        }
+
 
 class EdicionTipoRecurso(db.Model):
     """Modelo para gestionar las opciones del desplegable de ediciones según tipo de recurso"""

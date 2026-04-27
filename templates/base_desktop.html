@@ -195,14 +195,14 @@
                         </div>
                     </div>
 
-                    <!-- GRUPO: AUTORES (NUEVO MENU DEDICADO) -->
+                    <!-- GRUPO: AUTORES/AS (NUEVO MENU DEDICADO) -->
                     <div class="nav-group-item">
                         <a class="nav-item {% if request.endpoint not in ['lista_autores'] %}collapsed{% endif %}"
                             data-bs-toggle="collapse" href="#menuAutores" role="button"
                             aria-expanded="{% if request.endpoint in ['lista_autores'] %}true{% else %}false{% endif %}"
                             aria-controls="menuAutores">
                             <i class="fa-solid fa-user-pen"></i>
-                            <span class="nav-label">Autores</span>
+                            <span class="nav-label">Autores/as</span>
                             <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
                         </a>
                         <div class="collapse {% if request.endpoint in ['lista_autores'] %}show{% endif %}"
@@ -435,7 +435,7 @@
                                     title="Laboratorio de IA">
                                     <span class="nav-label">Laboratorio de IA</span>
                                     <span class="badge rounded-pill ms-auto"
-                                        style="font-size: 8px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6;">DEV</span>
+                                        style="font-size: 8px; background: rgba(155, 89, 182, 0.2); border: 1px solid #9b59b6; color: #9b59b6; margin-right: 35px;">DEV</span>
                                 </a>
                             </div>
                         </div>

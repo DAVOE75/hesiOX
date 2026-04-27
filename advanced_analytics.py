@@ -1849,7 +1849,13 @@ class AnalisisAvanzado:
         obras_analizadas = []
         
         for pub in publicaciones:
-            # Metadata: Reparto (palabras_clave)
+            # 1. Metadatos Globales de la Obra (Reparto completo)
+            reparto_global = pub.get('reparto_total', '') or ''
+            if reparto_global:
+                reparto_global_list = [p.upper().strip() for p in re.split(r'[,;]', reparto_global) if p.strip()]
+                personajes_detectados.update([p for p in reparto_global_list if len(p) > 1])
+
+            # 2. Metadatos del Fragmento (Personajes en este fragmento)
             reparto_meta = pub.get('palabras_clave', '') or ''
             if reparto_meta:
                 # Minimal normalization for detection to preserve variants in UI
@@ -1887,9 +1893,10 @@ class AnalisisAvanzado:
                 'publicacion': pub.get('publicacion', 'Sin obra'),
                 'publicacion_id': pub.get('publicacion_id'),
                 'contenido': contenido,
-                'actos': actos_val,
-                'escenas': escenas_val,
-                'personajes_meta': reparto_meta
+                'actos': pub.get('actos') or actos_val,
+                'escenas': pub.get('escenas') or escenas_val,
+                'personajes_meta': reparto_meta,
+                'reparto_global': reparto_global
             })
             
         if not obras_analizadas:
@@ -2045,7 +2052,19 @@ class AnalisisAvanzado:
                 regex_loc = r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}\s*(.*?)((?=\n\s*[A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?\s*[:\.\-]{1,3})|\Z)'
                 matches_loc = list(re.finditer(regex_loc, bloque, re.MULTILINE | re.DOTALL))
                 
+                # --- DETECCIÓN DE PRESENCIA BASADA EN METADATOS ---
                 presentes_en_bloque = set()
+                personajes_fragmento_fijos = []
+                
+                # Si el usuario definió personajes para este fragmento, esa es nuestra fuente de verdad
+                if obra.get('personajes_meta'):
+                    meta_list = [p.upper().strip() for p in re.split(r'[,;]', obra['personajes_meta']) if p.strip()]
+                    for p_meta in meta_list:
+                        p_canonical = resolver_alias(p_meta, aliases)
+                        if p_canonical in personajes_finales:
+                            presentes_en_bloque.add(p_canonical)
+                            personajes_fragmento_fijos.append(p_canonical)
+
                 sentimiento_locuciones_bloque = defaultdict(list)
                 locuciones_data = [] # Para el panel de contexto frontend
 
@@ -2063,6 +2082,11 @@ class AnalisisAvanzado:
 
                     # UNIFICACIÓN DEFINITIVA
                     p_final = self.find_identity(nombre_p, reparto_identities) if 'reparto_identities' in locals() else nombre_p
+                    
+                    # SI HAY PERSONAJES FIJOS EN METADATOS: Solo permitimos esos
+                    if personajes_fragmento_fijos:
+                        if p_final not in presentes_en_bloque:
+                            continue # Ignorar personajes que no están en los metadatos del fragmento
                     
                     if p_final in personajes_finales:
                         texto_p = m.group(2).strip()
@@ -2155,12 +2179,12 @@ class AnalisisAvanzado:
 
                 def es_frase_relevante(f):
                     words = f.split()
-                    if len(words) < 2: return False
+                    if len(words) != 3: return False # Forzar 3 palabras
                     if all(w in self.stopwords_es for w in words): return False
-                    if len(f) < 8: return False
+                    if len(f) < 10: return False
                     return True
                 
-                all_ngrams = trigramas + bigramas
+                all_ngrams = trigramas # Usar solo trigramas para cumplir con "3 palabras"
 
                 # Vocabulario dominante con frecuencias
                 word_counts = Counter(palabras_f).most_common(10)

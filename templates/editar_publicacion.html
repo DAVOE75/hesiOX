@@ -26,19 +26,19 @@ endblock %}
 <style>
     /* Fixed header alignment and normalization */
     .header-actions-wrapper {
-        height: 60px !important; 
+        height: 60px !important;
         margin-top: 0 !important;
         display: flex !important;
         align-items: center !important;
         gap: 8px !important;
     }
-    
-    .header-actions-wrapper > * {
+
+    .header-actions-wrapper>* {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
         align-self: center !important;
     }
-    
+
     .header-actions-wrapper .btn-sirio {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
@@ -52,7 +52,7 @@ endblock %}
 {% block content %}
 
 <div class="container-fluid py-3">
-    <div class="container" style="max-width: 900px;">
+    <div class="container" style="max-width: 90%;">
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -67,7 +67,8 @@ endblock %}
         {% endwith %}
 
         <form id="form-publicacion" method="POST"
-            action="{{ url_for('hemerotecas.editar_publicacion', id=pub.id_publicacion) }}">
+            action="{{ url_for('hemerotecas.editar_publicacion', id=pub.id_publicacion) }}"
+            enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="submit" id="submit-btn-publicacion" style="display: none;">
 
@@ -107,58 +108,57 @@ endblock %}
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label-sirio">Tipo de Publicación</label>
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Género / Recurso Literario
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_recurso" title="Gestionar géneros">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
                             <select class="form-select form-select-sirio" id="tipo_recurso_select" name="tipo_recurso">
-                                <option value="Periódico" {% if pub.tipo_recurso=='Periódico' or pub.tipo_recurso=='periódico' %}selected{% endif %}>Periódico</option>
-                                <option value="Diario" {% if pub.tipo_recurso=='diario' or pub.tipo_recurso=='Diario'
-                                    %}selected{% endif %}>Diario</option>
-                                <option value="Semanario" {% if pub.tipo_recurso=='semanario' or
-                                    pub.tipo_recurso=='Semanario' %}selected{% endif %}>Semanario</option>
-                                <option value="Revista" {% if pub.tipo_recurso=='revista' or pub.tipo_recurso=='Revista'
-                                    %}selected{% endif %}>Revista</option>
-                                <option value="Magazine" {% if pub.tipo_recurso=='Magazine' or pub.tipo_recurso=='magazine' %}selected{% endif %}>Magazine</option>
-                                <option value="Boletín" {% if pub.tipo_recurso == 'Boletín' %}selected{% endif %}>Boletín</option>
-                                <option value="Libro" {% if pub.tipo_recurso == 'Libro' %}selected{% endif %}>Libro</option>
-                                <option value="Colección de libros" {% if pub.tipo_recurso == 'Colección de libros' %}selected{% endif %}>Colección de libros</option>
-                                <option value="Mapa" {% if pub.tipo_recurso == 'Mapa' %}selected{% endif %}>Mapa</option>
-                                <option value="Colección de mapas" {% if pub.tipo_recurso == 'Colección de mapas' %}selected{% endif %}>Colección de mapas</option>
-                                <option value="Manuscrito" {% if pub.tipo_recurso == 'Manuscrito' %}selected{% endif %}>Manuscrito</option>
-                                <option value="Legajo" {% if pub.tipo_recurso == 'Legajo' %}selected{% endif %}>Legajo</option>
-                                <option value="Expediente" {% if pub.tipo_recurso == 'Expediente' %}selected{% endif %}>Expediente</option>
-                                <option value="Gaceta" {% if pub.tipo_recurso == 'Gaceta' %}selected{% endif %}>Gaceta</option>
-                                <option value="Anuario" {% if pub.tipo_recurso == 'Anuario' %}selected{% endif %}>Anuario</option>
-                                <option value="Fascículo" {% if pub.tipo_recurso == 'Fascículo' %}selected{% endif %}>Fascículo</option>
-                                <option value="Documento histórico" {% if pub.tipo_recurso=='Documento histórico' %}selected{% endif %}>Documento histórico</option>
-                                <option value="Atlas" {% if pub.tipo_recurso=='Atlas' %}selected{% endif %}>Atlas</option>
-                                <option value="Grabado / Estampa" {% if pub.tipo_recurso=='Grabado / Estampa' %}selected{% endif %}>Grabado / Estampa</option>
-                                <option value="Partitura" {% if pub.tipo_recurso=='Partitura' %}selected{% endif %}>Partitura</option>
-                                <option value="obra_teatral" {% if pub.tipo_recurso=='obra_teatral' or pub.tipo_recurso=='Obra Teatral'
-                                    %}selected{% endif %}>Obra Teatral</option>
-                                <option value="Otro" {% if pub.tipo_recurso=='otro' or pub.tipo_recurso=='Otro'
-                                    %}selected{% endif %}>Otro</option>
+                                <option value="">(Seleccionar)</option>
+                                {% for opt in opciones_genero %}
+                                    <option value="{{ opt.valor }}" {% if pub.tipo_recurso == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label-sirio">Frecuencia</label>
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Subgénero
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="tipo_publicacion" title="Gestionar subgéneros">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
+                            <select class="form-select form-select-sirio" id="tipo_publicacion" name="tipo_publicacion">
+                                <option value="">(Seleccionar)</option>
+                                {% set last_group = None %}
+                                {% for opt in opciones_subgenero %}
+                                    {% if opt.grupo != last_group %}
+                                        {% if last_group is not none %}</optgroup>{% endif %}
+                                        {% if opt.grupo %}
+                                            <optgroup label="{{ opt.grupo }}">
+                                        {% endif %}
+                                        {% set last_group = opt.grupo %}
+                                    {% endif %}
+                                    <option value="{{ opt.valor }}" {% if pub.tipo_publicacion == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                                {% endfor %}
+                                {% if last_group is not none %}</optgroup>{% endif %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label-sirio">
+                                Frecuencia
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 btn-manage-metadata" data-categoria="frecuencia" title="Gestionar frecuencias">
+                                    <i class="fas fa-cog text-muted"></i>
+                                </button>
+                            </label>
                             <select class="form-select form-control-sirio" id="frecuencia" name="frecuencia">
                                 <option value="">-- Selecciona frecuencia --</option>
-                                <option value="diaria" {% if pub.frecuencia=='diaria' %}selected{% endif %}>Diaria
-                                </option>
-                                <option value="semanal" {% if pub.frecuencia=='semanal' %}selected{% endif %}>Semanal
-                                </option>
-                                <option value="quincenal" {% if pub.frecuencia=='quincenal' %}selected{% endif %}>
-                                    Quincenal</option>
-                                <option value="mensual" {% if pub.frecuencia=='mensual' %}selected{% endif %}>Mensual
-                                </option>
-                                <option value="bimensual" {% if pub.frecuencia=='bimensual' %}selected{% endif %}>
-                                    Bimensual</option>
-                                <option value="trimestral" {% if pub.frecuencia=='trimestral' %}selected{% endif %}>
-                                    Trimestral</option>
-                                <option value="semestral" {% if pub.frecuencia=='semestral' %}selected{% endif %}>
-                                    Semestral</option>
-                                <option value="anual" {% if pub.frecuencia=='anual' %}selected{% endif %}>Anual</option>
+                                {% for opt in opciones_frecuencia %}
+                                    <option value="{{ opt.valor }}" {% if pub.frecuencia == opt.valor %}selected{% endif %}>{{ opt.etiqueta }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -173,15 +173,18 @@ endblock %}
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label-sirio">Actos (Totales de la Obra)</label>
-                            <input type="text" class="form-control form-control-sirio" name="actos_totales" value="{{ pub.actos_totales or '' }}" placeholder="Ej: 3 Actos">
+                            <input type="text" class="form-control form-control-sirio" name="actos_totales"
+                                value="{{ pub.actos_totales or '' }}" placeholder="Ej: 3 Actos">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sirio">Escenas (Totales de la Obra)</label>
-                            <input type="text" class="form-control form-control-sirio" name="escenas_totales" value="{{ pub.escenas_totales or '' }}" placeholder="Ej: 24 Escenas">
+                            <input type="text" class="form-control form-control-sirio" name="escenas_totales"
+                                value="{{ pub.escenas_totales or '' }}" placeholder="Ej: 24 Escenas">
                         </div>
                         <div class="col-12">
                             <label class="form-label-sirio">Reparto Completo / Personajes de la Obra</label>
-                            <textarea class="form-control form-control-sirio" name="reparto_total" rows="4" placeholder="Lista completa de personajes de la obra teatral (separados por comas)...">{{ pub.reparto_total or '' }}</textarea>
+                            <textarea class="form-control form-control-sirio" name="reparto_total" rows="4"
+                                placeholder="Lista completa de personajes de la obra teatral (separados por comas)...">{{ pub.reparto_total or '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -194,7 +197,8 @@ endblock %}
                     </button>
                 </div>
                 <div class="p-4">
-                    <div id="autores-container" class="mt-2" data-initial='{{ autores_json|safe if autores_json else "[]" }}'>
+                    <div id="autores-container" class="mt-2"
+                        data-initial='{{ autores_json|safe if autores_json else "[]" }}'>
                         <!-- Las filas de autores se cargarán aquí vía JS -->
                     </div>
                     <div class="mt-3">
@@ -294,7 +298,7 @@ endblock %}
                 </div>
                 <div class="p-4">
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <label class="form-label-sirio text-info">Fuente / Institución (Archivo)</label>
                             <input type="text" class="form-control form-control-sirio border-info" id="fuente"
                                 name="fuente" value="{{ pub.fuente or '' }}"
@@ -304,7 +308,7 @@ endblock %}
                                 según la hemeroteca seleccionada.{% else %}Puedes introducir manualmente la fuente o
                                 seleccionar una hemeroteca.{% endif %}</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label-sirio">Formato Habitual</label>
                             <select class="form-select form-select-sirio border-warning" id="formato_fuente"
                                 name="formato_fuente">
@@ -315,6 +319,12 @@ endblock %}
                                 <option value="Microfilm" {% if pub.formato_fuente=='Microfilm' %}selected{% endif %}>
                                     Microfilm</option>
                             </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label-sirio text-warning">Añadir Archivos</label>
+                            <input type="file" class="form-control form-control-sirio border-warning" name="archivos[]"
+                                multiple accept=".pdf,.doc,.docx,.txt">
+                            <div class="form-text-sirio">Puedes subir uno o varios archivos adicionales.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sirio">Editorial / Imprenta</label>
@@ -342,24 +352,69 @@ endblock %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-sirio">Licencia por defecto</label>
-                             <input type="text" class="form-control form-control-sirio" id="licencia" name="licencia"
-                                 value="{{ pub.licencia or 'CC BY 4.0' }}">
+                            <select class="form-select form-select-sirio" id="licencia" name="licencia">
+                                <option value="CC BY 4.0" {% if pub.licencia=='CC BY 4.0' or not pub.licencia
+                                    %}selected{% endif %}>CC BY 4.0 (Atribución)</option>
+                                <option value="CC BY-SA 4.0" {% if pub.licencia=='CC BY-SA 4.0' %}selected{% endif %}>CC
+                                    BY-SA 4.0 (Atribución-CompartirIgual)</option>
+                                <option value="CC BY-ND 4.0" {% if pub.licencia=='CC BY-ND 4.0' %}selected{% endif %}>CC
+                                    BY-ND 4.0 (Atribución-SinDerivadas)</option>
+                                <option value="CC BY-NC 4.0" {% if pub.licencia=='CC BY-NC 4.0' %}selected{% endif %}>CC
+                                    BY-NC 4.0 (Atribución-NoComercial)</option>
+                                <option value="CC BY-NC-SA 4.0" {% if pub.licencia=='CC BY-NC-SA 4.0' %}selected{% endif
+                                    %}>CC BY-NC-SA 4.0 (Atribución-NoComercial-CompartirIgual)</option>
+                                <option value="CC BY-NC-ND 4.0" {% if pub.licencia=='CC BY-NC-ND 4.0' %}selected{% endif
+                                    %}>CC BY-NC-ND 4.0 (Atribución-NoComercial-SinDerivadas)</option>
+                                <option value="CC0" {% if pub.licencia=='CC0' %}selected{% endif %}>CC0 (Dominio
+                                    Público)</option>
+                                <option value="Copyright" {% if pub.licencia=='Copyright' %}selected{% endif %}>
+                                    Copyright (Todos los derechos reservados)</option>
+                                <option value="Unknown" {% if pub.licencia=='Unknown' %}selected{% endif %}>Desconocida
+                                </option>
+                            </select>
                         </div>
                     </div>
+
+                    {% if pub.archivos.count() > 0 %}
+                    <div class="mt-4">
+                        <label class="form-label-sirio text-warning">Archivos Adjuntos Actuales</label>
+                        <div
+                            class="list-group list-group-flush bg-black bg-opacity-25 rounded border border-secondary border-opacity-25">
+                            {% for archivo in pub.archivos %}
+                            <div
+                                class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center border-secondary border-opacity-10 py-2">
+                                <div class="d-flex align-items-center overflow-hidden">
+                                    <i class="fa-solid fa-file-pdf me-2 text-danger"></i>
+                                    <span class="text-truncate small">{{ archivo.original_filename }}</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('static', filename='uploads/publicaciones/' ~ archivo.filename) }}"
+                                        target="_blank" class="btn btn-sirio btn-sm" title="Ver archivo">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sirio-danger btn-sm btn-delete-archivo"
+                                        data-id="{{ archivo.id }}" title="Eliminar archivo">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="mt-4 p-3 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="propagar" id="propagar">
                             <label class="form-check-label text-light small" for="propagar">
-                                <strong class="text-warning">Propagar cambios:</strong> Aplicar Nombre, Autoría, Pseudónimos, Ciudad, País,
-                                Fuente, Licencia, Formato, Editorial, Colección y Descripción a todas las noticias vinculadas.
+                                <strong class="text-warning">Propagar cambios:</strong> Aplicar <span class="text-white">TODOS</span> los metadatos (Nombre, Autoría, Género, Subgénero, Periodicidad, Geografía, Fuente, Licencia, Editorial, Colección, Descripción y Estructura Dramática) a todas las noticias vinculadas.
                             </label>
                         </div>
                     </div>
 
                 </div>
             </div>
-           </form>
+        </form>
 
         <div class="card-panel" style="border-color: rgba(220, 53, 69, 0.3);">
             <div class="card-header-panel text-danger">
@@ -369,7 +424,8 @@ endblock %}
                 <div class="small text-muted">
                     Esta acción eliminará la publicación y desvinculará todas sus noticias.
                 </div>
-                <form action="{{ url_for('hemerotecas.borrar_publicacion', id=pub.id_publicacion) }}" method="POST" onsubmit="return confirm('¿Eliminar publicación {{ pub.nombre }}? Esta acción no se puede deshacer.')">
+                <form action="{{ url_for('hemerotecas.borrar_publicacion', id=pub.id_publicacion) }}" method="POST"
+                    onsubmit="return confirm('¿Eliminar publicación {{ pub.nombre }}? Esta acción no se puede deshacer.')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-outline-danger btn-sm">
                         <i class="fa-solid fa-trash me-1"></i> Eliminar Publicación
@@ -388,10 +444,11 @@ endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.5"></script>
+<script src="{{ url_for('static', filename='js/metadata_manager.js') }}"></script>
 
 <script>
     // Datos de hemerotecas para autocompletado via backend JSON serialization
-    window.HEMEROTECAS_DATA = {{ hemerotecas_data|default({})|tojson|safe }};
+    window.HEMEROTECAS_DATA = {{ hemerotecas_data |default ({}) | tojson | safe }};
     console.log("DEBUG: Hemerotecas Data Loaded", window.HEMEROTECAS_DATA);
 </script>
 
@@ -496,6 +553,37 @@ endblock %}
                 }
             });
         }
+
+        // Eliminar archivos adjuntos (AJAX)
+        document.querySelectorAll('.btn-delete-archivo').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const archivoId = this.getAttribute('data-id');
+                const row = this.closest('.list-group-item');
+
+                if (confirm('¿Estás seguro de que deseas eliminar este archivo?')) {
+                    fetch(`/publicacion/archivo/borrar/${archivoId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                row.remove();
+                                // Si ya no quedan archivos, podríamos ocultar el contenedor
+                            } else {
+                                alert('Error: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Error al eliminar el archivo');
+                        });
+                }
+            });
+        });
     });
 </script>
+{% include "modals/_modal_metadata.html" %}
 {% endblock %}

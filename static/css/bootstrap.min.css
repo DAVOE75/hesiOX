@@ -8610,7 +8610,7 @@ fieldset:disabled .btn {
 
 .border-info {
   --bs-border-opacity: 1;
-  border-color: rgba(var(--bs-info-rgb), var(--bs-border-opacity)) !important;
+  border-color: #ff9800 !important;
 }
 
 .border-warning {
@@ -9896,7 +9896,7 @@ fieldset:disabled .btn {
 
 .bg-info {
   --bs-bg-opacity: 1;
-  background-color: rgba(var(--bs-info-rgb), var(--bs-bg-opacity)) !important;
+  background-color: #ff9800 !important;
 }
 
 .bg-warning {

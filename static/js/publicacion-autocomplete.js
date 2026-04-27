@@ -30,16 +30,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Detectar cuando se selecciona una opción del datalist
     let ultimoValor = inputPublicacion.value;
     
-    // 🔍 Trigger inicial solo si hay valor y el contenedor de autores está vacío/inicial
-    // Esto asegura que en "Nueva Referencia" con publicación precargada se hereden los autores
+    // 🔍 Solo disparar automáticamente si estamos en un formulario NUEVO (sin ID de referencia)
+    // o si el contenedor está realmente vacío.
+    const isEditPage = window.location.pathname.includes('/editar/');
+    
     const container = document.getElementById('autores-container');
     const esVacio = container && (container.querySelectorAll('.autor-row').length === 0 || 
                     (container.querySelectorAll('.autor-row').length === 1 && 
                      container.querySelector('input[name="nombre_autor[]"]').value === '' && 
                      container.querySelector('input[name="apellido_autor[]"]').value === ''));
 
-    if (inputPublicacion.value.trim().length > 1 && esVacio) {
-        cargarDatosPublicacion(inputPublicacion.value.trim());
+    // En edición, NO disparamos automáticamente al cargar para evitar el molesto modal
+    if (inputPublicacion.value.trim().length > 1 && esVacio && !isEditPage) {
+        cargarDatosPublicacion(inputPublicacion.value.trim(), false);
     }
 
     inputPublicacion.addEventListener('input', function() {
@@ -55,15 +58,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const opciones = Array.from(datalist.options).map(opt => opt.value);
                 
                 if (opciones.includes(nuevoValor)) {
-                    console.log('[Publicación Autocomplete] Publicación seleccionada:', nuevoValor);
-                    cargarDatosPublicacion(nuevoValor);
+                    console.log('[Publicación Autocomplete] Publicación seleccionada manualmente:', nuevoValor);
+                    cargarDatosPublicacion(nuevoValor, true); // true = cambio manual
                 }
             }
         }
     });
     
-    function cargarDatosPublicacion(nombre) {
-        console.log('[Publicación Autocomplete] Cargando datos para:', nombre);
+    function cargarDatosPublicacion(nombre, isManual = false) {
+        console.log('[Publicación Autocomplete] Cargando datos para:', nombre, 'Manual:', isManual);
         
         fetch(`/api/publicacion_info/${encodeURIComponent(nombre)}`)
             .then(response => {
@@ -147,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('[Publicación Autocomplete] ✓ Reparto Total:', datos.reparto_total);
                 }
 
-                // Autores y Pseudónimo (HERENCIA SOLICITADA)
+                // Autores y Pseudónimo (HERENCIA INTELIGENTE)
                 if (datos.autores && datos.autores.length > 0) {
                     console.log('[Publicación Autocomplete] ✓ Autores encontrados:', datos.autores.length);
                     const container = document.getElementById('autores-container');
@@ -156,35 +159,47 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (container && typeof window.addAutorRow === 'function') {
                             const rows = container.querySelectorAll('.autor-row');
                             let vacias = true;
+                            let autoresActuales = [];
+                            
                             rows.forEach(r => {
-                                if (r.querySelector('input[name="nombre_autor[]"]').value || 
-                                    r.querySelector('input[name="apellido_autor[]"]').value) {
+                                const n = r.querySelector('input[name="nombre_autor[]"]').value.trim();
+                                const a = r.querySelector('input[name="apellido_autor[]"]').value.trim();
+                                if (n || a) {
                                     vacias = false;
+                                    autoresActuales.push(`${n}|${a}`.toLowerCase());
                                 }
                             });
 
+                            // Si está vacío, heredar sin preguntar
                             if (vacias) {
                                 container.innerHTML = '';
                                 datos.autores.forEach(aut => {
-                                    window.addAutorRow(aut.nombre || '', aut.apellido || '', aut.tipo || 'firmado', aut.es_anonimo);
+                                    window.addAutorRow(aut.nombre || '', aut.apellido || '', aut.tipo || 'firmado', aut.es_anonimo, aut.pseudonimo || '');
                                 });
-                            } else {
-                                Swal.fire({
-                                    title: '¿Heredar autores?',
-                                    text: `La publicación "${nombre}" tiene autores definidos. ¿Deseas añadirlos a la lista actual?`,
-                                    icon: 'question',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Sí, añadir',
-                                    cancelButtonText: 'No',
-                                    background: '#294a60',
-                                    color: '#fff'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        datos.autores.forEach(aut => {
-                                            window.addAutorRow(aut.nombre || '', aut.apellido || '', aut.tipo || 'firmado', aut.es_anonimo);
-                                        });
-                                    }
-                                });
+                            } else if (isManual) {
+                                // Solo preguntar si es un cambio MANUAL y hay autores que NO están ya en la lista
+                                const nuevos = datos.autores.filter(aut => 
+                                    !autoresActuales.includes(`${aut.nombre || ''}|${aut.apellido || ''}`.toLowerCase())
+                                );
+
+                                if (nuevos.length > 0) {
+                                    Swal.fire({
+                                        title: '¿Heredar autores?',
+                                        text: `La publicación "${nombre}" tiene autores definidos que no están en la lista. ¿Deseas añadirlos?`,
+                                        icon: 'question',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Sí, añadir',
+                                        cancelButtonText: 'No',
+                                        background: '#294a60',
+                                        color: '#fff'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            nuevos.forEach(aut => {
+                                                window.addAutorRow(aut.nombre || '', aut.apellido || '', aut.tipo || 'firmado', aut.es_anonimo, aut.pseudonimo || '');
+                                            });
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             console.warn('[Publicación Autocomplete] addAutorRow no disponible, reintentando en 100ms...');
@@ -200,6 +215,41 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!campoPseudo.value) {
                         campoPseudo.value = datos.pseudonimo;
                     }
+                }
+
+                // Licencia (HERENCIA)
+                const campoLicencia = document.querySelector('select[name="licencia"]');
+                if (campoLicencia && datos.licencia) {
+                    campoLicencia.value = datos.licencia;
+                    console.log('[Publicación Autocomplete] ✓ Licencia:', datos.licencia);
+                }
+
+                // Metadatos Dinámicos (Género, Subgénero, Periodicidad)
+                // 1. Género (tipo_recurso)
+                const campoRecurso = document.getElementById('selectRecurso') || document.querySelector('select[name="tipo_recurso"]');
+                if (campoRecurso && (datos.tipo_recurso || datos.tipo_publicacion_base)) {
+                    const tr = datos.tipo_recurso || datos.tipo_publicacion_base;
+                    campoRecurso.value = tr;
+                    console.log('[Publicación Autocomplete] ✓ Recurso:', tr);
+                    // Disparar cambio para cargar subgéneros
+                    campoRecurso.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
+                // 2. Subgénero (tipo_publicacion)
+                const campoSubgenero = document.getElementById('selectTipoPublicacion') || document.querySelector('select[name="tipo_publicacion"]');
+                if (campoSubgenero && (datos.tipo_publicacion || datos.subtipo_base)) {
+                    const sp = datos.tipo_publicacion || datos.subtipo_base;
+                    // Guardamos en data-value para que el script de carga dinámica lo reconozca si aún no ha cargado
+                    campoSubgenero.setAttribute('data-value', sp);
+                    campoSubgenero.value = sp;
+                    console.log('[Publicación Autocomplete] ✓ Subgénero:', sp);
+                }
+
+                // 3. Periodicidad
+                const campoPeriodicidad = document.getElementById('selectPeriodicidad') || document.querySelector('select[name="periodicidad"]');
+                if (campoPeriodicidad && datos.periodicidad) {
+                    campoPeriodicidad.value = datos.periodicidad;
+                    console.log('[Publicación Autocomplete] ✓ Periodicidad:', datos.periodicidad);
                 }
                 
                 // Feedback visual

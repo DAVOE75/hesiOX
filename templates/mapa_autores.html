@@ -1,0 +1,1065 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Mapa Biográfico de Autores/as — HesiOX{% endblock %}
+{% block page_title %}Geografía Literaria{% endblock %}
+{% block main_class %}immersive-layout{% endblock %}
+
+{% block breadcrumb %}
+<span class="text-muted ms-2 small">/ Localización por Ciudad de Nacimiento</span>
+{% endblock %}
+
+{% block top_actions %}
+<div class="header-actions-wrapper">
+    <div class="btn-sirio active" style="pointer-events: none; opacity: 0.8; border-color: var(--ds-accent-primary);">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span class="btn-text">MAPA DE AUTORES</span>
+    </div>
+
+    <div class="dropdown">
+        <button class="btn-sirio dropdown-toggle" type="button" id="dropdownExport" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-file-export"></i>
+            <span class="btn-text">EXPORTAR (OPEN SCIENCE)</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-dark border-accent" aria-labelledby="dropdownExport" style="background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); font-size: 0.8rem;">
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportData('csv')">
+                <i class="fa-solid fa-file-csv me-2 text-success"></i> Exportar a CSV (Excel/Palladio)
+            </a></li>
+            <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="exportData('geojson')">
+                <i class="fa-solid fa-earth-americas me-2 text-info"></i> Exportar a GeoJSON (QGIS)
+            </a></li>
+            <li><hr class="dropdown-divider opacity-20"></li>
+            <li class="px-3 py-1 text-muted" style="font-size: 0.7rem;">
+                <i class="fa-solid fa-circle-info me-1"></i> Se exportará el conjunto de datos filtrado actual.
+            </li>
+        </ul>
+    </div>
+
+    <a href="{{ url_for('lista_autores') }}" class="btn-sirio">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="btn-text">VOLVER</span>
+    </a>
+
+    <div class="ms-1 ps-1" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+        title="<strong>Mapa Biográfico</strong><hr class='my-1'><ul class='small text-start ps-3 mb-0'><li><strong>Visualización</strong>: Ubicación de autores y autoras según su ciudad de nacimiento.</li><li><strong>Interacción</strong>: Haga clic en los marcadores para ver un resumen biográfico y acceder al perfil completo.</li></ul>">
+        <i class="fa-solid fa-circle-question text-warning" style="cursor: help; font-size: 1.2rem;"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.min.js"></script>
+
+<style>
+    /* Fixed header alignment and normalization */
+    .header-actions-wrapper {
+        height: 60px !important;
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .header-actions-wrapper .btn-sirio,
+    .header-actions-wrapper .dropdown {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    /* --- LAYOUT FIXES --- */
+    .desktop-main.immersive-layout .desktop-content {
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    html,
+    body,
+    .desktop-main,
+    .desktop-content,
+    .map-container {
+        height: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .map-container {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+        background: var(--ds-bg-app, #0f0f0f);
+    }
+
+    .leaflet-container a {
+        color: var(--ds-accent-primary, #ff9800);
+    }
+
+    /* --- FILTER PANEL --- */
+    .filter-sidepanel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 280px;
+        z-index: 1000;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 152, 0, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s ease; /* Quitamos transition all para que el drag sea fluido */
+    }
+
+    .filter-title {
+        color: var(--ds-accent-primary, #ff9800);
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: move; /* Indicar que es arrastrable */
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 152, 0, 0.1);
+        user-select: none;
+    }
+
+    .filter-group {
+        margin-bottom: 15px;
+    }
+
+    .filter-label {
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .form-control-sirio-sm {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 13px;
+        border-radius: 6px;
+        padding: 8px 12px;
+        width: 100%;
+    }
+
+    .form-control-sirio-sm:focus {
+        background: rgba(0, 0, 0, 0.5);
+        border-color: var(--ds-accent-primary, #ff9800);
+        color: #fff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
+    }
+
+    /* Choices.js Customization for Map */
+    /* Choices.js Customization for Map (Matching news filters style) */
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+        z-index: 100000 !important; /* Z-index masivo para estar por encima de todo en el mapa */
+        background: #181818 !important;
+        color: #fff !important;
+        border: 1px solid #ff9800 !important;
+        box-shadow: 0 12px 40px 0 rgba(255, 152, 0, 0.18), 0 2px 24px 0 rgba(0, 0, 0, 0.7) !important;
+        font-family: 'Fira Mono', 'JetBrains Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 0.8em !important;
+        padding: 0 !important;
+    }
+
+    .choices__item {
+        background: #181818 !important;
+        color: #fff !important;
+        border-bottom: 1px solid #222 !important;
+        font-family: inherit !important;
+        font-size: 0.95em !important;
+        padding: 4px 8px !important;
+        transition: background 0.15s;
+    }
+
+    .choices__item--selectable.is-highlighted {
+        background: #ff9800 !important;
+        color: #181818 !important;
+    }
+
+    .choices__inner {
+        background: #181818 !important;
+        color: #fff !important;
+        border: 1px solid #ff9800 !important;
+        font-family: inherit !important;
+        font-size: 0.9em !important;
+        min-height: 34px !important;
+        padding: 2px 8px !important;
+        display: flex;
+        align-items: center;
+        border-radius: 4px !important;
+    }
+
+    .choices[data-type*=select-one] .choices__input {
+        background: #222 !important;
+        color: #fff !important;
+        border: 1px solid #333 !important;
+        font-size: 0.95em !important;
+        padding: 1px 4px !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable:hover {
+        background: #ff9800 !important;
+        color: #181818 !important;
+    }
+
+    [data-theme="light"] .choices__list--dropdown,
+    [data-theme="light"] .choices__list[aria-expanded] {
+        background: #ffffff !important;
+        color: #333 !important;
+        border-color: #294a60 !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    [data-theme="light"] .choices__item {
+        background: #ffffff !important;
+        color: #333 !important;
+        border-bottom-color: #f0f0f0 !important;
+    }
+
+    [data-theme="light"] .choices__item--selectable.is-highlighted {
+        background: #294a60 !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="light"] .choices__inner {
+        background: transparent !important;
+        color: #333 !important;
+        border: none !important;
+    }
+
+    /* --- CUSTOM MARKER --- */
+    .marker-author-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        border: 2px solid var(--ds-accent-primary, #ff9800);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background-color: #333;
+        /* Fallback */
+    }
+
+    .marker-author-circle:hover {
+        transform: scale(1.3);
+        z-index: 1000 !important;
+        border-color: #fff;
+    }
+
+    .marker-pulse {
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border: 2px solid var(--ds-accent-primary, #ff9800);
+        border-radius: 50%;
+        animation: marker-pulse 2s infinite;
+        pointer-events: none;
+    }
+
+    @keyframes marker-pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(1.6);
+            opacity: 0;
+        }
+    }
+
+    /* Placeholder icon when no photo */
+    .marker-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #666;
+        font-size: 1.2rem;
+    }
+
+    /* --- POPUP CUSTOMIZATION --- */
+    .author-popup {
+        min-width: 240px;
+        padding: 5px;
+    }
+
+    .author-popup-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--ds-accent-primary, #ff9800);
+        margin-bottom: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .author-popup-name {
+        font-family: 'Playfair Display', serif;
+        font-weight: 800;
+        color: var(--ds-accent-primary, #ff9800);
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+
+    .author-popup-dates {
+        font-size: 0.8rem;
+        color: var(--ds-text-muted, #aaa);
+        margin-bottom: 10px;
+        font-family: var(--ds-font-mono, monospace);
+    }
+
+    .author-popup-place {
+        font-size: 0.85rem;
+        color: var(--ds-text-main, #eee);
+        background: var(--ds-bg-element, rgba(255, 255, 255, 0.05));
+        padding: 5px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 15px;
+        border: 1px solid var(--ds-border-light, rgba(255, 255, 255, 0.1));
+    }
+
+    .leaflet-popup-content-wrapper {
+        background: var(--ds-bg-panel, rgba(20, 20, 20, 0.95)) !important;
+        backdrop-filter: blur(10px);
+        color: var(--ds-text-main, white) !important;
+        border: 1px solid var(--ds-border-color, rgba(255, 152, 0, 0.4)) !important;
+        border-radius: 15px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+        overflow: visible !important; /* Permitir que los dropdowns salgan del popup */
+    }
+
+    .leaflet-popup-content {
+        overflow: visible !important;
+        margin: 15px !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content-wrapper {
+        background: #ffffff !important;
+        color: #333333 !important;
+        border-color: #dddddd !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .leaflet-popup-tip {
+        background: var(--ds-bg-panel, rgba(20, 20, 20, 0.95)) !important;
+        border: 1px solid var(--ds-border-color, rgba(255, 152, 0, 0.4));
+    }
+
+    [data-theme="light"] .leaflet-popup-tip {
+        background: #ffffff !important;
+        border-color: #dddddd !important;
+    }
+
+    /* --- STATS PANEL --- */
+    .map-stats-panel {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        z-index: 900;
+        background: rgba(26, 26, 26, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 152, 0, 0.3);
+        border-radius: 12px;
+        padding: 15px 25px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        min-width: 150px;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        color: #fff;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        color: #888;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .stat-accent {
+        color: var(--ds-accent-primary, #ff9800);
+    }
+
+    /* Marker Cluster Styles */
+    .marker-cluster-small div,
+    .marker-cluster-medium div,
+    .marker-cluster-large div {
+        background-color: rgba(255, 152, 0, 0.85) !important;
+        color: #000 !important;
+        font-weight: 800 !important;
+        border: 2px solid white !important;
+    }
+
+    .btn-sirio {
+        white-space: nowrap;
+        padding: 6px 20px;
+        font-size: 12px;
+        height: 32px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid rgba(255, 152, 0, 0.4);
+        color: var(--ds-accent-primary, #ff9800);
+        border-radius: 4px;
+        text-transform: uppercase;
+        text-decoration: none;
+    }
+
+    .btn-sirio:hover {
+        background: rgba(255, 152, 0, 0.15);
+        color: #fff;
+        border-color: var(--ds-accent-primary, #ff9800);
+    }
+
+    .author-popup .btn-sirio {
+        border-width: 1px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .author-popup-pubs {
+        text-align: left;
+    }
+
+    .author-popup-pubs .pub-label {
+        color: var(--ds-accent-primary, #ff9800);
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .leaflet-popup-content .author-popup-pubs .pub-search-input {
+        width: 100% !important;
+        background: #181818 !important;
+        border: 1px solid #ff9800 !important;
+        color: #fff !important;
+        border-radius: 4px !important;
+        padding: 6px 10px !important;
+        margin-bottom: 8px !important;
+        font-size: 0.8rem !important;
+        font-family: 'Fira Mono', 'JetBrains Mono', 'Consolas', monospace !important;
+        transition: all 0.2s ease;
+        height: 36px !important;
+        box-shadow: none !important;
+    }
+
+    .leaflet-popup-content .author-popup-pubs .pub-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    .leaflet-popup-content .author-popup-pubs .pub-search-input:focus {
+        outline: none !important;
+        border-color: #ff9800 !important;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.3) !important;
+    }
+
+    /* Ocultar el select original sin romper el layout para Choices */
+    .leaflet-popup-content .author-popup-pubs .pub-select {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+
+    .choices-popup-wrapper {
+        margin-bottom: 8px !important;
+        overflow: visible !important;
+    }
+
+    /* Estilos específicos para Choices dentro del popup */
+    .leaflet-popup-content .choices {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin-bottom: 8px !important;
+        overflow: visible !important;
+    }
+
+    .leaflet-popup-content .choices__inner {
+        background: #181818 !important;
+        border: 1px solid #ff9800 !important;
+        border-radius: 4px !important;
+        min-height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .leaflet-popup-content .choices__list--single {
+        padding: 0 4px !important;
+        color: #fff !important;
+        font-family: 'Fira Mono', monospace !important;
+    }
+
+    /* Asegurar que la lista desplegable no se corte y tenga el z-index correcto */
+    .leaflet-popup-content .choices__list--dropdown {
+        z-index: 100000 !important;
+        top: 100% !important;
+        pointer-events: auto !important;
+        border: 1px solid #ff9800 !important;
+        background: #181818 !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content .choices__inner {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content .choices__list--single {
+        color: #333 !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content .author-popup-pubs .pub-search-input {
+        background: #ffffff !important;
+        color: #333 !important;
+        border-color: #294a60 !important;
+    }
+
+    [data-theme="light"] .leaflet-popup-content .author-popup-pubs .pub-search-input::placeholder {
+        color: rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .badge-imported {
+        background: rgba(46, 204, 113, 0.1);
+        border: 1px solid rgba(46, 204, 113, 0.35);
+        color: #2ecc71;
+        font-size: 9px;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 1px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        display: block;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+
+    [data-theme="light"] .badge-imported {
+        background: #e8f5e9;
+        border-color: #a5d6a7;
+        color: #2e7d32;
+    }
+
+    .bg-success-sirio {
+        background: rgba(46, 204, 113, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-container">
+    <div id="map"></div>
+
+    <!-- Panel de Filtros -->
+    <div class="filter-sidepanel" id="filterPanel">
+        <div class="filter-title">
+            <i class="fa-solid fa-sliders"></i> Filtros de Búsqueda
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Siglo</label>
+            <select id="filter-siglo" class="form-select form-control-sirio-sm">
+                <option value="">Todos los siglos</option>
+                <option value="15">Siglo XV</option>
+                <option value="16">Siglo XVI</option>
+                <option value="17">Siglo XVII</option>
+                <option value="18">Siglo XVIII</option>
+                <option value="19">Siglo XIX</option>
+                <option value="20">Siglo XX</option>
+                <option value="21">Siglo XXI</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Nacionalidad</label>
+            <select id="filter-nacionalidad" class="form-select form-control-sirio-sm">
+                <option value="">Todas</option>
+                {% for n in nacionalidades %}
+                <option value="{{ n }}">{{ n }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Ciudad / Lugar</label>
+            <input type="text" id="filter-ciudad" class="form-control-sirio-sm" placeholder="Ej: Madrid, París...">
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Publicación</label>
+            <select id="filter-publicacion" class="form-select form-control-sirio-sm">
+                <option value="">Cualquier publicación</option>
+                {% for p in publicaciones %}
+                <option value="{{ p }}">{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button class="btn btn-sirio w-100 mt-2 justify-content-center" id="btn-reset-filters">
+            <i class="fa-solid fa-rotate-left"></i> Restablecer
+        </button>
+    </div>
+
+    <!-- Panel de Estadísticas -->
+    <div class="map-stats-panel" id="statsPanel">
+        <div class="stat-row">
+            <span class="stat-label">Autores/as</span>
+            <span class="stat-value stat-accent" id="stat-autores">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Ciudades</span>
+            <span class="stat-value" id="stat-ciudades">0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Inicialización de Mapa
+        const map = L.map('map', { zoomControl: false, attributionControl: false, minZoom: 2 }).setView([20, 0], 2);
+
+        let _currentBaseMap = 'auto';
+
+        const getTileUrl = (type, isDarkMode) => {
+            switch (type) {
+                case 'osm': return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                case 'satellite': return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+                case 'topo': return 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+                case 'auto':
+                default:
+                    return isDarkMode
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            }
+        };
+
+        const updateTiles = () => {
+            const isDarkMode = document.documentElement.getAttribute('data-theme') !== 'light';
+            const url = getTileUrl(_currentBaseMap, isDarkMode);
+            if (window.mapaTileLayer) map.removeLayer(window.mapaTileLayer);
+            window.mapaTileLayer = L.tileLayer(url, { maxZoom: 19 }).addTo(map);
+        };
+
+        updateTiles();
+
+        updateTiles();
+
+        // 2. Inicialización de Filtros (Choices.js)
+        const choiceConfigs = {
+            searchEnabled: true,
+            itemSelectText: '',
+            shouldSort: false,
+            placeholder: true
+        };
+
+        const choicesSiglo = new Choices('#filter-siglo', choiceConfigs);
+        const choicesNacionalidad = new Choices('#filter-nacionalidad', choiceConfigs);
+        const choicesPublicacion = new Choices('#filter-publicacion', choiceConfigs);
+
+        // Inicializar Choices.js cuando se abre un popup
+        map.on('popupopen', function (e) {
+            setTimeout(() => {
+                const container = e.popup._container;
+                if (!container) return;
+                const select = container.querySelector('.pub-select');
+                if (select && !select.classList.contains('choices__input') && typeof Choices !== 'undefined') {
+                    const c = new Choices(select, {
+                        searchEnabled: false,
+                        itemSelectText: '',
+                        shouldSort: false,
+                        placeholder: true,
+                        placeholderValue: '-- Seleccionar obra --'
+                    });
+                    // Forzar que esté plegado por defecto y redibujado
+                    c.hideDropdown();
+                    c.containerOuter.element.classList.add('choices-popup-wrapper');
+                }
+            }, 150); // Aumentar timeout para asegurar renderizado
+        });
+
+        const noticiasListUrl = "{{ url_for('noticias.listar') }}";
+        const csrfToken = "{{ csrf_token() }}";
+        const importAuthorBaseUrl = "{{ url_for('importar_autor_bio', id=0) }}";
+        
+        // --- FUNCIONALIDAD DRAGGABLE PARA EL PANEL ---
+        const dragPanel = document.getElementById('filterPanel');
+        const dragHandle = dragPanel.querySelector('.filter-title');
+        
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        dragHandle.addEventListener("mousedown", dragStart);
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", dragEnd);
+
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target === dragHandle || dragHandle.contains(e.target)) {
+                isDragging = true;
+                dragPanel.style.opacity = "0.8";
+                dragPanel.style.zIndex = "2000"; // Asegurar que está encima mientras se mueve
+            }
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            dragPanel.style.opacity = "1";
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, dragPanel);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+        }
+
+        // 3. Gestión de Marcadores
+        const clusters = L.markerClusterGroup({
+            maxClusterRadius: 40,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            iconCreateFunction: function (cluster) {
+                const childCount = cluster.getChildCount();
+                let c = ' marker-cluster-';
+                if (childCount < 10) c += 'small';
+                else if (childCount < 100) c += 'medium';
+                else c += 'large';
+
+                return new L.DivIcon({
+                    html: '<div><span>' + childCount + '</span></div>',
+                    className: 'marker-cluster' + c,
+                    iconSize: new L.Point(40, 40)
+                });
+            }
+        });
+        map.addLayer(clusters);
+
+        const escapeHtml = (value) => String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        const buildPublicationOptions = (publicaciones, encodedAutor, placeholder = '-- Seleccionar obra --') => {
+            const lista = Array.isArray(publicaciones) ? publicaciones : [];
+            const options = lista
+                .map((p) => String(p || '').trim())
+                .filter(Boolean)
+                .map((pub) => `<option value="${noticiasListUrl}?autor=${encodedAutor}&publicacion=${encodeURIComponent(pub)}">${escapeHtml(pub)}</option>`)
+                .join('');
+
+            if (!options) {
+                return '<option value="">Sin coincidencias</option>';
+            }
+
+            return `<option value="">${placeholder}</option>${options}`;
+        };
+
+        window.openPublicationFromSelect = function (selectEl) {
+            if (selectEl && selectEl.value) {
+                window.open(selectEl.value, '_self');
+            }
+        };
+
+        window.filterPopupPublicaciones = function (inputEl) {
+            const container = inputEl ? inputEl.closest('.author-popup-pubs') : null;
+            if (!container) return;
+
+            const selectEl = container.querySelector('.pub-select');
+            if (!selectEl) return;
+
+            const query = (inputEl.value || '').trim().toLowerCase();
+            let publicaciones = [];
+
+            try {
+                publicaciones = JSON.parse(decodeURIComponent(selectEl.dataset.pubs || '%5B%5D'));
+            } catch (e) {
+                publicaciones = [];
+            }
+
+            const filtradas = query
+                ? publicaciones.filter((p) => String(p || '').toLowerCase().includes(query))
+                : publicaciones;
+
+            const placeholder = query ? '-- Obras filtradas --' : '-- Seleccionar obra --';
+            selectEl.innerHTML = buildPublicationOptions(filtradas, selectEl.dataset.autor || '', placeholder);
+            selectEl.selectedIndex = 0;
+        };
+
+        // 4. Exportación de Datos (Open Science)
+        window.exportData = function(format) {
+            const authors = window._mapData || [];
+            if (authors.length === 0) {
+                Swal.fire('Sin datos', 'No hay datos filtrados para exportar.', 'warning');
+                return;
+            }
+
+            if (format === 'csv') {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Nombre,Lugar_Nacimiento,Latitud,Longitud,Siglo,Nacionalidad,Obras\n";
+                
+                authors.forEach(a => {
+                    const row = [
+                        `"${a.nombre}"`,
+                        `"${a.lugar_nacimiento}"`,
+                        a.lat,
+                        a.lng,
+                        a.siglo || '',
+                        `"${a.nacionalidad || ''}"`,
+                        `"${(a.publicaciones || []).join('; ')}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `hesiox_autores_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } 
+            else if (format === 'geojson') {
+                const geojson = {
+                    "type": "FeatureCollection",
+                    "metadata": {
+                        "generated": new Date().toISOString(),
+                        "source": "hesiOX Open Science",
+                        "total": authors.length
+                    },
+                    "features": authors.map(a => ({
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [a.lng, a.lat]
+                        },
+                        "properties": {
+                            "nombre": a.nombre,
+                            "lugar_nacimiento": a.lugar_nacimiento,
+                            "siglo": a.siglo,
+                            "nacionalidad": a.nacionalidad,
+                            "obras": a.publicaciones
+                        }
+                    }))
+                };
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
+                const link = document.createElement("a");
+                link.setAttribute("href", dataStr);
+                link.setAttribute("download", `hesiox_autores_${new Date().toISOString().split('T')[0]}.geojson`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        const loadMarkers = () => {
+            const siglo = document.getElementById('filter-siglo').value;
+            const nacionalidad = document.getElementById('filter-nacionalidad').value;
+            const ciudad = document.getElementById('filter-ciudad').value;
+            const publicacion = document.getElementById('filter-publicacion').value;
+
+            const params = new URLSearchParams();
+            if (siglo) params.append('siglo', siglo);
+            if (nacionalidad) params.append('nacionalidad', nacionalidad);
+            if (ciudad) params.append('ciudad', ciudad);
+            if (publicacion) params.append('publicacion', publicacion);
+
+            clusters.clearLayers();
+
+            fetch(`/api/autores/map-data?${params.toString()}`)
+                .then(r => r.json())
+                .then(data => {
+                    window._mapData = data; // Guardar para exportación
+                    clusters.clearLayers();
+                    const ciudadesSet = new Set();
+                    document.getElementById('stat-autores').innerText = data.length;
+
+                    data.forEach(a => {
+                        if (a.lugar_nacimiento) ciudadesSet.add(a.lugar_nacimiento);
+
+                        // Icono personalizado con fotografía
+                        const photoUrl = a.foto;
+                        const iconHtml = photoUrl
+                            ? `<div class="marker-author-circle" style="background-image: url('${photoUrl}');"><div class="marker-pulse"></div></div>`
+                            : `<div class="marker-author-circle"><div class="marker-placeholder"><i class="fa-solid fa-user"></i></div><div class="marker-pulse"></div></div>`;
+
+                        const customIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: iconHtml,
+                            iconSize: [44, 44],
+                            iconAnchor: [22, 22]
+                        });
+
+                        const marker = L.marker([a.lat, a.lon], { icon: customIcon });
+
+                        const photoPopup = a.foto
+                            ? `<img src="${a.foto}" class="author-popup-img" onerror="this.src='/static/img/authors/default.png';">`
+                            : `<div class="author-popup-img d-flex align-items-center justify-content-center bg-dark mx-auto"><i class="fa-solid fa-user fa-2x text-secondary"></i></div>`;
+
+                        const encodedAutor = encodeURIComponent(`${a.apellido}, ${a.nombre}`);
+                        const encodedPublicaciones = encodeURIComponent(JSON.stringify(a.publicaciones || []));
+                        const pubOptions = buildPublicationOptions(a.publicaciones || [], encodedAutor);
+                        const importAuthorUrl = importAuthorBaseUrl.slice(0, -1) + a.id;
+
+                        const popupHtml = `
+                            <div class="author-popup text-center">
+                                ${photoPopup}
+                                <h6 class="author-popup-name">${a.nombre} ${a.apellido}</h6>
+                                ${a.seudonimo && a.seudonimo !== '-' ? `<div class="small text-warning mb-1">${a.seudonimo}</div>` : ''}
+                                <div class="author-popup-dates">${a.fechas_vida || ''}</div>
+                                <div class="author-popup-place">
+                                    <i class="fa-solid fa-location-dot me-1 text-danger"></i>
+                                    ${a.lugar_nacimiento}
+                                </div>
+
+                                ${a.es_proyecto_activo ? `
+                                <div class="mb-2">
+                                    <div class="badge-imported">
+                                        <i class="fa-solid fa-check-circle me-1"></i> AUTOR YA IMPORTADO
+                                    </div>
+                                     <div class="author-popup-pubs mt-2 mb-2">
+                                        <div class="pub-label">
+                                            <i class="fa-solid fa-newspaper me-1"></i> Publicaciones / Obras
+                                        </div>
+                                        <input type="text" class="pub-search-input" placeholder="Filtrar obra/publicación..." oninput="window.filterPopupPublicaciones(this)">
+                                        <select class="pub-select" data-pubs="${encodedPublicaciones}" data-autor="${encodedAutor}" onchange="window.openPublicationFromSelect(this)">
+                                            ${pubOptions}
+                                        </select>
+                                    </div>
+                                    <a href="${noticiasListUrl}?autor=${encodedAutor}" class="btn-sirio btn-sm w-100 py-1">
+                                        <i class="fa-solid fa-list-ul me-1"></i> VER TODOS SUS TEXTOS
+                                    </a>
+                                </div>` : `
+                                <div class="mb-2">
+                                    <form action="${importAuthorUrl}" method="POST" style="display:block;">
+                                        <input type="hidden" name="csrf_token" value="${csrfToken}">
+                                        <button type="submit" class="btn-sirio btn-sm w-100 py-1" style="font-size: 10px; cursor:pointer;">
+                                            <i class="fa-solid fa-download me-1"></i> IMPORTAR AL PROYECTO
+                                        </button>
+                                    </form>
+                                </div>`}
+
+                                <hr class="my-2 border-secondary opacity-25">
+                                <button type="button" onclick="window.openVisorModal && window.openVisorModal('${a.nombre.replace(/'/g, "\\'")}',' ${a.apellido.replace(/'/g, "\\'")}'.trim())" class="btn-sirio btn-sm w-100 py-1" style="font-size: 10px; cursor:pointer;">VER PERFIL COMPLETO</button>
+                            </div>
+                        `;
+                        marker.bindPopup(popupHtml, { closeButton: false, offset: L.point(0, -20) });
+                        clusters.addLayer(marker);
+                    });
+
+                    document.getElementById('stat-ciudades').innerText = ciudadesSet.size;
+
+                    if (data.length > 0 && (siglo || nacionalidad || ciudad || publicacion)) {
+                        map.fitBounds(clusters.getBounds(), { padding: [100, 100], maxZoom: 12 });
+                    }
+                })
+                .catch(err => console.error("Error loading map data:", err));
+        };
+
+        // Eventos de filtro
+        document.getElementById('filter-siglo').addEventListener('change', loadMarkers);
+        document.getElementById('filter-nacionalidad').addEventListener('change', loadMarkers);
+        document.getElementById('filter-ciudad').addEventListener('input', debounce(loadMarkers, 500));
+        document.getElementById('filter-publicacion').addEventListener('change', loadMarkers);
+
+        document.getElementById('btn-reset-filters').addEventListener('click', () => {
+            choicesSiglo.setChoiceByValue('');
+            choicesNacionalidad.setChoiceByValue('');
+            choicesPublicacion.setChoiceByValue('');
+            document.getElementById('filter-ciudad').value = '';
+            loadMarkers();
+        });
+
+        // Helpers
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Carga inicial
+        loadMarkers();
+    });
+</script>
+
+{% include 'modal_autor_visor.html' %}
+<script src="{{ url_for('static', filename='js/autores-dinamicos.js') }}?v=2.1"></script>
+{% endblock %}
