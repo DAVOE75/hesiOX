@@ -260,6 +260,29 @@
     [data-theme="light"] #original-tab.active {
         color: #333 !important;
     }
+
+    /* Switcher de Noticias en Header */
+    .news-switcher {
+        user-select: none;
+    }
+    .btn-nav-switcher {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: var(--ds-accent-primary);
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .btn-nav-switcher:hover:not(.disabled) {
+        background: rgba(255, 152, 0, 0.2);
+        color: #fff;
+    }
+    .btn-nav-switcher.disabled {
+        cursor: not-allowed;
+    }
 </style>
 {% endblock %}
 
@@ -299,6 +322,9 @@
             <i class="fa-solid fa-trash"></i>
         </button>
     </form>
+    <a href="{{ url_for('noticias.noticia_exportar_tei', id=ref.id) }}" class="btn-sirio text-warning" title="Exportar TEI/XML (PRO)">
+        <i class="fa-solid fa-code"></i>
+    </a>
 </div>
 
 <div class="vr mx-1 opacity-25"></div>
@@ -308,6 +334,23 @@
     <i class="fa-solid fa-arrow-left"></i>
     <span class="btn-text">VOLVER</span>
 </a>
+
+<!-- News Switcher -->
+<div class="news-switcher d-flex align-items-center gap-1 bg-black-opacity rounded-pill px-2 py-1 mx-2" style="border: 1px solid rgba(255,255,255,0.1);">
+    <a href="{{ url_for('noticias.editar', id=nav_data.prev_id) if nav_data.prev_id else '#' }}" 
+       class="btn-nav-switcher {% if not nav_data.prev_id %}disabled opacity-25{% endif %}" 
+       title="Noticia Anterior (Alt + ←)">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+    <span class="text-muted small mx-1 px-1" style="min-width: 60px; text-align: center; font-family: monospace; font-weight: bold;">
+        {{ nav_data.current_pos }} / {{ nav_data.total_count }}
+    </span>
+    <a href="{{ url_for('noticias.editar', id=nav_data.next_id) if nav_data.next_id else '#' }}" 
+       class="btn-nav-switcher {% if not nav_data.next_id %}disabled opacity-25{% endif %}" 
+       title="Siguiente Noticia (Alt + →)">
+        <i class="fa-solid fa-chevron-right"></i>
+    </a>
+</div>
 
 <div class="vr mx-1 opacity-25"></div>
 
@@ -473,11 +516,13 @@
 
                                     <div class="d-flex gap-2 mb-2">
                                         <button id="btn-correct-gemini" class="btn btn-sirio flex-grow-1">
-                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
-                                            Seleccionada
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> IA
+                                        </button>
+                                        <button id="btn-analizar-ner" type="button" class="btn btn-sirio flex-grow-1">
+                                            <i class="fa-solid fa-tags me-1"></i> NER
                                         </button>
                                         <button id="btn-apply-ocr-text" class="btn btn-sirio flex-grow-1">
-                                            <i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado
+                                            <i class="fa-solid fa-check"></i>
                                         </button>
                                     </div>
                                     <div class="mb-2">
@@ -928,24 +973,37 @@
                                 </div>
                             </div>
 
-                            <hr class="my-4" style="opacity: 0.15;">
-
                             <ul class="nav nav-tabs border-secondary mb-0 d-flex flex-wrap align-items-center gap-3"
                                 id="contentTabs" role="tablist">
-
                                 <li class="nav-item">
                                     <button
                                         class="nav-link active small text-uppercase fw-bold bg-transparent text-light border-0 border-bottom border-2 border-warning rounded-0 ps-0 pe-3"
                                         id="traduccion-tab" data-bs-toggle="tab" data-bs-target="#traduccion"
-                                        type="button" style="white-space: nowrap; flex-shrink: 0;">ESPAÑOL /
-                                        TRADUCCIÓN</button>
+                                        type="button" style="white-space: nowrap; flex-shrink: 0;">Normalizada</button>
                                 </li>
                                 <li class="nav-item">
                                     <button
                                         class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
                                         id="original-tab" data-bs-toggle="tab" data-bs-target="#original" type="button"
-                                        style="white-space: nowrap; flex-shrink: 0;">Texto Original</button>
-
+                                        style="white-space: nowrap; flex-shrink: 0;">Original</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="diplomatica-tab" data-bs-toggle="tab" data-bs-target="#diplomatica" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;">Diplomática (🏛️)</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="critica-tab" data-bs-toggle="tab" data-bs-target="#critica" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;">Crítica (✍️)</button>
+                                </li>
+                                <li class="nav-item ms-auto">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-info border-0 rounded-0 ps-3"
+                                        id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;"><i class="fa-solid fa-clock-rotate-left me-1"></i> Historial</button>
                                 </li>
                             </ul>
                             <!-- AI Progress Bar (Global for both editors) -->
@@ -975,6 +1033,44 @@
                                     <div id="texto_original_editor" class="quill-editor flex-grow-1"></div>
                                     <textarea name="texto_original" id="texto_original"
                                         class="d-none">{{ ref.texto_original or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="diplomatica">
+                                    <div id="toolbar-contenido_diplomatico"></div>
+                                    <div id="contenido_diplomatico_editor" class="quill-editor flex-grow-1"></div>
+                                    <textarea name="contenido_diplomatico" id="contenido_diplomatico"
+                                        class="d-none">{{ ref.contenido_diplomatico or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="critica">
+                                    <div id="toolbar-contenido_critico"></div>
+                                    <div id="contenido_critico_editor" class="quill-editor flex-grow-1"></div>
+                                    <textarea name="contenido_critico" id="contenido_critico"
+                                        class="d-none">{{ ref.contenido_critico or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="historial">
+                                    <div class="historial-container p-3 bg-black-opacity rounded" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                                        <h6 class="text-info border-bottom border-secondary pb-2 mb-3">
+                                            <i class="fa-solid fa-history me-2"></i>Historial de Cambios
+                                        </h6>
+                                        {% if ref.historial_versiones.count() > 0 %}
+                                            <div class="list-group list-group-flush">
+                                            {% for v in ref.historial_versiones|sort(attribute='creado_en', reverse=True) %}
+                                                <div class="list-group-item bg-transparent border-secondary border-opacity-25 px-0">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <span class="text-warning small fw-bold">{{ v.creado_en.strftime('%d/%m/%Y %H:%M') }}</span>
+                                                        <span class="badge bg-dark text-muted">{{ v.usuario.username if v.usuario else 'Sistema' }}</span>
+                                                    </div>
+                                                    <p class="mb-1 text-light small">{{ v.comentario_cambio or 'Sin descripción' }}</p>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" style="font-size: 10px;" onclick="cargarVersion({{ v.id }})">RECUPERAR</button>
+                                                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 10px;" onclick="compararVersion({{ v.id }})">COMPARAR</button>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted text-center mt-5 italic">No hay versiones previas guardadas.</p>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -1016,12 +1112,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-3">
-                                <label class="form-label-sirio">Notas de Investigación</label>
-                                <input type="text" name="notas"
-                                    class="form-control form-control-sirio border-warning fst-italic"
-                                    value="{{ ref.notas or '' }}" placeholder="Notas adicionales...">
-                            </div>
+                             <div class="row g-2 mt-3">
+                                <div class="col-md-8">
+                                    <label class="form-label-sirio">Notas de Investigación</label>
+                                    <input type="text" name="notas"
+                                        class="form-control form-control-sirio border-warning fst-italic"
+                                        value="{{ ref.notas or '' }}" placeholder="Notas adicionales...">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-sirio">Comentario de Versión</label>
+                                    <input type="text" name="comentario_version"
+                                        class="form-control form-control-sirio border-info"
+                                        placeholder="Ej: Corregido OCR...">
+                                </div>
+                             </div>
                             <div class="mt-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <label class="form-label-sirio mb-0">Temas / Etiquetas</label>
@@ -1231,6 +1335,48 @@
                 }
             });
         });
+
+        // --- Lógica NER (PRO) ---
+        const btnNer = document.getElementById('btn-analizar-ner');
+        if (btnNer) {
+            btnNer.addEventListener('click', async () => {
+                const newsId = "{{ ref.id }}";
+                btnNer.disabled = true;
+                btnNer.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Analizando...';
+                
+                try {
+                    const response = await fetch(`/api/noticias/${newsId}/analizar-ner`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Análisis NER Completado',
+                            text: data.message,
+                            background: '#294a60',
+                            color: '#fff'
+                        });
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch (err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error NER',
+                        text: err.message,
+                        background: '#294a60',
+                        color: '#fff'
+                    });
+                } finally {
+                    btnNer.disabled = false;
+                    btnNer.innerHTML = '<i class="fa-solid fa-tags me-1"></i> NER';
+                }
+            });
+        }
 
         // Manejar aplicación de texto OCR al campo seleccionado
         const btnApplyOcrText = document.getElementById('btn-apply-ocr-text');
@@ -1742,6 +1888,33 @@
             btnSave.disabled = false;
             btnSave.innerHTML = originalBtnHTML;
         });
+    });
+
+    // --- Atajos de Teclado ---
+    document.addEventListener('keydown', function(e) {
+        // Alt + S: Guardar
+        if (e.altKey && e.key === 's') {
+            e.preventDefault();
+            document.getElementById('form-ficha').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}));
+        }
+        // Alt + L: Volver al listado
+        if (e.altKey && e.key === 'l') {
+            e.preventDefault();
+            const volverBtn = document.querySelector('a[title="Volver al listado"]');
+            if (volverBtn) volverBtn.click();
+        }
+        // Alt + Left: Anterior noticia
+        if (e.altKey && e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prevLink = document.querySelector('.btn-nav-switcher[title*="Anterior"]:not(.disabled)');
+            if (prevLink) prevLink.click();
+        }
+        // Alt + Right: Siguiente noticia
+        if (e.altKey && e.key === 'ArrowRight') {
+            e.preventDefault();
+            const nextLink = document.querySelector('.btn-nav-switcher[title*="Siguiente"]:not(.disabled)');
+            if (nextLink) nextLink.click();
+        }
     });
 
     // Inicializar ThemeManager con URLs dinámicas

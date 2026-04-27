@@ -89,6 +89,20 @@ document.addEventListener('DOMContentLoaded', function() {
         'Pega aquí el texto original (paleográfico/idioma nativo)...'
     );
 
+    window.quillEditors.contenido_diplomatico = setupEditor(
+        'contenido_diplomatico_editor', 
+        'contenido_diplomatico', 
+        'toolbar-contenido_diplomatico', 
+        'Transcripción diplomática (literal, respetando abreviaturas y grafías)...'
+    );
+
+    window.quillEditors.contenido_critico = setupEditor(
+        'contenido_critico_editor', 
+        'contenido_critico', 
+        'toolbar-contenido_critico', 
+        'Edición crítica (anotada, modernizada, con aparato crítico)...'
+    );
+
     // =========================================================
     // 🛠️ PARCHEO DE BOTONES EXISTENTES (IA / LIMPIEZA)
     // =========================================================
@@ -275,5 +289,39 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`[Quill News] Inyectando texto desde OCR a: ${fieldId}`);
             quill.root.innerHTML = text.replace(/\n/g, '<br>');
         }
+    };
+
+    /**
+     * Recupera una versión histórica de la noticia
+     */
+    window.cargarVersion = function(versionId) {
+        if (!confirm('¿Estás seguro de que deseas recuperar esta versión? Los cambios actuales no guardados se perderán.')) return;
+        
+        fetch(`/api/versiones/${versionId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (window.quillEditors.contenido) window.quillEditors.contenido.root.innerHTML = data.version.contenido || '';
+                    if (window.quillEditors.contenido_diplomatico) window.quillEditors.contenido_diplomatico.root.innerHTML = data.version.contenido_diplomatico || '';
+                    if (window.quillEditors.contenido_critico) window.quillEditors.contenido_critico.root.innerHTML = data.version.contenido_critico || '';
+                    
+                    // Notificar al usuario
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Versión Recuperada',
+                        text: 'Se han cargado los contenidos de la versión seleccionada.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                    
+                    // Cambiar a la pestaña de contenido normalizado
+                    document.getElementById('traduccion-tab').click();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => console.error('Error al recuperar versión:', err));
     };
 });

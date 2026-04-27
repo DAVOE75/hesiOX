@@ -306,47 +306,49 @@ def download_project():
         # Carpetas y archivos a incluir (Opt-in) para garantizar bajo peso
         include_dirs = {
             'routes', 'static', 'templates', 'scripts', 'docs',
-            'services', 'migrations'
+            'services', 'migrations', 'extensions'
         }
         
+        # Crear carpeta de exportación si no existe
+        export_dir = os.path.join(current_app.root_path, 'exports')
+        os.makedirs(export_dir, exist_ok=True)
+        zip_filepath = os.path.join(export_dir, zip_filename)
+        
+        root_dir = current_app.root_path
+        
         # Archivos top-level válidos (todo lo que es código base)
-        valid_extensions = ('.py', '.md', '.txt', '.json', '.bat', '.html', '.css', '.js', '.env.example')
+        valid_extensions = ('.py', '.md', '.txt', '.json', '.bat', '.html', '.css', '.js', '.env.example', '.env')
         exclude_specific = {'passenger_wsgi.py'} # O los que decidas no bajar
 
         with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(root_dir):
                 rel_path = os.path.relpath(root, root_dir)
                 
-                # Si estamos en la raíz del proyecto
+                # Excluir carpetas pesadas o no deseadas que no están en include_dirs pero walk sí ve
                 if rel_path == '.':
-                    # Filtrar qué directorios de la raíz vamos a recorrer
                     dirs[:] = [d for d in dirs if d in include_dirs]
+                
+                # Procesar archivos
+                for file in files:
+                    # Evitar archivos ocultos o temporales
+                    if file == '.DS_Store' or file.startswith('._') or file.endswith('.pyc'):
+                        continue
+                        
+                    file_path = os.path.join(root, file)
                     
-                    # Incluir archivos de código de la raíz
-                    for file in files:
-                        if any(file.endswith(ext) for ext in valid_extensions) and file not in exclude_specific:
-                            file_path = os.path.join(root, file)
-                            arcname = file
-                            zipf.write(file_path, arcname)
-                elif rel_path == 'static':
-                    # Excluir específicamente la carpeta de uploads para evitar ZIPs gigantes y timeouts
-                    dirs[:] = [d for d in dirs if d != 'uploads']
-                    for file in files:
-                        if file == '.DS_Store' or file.startswith('._'):
+                    # Si es la raíz, solo archivos de código permitidos
+                    if rel_path == '.':
+                        if not (any(file.endswith(ext) for ext in valid_extensions) and file not in exclude_specific):
                             continue
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, root_dir)
-                        zipf.write(file_path, arcname)
-                else:
-                    # Si ya estamos dentro de un directorio permitido (ej: routes/), incluimos todos sus archivos útiles
-                    for file in files:
-                        # Evitar binarios grandes que se hayan colado en carpetas permitidas, o archivos ocultos
-                        if file.endswith('.sql') or file.endswith('.db') or file == '.DS_Store' or file.startswith('._'):
-                            continue
-                            
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, root_dir)
-                        zipf.write(file_path, arcname)
+                    
+                    # Si es static/uploads, ya lo filtramos en dirs[:] si quisiéramos, 
+                    # pero vamos a ser más precisos:
+                    if 'static/uploads' in rel_path or 'static\\uploads' in rel_path:
+                        continue
+                    
+                    # Agregar al zip
+                    arcname = os.path.relpath(file_path, root_dir)
+                    zipf.write(file_path, arcname)
                         
         return send_file(zip_filepath, as_attachment=True, download_name=zip_filename)
         

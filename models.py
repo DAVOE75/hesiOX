@@ -501,6 +501,13 @@ class Prensa(db.Model):
     tipo_publicacion = db.Column(db.Text)  # Diario, Revista, etc.
     periodicidad = db.Column(db.Text)     # Diaria, Semanal, etc.
 
+    # --- Capas de Transcripción (PRO) ---
+    contenido_diplomatico = db.Column(db.Text) # Transcripción literal/paleográfica
+    contenido_critico = db.Column(db.Text)    # Edición crítica con anotaciones
+
+    # --- NER y Datos Enriquecidos (PRO) ---
+    entidades_ner = db.Column(db.JSON)         # Almacena entidades (Persona, Lugar, Org) extraídas por SpaCy/IA
+
     # Campos para investigador y universidad
     nombre_investigador = db.Column(db.Text)
     universidad_investigador = db.Column(db.Text)
@@ -573,6 +580,29 @@ class Prensa(db.Model):
 
     def __repr__(self):
         return f"<Prensa {self.id} {self.titulo}>"
+
+# --- Modelo para Historial de Versiones (PRO) ---
+class VersionPrensa(db.Model):
+    __tablename__ = "versiones_prensa"
+    id = db.Column(db.Integer, primary_key=True)
+    prensa_id = db.Column(db.Integer, db.ForeignKey("prensa.id", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+    
+    titulo = db.Column(db.Text)
+    contenido = db.Column(db.Text)
+    contenido_diplomatico = db.Column(db.Text)
+    contenido_critico = db.Column(db.Text)
+    notas = db.Column(db.Text)
+    
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+    comentario_cambio = db.Column(db.Text) # Ej: "Corregido OCR", "Añadida transcripción diplomática"
+
+    # Relación con usuario
+    usuario = db.relationship("Usuario", backref=db.backref("versiones_prensa", lazy="dynamic"))
+    noticia = db.relationship("Prensa", backref=db.backref("historial_versiones", lazy="dynamic", cascade="all, delete-orphan"))
+
+    def __repr__(self):
+        return f"<VersionPrensa {self.id} for news {self.prensa_id}>"
 
 
 class ImagenPrensa(db.Model):

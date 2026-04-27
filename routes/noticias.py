@@ -1,8 +1,8 @@
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app, abort, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app, abort, send_file, Response
 import json
 from flask_login import login_required, current_user
-from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa, MetadataOption
+from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa, MetadataOption, VersionPrensa
 from extensions import db, csrf
 from utils import get_proyecto_activo, get_nlp, limpieza_profunda_ocr, clean_location_name
 from cache_config import cache
@@ -5838,6 +5838,11 @@ def editar(id):
         noticia.reparto = request.form.get("reparto")
         noticia.texto_original = request.form.get("texto_original")
         noticia.descripcion_publicacion = request.form.get("descripcion_publicacion")
+        
+        # --- Transcripciones PRO ---
+        noticia.contenido_diplomatico = request.form.get("contenido_diplomatico")
+        noticia.contenido_critico = request.form.get("contenido_critico")
+        
         # Guardar imágenes adjuntas (múltiples)
         imagenes_files = request.files.getlist("imagen_scan")
         from models import ImagenPrensa
@@ -5861,6 +5866,21 @@ def editar(id):
                 db.session.commit()
                 print(f"[OCR] Imagen vinculada persistida para noticia {noticia.id}")
 
+        # --- GESTIÓN DE VERSIONES (PRO) ---
+        comentario = request.form.get("comentario_version") or "Actualización de ficha"
+        version = VersionPrensa(
+            prensa_id=noticia.id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            titulo=noticia.titulo,
+            contenido=noticia.contenido,
+            contenido_diplomatico=noticia.contenido_diplomatico,
+            contenido_critico=noticia.contenido_critico,
+            notas=noticia.notas,
+            comentario_cambio=comentario
+        )
+        db.session.add(version)
+        db.session.commit()
+
         # Invalidate analysis cache
         try:
             from analisis_cache import cache as analisis_cache_instance
@@ -5877,6 +5897,55 @@ def editar(id):
 
         flash("✅ Noticia actualizada correctamente.", "success")
         return redirect(url_for("noticias.listar", highlight_id=noticia.id))
+    # --- LÓGICA DE NAVEGACIÓN (SWITCHER) ---
+    order_expr = text("""
+        CASE 
+            WHEN fecha_original ~ '^\d{2}/\d{2}/\d{4}$' THEN to_date(fecha_original, 'DD/MM/YYYY')
+            WHEN fecha_original ~ '^\d{4}-\d{2}-\d{2}$' THEN to_date(fecha_original, 'YYYY-MM-DD')
+            WHEN fecha_original ~ '^\d{4}-\d{2}$' THEN to_date(fecha_original || '-01', 'YYYY-MM-DD')
+            WHEN fecha_original ~ '^\d{4}$' THEN to_date(fecha_original || '-01-01', 'YYYY-MM-DD')
+            ELSE '1900-01-01'::date
+        END
+    """)
+    
+    try:
+        query_base = db.session.query(Prensa).filter(Prensa.proyecto_id == noticia.proyecto_id)
+        current_date_val = db.session.query(order_expr).filter(Prensa.id == id).scalar()
+        
+        # Siguiente noticia
+        noticia_next = query_base.filter(
+            or_(
+                order_expr > current_date_val,
+                and_(order_expr == current_date_val, Prensa.id > id)
+            )
+        ).order_by(order_expr.asc(), Prensa.id.asc()).first()
+        
+        # Noticia anterior
+        noticia_prev = query_base.filter(
+            or_(
+                order_expr < current_date_val,
+                and_(order_expr == current_date_val, Prensa.id < id)
+            )
+        ).order_by(order_expr.desc(), Prensa.id.desc()).first()
+        
+        total_count = query_base.count()
+        current_pos = query_base.filter(
+            or_(
+                order_expr < current_date_val,
+                and_(order_expr == current_date_val, Prensa.id <= id)
+            )
+        ).count()
+        
+        nav_data = {
+            'prev_id': noticia_prev.id if noticia_prev else None,
+            'next_id': noticia_next.id if noticia_next else None,
+            'total_count': total_count,
+            'current_pos': current_pos
+        }
+    except Exception as e:
+        print(f"[ERROR] Navegación switcher: {e}")
+        nav_data = {'prev_id': None, 'next_id': None, 'total_count': 0, 'current_pos': 0}
+
     # GET o fallback: mostrar formulario con datos actuales
     form_data = get_form_data_for_templates_noticias()
     
@@ -5884,6 +5953,7 @@ def editar(id):
         "editar.html",
         ref=noticia,
         **form_data,
+        nav_data=nav_data,
         publicacion_rel=noticia.publicacion_rel,
         nombre_autor_val=noticia.nombre_autor,
         apellido_autor_val=noticia.apellido_autor,
@@ -6505,3 +6575,106 @@ def api_crear_tema_v2():
     db.session.commit()
     
     return jsonify({'success': True, 'nombre': tema_new})
+
+@noticias_bp.route("/api/noticias/<int:id>/analizar-ner", methods=["POST"])
+@login_required
+def api_noticia_analizar_ner(id):
+    """Analiza entidades nombradas (NER) usando SpaCy en el contenido de la noticia"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia or not noticia.contenido:
+        return jsonify({"success": False, "error": "Contenido no disponible"}), 400
+    
+    try:
+        nlp = get_nlp() # Utilidad existente en utils.py
+        doc = nlp(noticia.contenido)
+        
+        entidades = []
+        for ent in doc.ents:
+            entidades.append({
+                "texto": ent.text,
+                "label": ent.label_,
+                "start": ent.start_char,
+                "end": ent.end_char
+            })
+        
+        # Guardar en la base de datos
+        noticia.entidades_ner = entidades
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Se han detectado {len(entidades)} entidades.",
+            "entidades": entidades
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@noticias_bp.route("/noticias/<int:id>/exportar-tei")
+@login_required
+def noticia_exportar_tei(id):
+    """Genera un archivo XML en formato TEI (Text Encoding Initiative) para la noticia"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia:
+        abort(404)
+        
+    from xml.sax.saxutils import escape as xml_escape
+    
+    # Construcción básica de TEI
+    tei = f'''<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>{xml_escape(noticia.titulo or 'Sin título')}</title>
+        <author>{xml_escape(noticia.autor or 'Anónimo')}</author>
+      </titleStmt>
+      <publicationStmt>
+        <publisher>Proyecto HESIOX</publisher>
+        <pubPlace>{xml_escape(noticia.ciudad or 'Desconocido')}</pubPlace>
+        <date when="{noticia.anio or ''}">{xml_escape(noticia.fecha_original or '')}</date>
+      </publicationStmt>
+      <sourceDesc>
+        <bibl>
+          <title level="j">{xml_escape(noticia.publicacion or '')}</title>
+          <biblScope unit="page">{xml_escape(noticia.paginas or '')}</biblScope>
+        </bibl>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <div type="article">
+        <head>{xml_escape(noticia.titulo or '')}</head>
+        <p>
+          {xml_escape(noticia.contenido or '')}
+        </p>
+      </div>
+      <div type="transcription_diplomatic">
+        <p>{xml_escape(noticia.contenido_diplomatico or '')}</p>
+      </div>
+    </body>
+  </text>
+</TEI>
+'''
+    return Response(tei, mimetype='application/xml', 
+                    headers={"Content-Disposition": f"attachment;filename=noticia_{id}_tei.xml"})
+
+@noticias_bp.route("/api/versiones/<int:version_id>")
+@login_required
+def api_get_version(version_id):
+    """Obtiene los datos de una versión específica para su recuperación en el editor"""
+    version = db.session.get(VersionPrensa, version_id)
+    if not version:
+        return jsonify({"success": False, "error": "Versión no encontrada"}), 404
+        
+    return jsonify({
+        "success": True,
+        "version": {
+            "contenido": version.contenido,
+            "contenido_diplomatico": version.contenido_diplomatico,
+            "contenido_critico": version.contenido_critico,
+            "titulo": version.titulo,
+            "notas": version.notas
+        }
+    })
