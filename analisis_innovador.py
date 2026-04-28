@@ -574,8 +574,8 @@ class AnalisisInnovador:
             interpolate='monotone',
             fillOpacity=0.8
         ).encode(
-            x=alt.X('acto:N', title='Progreso de la Obra (Actos/Escenas)', axis=alt.Axis(labelAngle=0)),
-            y=alt.Y('valor:Q', stack='center', axis=None),
+            x=alt.X('acto:N', title='Progreso de la Obra (Actos/Escenas)', axis=alt.Axis(labelAngle=0, grid=True, gridDash=[3,3])),
+            y=alt.Y('valor:Q', stack='center', axis=alt.Axis(labels=False, ticks=False, title=None, grid=True, gridDash=[2,2], gridOpacity=0.5)),
             color=alt.Color('tactica:N', 
                            scale=alt.Scale(scheme='spectral'),
                            legend=alt.Legend(title="Tácticas", orient='right', labelColor=text_color, titleColor=text_color)),

@@ -61,6 +61,15 @@ def api_search():
     query = Prensa.query
     if proyecto_id:
         query = query.filter(Prensa.proyecto_id == proyecto_id)
+
+    # Filtrar por visibilidad de la publicación
+    query = query.outerjoin(Publicacion, Prensa.id_publicacion == Publicacion.id_publicacion).filter(
+        or_(
+            Publicacion.visible == True,
+            Publicacion.id_publicacion == None
+        )
+    )
+
         
     results = query.filter(
         or_(
@@ -174,6 +183,16 @@ def valores_unicos_prensa(columna, proyecto_id=None):
     query = db.session.query(columna).distinct()
     if proyecto_id and hasattr(columna.table.c, 'proyecto_id'):
         query = query.filter(columna.table.c.proyecto_id == proyecto_id)
+
+    # Filtrar por visibilidad de la publicación si la tabla es 'prensa'
+    if columna.table.name == 'prensa':
+        query = query.outerjoin(Publicacion, Prensa.id_publicacion == Publicacion.id_publicacion).filter(
+            or_(
+                Publicacion.visible == True,
+                Publicacion.id_publicacion == None
+            )
+        )
+
     valores_db = [x[0] for x in query.all() if x[0] and str(x[0]).strip()]
     unicos = {}
     for v in valores_db:
@@ -3726,6 +3745,8 @@ def cartografia_semantica_api():
 
 
 @noticias_bp.route('/api/noticia/toggle_incluido/<int:id>', methods=['POST'])
+@noticias_bp.route('/api/noticia/<int:id>/toggle_incluido', methods=['POST'])
+
 @login_required
 def toggle_incluido(id):
     """
@@ -3741,7 +3762,7 @@ def toggle_incluido(id):
     db.session.commit()
     
     return jsonify({
-        'status': 'success',
+        'success': True,
         'id': noticia.id,
         'incluido': noticia.incluido,
         'message': f'Noticia {"activada" if noticia.incluido else "pausada"}'
@@ -5080,6 +5101,15 @@ def listar():
 
     query = Prensa.query.filter_by(proyecto_id=proyecto.id)
     
+    # Filtrar noticias de publicaciones marcadas como no visibles
+    query = query.outerjoin(Publicacion, Prensa.id_publicacion == Publicacion.id_publicacion).filter(
+        or_(
+            Publicacion.visible == True,
+            Publicacion.id_publicacion == None
+        )
+    )
+
+    
     # --- DEBUG LOGGING ---
     try:
         with open("/opt/hesiox/logs/debug_filter.log", "a") as f:
@@ -5296,7 +5326,7 @@ def listar():
     
     autores = sorted(list(autores_set), key=lambda x: x.lower())
     
-    return render_template(
+    resp = render_template(
         "list.html",
         registros=registros,
         proyecto=proyecto,
@@ -5331,8 +5361,16 @@ def listar():
         filtros=filtros,
         **filtros,
         proyecto_id=proyecto.id,
-        noticias_por_pagina=noticias_por_pagina
+        noticias_por_pagina=noticias_por_pagina,
+        lote_opciones_genero=MetadataOption.query.filter_by(categoria='tipo_recurso').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
+        lote_opciones_subgenero=MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
+        lote_opciones_frecuencia=MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all()
     )
+    return resp
+
+
+
+
 
 # --- Crear noticia de prensa ---
 def save_base64_image(b64_string, noticia_id):
@@ -5898,7 +5936,7 @@ def editar(id):
         flash("✅ Noticia actualizada correctamente.", "success")
         return redirect(url_for("noticias.listar", highlight_id=noticia.id))
     # --- LÓGICA DE NAVEGACIÓN (SWITCHER) ---
-    order_expr = text("""
+    sql_case = r"""
         CASE 
             WHEN fecha_original ~ '^\d{2}/\d{2}/\d{4}$' THEN to_date(fecha_original, 'DD/MM/YYYY')
             WHEN fecha_original ~ '^\d{4}-\d{2}-\d{2}$' THEN to_date(fecha_original, 'YYYY-MM-DD')
@@ -5906,39 +5944,67 @@ def editar(id):
             WHEN fecha_original ~ '^\d{4}$' THEN to_date(fecha_original || '-01-01', 'YYYY-MM-DD')
             ELSE '1900-01-01'::date
         END
-    """)
+    """
     
     try:
-        query_base = db.session.query(Prensa).filter(Prensa.proyecto_id == noticia.proyecto_id)
-        current_date_val = db.session.query(order_expr).filter(Prensa.id == id).scalar()
+        # Obtener valor de ordenación actual
+        current_date_val = db.session.execute(
+            text(f"SELECT ({sql_case}) FROM prensa WHERE id = :id"),
+            {'id': id}
+        ).scalar()
+
         
         # Siguiente noticia
-        noticia_next = query_base.filter(
-            or_(
-                order_expr > current_date_val,
-                and_(order_expr == current_date_val, Prensa.id > id)
+        sql_next = text(f"""
+            SELECT id FROM prensa 
+            WHERE proyecto_id = :pid 
+            AND (
+                ({sql_case}) > :cur_date
+                OR (({sql_case}) = :cur_date AND id > :cur_id)
             )
-        ).order_by(order_expr.asc(), Prensa.id.asc()).first()
+            ORDER BY ({sql_case}) ASC, id ASC
+            LIMIT 1
+        """)
+        noticia_next_id = db.session.execute(sql_next, {
+            'pid': noticia.proyecto_id, 
+            'cur_date': current_date_val, 
+            'cur_id': id
+        }).scalar()
         
         # Noticia anterior
-        noticia_prev = query_base.filter(
-            or_(
-                order_expr < current_date_val,
-                and_(order_expr == current_date_val, Prensa.id < id)
+        sql_prev = text(f"""
+            SELECT id FROM prensa 
+            WHERE proyecto_id = :pid 
+            AND (
+                ({sql_case}) < :cur_date
+                OR (({sql_case}) = :cur_date AND id < :cur_id)
             )
-        ).order_by(order_expr.desc(), Prensa.id.desc()).first()
+            ORDER BY ({sql_case}) DESC, id DESC
+            LIMIT 1
+        """)
+        noticia_prev_id = db.session.execute(sql_prev, {
+            'pid': noticia.proyecto_id, 
+            'cur_date': current_date_val, 
+            'cur_id': id
+        }).scalar()
         
-        total_count = query_base.count()
-        current_pos = query_base.filter(
-            or_(
-                order_expr < current_date_val,
-                and_(order_expr == current_date_val, Prensa.id <= id)
-            )
-        ).count()
+        # Totales y posición
+        total_count = db.session.query(Prensa).filter(Prensa.proyecto_id == noticia.proyecto_id).count()
+        current_pos = db.session.execute(
+            text(f"""
+                SELECT COUNT(*) FROM prensa 
+                WHERE proyecto_id = :pid 
+                AND (
+                    ({sql_case}) < :cur_date
+                    OR (({sql_case}) = :cur_date AND id <= :cur_id)
+                )
+            """),
+            {'pid': noticia.proyecto_id, 'cur_date': current_date_val, 'cur_id': id}
+        ).scalar()
         
         nav_data = {
-            'prev_id': noticia_prev.id if noticia_prev else None,
-            'next_id': noticia_next.id if noticia_next else None,
+            'prev_id': noticia_prev_id,
+            'next_id': noticia_next_id,
             'total_count': total_count,
             'current_pos': current_pos
         }
@@ -5977,7 +6043,7 @@ def noticia_duplicar(noticia_id):
         flash('Noticia original no encontrada', 'danger')
         return redirect(url_for('noticias.listar'))
 
-    campos = [c.name for c in Prensa.__table__.columns if c.name not in ('id', 'creado_en', 'modificado_en')]
+    campos = [c.name for c in Prensa.__table__.columns if c.name not in ('id', 'creado_en', 'modificado_en', 'entidades_ner')]
     datos = {campo: getattr(original, campo) for campo in campos}
     if 'titulo' in datos and datos['titulo']:
         datos['titulo'] = f"{datos['titulo']} (copia)"
@@ -6579,41 +6645,180 @@ def api_crear_tema_v2():
 @noticias_bp.route("/api/noticias/<int:id>/analizar-ner", methods=["POST"])
 @login_required
 def api_noticia_analizar_ner(id):
-    """Analiza entidades nombradas (NER) usando SpaCy en el contenido de la noticia"""
+    """
+    Analiza entidades (NER) usando el motor PROSOGRAF-IA (SpaCy + Filtros + IA).
+    Mantenemos el nombre de la ruta por compatibilidad con el JS existente.
+    """
     noticia = db.session.get(Prensa, id)
     if not noticia or not noticia.contenido:
-        return jsonify({"success": False, "error": "Contenido no disponible"}), 400
+        return jsonify({"success": False, "error": "Contenido no disponible o vacío"}), 400
     
     try:
-        nlp = get_nlp() # Utilidad existente en utils.py
-        doc = nlp(noticia.contenido)
+        from services.prosopografia_service import ProsopografiaService
+        from flask_login import current_user
         
-        entidades = []
-        for ent in doc.ents:
-            entidades.append({
-                "texto": ent.text,
-                "label": ent.label_,
-                "start": ent.start_char,
-                "end": ent.end_char
-            })
+        # Contexto para la IA
+        context = {
+            "noticia_id": noticia.id,
+            "titulo": noticia.titulo,
+            "anio": noticia.anio,
+            "proyecto_id": noticia.proyecto_id
+        }
+        
+        svc = ProsopografiaService(proyecto_id=noticia.proyecto_id, user=current_user)
+        entidades = svc.analizar_completo(noticia.contenido, context=context)
         
         # Guardar en la base de datos
         noticia.entidades_ner = entidades
         db.session.commit()
         
+        num_entidades = len(entidades)
+        num_vinculadas = len([e for e in entidades if e.get('autor_bio_id')])
+        
         return jsonify({
             "success": True,
-            "message": f"Se han detectado {len(entidades)} entidades.",
+            "message": f"PROSOGRAF-IA: Detectadas {num_entidades} entidades ({num_vinculadas} auto-vinculadas).",
             "entidades": entidades
+        })
+    except Exception as e:
+        import traceback
+        print(f"[PROSOGRAF-IA] Error: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@noticias_bp.route("/api/noticias/<int:id>/entidades/ignorar-global", methods=["POST"])
+@login_required
+def api_noticia_entidad_ignorar_global(id):
+    """Añade una entidad al diccionario de ignoradas (aprendizaje)"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia:
+        return jsonify({"success": False, "error": "Noticia no encontrada"}), 404
+        
+    data = request.json
+    texto = data.get('texto')
+    label = data.get('label')
+    
+    if not texto:
+        return jsonify({"success": False, "error": "Texto no proporcionado"}), 400
+        
+    try:
+        from services.prosopografia_service import ProsopografiaService
+        from flask_login import current_user
+        
+        svc = ProsopografiaService(proyecto_id=noticia.proyecto_id, user=current_user)
+        res = svc.aprender_ignorada(texto, label)
+        
+        if res:
+            # Eliminarla también de la noticia actual
+            entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
+            entidades = [e for e in entidades if not (e['texto'] == texto and e['label'] == label)]
+            noticia.entidades_ner = entidades
+            db.session.commit()
+            
+            return jsonify({"success": True, "message": f"'{texto}' añadido al diccionario de ignorados."})
+        else:
+            return jsonify({"success": False, "error": "Ya existe en el diccionario o error de base de datos"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@noticias_bp.route("/api/noticias/<int:id>/entidades/vincular", methods=["POST"])
+@login_required
+def api_noticia_entidad_vincular(id):
+    """Vincula una entidad detectada con un AutorBio"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia:
+        return jsonify({"success": False, "error": "Noticia no encontrada"}), 404
+        
+    data = request.json
+    idx = data.get('index')
+    autor_bio_id = data.get('autor_bio_id')
+    
+    if idx is None or not autor_bio_id:
+        return jsonify({"success": False, "error": "Parámetros insuficientes"}), 400
+        
+    entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
+    if idx >= len(entidades):
+        return jsonify({"success": False, "error": "Índice fuera de rango"}), 400
+        
+    entidades[idx]['autor_bio_id'] = autor_bio_id
+    noticia.entidades_ner = entidades
+    db.session.commit()
+    
+    return jsonify({"success": True, "message": "Entidad vinculada correctamente"})
+
+@noticias_bp.route("/api/noticias/<int:id>/entidades/lote", methods=["POST"])
+@login_required
+def api_noticia_entidades_lote(id):
+    """Acciones por lote sobre entidades (eliminar o ignorar global)"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia:
+        return jsonify({"success": False, "error": "Noticia no encontrada"}), 404
+        
+    data = request.json
+    indices = data.get('indices', [])
+    accion = data.get('accion') # 'eliminar' o 'ignorar_global'
+    
+    if not indices or not accion:
+        return jsonify({"success": False, "error": "Parámetros insuficientes"}), 400
+        
+    entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
+    
+    # Ordenar índices de mayor a menor para borrar sin alterar los anteriores
+    indices_sorted = sorted([int(i) for i in indices], reverse=True)
+    
+    try:
+        from services.prosopografia_service import ProsopografiaService
+        svc = ProsopografiaService(proyecto_id=noticia.proyecto_id, user=current_user)
+        
+        for idx in indices_sorted:
+            if idx < len(entidades):
+                ent = entidades[idx]
+                if accion == 'ignorar_global':
+                    svc.aprender_ignorada(ent['texto'], ent.get('label'))
+                
+                # En ambos casos (eliminar o ignorar), quitamos de la noticia actual
+                entidades.pop(idx)
+                
+        noticia.entidades_ner = entidades
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": f"Acción '{accion}' aplicada a {len(indices)} entidades correctamente."
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-@noticias_bp.route("/noticias/<int:id>/exportar-tei")
+@noticias_bp.route("/api/noticias/<int:id>/entidades/eliminar", methods=["POST"])
 @login_required
-def noticia_exportar_tei(id):
-    """Genera un archivo XML en formato TEI (Text Encoding Initiative) para la noticia"""
+def api_noticia_entidad_eliminar(id):
+    """Elimina una entidad de la lista de NER"""
     noticia = db.session.get(Prensa, id)
+    if not noticia:
+        return jsonify({"success": False, "error": "Noticia no encontrada"}), 404
+        
+    data = request.json
+    idx = data.get('index')
+    
+    if idx is None:
+        return jsonify({"success": False, "error": "Índice no proporcionado"}), 400
+        
+    entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
+    if idx >= len(entidades):
+        return jsonify({"success": False, "error": "Índice fuera de rango"}), 400
+        
+    entidades.pop(idx)
+    noticia.entidades_ner = entidades
+    db.session.commit()
+    
+    return jsonify({"success": True, "message": "Entidad eliminada"})
+
+
+@noticias_bp.route("/noticias/<int:noticia_id>/exportar-tei")
+@login_required
+def noticia_exportar_tei(noticia_id):
+    """Genera un archivo XML en formato TEI (Text Encoding Initiative) para la noticia"""
+    noticia = db.session.get(Prensa, noticia_id)
     if not noticia:
         abort(404)
         
@@ -6658,7 +6863,7 @@ def noticia_exportar_tei(id):
 </TEI>
 '''
     return Response(tei, mimetype='application/xml', 
-                    headers={"Content-Disposition": f"attachment;filename=noticia_{id}_tei.xml"})
+                    headers={"Content-Disposition": f"attachment;filename=noticia_{noticia_id}_tei.xml"})
 
 @noticias_bp.route("/api/versiones/<int:version_id>")
 @login_required

@@ -280,6 +280,56 @@
         background: rgba(255, 152, 0, 0.2);
         color: #fff;
     }
+    .btn-ver-ficha-prosopografia {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 152, 0, 0.5);
+        background: rgba(255, 152, 0, 0.1);
+        color: #ff9800;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        transition: all 0.2s ease;
+        margin-left: 12px;
+    }
+
+    .btn-ver-ficha-prosopografia:hover {
+        background: #ff9800;
+        color: #fff;
+        border-color: #ff9800;
+    }
+
+    [data-theme="light"] .btn-ver-ficha-prosopografia {
+        background: rgba(41, 74, 96, 0.1);
+        border-color: rgba(41, 74, 96, 0.5);
+        color: #294a60;
+    }
+
+    [data-theme="light"] .btn-ver-ficha-prosopografia:hover {
+        background: #294a60;
+        color: #fff;
+        border-color: #294a60;
+    }
+    .btn-geo-prosopografia {
+        color: #ff9800 !important;
+        background: transparent !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+
+    .btn-geo-prosopografia:hover {
+        background: rgba(255, 152, 0, 0.2) !important;
+        color: #fff !important;
+    }
+
+    [data-theme="light"] .btn-geo-prosopografia {
+        color: #294a60 !important;
+    }
+
+    [data-theme="light"] .btn-geo-prosopografia:hover {
+        background: rgba(41, 74, 96, 0.1) !important;
+        color: #1a1a1a !important;
+    }
     .btn-nav-switcher.disabled {
         cursor: not-allowed;
     }
@@ -309,7 +359,7 @@
     <a href="{{ url_for('imprimir_pdf', id=ref.id) }}" target="_blank" class="btn-sirio" title="Vista PDF">
         <i class="fa-solid fa-file-pdf"></i>
     </a>
-    <a href="{{ url_for('articulo_duplicar', articulo_id=ref.id) }}" class="btn-sirio text-info"
+    <a href="{{ url_for('noticias.noticia_duplicar', noticia_id=ref.id) }}" class="btn-sirio text-info"
         title="Duplicar noticia">
         <i class="fa-solid fa-copy"></i>
     </a>
@@ -322,7 +372,7 @@
             <i class="fa-solid fa-trash"></i>
         </button>
     </form>
-    <a href="{{ url_for('noticias.noticia_exportar_tei', id=ref.id) }}" class="btn-sirio text-warning" title="Exportar TEI/XML (PRO)">
+    <a href="{{ url_for('noticias.noticia_exportar_tei', noticia_id=ref.id) }}" class="btn-sirio text-warning" title="Exportar TEI/XML (PRO)">
         <i class="fa-solid fa-code"></i>
     </a>
 </div>
@@ -515,21 +565,20 @@
                                     </div>
 
                                     <div class="d-flex gap-2 mb-2">
-                                        <button id="btn-correct-gemini" class="btn btn-sirio flex-grow-1">
+                                        <button id="btn-correct-gemini" class="btn btn-warning flex-grow-1 fw-bold text-dark">
                                             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> IA
                                         </button>
-                                        <button id="btn-analizar-ner" type="button" class="btn btn-sirio flex-grow-1">
+                                        <button id="btn-analizar-ner" type="button" class="btn btn-primary flex-grow-1 fw-bold text-white">
                                             <i class="fa-solid fa-tags me-1"></i> NER
                                         </button>
-                                        <button id="btn-apply-ocr-text" class="btn btn-sirio flex-grow-1">
+                                        <button id="btn-apply-ocr-text" class="btn btn-success flex-grow-1 fw-bold text-white">
                                             <i class="fa-solid fa-check"></i>
                                         </button>
                                     </div>
                                     <div class="mb-2">
                                         <button id="btn-vincular-imagen-ocr" type="button"
-                                            class="btn btn-sm btn-outline-info w-100" style="font-size: 0.75rem;">
-                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada como
-                                            Material Adjunto
+                                            class="btn btn-sm btn-info w-100 fw-bold" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada como Material Adjunto
                                         </button>
                                     </div>
                                 </div>
@@ -999,6 +1048,13 @@
                                         id="critica-tab" data-bs-toggle="tab" data-bs-target="#critica" type="button"
                                         style="white-space: nowrap; flex-shrink: 0;">Crítica (✍️)</button>
                                 </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="prosopografia-tab" data-bs-toggle="tab" data-bs-target="#prosopografia" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;"><i class="fa-solid fa-brain me-1"></i> PROSOGRAF-IA</button>
+                                </li>
+
                                 <li class="nav-item ms-auto">
                                     <button
                                         class="nav-link small text-uppercase fw-bold bg-transparent text-info border-0 rounded-0 ps-3"
@@ -1046,6 +1102,116 @@
                                     <textarea name="contenido_critico" id="contenido_critico"
                                         class="d-none">{{ ref.contenido_critico or '' }}</textarea>
                                 </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="prosopografia">
+                                    <div class="prosopografia-container p-3 bg-black-opacity rounded" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                                            <h6 class="text-info mb-0">
+                                                <i class="fa-solid fa-brain me-2"></i>Motor PROSOGRAF-IA (Híbrido)
+                                            </h6>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" id="btn-analizar-ner-tab" class="btn btn-xs btn-sirio">
+                                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i>RE-ANALIZAR (IA + SPACY)
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- BARRA DE ACCIONES POR LOTE (Más visible) -->
+                                        <div id="bulk-actions-ner" class="alert alert-info bg-dark border-info text-info py-2 px-3 mb-3 d-none d-flex justify-content-between align-items-center animate__animated animate__slideInDown">
+                                            <div class="small">
+                                                <i class="fa-solid fa-check-double me-2"></i>
+                                                <span class="fw-bold"><span class="selected-count">0</span> seleccionadas</span>
+                                            </div>
+                                            <div class="btn-group btn-group-xs">
+                                                <button type="button" class="btn btn-danger" onclick="procesarLoteEntidades('eliminar')">
+                                                    <i class="fa-solid fa-trash me-1"></i>ELIMINAR
+                                                </button>
+                                                <button type="button" class="btn btn-warning" onclick="procesarLoteEntidades('ignorar_global')">
+                                                    <i class="fa-solid fa-ban me-1"></i>IGNORAR SIEMPRE
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="entidades-list-container">
+                                            {% if ref.entidades_ner and ref.entidades_ner|length > 0 %}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sirio table-sm align-middle">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width: 30px;">
+                                                                    <input type="checkbox" class="form-check-input" id="check-all-entidades" onclick="toggleAllEntidades(this)">
+                                                                </th>
+                                                                <th>Entidad detectada</th>
+                                                                <th>Tipo</th>
+                                                                <th>IA Contexto / Descripción</th>
+                                                                <th>Vinculación (Diccionario)</th>
+                                                                <th class="text-end">Acción</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="tbody-entidades">
+                                                            {% for ent in ref.entidades_ner %}
+                                                            <tr data-index="{{ loop.index0 }}">
+                                                                <td>
+                                                                    <input type="checkbox" class="form-check-input check-entidad" data-index="{{ loop.index0 }}" onchange="updateBulkNERToolbar()">
+                                                                </td>
+                                                                <td class="fw-bold">{{ ent.texto }}</td>
+                                                                <td>
+                                                                    <span class="badge {% if ent.label == 'PER' %}bg-primary{% elif ent.label == 'LOC' %}bg-success{% elif ent.label == 'ORG' %}bg-info{% else %}bg-secondary{% endif %}" style="font-size: 0.7rem;">
+                                                                        {{ ent.label }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="small text-muted italic">
+                                                                    {{ ent.descripcion or ent.texto_normalizado or '-' }}
+                                                                </td>
+                                                                <td class="entity-link-cell">
+                                                                    {% if ent.autor_bio_id %}
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <span class="text-warning small"><i class="fa-solid fa-link me-1"></i> Vinculado</span>
+                                                                            <button type="button" class="btn btn-ver-ficha-prosopografia" onclick="verPerfilAutor({{ ent.autor_bio_id }})">VER FICHA</button>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        {% if ent.label == 'PER' %}
+                                                                            <div class="d-flex align-items-center gap-1">
+                                                                                <input type="text" class="form-control form-control-sirio entity-search form-control-sm" placeholder="Buscar autor/a..." style="font-size: 0.75rem; flex: 1;">
+                                                                                <button class="btn btn-sirio btn-link-entity py-1 px-3" type="button" title="Vincular" style="height: 31px; display: flex; align-items: center; justify-content: center;">
+                                                                                    <i class="fa-solid fa-plus"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            <div class="search-results-dropdown"></div>
+                                                                        {% else %}
+                                                                            <span class="text-muted small italic">No procesable</span>
+                                                                        {% endif %}
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    <div class="btn-group btn-group-xs">
+                                                                        {% if ent.label == 'LOC' %}
+                                                                        <button type="button" class="btn btn-geo-prosopografia" title="Mandar al Mapa (Geolocalizar)" onclick="geolocalizarEntidad('{{ loop.index0 }}')">
+                                                                            <i class="fa-solid fa-location-dot"></i>
+                                                                        </button>
+                                                                        {% endif %}
+                                                                        <button type="button" class="btn btn-outline-danger border-0" title="Eliminar de este texto" onclick="eliminarEntidad('{{ loop.index0 }}')">
+                                                                            <i class="fa-solid fa-times"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            {% else %}
+                                                <div class="text-center py-5 text-muted">
+                                                    <i class="fa-solid fa-robot fa-3x mb-3 opacity-25"></i>
+                                                    <p>No se han detectado entidades en esta noticia.</p>
+                                                    <button type="button" class="btn btn-sirio btn-sm" onclick="triggerNER()">
+                                                        ANALIZAR AHORA
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="historial">
                                     <div class="historial-container p-3 bg-black-opacity rounded" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
                                         <h6 class="text-info border-bottom border-secondary pb-2 mb-3">
@@ -1238,6 +1404,51 @@
 <script src="{{ url_for('static', filename='js/form-editor.js') }}?v=fixSave"></script>
 
 <script>
+    function verPerfilAutor(id) {
+        if (!id) return;
+        
+        fetch(`/autor/bio/get?id=${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success' && data.bio) {
+                const bio = data.bio;
+                const bioModalEl = document.getElementById('modalAutorBio');
+                if (!bioModalEl) {
+                    console.error('Modal de biografía no encontrado en el DOM');
+                    return;
+                }
+                
+                // Limpiar formulario antes de cargar
+                const formBio = document.getElementById('formAutorBio');
+                if (formBio) formBio.reset();
+
+                const avatarContainer = document.getElementById('bio_avatar_container');
+                if (avatarContainer) avatarContainer.innerHTML = `<i class="fa-solid fa-user" style="font-size: 2.5rem; color: #ffffff;"></i>`;
+
+                // Rellenar campos
+                const bioIdInput = document.getElementById('bio_autor_id');
+                if (bioIdInput) bioIdInput.value = id;
+                
+                Object.keys(bio).forEach(key => {
+                    const input = document.getElementById('bio_' + key);
+                    if (input) input.value = bio[key] || '';
+                });
+
+                if (bio.foto && avatarContainer) {
+                    avatarContainer.innerHTML = `<img src="/static/uploads/autores/${bio.foto}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                }
+
+                const modal = new bootstrap.Modal(bioModalEl);
+                modal.show();
+            } else {
+                Swal.fire('Atención', 'No se encontró la biografía del autor vinculado.', 'info');
+            }
+        })
+        .catch(err => {
+            console.error("Error al cargar perfil de autor vinculado:", err);
+            Swal.fire('Error', 'No se pudo cargar la información del autor.', 'error');
+        });
+    }
     // Función para limpiar número de referencia y marcar como No incluido
     function limpiarReferencia() {
         const inputNumero = document.getElementById('numero_referencia');
@@ -1338,44 +1549,62 @@
 
         // --- Lógica NER (PRO) ---
         const btnNer = document.getElementById('btn-analizar-ner');
-        if (btnNer) {
-            btnNer.addEventListener('click', async () => {
-                const newsId = "{{ ref.id }}";
-                btnNer.disabled = true;
-                btnNer.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Analizando...';
-                
-                try {
-                    const response = await fetch(`/api/noticias/${newsId}/analizar-ner`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                        }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Análisis NER Completado',
-                            text: data.message,
-                            background: '#294a60',
-                            color: '#fff'
-                        });
-                    } else {
-                        throw new Error(data.error);
+        const btnNerTab = document.getElementById('btn-analizar-ner-tab');
+
+        const ejecutarAnalisisNER = async (boton, esTab = false) => {
+            const newsId = "{{ ref.id }}";
+            boton.disabled = true;
+            const originalHTML = boton.innerHTML;
+            boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Analizando...';
+            
+            try {
+                const response = await fetch(`/api/noticias/${newsId}/analizar-ner`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                     }
-                } catch (err) {
+                });
+                const data = await response.json();
+                if (data.success) {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error NER',
-                        text: err.message,
-                        background: '#294a60',
-                        color: '#fff'
+                        icon: 'success',
+                        title: 'Análisis NER Completado',
+                        text: data.message,
+                        background: '#1a1a1a',
+                        color: '#fff',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
                     });
-                } finally {
-                    btnNer.disabled = false;
-                    btnNer.innerHTML = '<i class="fa-solid fa-tags me-1"></i> NER';
+                } else {
+                    throw new Error(data.error);
                 }
-            });
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error NER',
+                    text: err.message,
+                    background: '#294a60',
+                    color: '#fff'
+                });
+                boton.disabled = false;
+                boton.innerHTML = originalHTML;
+            } finally {
+                boton.disabled = false;
+                if (!esTab) {
+                    boton.innerHTML = '<i class="fa-solid fa-tags me-1"></i> NER';
+                } else {
+                    boton.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1"></i>RE-ANALIZAR (IA + SPACY)';
+                }
+            }
+        };
+
+        if (btnNer) {
+            btnNer.addEventListener('click', () => ejecutarAnalisisNER(btnNer, false));
+        }
+        if (btnNerTab) {
+            btnNerTab.addEventListener('click', () => ejecutarAnalisisNER(btnNerTab, true));
         }
 
         // Manejar aplicación de texto OCR al campo seleccionado
@@ -1917,7 +2146,200 @@
         }
     });
 
+
+    // Lógica de autocompletado para vinculación
+    document.addEventListener('DOMContentLoaded', () => {
+        const entityInputs = document.querySelectorAll('.entity-search');
+        entityInputs.forEach(input => {
+            let timeout = null;
+            const dropdown = input.parentElement.nextElementSibling;
+
+            input.addEventListener('input', () => {
+                clearTimeout(timeout);
+                const query = input.value.trim();
+                if (query.length < 2) {
+                    dropdown.innerHTML = '';
+                    return;
+                }
+
+                timeout = setTimeout(async () => {
+                    const response = await fetch(`/api/autocomplete/autores_bio?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    dropdown.innerHTML = '';
+                    if (data.length > 0) {
+                        data.slice(0, 5).forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item p-2 small border-bottom border-secondary bg-dark';
+                            div.style.cursor = 'pointer';
+                            div.innerHTML = `<i class="fa-solid fa-user me-2 text-info"></i> ${item.text}`;
+                            div.onclick = () => vincularEntidad(input.closest('tr').dataset.index, item.id);
+                            dropdown.appendChild(div);
+                        });
+                    }
+                }, 300);
+            });
+        });
+
+    });
+
+    // ========================================
+    // PROSOPOGRAFÍA & ENTIDADES (GLOBAL)
+    // ========================================
+    function toggleAllEntidades(source) {
+        const checkboxes = document.querySelectorAll('.check-entidad');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        updateBulkNERToolbar();
+    }
+
+    function updateBulkNERToolbar() {
+        const selected = document.querySelectorAll('.check-entidad:checked');
+        const toolbar = document.getElementById('bulk-actions-ner');
+        const countSpan = toolbar ? toolbar.querySelector('.selected-count') : null;
+        
+        if (selected.length > 0 && toolbar) {
+            toolbar.classList.remove('d-none');
+            if (countSpan) countSpan.innerText = selected.length;
+        } else if (toolbar) {
+            toolbar.classList.add('d-none');
+        }
+    }
+
+    async function procesarLoteEntidades(accion) {
+        const selected = document.querySelectorAll('.check-entidad:checked');
+        const indices = Array.from(selected).map(cb => cb.dataset.index);
+        
+        const title = accion === 'eliminar' ? '¿Eliminar seleccionadas?' : '¿Ignorar siempre seleccionadas?';
+        const text = accion === 'eliminar' 
+            ? `Se eliminarán ${indices.length} entidades de este texto.` 
+            : `Se eliminarán de este texto y se añadirán al diccionario de ignorados para siempre.`;
+
+        const result = await Swal.fire({
+            title: title,
+            text: text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: accion === 'eliminar' ? '#d33' : '#f39c12',
+            confirmButtonText: 'Sí, proceder',
+            background: '#1a1a1a',
+            color: '#fff'
+        });
+
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Procesando...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+
+            try {
+                const response = await fetch(`/api/noticias/{{ ref.id }}/entidades/lote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    },
+                    body: JSON.stringify({ indices: indices, accion: accion })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Fallo en la comunicación con el servidor', 'error');
+            }
+        }
+    }
+
+    async function vincularEntidad(index, autorBioId) {
+        try {
+            const response = await fetch(`/api/noticias/{{ ref.id }}/entidades/vincular`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({ index: index, autor_bio_id: autorBioId })
+            });
+            const data = await response.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function geolocalizarEntidad(index) {
+        const tr = document.querySelector(`tr[data-index="${index}"]`);
+        if (!tr) return;
+        
+        const texto = tr.querySelector('td:nth-child(2)').innerText.trim();
+        const descripcion = tr.querySelector('td:nth-child(4)').innerText.trim();
+        
+        // El nombre de búsqueda puede ser Texto + Descripción para ayudar a la IA/Nominatim
+        const nombreBusqueda = descripcion && descripcion !== '-' ? `${texto}, ${descripcion}` : texto;
+
+        Swal.fire({
+            title: 'Geolocalizando...',
+            text: `Buscando coordenadas para "${texto}"`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            background: '#1a1a1a',
+            color: '#fff'
+        });
+
+        try {
+            const response = await fetch(`/api/cartografia_noticia_add_location/{{ ref.id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({ 
+                    nombre: texto, 
+                    nombre_busqueda: nombreBusqueda,
+                    en_contenido: true
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Ubicación Añadida!',
+                    text: `"${texto}" ha sido geolocalizado e integrado en el mapa de esta noticia.`,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: '#1a1a1a',
+                    color: '#fff'
+                });
+            } else {
+                Swal.fire('Error', data.error || 'No se pudo geolocalizar', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Fallo en la comunicación con el servidor', 'error');
+        }
+    }
+
+    function triggerNER() {
+        const btnReal = document.getElementById('btn-analizar-ner');
+        if (btnReal) {
+            btnReal.click();
+        } else {
+            console.error('No se encontró el botón principal de NER');
+        }
+    }
+
     // Inicializar ThemeManager con URLs dinámicas
+
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof ThemeManager !== 'undefined') {
             ThemeManager.init({

@@ -495,7 +495,101 @@ class AnalisisAvanzado:
             }
         
         
-        return {'exito': False, 'error': 'No hay datos'}
+        return {
+            'exito': True,
+            'documentos': resultados,
+            'estadisticas_globales': estadisticas_globales
+        }
+
+    def atribucion_autoria(self, publicaciones: List[Dict]) -> Dict:
+        """
+        Compara obras estilométricamente y aplica el algoritmo Delta de Burrows
+        para medir la distancia de autoría entre textos.
+        """
+        if len(publicaciones) < 2:
+            return {'exito': False, 'error': 'Se requieren al menos 2 obras para comparar'}
+
+        textos_procesados = []
+        for pub in publicaciones:
+            texto = self._limpiar_html(pub.get('contenido', '') or pub.get('titulo', ''))
+            if not texto:
+                continue
+            palabras = re.findall(r'\b\w+\b', texto.lower())
+            total_palabras = len(palabras)
+            if total_palabras < 50:
+                continue
+            
+            conteo = Counter(palabras)
+            
+            textos_procesados.append({
+                'id': pub.get('id'),
+                'titulo': pub.get('titulo', 'Sin título'),
+                'autor': pub.get('autor') or pub.get('publicacion') or 'Desconocido',
+                'conteo': conteo,
+                'total': total_palabras,
+                'metricas': self._calcular_metricas_estilo(texto)
+            })
+
+        if len(textos_procesados) < 2:
+            return {'exito': False, 'error': 'No hay suficientes documentos válidos con texto suficiente'}
+
+        vocabulario_global = Counter()
+        for doc in textos_procesados:
+            vocabulario_global.update(doc['conteo'])
+        
+        top_n = min(150, len(vocabulario_global))
+        palabras_frecuentes = [w for w, _ in vocabulario_global.most_common(top_n)]
+
+        frecuencias = {}
+        for w in palabras_frecuentes:
+            frecuencias[w] = []
+            for doc in textos_procesados:
+                freq_rel = (doc['conteo'].get(w, 0) / doc['total']) * 100
+                frecuencias[w].append(freq_rel)
+        
+        medias = {w: np.mean(frecuencias[w]) for w in palabras_frecuentes}
+        stds = {w: np.std(frecuencias[w]) for w in palabras_frecuentes}
+        for w in stds:
+            if stds[w] == 0:
+                stds[w] = 0.0001
+
+        for doc in textos_procesados:
+            z_scores = {}
+            for w in palabras_frecuentes:
+                freq_rel = (doc['conteo'].get(w, 0) / doc['total']) * 100
+                z_scores[w] = (freq_rel - medias[w]) / stds[w]
+            doc['z_scores'] = z_scores
+
+        matriz_distancias = []
+        for i, doc_a in enumerate(textos_procesados):
+            for j, doc_b in enumerate(textos_procesados):
+                if i >= j:
+                    continue
+                delta = float(np.mean([abs(doc_a['z_scores'][w] - doc_b['z_scores'][w]) for w in palabras_frecuentes]))
+                matriz_distancias.append({
+                    'id_a': doc_a['id'],
+                    'id_b': doc_b['id'],
+                    'titulo_a': doc_a['titulo'],
+                    'titulo_b': doc_b['titulo'],
+                    'autor_a': doc_a['autor'],
+                    'autor_b': doc_b['autor'],
+                    'delta': delta,
+                    'similitud_prob': float(max(0, min(100, (2.5 - delta) * 40)))  # Delta < 2.5 como coincidencia posible
+                })
+
+        return {
+            'exito': True,
+            'matriz_delta': matriz_distancias,
+            'metricas_comparativas': [
+                {
+                    'id': d['id'],
+                    'titulo': d['titulo'],
+                    'autor': d['autor'],
+                    'metricas': d['metricas']
+                } for d in textos_procesados
+            ],
+            'vocabulario_frecuente': palabras_frecuentes[:20]
+        }
     
     def _calcular_metricas_estilo(self, texto: str) -> Dict:
         """Calcula métricas estilométricas de un texto"""
@@ -1870,10 +1964,10 @@ class AnalisisAvanzado:
             contenido = re.sub(r'<[^>]*?>', '', contenido)
             contenido = contenido.replace('&nbsp;', ' ').replace('&quot;', '"').replace('&apos;', "'")
             
-            # Intentar detectar personajes por formato (NOMBRE: o NOMBRE.-)
-            # Soporta espacios, múltiples signos de puntuación y nombres con aclaraciones (apartes)
-            nombres_formato = re.findall(r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
-            personajes_detectados.update([n.upper().strip() for n in nombres_formato if len(n.strip()) > 1])
+            # Intentar detectar personajes por formato (NOMBRE: o NOMBRE.-) SOLO SI no hay metadatos manuales
+            if not reparto_global and not reparto_meta:
+                nombres_formato = re.findall(r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
+                personajes_detectados.update([n.upper().strip() for n in nombres_formato if len(n.strip()) > 1])
             
             # Fallback extraction: If section/volume are empty, try finding Roman/Arabic nuggets in Title or Keywords
             actos_val = pub.get('seccion')

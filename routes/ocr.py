@@ -545,6 +545,11 @@ def ocr_advanced():
         except Exception as e:
             print(f'[OCR NLP] Error procesando entidades: {e}')
 
+        if text:
+            text = text.replace('**', '').replace('*', '')
+            import re
+            text = re.sub(r'#+\s*', '', text)
+
         return jsonify({
             'text': text, 
             'confidence': confidence, 
@@ -619,6 +624,11 @@ def ocr_corregir():
                 metadatos['confianza'] = 95  # Alta confianza con AI
                 correcciones.append("Texto corregido y estructurado por Gemini AI.")
                 
+                if corrected_text:
+                    corrected_text = corrected_text.replace('**', '').replace('*', '')
+                    import re
+                    corrected_text = re.sub(r'#+\s*', '', corrected_text)
+
                 return jsonify({
                     'success': True,
                     'metadatos': metadatos,

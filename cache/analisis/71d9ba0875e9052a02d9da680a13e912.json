@@ -1,0 +1,542 @@
+{
+  "timestamp": "2026-04-28T09:14:48.817249",
+  "tipo_analisis": "dashboard",
+  "filtros": {
+    "proyecto_id": 40,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "fecha",
+    "documentos_ids": []
+  },
+  "params": {
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "total_documentos": 10,
+    "sentimiento": {
+      "exito": true,
+      "datos_temporales": [
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.3297499643209924,
+          "subjetividad": 0.9604166666666666,
+          "count": 10
+        }
+      ],
+      "datos_individuales": [
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.34033203125,
+          "subjetividad": 0.9791666666666666,
+          "titulo": "ACTO I - Escena I",
+          "id": 1261
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.5416666666666666,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena IV",
+          "id": 1265
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.30368303571428573,
+          "subjetividad": 0.9,
+          "titulo": "ACTO I - Escena II",
+          "id": 1262
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.3456610317887931,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena III",
+          "id": 1264
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.36834716796875,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena VI",
+          "id": 1267
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": -0.01171875,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena V",
+          "id": 1266
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.4453125,
+          "subjetividad": 0.9,
+          "titulo": "ACTO I - Escena VIII",
+          "id": 1269
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.33714076450892855,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena Última",
+          "id": 1271
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.265625,
+          "subjetividad": 0.825,
+          "titulo": "ACTO I - Escena VII",
+          "id": 1268
+        },
+        {
+          "fecha": "1869-11-01",
+          "sentimiento": 0.3614501953125,
+          "subjetividad": 1.0,
+          "titulo": "ACTO I - Escena IX",
+          "id": 1270
+        }
+      ],
+      "estadisticas": {
+        "promedio_sentimiento": 0.32974996432099235,
+        "promedio_subjetividad": 0.9604166666666666,
+        "mediana_sentimiento": 0.3429965315193966,
+        "mediana_subjetividad": 1.0,
+        "total_documentos": 10
+      },
+      "tipo_eje": "fecha"
+    },
+    "arco_sentimiento": "{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v6.1.0.json\",\n  \"config\": {\n    \"axis\": {\n      \"grid\": true,\n      \"gridColor\": \"rgba(255,255,255,0.1)\",\n      \"gridOpacity\": 0.4,\n      \"labelColor\": \"#ccc\",\n      \"titleColor\": \"#ff9800\"\n    },\n    \"title\": {\n      \"color\": \"#ff9800\"\n    },\n    \"view\": {\n      \"continuousHeight\": 300,\n      \"continuousWidth\": 300\n    }\n  },\n  \"data\": {\n    \"name\": \"data-8a1d6128305adc84b747fb1cfc301bdd\"\n  },\n  \"datasets\": {\n    \"data-8a1d6128305adc84b747fb1cfc301bdd\": [\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1261,\n        \"idx\": 0,\n        \"sentimiento\": 0.34033203125,\n        \"subjetividad\": 0.9791666666666666,\n        \"titulo\": \"ACTO I - Escena I\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1265,\n        \"idx\": 1,\n        \"sentimiento\": 0.5416666666666666,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena IV\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1262,\n        \"idx\": 2,\n        \"sentimiento\": 0.30368303571428573,\n        \"subjetividad\": 0.9,\n        \"titulo\": \"ACTO I - Escena II\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1264,\n        \"idx\": 3,\n        \"sentimiento\": 0.3456610317887931,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena III\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1267,\n        \"idx\": 4,\n        \"sentimiento\": 0.36834716796875,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena VI\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1266,\n        \"idx\": 5,\n        \"sentimiento\": -0.01171875,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena V\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1269,\n        \"idx\": 6,\n        \"sentimiento\": 0.4453125,\n        \"subjetividad\": 0.9,\n        \"titulo\": \"ACTO I - Escena VIII\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1271,\n        \"idx\": 7,\n        \"sentimiento\": 0.33714076450892855,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena \\u00daltima\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1268,\n        \"idx\": 8,\n        \"sentimiento\": 0.265625,\n        \"subjetividad\": 0.825,\n        \"titulo\": \"ACTO I - Escena VII\"\n      },\n      {\n        \"fecha\": \"1869-11-01\",\n        \"id\": 1270,\n        \"idx\": 9,\n        \"sentimiento\": 0.3614501953125,\n        \"subjetividad\": 1.0,\n        \"titulo\": \"ACTO I - Escena IX\"\n      }\n    ]\n  },\n  \"height\": 350,\n  \"layer\": [\n    {\n      \"encoding\": {\n        \"tooltip\": [\n          {\n            \"field\": \"titulo\",\n            \"type\": \"nominal\"\n          },\n          {\n            \"field\": \"sentimiento\",\n            \"type\": \"quantitative\"\n          }\n        ],\n        \"x\": {\n          \"field\": \"idx\",\n          \"title\": \"Secuencia Narrativa\",\n          \"type\": \"quantitative\"\n        },\n        \"y\": {\n          \"field\": \"sentimiento\",\n          \"scale\": {\n            \"domain\": [\n              -1,\n              1\n            ]\n          },\n          \"title\": \"Sentimiento\",\n          \"type\": \"quantitative\"\n        }\n      },\n      \"mark\": {\n        \"color\": \"#ffffff\",\n        \"opacity\": 0.3,\n        \"size\": 60,\n        \"type\": \"circle\"\n      }\n    },\n    {\n      \"encoding\": {\n        \"tooltip\": [\n          {\n            \"field\": \"titulo\",\n            \"type\": \"nominal\"\n          },\n          {\n            \"field\": \"sentimiento\",\n            \"type\": \"quantitative\"\n          }\n        ],\n        \"x\": {\n          \"field\": \"idx\",\n          \"title\": \"Secuencia Narrativa\",\n          \"type\": \"quantitative\"\n        },\n        \"y\": {\n          \"field\": \"sentimiento\",\n          \"scale\": {\n            \"domain\": [\n              -1,\n              1\n            ]\n          },\n          \"title\": \"Sentimiento\",\n          \"type\": \"quantitative\"\n        }\n      },\n      \"mark\": {\n        \"color\": \"#ff9800\",\n        \"interpolate\": \"monotone\",\n        \"size\": 4,\n        \"type\": \"line\"\n      },\n      \"transform\": [\n        {\n          \"loess\": \"sentimiento\",\n          \"on\": \"idx\"\n        }\n      ]\n    }\n  ],\n  \"title\": \"Arco Narrativo (Flujo Emocional)\",\n  \"width\": \"container\"\n}",
+    "topics": {
+      "exito": true,
+      "topicos": [
+        {
+          "id": 1,
+          "palabras": [
+            [
+              "barbas",
+              0.2000143783091268
+            ],
+            [
+              "momento",
+              0.20001428715725503
+            ],
+            [
+              "papá",
+              0.20001411993785304
+            ],
+            [
+              "tapaboca",
+              0.20001367155910818
+            ],
+            [
+              "vuelve",
+              0.20001367052631028
+            ],
+            [
+              "pocas",
+              0.2000134281322635
+            ],
+            [
+              "mucho",
+              0.20001304659842845
+            ],
+            [
+              "vamos",
+              0.20001304659842845
+            ]
+          ]
+        },
+        {
+          "id": 2,
+          "palabras": [
+            [
+              "bar",
+              100.1963975627441
+            ],
+            [
+              "rup",
+              78.98521268984388
+            ],
+            [
+              "tiene",
+              15.681143830417497
+            ],
+            [
+              "señor",
+              14.290637600189886
+            ],
+            [
+              "bartolomé",
+              13.227392788474786
+            ],
+            [
+              "navaja",
+              12.063492674932377
+            ],
+            [
+              "pues",
+              11.332092435906754
+            ],
+            [
+              "hija",
+              10.19841865707422
+            ]
+          ]
+        },
+        {
+          "id": 3,
+          "palabras": [
+            [
+              "rup",
+              36.41197881951242
+            ],
+            [
+              "vir",
+              28.78605129713185
+            ],
+            [
+              "hombre",
+              9.868085654072036
+            ],
+            [
+              "ele",
+              9.294593471658528
+            ],
+            [
+              "quién",
+              6.104042483605884
+            ],
+            [
+              "ese",
+              6.05795685284979
+            ],
+            [
+              "virginia",
+              5.121895041618465
+            ],
+            [
+              "escribiente",
+              4.197939993753583
+            ]
+          ]
+        },
+        {
+          "id": 4,
+          "palabras": [
+            [
+              "barbas",
+              0.2000143783091268
+            ],
+            [
+              "momento",
+              0.20001428715725503
+            ],
+            [
+              "papá",
+              0.20001411993785304
+            ],
+            [
+              "tapaboca",
+              0.20001367155910818
+            ],
+            [
+              "vuelve",
+              0.20001367052631028
+            ],
+            [
+              "pocas",
+              0.2000134281322635
+            ],
+            [
+              "mucho",
+              0.20001304659842845
+            ],
+            [
+              "vamos",
+              0.20001304659842845
+            ]
+          ]
+        },
+        {
+          "id": 5,
+          "palabras": [
+            [
+              "tob",
+              62.19759714861958
+            ],
+            [
+              "ele",
+              42.772606330684894
+            ],
+            [
+              "tobías",
+              20.36815919253936
+            ],
+            [
+              "elena",
+              13.957919737430622
+            ],
+            [
+              "padre",
+              12.109436127845214
+            ],
+            [
+              "como",
+              10.504474242555718
+            ],
+            [
+              "tan",
+              8.072078487503703
+            ],
+            [
+              "está",
+              7.471535083253047
+            ]
+          ]
+        }
+      ],
+      "documentos": [
+        {
+          "id": 1261,
+          "titulo": "ACTO I - Escena I",
+          "fecha": "1869-11-01",
+          "topico": 5,
+          "probabilidad": 0.9967075889672944
+        },
+        {
+          "id": 1265,
+          "titulo": "ACTO I - Escena IV",
+          "fecha": "1869-11-01",
+          "topico": 3,
+          "probabilidad": 0.9915140278090385
+        },
+        {
+          "id": 1262,
+          "titulo": "ACTO I - Escena II",
+          "fecha": "1869-11-01",
+          "topico": 5,
+          "probabilidad": 0.5966674998709004
+        },
+        {
+          "id": 1264,
+          "titulo": "ACTO I - Escena III",
+          "fecha": "1869-11-01",
+          "topico": 2,
+          "probabilidad": 0.9970638747139551
+        },
+        {
+          "id": 1267,
+          "titulo": "ACTO I - Escena VI",
+          "fecha": "1869-11-01",
+          "topico": 2,
+          "probabilidad": 0.994326339566777
+        },
+        {
+          "id": 1266,
+          "titulo": "ACTO I - Escena V",
+          "fecha": "1869-11-01",
+          "topico": 3,
+          "probabilidad": 0.9875261718550448
+        },
+        {
+          "id": 1269,
+          "titulo": "ACTO I - Escena VIII",
+          "fecha": "1869-11-01",
+          "topico": 5,
+          "probabilidad": 0.5377662771874607
+        },
+        {
+          "id": 1271,
+          "titulo": "ACTO I - Escena Última",
+          "fecha": "1869-11-01",
+          "topico": 2,
+          "probabilidad": 0.5312706165378348
+        },
+        {
+          "id": 1268,
+          "titulo": "ACTO I - Escena VII",
+          "fecha": "1869-11-01",
+          "topico": 5,
+          "probabilidad": 0.5440744855434634
+        },
+        {
+          "id": 1270,
+          "titulo": "ACTO I - Escena IX",
+          "fecha": "1869-11-01",
+          "topico": 2,
+          "probabilidad": 0.4217824584038794
+        }
+      ],
+      "n_topics": 5
+    },
+    "ngramas": {
+      "exito": false,
+      "error": "'AnalisisAvanzado' object has no attribute 'analisis_ngramas'"
+    },
+    "estilometria": {
+      "exito": true,
+      "documentos": [
+        {
+          "total_palabras": 956,
+          "total_oraciones": 220,
+          "palabras_por_oracion": 4.345454545454546,
+          "longitud_promedio_palabra": 3.98744769874477,
+          "diversidad_lexica": 0.4131799163179916,
+          "palabras_unicas": 395,
+          "densidad_puntuacion": 51.04602510460251,
+          "ratio_hapax": 0.2897489539748954,
+          "ratio_pronombres": 8.263598326359832,
+          "id": 1261,
+          "titulo": "ACTO I - Escena I",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 262,
+          "total_oraciones": 85,
+          "palabras_por_oracion": 3.0823529411764707,
+          "longitud_promedio_palabra": 3.927480916030534,
+          "diversidad_lexica": 0.4961832061068702,
+          "palabras_unicas": 130,
+          "densidad_puntuacion": 50.38167938931297,
+          "ratio_hapax": 0.3320610687022901,
+          "ratio_pronombres": 6.488549618320611,
+          "id": 1265,
+          "titulo": "ACTO I - Escena IV",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 355,
+          "total_oraciones": 78,
+          "palabras_por_oracion": 4.551282051282051,
+          "longitud_promedio_palabra": 4.177464788732395,
+          "diversidad_lexica": 0.5605633802816902,
+          "palabras_unicas": 199,
+          "densidad_puntuacion": 44.225352112676056,
+          "ratio_hapax": 0.4169014084507042,
+          "ratio_pronombres": 6.760563380281689,
+          "id": 1262,
+          "titulo": "ACTO I - Escena II",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 944,
+          "total_oraciones": 246,
+          "palabras_por_oracion": 3.83739837398374,
+          "longitud_promedio_palabra": 4.067796610169491,
+          "diversidad_lexica": 0.399364406779661,
+          "palabras_unicas": 377,
+          "densidad_puntuacion": 48.30508474576271,
+          "ratio_hapax": 0.2775423728813559,
+          "ratio_pronombres": 6.567796610169492,
+          "id": 1264,
+          "titulo": "ACTO I - Escena III",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 424,
+          "total_oraciones": 138,
+          "palabras_por_oracion": 3.072463768115942,
+          "longitud_promedio_palabra": 4.004716981132075,
+          "diversidad_lexica": 0.49764150943396224,
+          "palabras_unicas": 211,
+          "densidad_puntuacion": 56.367924528301884,
+          "ratio_hapax": 0.35377358490566035,
+          "ratio_pronombres": 5.188679245283019,
+          "id": 1267,
+          "titulo": "ACTO I - Escena VI",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 240,
+          "total_oraciones": 50,
+          "palabras_por_oracion": 4.8,
+          "longitud_promedio_palabra": 4.208333333333333,
+          "diversidad_lexica": 0.5958333333333333,
+          "palabras_unicas": 143,
+          "densidad_puntuacion": 42.083333333333336,
+          "ratio_hapax": 0.45,
+          "ratio_pronombres": 7.5,
+          "id": 1266,
+          "titulo": "ACTO I - Escena V",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 571,
+          "total_oraciones": 110,
+          "palabras_por_oracion": 5.1909090909090905,
+          "longitud_promedio_palabra": 4.007005253940456,
+          "diversidad_lexica": 0.48336252189141854,
+          "palabras_unicas": 276,
+          "densidad_puntuacion": 37.3029772329247,
+          "ratio_hapax": 0.35376532399299476,
+          "ratio_pronombres": 7.355516637478108,
+          "id": 1269,
+          "titulo": "ACTO I - Escena VIII",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 499,
+          "total_oraciones": 136,
+          "palabras_por_oracion": 3.6691176470588234,
+          "longitud_promedio_palabra": 4.142284569138276,
+          "diversidad_lexica": 0.47695390781563124,
+          "palabras_unicas": 238,
+          "densidad_puntuacion": 54.50901803607214,
+          "ratio_hapax": 0.3406813627254509,
+          "ratio_pronombres": 8.41683366733467,
+          "id": 1271,
+          "titulo": "ACTO I - Escena Última",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 153,
+          "total_oraciones": 32,
+          "palabras_por_oracion": 4.78125,
+          "longitud_promedio_palabra": 4.196078431372549,
+          "diversidad_lexica": 0.673202614379085,
+          "palabras_unicas": 103,
+          "densidad_puntuacion": 47.712418300653596,
+          "ratio_hapax": 0.5163398692810458,
+          "ratio_pronombres": 6.535947712418301,
+          "id": 1268,
+          "titulo": "ACTO I - Escena VII",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        },
+        {
+          "total_palabras": 368,
+          "total_oraciones": 91,
+          "palabras_por_oracion": 4.043956043956044,
+          "longitud_promedio_palabra": 4.165760869565218,
+          "diversidad_lexica": 0.5054347826086957,
+          "palabras_unicas": 186,
+          "densidad_puntuacion": 47.55434782608695,
+          "ratio_hapax": 0.35054347826086957,
+          "ratio_pronombres": 5.978260869565218,
+          "id": 1270,
+          "titulo": "ACTO I - Escena IX",
+          "publicacion": "Barba y Media",
+          "fecha": "1869-11-01"
+        }
+      ],
+      "estadisticas_globales": {
+        "promedio_palabras": 477.2,
+        "promedio_oraciones": 118.6,
+        "promedio_palabras_por_oracion": 4.137418446193671,
+        "promedio_longitud_palabra": 4.08843694521591,
+        "promedio_diversidad_lexica": 0.5101719578948338
+      }
+    }
+  }
+}

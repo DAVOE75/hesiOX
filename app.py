@@ -2068,11 +2068,20 @@ def editar_autor_bio_page(id):
 @app.route("/autor/bio/get", methods=["GET"])
 @login_required
 def get_autor_bio():
+    valid_project_ids = [p.id for p in current_user.proyectos]
+    valid_project_ids += [pc.proyecto_id for pc in current_user.proyectos_compartidos]
+    if session.get("proyecto_activo_id"):
+        valid_project_ids.append(session.get("proyecto_activo_id"))
+        
+    autor_id = request.args.get("id")
+    if autor_id:
+        autor = db.session.get(AutorBio, int(autor_id))
+        if autor and (autor.proyecto_id in valid_project_ids or current_user.rol == 'admin'):
+            return jsonify({"status": "success", "bio": autor.to_dict()})
+        return jsonify({"status": "not_found"}), 200
+
     nombre = request.args.get("nombre", "").strip()
     apellido = request.args.get("apellido", "").strip()
-    
-    if not nombre and not apellido:
-        return jsonify({"status": "not_found", "message": "Parámetros vacíos"}), 200
         
     proyecto_activo = get_proyecto_activo()
     
@@ -2083,8 +2092,7 @@ def get_autor_bio():
         apellido = partes[0].strip()
         nombre = partes[1].strip()
         
-    user_project_ids = [p.id for p in current_user.proyectos]
-    query = AutorBio.query.filter(AutorBio.proyecto_id.in_(user_project_ids))
+    query = AutorBio.query.filter(AutorBio.proyecto_id.in_(valid_project_ids))
     
     # Búsqueda por nombre y apellido
     autor = query.filter(

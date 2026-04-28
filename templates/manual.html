@@ -505,6 +505,9 @@
                     Documental</a>
                 <a href="#text-explorer" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.6
                     Explorador de Textos e Imagen (Lector Pro)</a>
+                <a href="#transcription-layers" class="list-group-item list-group-item-action ps-3">4.7 Capas de Transcripción Multidimensional</a>
+                <a href="#prosograf-ia" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.8 Prosopografía Avanzada con IA (PROSOGRAF-IA)</a>
+                <a href="#version-history" class="list-group-item list-group-item-action ps-3">4.9 Control de Versiones e Historial</a>
                 <div class="mt-3 mb-1 text-uppercase text-secondary xsmall fw-bold">V. Mapas y Geografía</div>
                 <a href="#corpus-map" class="list-group-item list-group-item-action ps-3">5.1 Proyección
                     Geo-Documental</a>
@@ -655,6 +658,14 @@
                         <li><strong>Visualización de Perfil Táctico (Radar Charts):</strong> Cada personaje cuenta con un gráfico de radar dinámico que muestra su espectro de acciones, permitiendo comparar visualmente las personalidades dramáticas.</li>
                         <li><strong>Evolución del Flujo Táctico (Streamgraph):</strong> Se ha integrado un gráfico de áreas fluido (Streamgraph) generado con Vega-Lite que muestra cómo evolucionan las tácticas dominantes a lo largo de la obra.</li>
                         <li><strong>Síntesis Estratégica:</strong> El sistema genera informes sobre el Conflicto Dominante, el Clima Escénico y las Metas Estratégicas de cada personaje.</li>
+                    </ul>
+                    <hr class="my-3 opacity-25">
+    
+                    <p class="mb-2"><strong>Nuevas Capas de Transcripción y Prosopografía (v4.3.0):</strong></p>
+                    <ul class="mb-2">
+                        <li><strong>Transcripción Multidimensional:</strong> Soporte para capas <em>Diplomática</em> (paleográfica literal) y <em>Crítica</em> (con anotaciones) en el editor.</li>
+                        <li><strong>Prosopografía IA (PROSOGRAF-IA):</strong> Extracción híbrida de entidades (SpaCy + LLM) con vinculación biográfica y geolocalización automática.</li>
+                        <li><strong>Control de Versiones:</strong> Historial completo de cambios con opciones de comparación y recuperación.</li>
                     </ul>
                     <hr class="my-3 opacity-25">
     
@@ -1632,6 +1643,50 @@
                     <span><kbd class="bg-dark">S</kbd> Resumen IA</span>
                 </div>
             </div>
+
+            <h3 id="transcription-layers" class="h4 mt-5 fw-bold">4.7 Capas de Transcripción Multidimensional</h3>
+            <p>
+                La investigación filológica y de prensa histórica a menudo requiere diferentes niveles de fidelidad al texto original. HesiOX v4 introduce soporte para cuatro capas de transcripción independientes:
+            </p>
+            <ul class="list-group list-group-flush mt-3 small">
+                <li class="list-group-item"><strong>Normalizada:</strong> El texto corregido y adaptado a la ortografía moderna para facilitar la búsqueda y el análisis computacional.</li>
+                <li class="list-group-item"><strong>Original:</strong> El texto tal y como fue capturado por el motor OCR, preservando erratas y grafías de la época.</li>
+                <li class="list-group-item"><strong>Diplomática (🏛️):</strong> Transcripción literal o paleográfica que respeta la disposición, abreviaturas y caracteres especiales del documento físico.</li>
+                <li class="list-group-item"><strong>Crítica (✍️):</strong> Edición académica anotada donde el investigador puede señalar variantes, correcciones y notas al pie.</li>
+            </ul>
+
+            <h3 id="prosograf-ia" class="h4 mt-5 fw-bold text-accent">4.8 Prosopografía Avanzada con IA (PROSOGRAF-IA)</h3>
+            <p>
+                La pestaña <strong>PROSOGRAF-IA</strong> integra un motor híbrido de Procesamiento del Lenguaje Natural (NLP) para el análisis prosopográfico automático:
+            </p>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 bg-light p-3">
+                        <h6 class="fw-bold"><i class="fa-solid fa-brain me-2 text-primary"></i>Detección Híbrida de Entidades (NER)</h6>
+                        <p class="small mb-0">
+                            Combina la velocidad de <strong>SpaCy</strong> con la comprensión contextual de <strong>Gemini</strong> para extraer Personas (PER), Lugares (LOC) y Organizaciones (ORG), aplicando filtros globales para ignorar ruido.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 bg-light p-3">
+                        <h6 class="fw-bold"><i class="fa-solid fa-link me-2 text-success"></i>Vinculación Biográfica y GIS</h6>
+                        <p class="small mb-0">
+                            Permite conectar automáticamente las personas detectadas con el <em>Ecosistema de Autores</em> y proyectar los lugares directamente en el mapa cartográfico con un solo clic.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 id="version-history" class="h4 mt-5 fw-bold">4.9 Control de Versiones e Historial</h3>
+            <p>
+                Para garantizar la trazabilidad del trabajo editorial, la pestaña <strong>Historial</strong> registra cada modificación guardada. El sistema permite:
+            </p>
+            <ul class="small">
+                <li>Visualizar quién realizó el cambio y en qué fecha.</li>
+                <li><strong>Comparar</strong> versiones previas mediante un diff visual.</li>
+                <li><strong>Recuperar</strong> estados anteriores del texto en caso de error.</li>
+            </ul>
         </section>
 
 

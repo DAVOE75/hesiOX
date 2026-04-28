@@ -423,12 +423,12 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
             - Nunca unas líneas que pertenecen a columnas adyacentes horizontalmente.
             - Identifica y separa claramente los diferentes bloques lógicos: Cabeceras (Mastheads), Noticias, Crónicas, Secciones Financieras (Cotizaciones) y Anuncios Comerciales.
             
-            3. Marcado Estructural y Metadatos (Formato Markdown):
-            Utiliza etiquetas en corchetes y formato Markdown para mapear la estructura visual del documento al texto plano:
+            3. Marcado Estructural y Metadatos:
+            Mapea la estructura visual del documento utilizando texto plano limpio:
             - Usa [CABECERA] para el título del periódico, fecha, precios de suscripción y datos de edición.
             - Usa [COLUMNA 1], [COLUMNA 2], etc., para indicar el inicio de cada bloque espacial.
-            - Usa ## Título de la noticia para los titulares.
-            - Usa [SECCIÓN DE ANUNCIOS] para bloques publicitarios y separa cada anuncio con un divisor ---.
+            - NO uses almohadillas (#) para títulos o encabezados.
+            - Usa [SECCIÓN DE ANUNCIOS] para bloques publicitarios.
             - Si un artículo salta de una columna a otra, indícalo (ej. [Continúa en Columna 3]).
             
             4. Tratamiento de Lagunas y Daños Físicos:
@@ -438,7 +438,7 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
             
             5. Elementos Gráficos y Tipográficos:
             - Si hay capitulares (Letras grandes al inicio de un párrafo), intégralas a la palabra correspondiente sin espacios.
-            - Mantén el texto en cursiva o negrita usando el marcado de Markdown (*cursiva*, **negrita**).
+            - PROHIBICIÓN DE MARKDOWN: Bajo NINGUNA circunstancia utilices asteriscos (** o *) para texto en negrita, cursiva, acotaciones o diálogos. No uses ningún marcado de Markdown. Todo el texto debe ser texto plano limpio y directo.
             - Si hay ilustraciones, grabados o filetes decorativos separadores, descríbelos brevemente: [Grabado: descripción visual].
             
             {instrucciones_contexto}
@@ -467,7 +467,19 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
             """
         try:
             raw_text = self.generate_content(prompt, temperature=0.0, image_data=image_data, top_p=1.0)
-            return self._extract_json_from_text(raw_text)
+            result_data = self._extract_json_from_text(raw_text)
+            
+            if result_data and 'corrected_text' in result_data and result_data['corrected_text']:
+                txt = result_data['corrected_text']
+                # Eliminar asteriscos de negrita/cursiva
+                txt = txt.replace('**', '').replace('*', '')
+                # Eliminar almohadillas de títulos de markdown
+                import re
+                txt = re.sub(r'#+\s*', '', txt)
+                result_data['corrected_text'] = txt
+                
+                
+            return result_data
         except Exception as e_gen:
             print(f"[AIService] Error crítico en correct_ocr_text: {e_gen}", file=sys.stderr)
             return {"corrected_text": text, "metadata": {}, "error": str(e_gen)}

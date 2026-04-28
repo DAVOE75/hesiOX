@@ -1,0 +1,656 @@
+{
+  "timestamp": "2026-04-28T10:52:08.649401",
+  "tipo_analisis": "atribucion",
+  "filtros": {
+    "proyecto_id": 40,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "fecha",
+    "documentos_ids": []
+  },
+  "params": {
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "matriz_delta": [
+      {
+        "id_a": 1261,
+        "id_b": 1265,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena IV",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.235634309135143,
+        "similitud_prob": 50.57462763459428
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1262,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena II",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.014253139184276,
+        "similitud_prob": 59.429874432628964
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1264,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena III",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 0.9901377166947699,
+        "similitud_prob": 60.3944913322092
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1267,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena VI",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0723027777900453,
+        "similitud_prob": 57.107888888398186
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1266,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena V",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0442821938304823,
+        "similitud_prob": 58.22871224678071
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0097919417221632,
+        "similitud_prob": 59.60832233111347
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0341122241745837,
+        "similitud_prob": 58.635511033016655
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.330740885949969,
+        "similitud_prob": 46.77036456200124
+      },
+      {
+        "id_a": 1261,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena I",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.067847494401839,
+        "similitud_prob": 57.28610022392644
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1262,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena II",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1452709825652359,
+        "similitud_prob": 54.18916069739056
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1264,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena III",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1372018055350894,
+        "similitud_prob": 54.51192777859642
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1267,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena VI",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.078045842289842,
+        "similitud_prob": 56.87816630840632
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1266,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena V",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1131293556011335,
+        "similitud_prob": 55.47482577595466
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2260378421839744,
+        "similitud_prob": 50.95848631264103
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.166107863396546,
+        "similitud_prob": 53.35568546413816
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.187409411183349,
+        "similitud_prob": 52.503623552666035
+      },
+      {
+        "id_a": 1265,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena IV",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.20322116966953,
+        "similitud_prob": 51.8711532132188
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1264,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena III",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0983817213062237,
+        "similitud_prob": 56.064731147751054
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1267,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena VI",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2348541859678226,
+        "similitud_prob": 50.605832561287095
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1266,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena V",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1488022017727424,
+        "similitud_prob": 54.047911929090304
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0938311511574603,
+        "similitud_prob": 56.246753953701585
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1499894863861038,
+        "similitud_prob": 54.00042054455585
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2483696732690504,
+        "similitud_prob": 50.065213069237984
+      },
+      {
+        "id_a": 1262,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena II",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1466718425359204,
+        "similitud_prob": 54.133126298563184
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1267,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena VI",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 0.8978801527094934,
+        "similitud_prob": 64.08479389162027
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1266,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena V",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0705497307068652,
+        "similitud_prob": 57.17801077172539
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 0.9317570072933226,
+        "similitud_prob": 62.7297197082671
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0107882110577526,
+        "similitud_prob": 59.5684715576899
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2676462340305965,
+        "similitud_prob": 49.29415063877614
+      },
+      {
+        "id_a": 1264,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena III",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0496808396264294,
+        "similitud_prob": 58.012766414942824
+      },
+      {
+        "id_a": 1267,
+        "id_b": 1266,
+        "titulo_a": "ACTO I - Escena VI",
+        "titulo_b": "ACTO I - Escena V",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.050720646319093,
+        "similitud_prob": 57.97117414723628
+      },
+      {
+        "id_a": 1267,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena VI",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 0.89530125699672,
+        "similitud_prob": 64.1879497201312
+      },
+      {
+        "id_a": 1267,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena VI",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0284125492747944,
+        "similitud_prob": 58.86349802900823
+      },
+      {
+        "id_a": 1267,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena VI",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2704377827640667,
+        "similitud_prob": 49.182488689437335
+      },
+      {
+        "id_a": 1267,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena VI",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1401463666758596,
+        "similitud_prob": 54.39414533296562
+      },
+      {
+        "id_a": 1266,
+        "id_b": 1269,
+        "titulo_a": "ACTO I - Escena V",
+        "titulo_b": "ACTO I - Escena VIII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.2227398965534446,
+        "similitud_prob": 51.090404137862215
+      },
+      {
+        "id_a": 1266,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena V",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1292763140019721,
+        "similitud_prob": 54.828947439921116
+      },
+      {
+        "id_a": 1266,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena V",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1515159053928936,
+        "similitud_prob": 53.939363784284254
+      },
+      {
+        "id_a": 1266,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena V",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1035655475789758,
+        "similitud_prob": 55.85737809684097
+      },
+      {
+        "id_a": 1269,
+        "id_b": 1271,
+        "titulo_a": "ACTO I - Escena VIII",
+        "titulo_b": "ACTO I - Escena Última",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.0279755199423388,
+        "similitud_prob": 58.88097920230645
+      },
+      {
+        "id_a": 1269,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena VIII",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.3262325146711218,
+        "similitud_prob": 46.95069941315513
+      },
+      {
+        "id_a": 1269,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena VIII",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.178899021578746,
+        "similitud_prob": 52.84403913685016
+      },
+      {
+        "id_a": 1271,
+        "id_b": 1268,
+        "titulo_a": "ACTO I - Escena Última",
+        "titulo_b": "ACTO I - Escena VII",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.1434917106699336,
+        "similitud_prob": 54.260331573202656
+      },
+      {
+        "id_a": 1271,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena Última",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.15599166819377,
+        "similitud_prob": 53.7603332722492
+      },
+      {
+        "id_a": 1268,
+        "id_b": 1270,
+        "titulo_a": "ACTO I - Escena VII",
+        "titulo_b": "ACTO I - Escena IX",
+        "autor_a": "Manuel",
+        "autor_b": "Manuel",
+        "delta": 1.3217245666983877,
+        "similitud_prob": 47.131017332064495
+      }
+    ],
+    "metricas_comparativas": [
+      {
+        "id": 1261,
+        "titulo": "ACTO I - Escena I",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 956,
+          "total_oraciones": 220,
+          "palabras_por_oracion": 4.345454545454546,
+          "longitud_promedio_palabra": 3.98744769874477,
+          "diversidad_lexica": 0.4131799163179916,
+          "palabras_unicas": 395,
+          "densidad_puntuacion": 51.04602510460251,
+          "ratio_hapax": 0.2897489539748954,
+          "ratio_pronombres": 8.263598326359832
+        }
+      },
+      {
+        "id": 1265,
+        "titulo": "ACTO I - Escena IV",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 262,
+          "total_oraciones": 85,
+          "palabras_por_oracion": 3.0823529411764707,
+          "longitud_promedio_palabra": 3.927480916030534,
+          "diversidad_lexica": 0.4961832061068702,
+          "palabras_unicas": 130,
+          "densidad_puntuacion": 50.38167938931297,
+          "ratio_hapax": 0.3320610687022901,
+          "ratio_pronombres": 6.488549618320611
+        }
+      },
+      {
+        "id": 1262,
+        "titulo": "ACTO I - Escena II",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 355,
+          "total_oraciones": 78,
+          "palabras_por_oracion": 4.551282051282051,
+          "longitud_promedio_palabra": 4.177464788732395,
+          "diversidad_lexica": 0.5605633802816902,
+          "palabras_unicas": 199,
+          "densidad_puntuacion": 44.225352112676056,
+          "ratio_hapax": 0.4169014084507042,
+          "ratio_pronombres": 6.760563380281689
+        }
+      },
+      {
+        "id": 1264,
+        "titulo": "ACTO I - Escena III",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 944,
+          "total_oraciones": 246,
+          "palabras_por_oracion": 3.83739837398374,
+          "longitud_promedio_palabra": 4.067796610169491,
+          "diversidad_lexica": 0.399364406779661,
+          "palabras_unicas": 377,
+          "densidad_puntuacion": 48.30508474576271,
+          "ratio_hapax": 0.2775423728813559,
+          "ratio_pronombres": 6.567796610169492
+        }
+      },
+      {
+        "id": 1267,
+        "titulo": "ACTO I - Escena VI",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 424,
+          "total_oraciones": 138,
+          "palabras_por_oracion": 3.072463768115942,
+          "longitud_promedio_palabra": 4.004716981132075,
+          "diversidad_lexica": 0.49764150943396224,
+          "palabras_unicas": 211,
+          "densidad_puntuacion": 56.367924528301884,
+          "ratio_hapax": 0.35377358490566035,
+          "ratio_pronombres": 5.188679245283019
+        }
+      },
+      {
+        "id": 1266,
+        "titulo": "ACTO I - Escena V",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 240,
+          "total_oraciones": 50,
+          "palabras_por_oracion": 4.8,
+          "longitud_promedio_palabra": 4.208333333333333,
+          "diversidad_lexica": 0.5958333333333333,
+          "palabras_unicas": 143,
+          "densidad_puntuacion": 42.083333333333336,
+          "ratio_hapax": 0.45,
+          "ratio_pronombres": 7.5
+        }
+      },
+      {
+        "id": 1269,
+        "titulo": "ACTO I - Escena VIII",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 571,
+          "total_oraciones": 110,
+          "palabras_por_oracion": 5.1909090909090905,
+          "longitud_promedio_palabra": 4.007005253940456,
+          "diversidad_lexica": 0.48336252189141854,
+          "palabras_unicas": 276,
+          "densidad_puntuacion": 37.3029772329247,
+          "ratio_hapax": 0.35376532399299476,
+          "ratio_pronombres": 7.355516637478108
+        }
+      },
+      {
+        "id": 1271,
+        "titulo": "ACTO I - Escena Última",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 499,
+          "total_oraciones": 136,
+          "palabras_por_oracion": 3.6691176470588234,
+          "longitud_promedio_palabra": 4.142284569138276,
+          "diversidad_lexica": 0.47695390781563124,
+          "palabras_unicas": 238,
+          "densidad_puntuacion": 54.50901803607214,
+          "ratio_hapax": 0.3406813627254509,
+          "ratio_pronombres": 8.41683366733467
+        }
+      },
+      {
+        "id": 1268,
+        "titulo": "ACTO I - Escena VII",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 153,
+          "total_oraciones": 32,
+          "palabras_por_oracion": 4.78125,
+          "longitud_promedio_palabra": 4.196078431372549,
+          "diversidad_lexica": 0.673202614379085,
+          "palabras_unicas": 103,
+          "densidad_puntuacion": 47.712418300653596,
+          "ratio_hapax": 0.5163398692810458,
+          "ratio_pronombres": 6.535947712418301
+        }
+      },
+      {
+        "id": 1270,
+        "titulo": "ACTO I - Escena IX",
+        "autor": "Manuel",
+        "metricas": {
+          "total_palabras": 368,
+          "total_oraciones": 91,
+          "palabras_por_oracion": 4.043956043956044,
+          "longitud_promedio_palabra": 4.165760869565218,
+          "diversidad_lexica": 0.5054347826086957,
+          "palabras_unicas": 186,
+          "densidad_puntuacion": 47.55434782608695,
+          "ratio_hapax": 0.35054347826086957,
+          "ratio_pronombres": 5.978260869565218
+        }
+      }
+    ],
+    "vocabulario_frecuente": [
+      "de",
+      "v",
+      "que",
+      "y",
+      "á",
+      "la",
+      "rup",
+      "bar",
+      "no",
+      "el",
+      "me",
+      "en",
+      "se",
+      "tob",
+      "es",
+      "ele",
+      "un",
+      "con",
+      "yo",
+      "pero"
+    ]
+  }
+}

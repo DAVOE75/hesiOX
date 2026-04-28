@@ -1,0 +1,4207 @@
+{
+  "timestamp": "2026-04-28T09:35:23.815592",
+  "tipo_analisis": "dramatico",
+  "filtros": {
+    "proyecto_id": 40,
+    "tema": null,
+    "publicacion_id": null,
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "eje_x": "fecha",
+    "documentos_ids": []
+  },
+  "params": {
+    "manual_aliases": {
+      "BAR": "BARTOLOMÉ",
+      "ELE": "ELENA",
+      "RUP": "RUPERTO",
+      "TOB": "TOBÍAS",
+      "VIR": "VIRGINIA",
+      "RUPERTO": "DON RUPERTO"
+    },
+    "limite": 300
+  },
+  "resultado": {
+    "exito": true,
+    "nodos": [
+      {
+        "id": "BAR V",
+        "name": "BAR V",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "BAR Y V",
+        "name": "BAR Y V",
+        "influencia": 2,
+        "grupo": 0
+      },
+      {
+        "id": "BARTOLOMÉ",
+        "name": "BARTOLOMÉ",
+        "influencia": 6,
+        "grupo": 0
+      },
+      {
+        "id": "DON RUPERTO",
+        "name": "DON RUPERTO",
+        "influencia": 8,
+        "grupo": 0
+      },
+      {
+        "id": "ELENA",
+        "name": "ELENA",
+        "influencia": 6,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA IV",
+        "name": "ESCENA IV",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA IX",
+        "name": "ESCENA IX",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA V",
+        "name": "ESCENA V",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA VI",
+        "name": "ESCENA VI",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA VII",
+        "name": "ESCENA VII",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA VIII",
+        "name": "ESCENA VIII",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "ESCENA ÚLTIMA",
+        "name": "ESCENA ÚLTIMA",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "PROPIEDAD DE V DE LALAMA",
+        "name": "PROPIEDAD DE V DE LALAMA",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "RUP V",
+        "name": "RUP V",
+        "influencia": 1,
+        "grupo": 0
+      },
+      {
+        "id": "TOBÍAS",
+        "name": "TOBÍAS",
+        "influencia": 5,
+        "grupo": 0
+      },
+      {
+        "id": "VIRGINIA",
+        "name": "VIRGINIA",
+        "influencia": 3,
+        "grupo": 0
+      }
+    ],
+    "enlaces": [
+      {
+        "source": "ESCENA ÚLTIMA",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ESCENA ÚLTIMA",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "ESCENA ÚLTIMA",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ESCENA ÚLTIMA",
+        "value": 1
+      },
+      {
+        "source": "BAR Y V",
+        "target": "ESCENA ÚLTIMA",
+        "value": 1
+      },
+      {
+        "source": "ESCENA ÚLTIMA",
+        "target": "VIRGINIA",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "TOBÍAS",
+        "value": 4
+      },
+      {
+        "source": "ELENA",
+        "target": "TOBÍAS",
+        "value": 4
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "TOBÍAS",
+        "value": 3
+      },
+      {
+        "source": "BAR Y V",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "TOBÍAS",
+        "target": "VIRGINIA",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ELENA",
+        "value": 6
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "DON RUPERTO",
+        "value": 4
+      },
+      {
+        "source": "BAR Y V",
+        "target": "DON RUPERTO",
+        "value": 2
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "VIRGINIA",
+        "value": 2
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ELENA",
+        "value": 3
+      },
+      {
+        "source": "BAR Y V",
+        "target": "ELENA",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "VIRGINIA",
+        "value": 1
+      },
+      {
+        "source": "BAR Y V",
+        "target": "BARTOLOMÉ",
+        "value": 2
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "VIRGINIA",
+        "value": 2
+      },
+      {
+        "source": "BAR Y V",
+        "target": "VIRGINIA",
+        "value": 1
+      },
+      {
+        "source": "PROPIEDAD DE V DE LALAMA",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "PROPIEDAD DE V DE LALAMA",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "PROPIEDAD DE V DE LALAMA",
+        "value": 1
+      },
+      {
+        "source": "ESCENA IV",
+        "target": "VIRGINIA",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ESCENA IV",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ESCENA V",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "ESCENA V",
+        "value": 1
+      },
+      {
+        "source": "BAR V",
+        "target": "DON RUPERTO",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ESCENA VI",
+        "value": 1
+      },
+      {
+        "source": "BAR V",
+        "target": "ELENA",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "ESCENA VI",
+        "value": 1
+      },
+      {
+        "source": "BAR V",
+        "target": "BARTOLOMÉ",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ESCENA VI",
+        "value": 1
+      },
+      {
+        "source": "BAR V",
+        "target": "ESCENA VI",
+        "value": 1
+      },
+      {
+        "source": "ESCENA VII",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "ESCENA VII",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "ESCENA VII",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ESCENA VII",
+        "value": 1
+      },
+      {
+        "source": "ESCENA VII",
+        "target": "RUP V",
+        "value": 1
+      },
+      {
+        "source": "RUP V",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "DON RUPERTO",
+        "target": "RUP V",
+        "value": 1
+      },
+      {
+        "source": "ELENA",
+        "target": "RUP V",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "RUP V",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ESCENA VIII",
+        "value": 1
+      },
+      {
+        "source": "ESCENA VIII",
+        "target": "TOBÍAS",
+        "value": 1
+      },
+      {
+        "source": "BARTOLOMÉ",
+        "target": "ESCENA IX",
+        "value": 1
+      },
+      {
+        "source": "ESCENA IX",
+        "target": "VIRGINIA",
+        "value": 1
+      }
+    ],
+    "sentimiento_temporal": [
+      {
+        "label": "Act.I",
+        "sentimiento": 0.33714076450892855,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1271,
+        "acto": "I",
+        "escena": "",
+        "texto": "ESCENA ÚLTIMA.\r\n\r\nLos mismos, DON RUPERTO y ELENA, acudiendo asustados, despues TOBIAS.\r\n\r\nRUP. Ha profundizado la navaja?... Cielos, la incógnita!\r\n\r\nELE. (Bartolomé con una mujer!)\r\n\r\nRUP. Pero qué le ha dado?\r\n\r\nBAR. Y V. qué me pregunta? Entiendo yo acaso de medicina?\r\n\r\nRUP. (*Tomándola el pulso.*) Malo, malo, malo... Esta mujer se vá. (*A Bartolomé.*) Pronto, agarra esas lancetas, y tú (*A Elena.*) corre por un barreño para la sangre.\r\n\r\nELE. Ha de ser muy grande?\r\n\r\nRUP. Sí, el mayor que encuentres.\r\n\r\nELE. Qué vá á pasar aquí? (*Váse.*)\r\n\r\nBAR. Que esta casa se vá á convertir en un matadero.\r\n\r\nRUP. Ea, manos á la obra.\r\n\r\nBAR. Maestro, mi conciencia no me permite callar. Esta mujer está menos enferma de lo que parece, y yo soy mas torpe de lo que V. se figura. Si V. me obliga á pincharla, caiga la sangre sobre...\r\n\r\nELE. (*Entrando con el barreño.*) El barreño.\r\n\r\nRUP. Pero, hombre, la impericia de V. es mas notoria cada instante. Vaya, acostémosla en la cama de Elena, hasta que venga un médico.\r\n\r\nBAR. No, mejor está aquí.\r\n\r\nRUP. De ningun modo; ayudadme á que la llevemos.\r\n\r\nBAR. Pero, maestro, repare V...\r\n\r\nRUP. La humanidad tiene sus leyes, y la desgracia sus derechos. Pronto; V. de los brazos y tú de los pies. Yo me encargo de lo demás.\r\n\r\nBAR. Conste que yo no queria llevarla á esa alcoba.\r\n\r\n(*Al dirigirse todos hácia la alcoba, llevando en brazos á Virginia, se presenta Tobías.*)\r\n\r\nRUP. } Tobías!\r\n\r\nELE. } Tobías!\r\n\r\nVIR. (*Abalanzándose á Tobías.*) Mi corazon me daba que no estarias lejos de tu tapaboca!\r\n\r\nTOB. Yo...\r\n\r\nVIR. No es él!\r\n\r\nBAR. Sí es él; mírele V. por el lado opuesto!\r\n\r\nTOB. Yo te explicaré. (*Hablan con calor Tobías y Virginia.*)\r\n\r\nRUP. (Tobías escondido, y mi dependiente cómplice y encubridor! Oh! Todo lo he de descubrir..) (*Alto.*) Caballerito, míreme V. cara á cara... Cielos... la camisa llena de sangre! V. debe ser un asesino... Guardias! Guardias!\r\n\r\nTOB. Qué es eso?\r\n\r\nBAR. Eh! señor mio, pocas voces... aquí no hay mas asesino que V.\r\n\r\nRUP. Yo... qué imprudencia!\r\n\r\nBAR. (*Quitándose la patilla corrida y enseñando sus cortaduras.*) Gócese V. en su obra.\r\n\r\nRUP. Mi parroquiano! Y á qué fin ese disfraz acusador?\r\n\r\nBAR. Su niña de V. lo dirá.\r\n\r\nRUP. Tú?\r\n\r\nELE. Sí, papá; el señor es Bartolomé, mi amante, que viene á solicitar mi mano.\r\n\r\nRUP. Tu mano? Es decir...\r\n\r\nBAR. Que por casarme con Elena, me dejo hasta degollar, como lo prueba... (*Enseña la garganta.*)\r\n\r\nRUP. Pero, qué profesion es la de V?\r\n\r\nBAR. Zurupeto! Aspirante á bolsista.\r\n\r\nRUP. Consiento con mil amores.\r\n\r\nBAR. Pero, antes de volver á mi verdadera profesion, he de concluir de afeitar al señor. (*Por Tobías.*)\r\n\r\nTOB. Gracias; mi esposa Virginia me acabará de hacer la barba.\r\n\r\nRUP. (*Al público.*)\r\n\r\n> Siempre en tu bien me deleito\r\n\r\n> y en complacerte me afano;\r\n\r\n> serás conmigo inhumano?\r\n\r\n(*Cambiando de tono y adelantándose hasta la concha con la navaja grande abierta.*)\r\n\r\n> Si no me aplaudes, te afeito!\r\n\r\n**FIN.**",
+        "locuciones": [
+          {
+            "p": "ESCENA ÚLTIMA",
+            "t": "Los mismos, DON RUPERTO y ELENA, acudiendo asustados, despues TOBIAS.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ha profundizado la navaja?... Cielos, la incógnita!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(Bartolomé con una mujer!)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero qué le ha dado?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BAR Y V",
+            "t": "qué me pregunta? Entiendo yo acaso de medicina?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Tomándola el pulso.*) Malo, malo, malo... Esta mujer se vá. (*A Bartolomé.*) Pronto, agarra esas lancetas, y tú (*A Elena.*) corre por un barreño para la sangre.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Ha de ser muy grande?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí, el mayor que encuentres.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Qué vá á pasar aquí? (*Váse.*)",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que esta casa se vá á convertir en un matadero.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ea, manos á la obra.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Maestro, mi conciencia no me permite callar. Esta mujer está menos enferma de lo que parece, y yo soy mas torpe de lo que V. se figura. Si V. me obliga á pincharla, caiga la sangre sobre...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Entrando con el barreño.*) El barreño.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero, hombre, la impericia de V. es mas notoria cada instante. Vaya, acostémosla en la cama de Elena, hasta que venga un médico.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No, mejor está aquí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "De ningun modo; ayudadme á que la llevemos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pero, maestro, repare V...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "La humanidad tiene sus leyes, y la desgracia sus derechos. Pronto; V. de los brazos y tú de los pies. Yo me encargo de lo demás.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Conste que yo no queria llevarla á esa alcoba.\r\n\r\n(*Al dirigirse todos hácia la alcoba, llevando en brazos á Virginia, se presenta Tobías.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "} Tobías!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "} Tobías!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "(*Abalanzándose á Tobías.*) Mi corazon me daba que no estarias lejos de tu tapaboca!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Yo...",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "No es él!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Sí es él; mírele V. por el lado opuesto!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Yo te explicaré. (*Hablan con calor Tobías y Virginia.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(Tobías escondido, y mi dependiente cómplice y encubridor! Oh! Todo lo he de descubrir..) (*Alto.*) Caballerito, míreme V. cara á cara... Cielos... la camisa llena de sangre! V. debe ser un asesino... Guardias! Guardias!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Qué es eso?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Eh! señor mio, pocas voces... aquí no hay mas asesino que V.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Yo... qué imprudencia!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Quitándose la patilla corrida y enseñando sus cortaduras.*) Gócese V. en su obra.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Mi parroquiano! Y á qué fin ese disfraz acusador?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Su niña de V. lo dirá.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Tú?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Sí, papá; el señor es Bartolomé, mi amante, que viene á solicitar mi mano.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Tu mano? Es decir...",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que por casarme con Elena, me dejo hasta degollar, como lo prueba... (*Enseña la garganta.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero, qué profesion es la de V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Zurupeto! Aspirante á bolsista.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Consiento con mil amores.",
+            "tac": "Seducir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pero, antes de volver á mi verdadera profesion, he de concluir de afeitar al señor. (*Por Tobías.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Gracias; mi esposa Virginia me acabará de hacer la barba.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Al público.*)\r\n\r\n> Siempre en tu bien me deleito\r\n\r\n> y en complacerte me afano;\r\n\r\n> serás conmigo inhumano?\r\n\r\n(*Cambiando de tono y adelantándose hasta la concha con la navaja grande abierta.*)\r\n\r\n> Si no me aplaudes, te afeito!\r\n\r\n**FIN.**",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.I",
+        "sentimiento": 0.34033203125,
+        "subjetividad": 0.9791666666666666,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1261,
+        "acto": "I",
+        "escena": "I",
+        "texto": "PROPIEDAD DE V. DE LALAMA. | BIBLIOTECA DRAMATICA. | SE VENDE LIB. DE CUESTA.\r\n\r\n# BARBA Y MEDIA.\r\n\r\nJuguete cómico, original de D. MANUEL OSSORIO Y BERNARD, estrenado con gran aplauso en el teatro de Novedades, en el mes de Noviembre de 1869.\r\n\r\n**PERSONAJES.**\r\n\r\nELENA....................\r\n\r\nVIRGINIA.................\r\n\r\nD. RUPERTO...............\r\n\r\nBARTOLOMÉ................\r\n\r\nTOBÍAS...................\r\n\r\n**ACTORES.**\r\n\r\nDoña Maria Ruiz.\r\n\r\nDoña Laura García.\r\n\r\nDon Enrique Martinez.\r\n\r\nDon Segismundo Cervi.\r\n\r\nDon N. Martinez.\r\n\r\n[TEXTO A TODA PLANA]\r\n\r\nEl teatro representa una peluquería-barbería con dos balcones á la izquierda: puerta en el fondo y otras dos á la derecha, que suponen dar entrada á las habitaciones interiores.\r\n\r\n## ESCENA PRIMERA.\r\n\r\n*ELENA, despues TOBIAS.*\r\n\r\nELE. (Al balcon haciendo señas con un pañuelo.) Ya sube, gracias á Dios! Ese jóven es demasiado tímido para novio, cosa rara en el dia. Por la pinta debe hacer un marido excelente, y yo tengo necesidad, mucha necesidad de un marido que me haga olvidar á Bartolomé, y me defienda de él. Ay Bartolomé! Tu pinta es mejor que la de Tobías; pero creo que tu amor me vá á pintar mal, si no pongo un marido por medio.\r\n\r\nTOB. (Desde la puerta y mirando á todos lados.) Me llamaba V., bella Elena?\r\n\r\nELE. Creo que si.\r\n\r\nTOB. Me ha parecido que me mandaba subir...\r\n\r\nELE. Acaso le haya parecido á V. lo que era.\r\n\r\nTOB. Puedo entrar?\r\n\r\nELE. Ps... la puerta está abierta, y yo sola.\r\n\r\nTOB. Pícaros inconvenientes! Si no lo tomase V. á abuso de confianza, me atrevería... (*Da un paso y se detiene.*)\r\n\r\nELE. Atrévase V., hombre.\r\n\r\nTOB. Puesto que está V. sola y abierta... la puerta, me permitiré pasar adelante y... (*La besa la mano.*)\r\n\r\nELE. (*Retirando la mano.*) Cuidado, amigo mio, se equivoca V.\r\n\r\nTOB. Ah! estoy tan turbado... lo que debo besar á V. son los pies. (*Se arrodilla y quiere besarla los piés.*)\r\n\r\nELE. (*Apartándose.*) Tampoco. Eso está bien para dicho; pero no se hace.\r\n\r\nTOB. (*Levantándose.*) Yo no miento nunca; hago lo que digo, y muchas cosas mas que no digo... porque me da asi, como vergüenza.\r\n\r\nELE. Hola! hace V. cosas de que se avergüenza?\r\n\r\nTOB. Soy algo corto de genio.\r\n\r\nELE. Y algo largo de manos, á lo que voy presumiendo.\r\n\r\nTOB. Diré á V.; soy como los niños; veo una cosa que me agrada, y se me van las manos sin poderlo remediar...\r\n\r\nELE. Pues guárdese V. las manos en los bolsillos, para que no se le vayan, y escúcheme.\r\n\r\nTOB. Obedezco, (*se mete las manos en los bolsillos.*) y escucho.\r\n\r\nELE. Es preciso que haga V. conocer á mi padre todos sus intentos.\r\n\r\nTOB. Todos... mis intentos?\r\n\r\nELE. Si señor, respecto á mí.\r\n\r\nTOB. Ya lo entiendo. Le diré que la amo á V.; que V. me ama á mí; que los dos nos amamos, y creo que no habrá necesidad de decirle mas para que conozca todo lo que yo puedo intentar.\r\n\r\nELE. Es claro, que nos casemos.\r\n\r\nTOB. Quién lo duda?\r\n\r\nELE. Pero debo manifestar á V., que mi padre le vá á dar unas solemnes calabazas.\r\n\r\nTOB. Si yo nunca he pensado en enamorarle!\r\n\r\nELE. Lo creo; pero es el único que puede disponer de mi mano, y se la negará á V.\r\n\r\nTOB. Concédamela V., y basta.\r\n\r\nELE. Es que yo no puedo, ni quiero casarme sin su consentimiento.\r\n\r\nTOB. A todo me resigno por V.; no nos casamos.\r\n\r\nELE. Pues me gusta. Y entonces, ¿qué hemos de hacer?\r\n\r\nTOB. Menos casarnos, porque su padre de V. no quiere, todo lo que nosotros queramos.\r\n\r\nELE. Yo no quiero nada; y V?\r\n\r\nTOB. Yo!... vaya una pregunta!.. Qué querré yo, cuando quiero casarme?\r\n\r\nELE. Lo mismo quiero yo.\r\n\r\nTOB. Luego la conciencia de V. debe estar tan tranquila como la mía. Aquí el único pecador es su padre de V.: caiga, pues, sobre él nuestro pecado. (*Queriendo abrazarla.*) Elena, Elena mía...\r\n\r\nELE. (*Apartándole.*) Detenga V. sus ímpetus, pensemos...\r\n\r\nTOB. En la Vicaría?\r\n\r\nELE. Si.\r\n\r\nTOB. Maldita casa! Pero si su padre de V. se opone, y V. le obedece, no me ocurre el medio...\r\n\r\nELE. El medio es, que despues de hablar á mi padre, y ser desairado, me robe V.\r\n\r\nTOB. Cual otra Elena!.. Qué dicha!\r\n\r\nELE. No; esta Elena no se deja robar de veras, y mucho menos...\r\n\r\nTOB. Pues no lo entiendo.\r\n\r\nELE. El robo ha de ser fingido, y de tal manera llevado á efecto, que mi padre mismo lo evite.\r\n\r\nTOB. Ahora lo entiendo menos.\r\n\r\nELE. Al vernos mi padre tan decididos, consentirá en que nos casemos.\r\n\r\nTOB. Y para conseguirlo, debo yo hacer como que la robo á V., y V. como que se deja robar. Y su padre hará tambien como que?.. (*Hace ademán de pegar.*)\r\n\r\nELE. Tiene V. miedo?\r\n\r\nTOB. Soy muy amante de mi familia, y sentiría que tuviese el disgusto de perderme; pero, puesto que no hay otro remedio, me decido. Cuándo he de hablar al autor de sus dias?\r\n\r\nELE. En cuanto venga. Es la mejor ocasion, porque está hecho una furia. Mi padre ve visiones respecto á mí; quiero que esta vez no se equivoque, y le vea á V.\r\n\r\nTOB. Gracias por el favor.\r\n\r\nELE. Esta mañana se imaginó que los dos dependientes me amaban; los despidió en el acto, y fué á encargar otros.\r\n\r\nTOB. Le ví pasar desde la lotería; pero, no hubiera hecho mejor en quedarse, por si alguien venia á que le rapasen? Porque, supongo que V. no ejercerá...\r\n\r\nELE. Ni mi padre tampoco. Es empresario director de este establecimiento, sin conocimiento del arte.\r\n\r\nTOB. Me parece que sube alguien.\r\n\r\nELE. Haga V. como que me abraza.\r\n\r\nTOB. Pero...\r\n\r\nELE. Vamos, pronto, que es él.\r\n\r\nTOB. Fingido tambien?\r\n\r\nELE. Sí.\r\n\r\nTOB. Ya de hacerlo, que sea de veras. (*La abraza.*)",
+        "locuciones": [
+          {
+            "p": "PROPIEDAD DE V DE LALAMA",
+            "t": "| BIBLIOTECA DRAMATICA. | SE VENDE LIB. DE CUESTA.\r\n\r\n# BARBA Y MEDIA.\r\n\r\nJuguete cómico, original de D. MANUEL OSSORIO Y BERNARD, estrenado con gran aplauso en el teatro de Novedades, en el mes de Noviembre de 1869.\r\n\r\n**PERSONAJES.**",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "VIRGINIA.................",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "BARTOLOMÉ................",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "**ACTORES.**\r\n\r\nDoña Maria Ruiz.\r\n\r\nDoña Laura García.\r\n\r\nDon Enrique Martinez.\r\n\r\nDon Segismundo Cervi.\r\n\r\nDon N. Martinez.\r\n\r\n[TEXTO A TODA PLANA]\r\n\r\nEl teatro representa una peluquería-barbería con dos balcones á la izquierda: puerta en el fondo y otras dos á la derecha, que suponen dar entrada á las habitaciones interiores.\r\n\r\n## ESCENA PRIMERA.\r\n\r\n*ELENA, despues TOBIAS.*",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(Al balcon haciendo señas con un pañuelo.) Ya sube, gracias á Dios! Ese jóven es demasiado tímido para novio, cosa rara en el dia. Por la pinta debe hacer un marido excelente, y yo tengo necesidad, mucha necesidad de un marido que me haga olvidar á Bartolomé, y me defienda de él. Ay Bartolomé! Tu pinta es mejor que la de Tobías; pero creo que tu amor me vá á pintar mal, si no pongo un marido por medio.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(Desde la puerta y mirando á todos lados.) Me llamaba V., bella Elena?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Creo que si.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Me ha parecido que me mandaba subir...",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Acaso le haya parecido á V. lo que era.",
+            "tac": "Manipular"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Puedo entrar?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Ps... la puerta está abierta, y yo sola.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pícaros inconvenientes! Si no lo tomase V. á abuso de confianza, me atrevería... (*Da un paso y se detiene.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Atrévase V., hombre.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Puesto que está V. sola y abierta... la puerta, me permitiré pasar adelante y... (*La besa la mano.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Retirando la mano.*) Cuidado, amigo mio, se equivoca V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ah! estoy tan turbado... lo que debo besar á V. son los pies. (*Se arrodilla y quiere besarla los piés.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Apartándose.*) Tampoco. Eso está bien para dicho; pero no se hace.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(*Levantándose.*) Yo no miento nunca; hago lo que digo, y muchas cosas mas que no digo... porque me da asi, como vergüenza.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Hola! hace V. cosas de que se avergüenza?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Soy algo corto de genio.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Y algo largo de manos, á lo que voy presumiendo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Diré á V.; soy como los niños; veo una cosa que me agrada, y se me van las manos sin poderlo remediar...",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pues guárdese V. las manos en los bolsillos, para que no se le vayan, y escúcheme.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Obedezco, (*se mete las manos en los bolsillos.*) y escucho.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Es preciso que haga V. conocer á mi padre todos sus intentos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Todos... mis intentos?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Si señor, respecto á mí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ya lo entiendo. Le diré que la amo á V.; que V. me ama á mí; que los dos nos amamos, y creo que no habrá necesidad de decirle mas para que conozca todo lo que yo puedo intentar.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Es claro, que nos casemos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Quién lo duda?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pero debo manifestar á V., que mi padre le vá á dar unas solemnes calabazas.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Si yo nunca he pensado en enamorarle!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Lo creo; pero es el único que puede disponer de mi mano, y se la negará á V.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Concédamela V., y basta.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Es que yo no puedo, ni quiero casarme sin su consentimiento.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "A todo me resigno por V.; no nos casamos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pues me gusta. Y entonces, ¿qué hemos de hacer?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Menos casarnos, porque su padre de V. no quiere, todo lo que nosotros queramos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Yo no quiero nada; y V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Yo!... vaya una pregunta!.. Qué querré yo, cuando quiero casarme?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Lo mismo quiero yo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Luego la conciencia de V. debe estar tan tranquila como la mía. Aquí el único pecador es su padre de V.: caiga, pues, sobre él nuestro pecado. (*Queriendo abrazarla.*) Elena, Elena mía...",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Apartándole.*) Detenga V. sus ímpetus, pensemos...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "En la Vicaría?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Si.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Maldita casa! Pero si su padre de V. se opone, y V. le obedece, no me ocurre el medio...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "El medio es, que despues de hablar á mi padre, y ser desairado, me robe V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Cual otra Elena!.. Qué dicha!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "No; esta Elena no se deja robar de veras, y mucho menos...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pues no lo entiendo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "El robo ha de ser fingido, y de tal manera llevado á efecto, que mi padre mismo lo evite.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ahora lo entiendo menos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Al vernos mi padre tan decididos, consentirá en que nos casemos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Y para conseguirlo, debo yo hacer como que la robo á V., y V. como que se deja robar. Y su padre hará tambien como que?.. (*Hace ademán de pegar.*)",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Tiene V. miedo?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Soy muy amante de mi familia, y sentiría que tuviese el disgusto de perderme; pero, puesto que no hay otro remedio, me decido. Cuándo he de hablar al autor de sus dias?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "En cuanto venga. Es la mejor ocasion, porque está hecho una furia. Mi padre ve visiones respecto á mí; quiero que esta vez no se equivoque, y le vea á V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Gracias por el favor.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Esta mañana se imaginó que los dos dependientes me amaban; los despidió en el acto, y fué á encargar otros.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Le ví pasar desde la lotería; pero, no hubiera hecho mejor en quedarse, por si alguien venia á que le rapasen? Porque, supongo que V. no ejercerá...",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Ni mi padre tampoco. Es empresario director de este establecimiento, sin conocimiento del arte.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Me parece que sube alguien.",
+            "tac": "Manipular"
+          },
+          {
+            "p": "ELENA",
+            "t": "Haga V. como que me abraza.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pero...",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Vamos, pronto, que es él.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Fingido tambien?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Sí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ya de hacerlo, que sea de veras. (*La abraza.*)",
+            "tac": "Informar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.II",
+        "sentimiento": 0.30368303571428573,
+        "subjetividad": 0.9,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1262,
+        "acto": "I",
+        "escena": "II",
+        "texto": "## ESCENA II.\r\n\r\nLos mismos, DON RUPERTO.\r\n\r\nRUP. Horror y execracion! Acabo de despedir á dos dependientes, que no tenian precio en batir mandíbulas, y rapar barbas, y al volver á casa la encuentro á V. luchando á brazo partido!\r\n\r\nELE. Pero, papá...\r\n\r\nRUP. (*A Tobías.*) Quién es V., caballero?.. Pronto!\r\n\r\nTOB. Yo diré á V... A mí me llaman Tobias Floro Melaza y Martinez del Villar.\r\n\r\nRUP. Y qué mas?\r\n\r\nTOB. Le parecen á V. pocos apellidos?..\r\n\r\nRUP. Por mí, aunque fuera V. inclusero...\r\n\r\nTOB. No lo juzgará V. así, cuando sepa que anhelo llamarle padre...\r\n\r\nRUP. Mas anhelaba V. abrazar á la chica...\r\n\r\nTOB. No creí que pudiera V. incomodarse...\r\n\r\nRUP. Centellas, culebrinas y ametralladoras!\r\n\r\nELE. Pero, papá, si no llegó á abrazarme; es tan tonto!\r\n\r\nRUP. Y se mete en casa. Pero yo he de enseñarle... (*Levanta un palo.*)\r\n\r\nTOB. Ese razonamiento me ha convencido; escúcheme V. antes de terminarlo. Yo amo á su hija desde hace dos meses, que se me apareció en ese balcon, bella como una hurí de las *Mil y una noches*, limpiando el barro de sus enaguas. Desde aquel momento, porque soy escribiente de esa lotería de la esquina, mi corazon descubrió tesoros inagotables de amor; olvidé mis quehaceres habituales, y me sentí renacer.\r\n\r\nRUP. Pues, señor don Tobías Floro Melaza y Martinez del Villar, escribiente de esa administracion de lotería, sepa V. que no estoy de humor de consentir que ataque la inviolabilidad de mi domicilio, consignada en el código fundamental de nuestra nacion.\r\n\r\nTOB. Pero señor don Ruperto...\r\n\r\nRUP. Lo dicho, dicho. Salga V. de esta casa, y no vuelva á poner en ella los pies hasta que le toque el premio gordo de la lotería.\r\n\r\nTOB. Oh! yo tambien tengo mi genio, y cuando se me irrita, soy una fiera. Volveré.\r\n\r\nRUP. No volverá V.\r\n\r\nTOB. Volveré, así que encuentre quien me preste un real. (*Váse.*)\r\n\r\nRUP. (*A Elena.*) Ya ves cuál nos humilla!\r\n\r\nELE. Qué dice V.?\r\n\r\nRUP. Que se retire V. de esta sala; que huya V. de mi vista, ó tiemble mi cólera. (*Coge una navaja de afeitar.*)\r\n\r\nELE. Ay! (*Vase corriendo.*)",
+        "locuciones": [
+          {
+            "p": "DON RUPERTO",
+            "t": "Horror y execracion! Acabo de despedir á dos dependientes, que no tenian precio en batir mandíbulas, y rapar barbas, y al volver á casa la encuentro á V. luchando á brazo partido!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pero, papá...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*A Tobías.*) Quién es V., caballero?.. Pronto!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Yo diré á V... A mí me llaman Tobias Floro Melaza y Martinez del Villar.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y qué mas?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Le parecen á V. pocos apellidos?..",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Por mí, aunque fuera V. inclusero...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "No lo juzgará V. así, cuando sepa que anhelo llamarle padre...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Mas anhelaba V. abrazar á la chica...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "No creí que pudiera V. incomodarse...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Centellas, culebrinas y ametralladoras!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pero, papá, si no llegó á abrazarme; es tan tonto!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y se mete en casa. Pero yo he de enseñarle... (*Levanta un palo.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ese razonamiento me ha convencido; escúcheme V. antes de terminarlo. Yo amo á su hija desde hace dos meses, que se me apareció en ese balcon, bella como una hurí de las *Mil y una noches*, limpiando el barro de sus enaguas. Desde aquel momento, porque soy escribiente de esa lotería de la esquina, mi corazon descubrió tesoros inagotables de amor; olvidé mis quehaceres habituales, y me sentí renacer.",
+            "tac": "Seducir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pues, señor don Tobías Floro Melaza y Martinez del Villar, escribiente de esa administracion de lotería, sepa V. que no estoy de humor de consentir que ataque la inviolabilidad de mi domicilio, consignada en el código fundamental de nuestra nacion.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pero señor don Ruperto...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Lo dicho, dicho. Salga V. de esta casa, y no vuelva á poner en ella los pies hasta que le toque el premio gordo de la lotería.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Oh! yo tambien tengo mi genio, y cuando se me irrita, soy una fiera. Volveré.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "No volverá V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Volveré, así que encuentre quien me preste un real. (*Váse.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*A Elena.*) Ya ves cuál nos humilla!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Qué dice V.?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Que se retire V. de esta sala; que huya V. de mi vista, ó tiemble mi cólera. (*Coge una navaja de afeitar.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Ay! (*Vase corriendo.*)",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.III",
+        "sentimiento": 0.3456610317887931,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1264,
+        "acto": "I",
+        "escena": "III",
+        "texto": "\n### ESCENA III.\n\n\nDON RUPERTO, despues BARTOLOMÉ.\nRUP. (*Afilando la navaja.*) Procedamos con prudencia. Esa muchacha me pone en el disparadero, y voy á hacer una barbaridad. Que no resucitára su madre! Pero no, que no resucite, porque entonces haria dos barbaridades. (*Mira el reló.*) Las once de la mañana, y aun no ha venido ningun dependiente! (*Se asoma al balcon. En este momento entra Bartolomé, vestido decentemente, aunque con desaliño, sin que don Ruperto se aperciba de su entrada.*)\nBAR.** El gato, convertido en raton, entra en la ratonera, dispuesto á dejar en ella la libertad, el corazon y hasta las barbas. Calle! El padre de Elena, y ella estará dentro sola... Pues que me afeite Elena. (*Al tiempo de dirigirse á una de las puertas que dan al interior, le vé don Ruperto.*)\nRUP. Eh! caballerito... A dónde va V?\nBAR. A afeitarme.\nRUP. A la cocina?\nBAR. No conozco la casa; V. dispense. (*Se dirije á otra puerta.*)\nRUP. Señor mio, que por ahí se va á la alcoba de mi hija.\nBAR. Yo no miro nunca las alcobas de las mujeres. (*Entra.*)\nRUP. (*Sacándole del brazo.*) Quiere V. decirme qué es lo que pretende?\nBAR. Afeitarme.\nRUP. Pues, hombre, aquí.\nBAR. Ah! Es este el taller?\nRUP. Es el Infierno.\nBAR. Con sus correspondientes suplicios? Pues he aquí una víctima. (*Se sienta en el sillon mas próximo.*) Aféiteme V.\nRUP. Intenciones me dan de hacerlo.\nBAR. Se niega V?\nRUP. Quiá! No señor. Voy á servir á V. en seguida. (*Le desuello vivo, no hay duda. Demos tiempo á ver si viene algun dependiente.*) (*Le enseña una navaja enorme.*)\nBAR. Tiene V. la mano suave?\nRUP. Como un guante.\nBAR. Y la navaja?\nRUP. Magnífica! Como que es de la Estrella. Véala usted. (*Le enseña una navaja enorme.*)\nBAR. Y dónde hay cara para tanta navaja? Si con la quinta parte bastaba!\nRUP. Asi emplearemos la quinta parte del tiempo. (*Dando correa á la navaja.*) (*Si supieras, desventurado!... Cómo hacerle conocer el peligro que corre?*) (*Alto.*) Pero está V. decidido á que le afeite?\nBAR. Que si estoy decidido! Pues ya lo creo.\nRUP. Y si yo no quisiera afeitar á V?\nBAR. (*Este hombre conoce mis intenciones.*) (*Alto.*) Fijaré en esta casa mi domicilio, pues tengo derecho á no salir de ella sin afeitar.\nRUP. Sí? Pues, hombre, voy á complacerle. (*Se vá hácia él con la navaja en la mano.*)\nBAR. Pero, maestro, piensa V. mondarme ó afeitarme? Primero es bañar.\nRUP. Ah! si. (*Coje la brocha, y se la pasa por la cara.*)\nBAR. Un paño, si V. lo tiene á bien.\nRUP. Qué cabeza la mia. (*Se dirije á una percha en que estan los paños, trae la cortina que los cubre y se la sujeta al cuello á Ruperto. Empieza á afeitarle.*)\nBAR. Conque tiene V. una hija?\nRUP. Cómo lo sabe V!\nBAR. Su alcoba me la ha denunciado.\nRUP. Ira de Dios! Qué dice V. de la alcoba de mi hija?\nBAR. Usted me ha manifestado hace un momento, que por esa puerta se iba á la alcoba de su hija.\nRUP. Sí; y qué?\nBAR. Que el que tiene alcoba para su hija, debe tener una hija para su alcoba.\nRUP. Y qué mas?\nBAR. Nada mas, sinó que tiene V. la felicidad de tener una hija.\nRUP. Pues yo se la regalaria á V. de muy buena gana.\nBAR. Su hija?\nRUP. La felicidad de tener hijas casaderas, orígen de no pocos disgustos.\nBAR. Y V. los tiene?\nRUP. Friolera! Hoy he despedido á mis dependientes, porque la hacian el amor; y acabo de despedir á un vecino por la misma causa.\nBAR. Vecino, eh?\nRUP. El escribientillo de esa lotería de enfrente.\nBAR. Ha hecho V. muy bien en despedirle; es un seductor! (*Quién será ese prógimo?*)\nRUP. Seductor! Tiene V. pruebas?\nBAR. Se dice de público, que ha hecho víctima de sus liviandades, á Micaela, la ribeteadora, que hoy llora su bien perdido, con lágrimas como nueces.\nRUP. Pobre criatura!\nBAR. Pues aun hay mas; maestro, no me dé V. jabon en los ojos... Una jóven huérfana, cándida y hermosa, ha caido en poder de ese antropófago, y... pásmese V., la ha devorado...\nRUP. Es imposible!\nBAR. Todo su caudal. Además es súcio, gloton, borracho, pendenciero, y levanta-muertos. Pero, maestro, que me está V. haciendo tragar una fábrica de jabon!\nRUP. Cierre V. la boca, que es la última mano.\nBAR. Me ha introducido V. la brocha en los sesos!\nRUP. El bañado ha concluido; verá V. como adelantamos ahora. (*Coje la navaja, vuelve la espalda á Bartolomé y se santigua.*) (*El Señor me perdone!*)\nBAR. (*Dios me ampare!*)\nRUP. (*Afeitando.*) Un mal rato pronto se pasa.\nBAR. Ay! que me sierra V. el cuello!\nRUP. No se mueva V.\nBAR. Vírgen Santísima, qué horrenda cortadura!\nRUP. Un granillo en que ha tropezado la navaja.\nBAR. Donde ha tropezado ese maldito serrucho, es en el hueso. Ay! mi oreja! (*Se levanta.*) Pero V. se ha propuesto disecarme?\nRUP. No tal; descañonarle.\nBAR. (*Dirigiéndose al proscenio.*) Vaya V. y su descañonado al Infierno!\nRUP. Le he hecho á V. daño?\nBAR. No señor; me ha hecho V. unas cosquillas deliciosas.\nRUP. Entonces, por qué se aflije V?\nBAR. Porque me acuerdo de San Bartolomé, mi patrono, que murió desollado.\nRUP. Voy por agua para acabarle de hacer la barba.\nBAR. A mí, un demonio!\nRUP. Pero!...\nBAR. Volveré!... (*Vaya si volveré! Necesito vengarme y realizar mi plan.*) (*Váse.*)\nRUP. De seguro que he perdido un parroquiano. Pero, ahora que caigo, el bribon no me ha pagado. (*Llamando.*) Eh! Señor mio...\n\n",
+        "locuciones": [
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Afilando la navaja.*) Procedamos con prudencia. Esa muchacha me pone en el disparadero, y voy á hacer una barbaridad. Que no resucitára su madre! Pero no, que no resucite, porque entonces haria dos barbaridades. (*Mira el reló.*) Las once de la mañana, y aun no ha venido ningun dependiente! (*Se asoma al balcon. En este momento entra Bartolomé, vestido decentemente, aunque con desaliño, sin que don Ruperto se aperciba de su entrada.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "** El gato, convertido en raton, entra en la ratonera, dispuesto á dejar en ella la libertad, el corazon y hasta las barbas. Calle! El padre de Elena, y ella estará dentro sola... Pues que me afeite Elena. (*Al tiempo de dirigirse á una de las puertas que dan al interior, le vé don Ruperto.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Eh! caballerito... A dónde va V?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "A afeitarme.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "A la cocina?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No conozco la casa; V. dispense. (*Se dirije á otra puerta.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Señor mio, que por ahí se va á la alcoba de mi hija.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Yo no miro nunca las alcobas de las mujeres. (*Entra.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Sacándole del brazo.*) Quiere V. decirme qué es lo que pretende?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Afeitarme.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pues, hombre, aquí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Ah! Es este el taller?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Es el Infierno.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Con sus correspondientes suplicios? Pues he aquí una víctima. (*Se sienta en el sillon mas próximo.*) Aféiteme V.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Intenciones me dan de hacerlo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Se niega V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Quiá! No señor. Voy á servir á V. en seguida. (*Le desuello vivo, no hay duda. Demos tiempo á ver si viene algun dependiente.*) (*Le enseña una navaja enorme.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Tiene V. la mano suave?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Como un guante.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Y la navaja?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Magnífica! Como que es de la Estrella. Véala usted. (*Le enseña una navaja enorme.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Y dónde hay cara para tanta navaja? Si con la quinta parte bastaba!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Asi emplearemos la quinta parte del tiempo. (*Dando correa á la navaja.*) (*Si supieras, desventurado!... Cómo hacerle conocer el peligro que corre?*) (*Alto.*) Pero está V. decidido á que le afeite?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que si estoy decidido! Pues ya lo creo.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y si yo no quisiera afeitar á V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Este hombre conoce mis intenciones.*) (*Alto.*) Fijaré en esta casa mi domicilio, pues tengo derecho á no salir de ella sin afeitar.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí? Pues, hombre, voy á complacerle. (*Se vá hácia él con la navaja en la mano.*)",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pero, maestro, piensa V. mondarme ó afeitarme? Primero es bañar.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ah! si. (*Coje la brocha, y se la pasa por la cara.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Un paño, si V. lo tiene á bien.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Qué cabeza la mia. (*Se dirije á una percha en que estan los paños, trae la cortina que los cubre y se la sujeta al cuello á Ruperto. Empieza á afeitarle.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Conque tiene V. una hija?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Cómo lo sabe V!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Su alcoba me la ha denunciado.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ira de Dios! Qué dice V. de la alcoba de mi hija?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Usted me ha manifestado hace un momento, que por esa puerta se iba á la alcoba de su hija.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí; y qué?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que el que tiene alcoba para su hija, debe tener una hija para su alcoba.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y qué mas?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Nada mas, sinó que tiene V. la felicidad de tener una hija.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pues yo se la regalaria á V. de muy buena gana.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Su hija?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "La felicidad de tener hijas casaderas, orígen de no pocos disgustos.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BAR Y V",
+            "t": "los tiene?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Friolera! Hoy he despedido á mis dependientes, porque la hacian el amor; y acabo de despedir á un vecino por la misma causa.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Vecino, eh?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "El escribientillo de esa lotería de enfrente.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Ha hecho V. muy bien en despedirle; es un seductor! (*Quién será ese prógimo?*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Seductor! Tiene V. pruebas?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Se dice de público, que ha hecho víctima de sus liviandades, á Micaela, la ribeteadora, que hoy llora su bien perdido, con lágrimas como nueces.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pobre criatura!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pues aun hay mas; maestro, no me dé V. jabon en los ojos... Una jóven huérfana, cándida y hermosa, ha caido en poder de ese antropófago, y... pásmese V., la ha devorado...",
+            "tac": "Seducir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Es imposible!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Todo su caudal. Además es súcio, gloton, borracho, pendenciero, y levanta-muertos. Pero, maestro, que me está V. haciendo tragar una fábrica de jabon!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Cierre V. la boca, que es la última mano.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Me ha introducido V. la brocha en los sesos!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "El bañado ha concluido; verá V. como adelantamos ahora. (*Coje la navaja, vuelve la espalda á Bartolomé y se santigua.*) (*El Señor me perdone!*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Dios me ampare!*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Afeitando.*) Un mal rato pronto se pasa.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Ay! que me sierra V. el cuello!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "No se mueva V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Vírgen Santísima, qué horrenda cortadura!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Un granillo en que ha tropezado la navaja.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Donde ha tropezado ese maldito serrucho, es en el hueso. Ay! mi oreja! (*Se levanta.*) Pero V. se ha propuesto disecarme?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "No tal; descañonarle.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Dirigiéndose al proscenio.*) Vaya V. y su descañonado al Infierno!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Le he hecho á V. daño?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No señor; me ha hecho V. unas cosquillas deliciosas.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Entonces, por qué se aflije V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Porque me acuerdo de San Bartolomé, mi patrono, que murió desollado.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Voy por agua para acabarle de hacer la barba.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "A mí, un demonio!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero!...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Volveré!... (*Vaya si volveré! Necesito vengarme y realizar mi plan.*) (*Váse.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "De seguro que he perdido un parroquiano. Pero, ahora que caigo, el bribon no me ha pagado. (*Llamando.*) Eh! Señor mio...",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.IV",
+        "sentimiento": 0.5416666666666666,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1265,
+        "acto": "I",
+        "escena": "IV",
+        "texto": "\nESCENA IV.\n\n\nEl mismo, VIRGINIA.\n\n\nVIR. (*Entrando azorada.*) Caballero, V. tiene cara de hombre de bien.\nRUP. Me precio de serlo.\nVIR. Amigo de hacer un favor...\nRUP. Oh! sin duda.\nVIR. Compasivo con las mujeres...\nRUP. Ya lo creo. (*A dónde irá á parar?*)\nVIR. Dejaré los rodeos. Le gustaria á V. que un hombre le hiciese el amor, y que despues de hacerle consentir en el matrimonio, le abandonase!\nRUP. Pero, señora, la suposicion es inadmisible.\nVIR. Es verdad; pero, póngase V. en mi caso.\nRUP. Dios me libre!\nVIR. Un hombre á quien V. conoce, intenta mi deshonra; yo necesito que ese hombre pruebe que lo es.\nRUP. Cómo?\nVIR. O casándose conmigo, ó batiéndose con V.\nRUP. Y qué tengo yo que ver?...\nVIR. Usted tiene cara de hombre honrado.\nRUP. Sí...\nVIR. Amigo de hacer un favor.\nRUP. Sí; pero...\nVIR. Compasivo con las mujeres.\nRUP. Pero, quién es él?\nVIR. Oh! gracias, gracias. Mi corazon me decia que era V. lo que yo necesitaba... Pues, ese hombre, acaba de salir de esta casa, ese hombre es un infame, y se llama Tobías.\nRUP. Tobías!\nVIR. Si señor; como el protegido por el arcángel.\nRUP. El amante de mi hija!\nVIR. Qué dice V?\nRUP. El escribiente de la lotería de la esquina!\nVIR. Qué escucho! Dice V. que vive en la esquina?\nAhora no se me escapará! Si vuelve...\nRUP. No volverá.\nVIR. Si vuelve, dígale V. que he estado aquí.\nRUP. Y quién es V?\nVIR. Virginia. (*Váse.*)\nRUP. Por muchos años. Aventura mas extraña!",
+        "locuciones": [
+          {
+            "p": "ESCENA IV",
+            "t": "El mismo, VIRGINIA.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "(*Entrando azorada.*) Caballero, V. tiene cara de hombre de bien.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Me precio de serlo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Amigo de hacer un favor...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Oh! sin duda.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Compasivo con las mujeres...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ya lo creo. (*A dónde irá á parar?*)",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Dejaré los rodeos. Le gustaria á V. que un hombre le hiciese el amor, y que despues de hacerle consentir en el matrimonio, le abandonase!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero, señora, la suposicion es inadmisible.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Es verdad; pero, póngase V. en mi caso.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Dios me libre!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Un hombre á quien V. conoce, intenta mi deshonra; yo necesito que ese hombre pruebe que lo es.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Cómo?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "O casándose conmigo, ó batiéndose con V.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y qué tengo yo que ver?...",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Usted tiene cara de hombre honrado.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí...",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Amigo de hacer un favor.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí; pero...",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Compasivo con las mujeres.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero, quién es él?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Oh! gracias, gracias. Mi corazon me decia que era V. lo que yo necesitaba... Pues, ese hombre, acaba de salir de esta casa, ese hombre es un infame, y se llama Tobías.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Tobías!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Si señor; como el protegido por el arcángel.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "El amante de mi hija!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Qué dice V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "El escribiente de la lotería de la esquina!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Qué escucho! Dice V. que vive en la esquina?\nAhora no se me escapará! Si vuelve...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "No volverá.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Si vuelve, dígale V. que he estado aquí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y quién es V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Virginia. (*Váse.*)",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Por muchos años. Aventura mas extraña!",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.V",
+        "sentimiento": -0.01171875,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1266,
+        "acto": "I",
+        "escena": "V",
+        "texto": "\nESCENA V.\n\n\nDON RUPERTO, ELENA.\n\n\nELE. Con quién hablaba V?\nRUP. Yo, solo... es decir, no: hablaba con... y á tí, qué te importa?\nELE. Jesús! Tiene V. hoy un genio!\nRUP. Y tú una curiosidad imperdonable.\nELE. Se le ha pasado á V. el enfado?\nRUP. Cuál de ellos?\nELE. El último.\nRUP. Ah, sí, á propósito. Sabes con quién estaba hablando? Pues, tiembla; con Virginia.\nELE. No conozco...\nRUP. Pues pregúntale, pregúntale á Tobías si la conoce. Pregunta á ese infame escribiente lo que ha hecho de su sencilla virtud; pregúntale de paso si conoce á una ribeteadora que se llama Micaela; pregúntale el número de muertos que levanta al dia, y cuando estés convencida de lo honrado que es tu pretendiente, déjate abrazar por él.\nELE. Pero, quién le ha dicho á V?....\nRUP. Nadie... yo soy un visionario, un padre feroz, un tirano... Afortunadamente la Providencia ha acudido en tu auxilio. Que tiemble el infame!\nELE. (*Oh! si me engañase!...*)\nRUP. Y á todo esto, sin venir ningun dependiente; ya he desollado á un parroquiano, y esta casa se vá á convertir en un cementerio. Las navajas deben tener la culpa! (*Vuelve á afilarlas.*)\nELE. (*Fíese V. de los hombres! Un jóven tan tímido, en tratos con una ribeteadora, y con otra que se llama Virginia! Está visto que son menos temibles los atrevidos; esto me enseñará á no ser tan cruel con mi pobre Bartolomé.*)",
+        "locuciones": [
+          {
+            "p": "ESCENA V",
+            "t": "DON RUPERTO, ELENA.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Con quién hablaba V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Yo, solo... es decir, no: hablaba con... y á tí, qué te importa?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Jesús! Tiene V. hoy un genio!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y tú una curiosidad imperdonable.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Se le ha pasado á V. el enfado?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Cuál de ellos?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "El último.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Ah, sí, á propósito. Sabes con quién estaba hablando? Pues, tiembla; con Virginia.",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "No conozco...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pues pregúntale, pregúntale á Tobías si la conoce. Pregunta á ese infame escribiente lo que ha hecho de su sencilla virtud; pregúntale de paso si conoce á una ribeteadora que se llama Micaela; pregúntale el número de muertos que levanta al dia, y cuando estés convencida de lo honrado que es tu pretendiente, déjate abrazar por él.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pero, quién le ha dicho á V?....",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Nadie... yo soy un visionario, un padre feroz, un tirano... Afortunadamente la Providencia ha acudido en tu auxilio. Que tiemble el infame!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Oh! si me engañase!...*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y á todo esto, sin venir ningun dependiente; ya he desollado á un parroquiano, y esta casa se vá á convertir en un cementerio. Las navajas deben tener la culpa! (*Vuelve á afilarlas.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Fíese V. de los hombres! Un jóven tan tímido, en tratos con una ribeteadora, y con otra que se llama Virginia! Está visto que son menos temibles los atrevidos; esto me enseñará á no ser tan cruel con mi pobre Bartolomé.*)",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.VI",
+        "sentimiento": 0.36834716796875,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1267,
+        "acto": "I",
+        "escena": "VI",
+        "texto": "ESCENA VI.\r\n\r\nLos mismos y BARTOLOMÉ con otro trage y patilla corrida.\r\n\r\nBAR. Es esta la barbería de D. Ruperto?\r\n\r\nRUP. Sí señor.\r\n\r\nBAR. El que ha encargado dependientes, al vaciador de la Plaza.\r\n\r\nRUP. El mismo; V. será por acaso?\r\n\r\nBAR. No, señor, no soy por acaso; soy Gil, de profesion peluquero.\r\n\r\nRUP. Y tiene V. práctica en el oficio?\r\n\r\nBAR. Puedo vanagloriarme de ello.\r\n\r\nRUP. (*Voy á examinarle.*) (*Alto.*) Veamos la marcha que sigue V. para hacer la barba.\r\n\r\nBAR. Oh! muy sencilla. En cuanto llega un parroquiano, le siento en un sillon; lleno de agua la brocha, le paso la bacía por la cara, despues afilo la piedra en la navaja, y le quito á las barbas todo el semblante.\r\n\r\nRUP. Perfectamente! Y si el parroquiano tiene granos?\r\n\r\nBAR. Se los corto.\r\n\r\nRUP. Y si tiene berrugas?\r\n\r\nBAR. Se las corto.\r\n\r\nRUP. Y si tiene una erupcion?\r\n\r\nBAR. Se la corto.\r\n\r\nRUP. Hombre! V. todo lo corta! Ha sido V. cortador?\r\n\r\n(*Modifico mi opinion; no le creo muy hábil.*) Pasemos á otra cosa. (*Vá al fondo y vuelve con unas tenacillas.*)\r\n\r\nBAR. (*Rápidamente á Elena.*) Elena, soy yo; tu Bartolomé.\r\n\r\nELE. Ah! qué atrevimiento.\r\n\r\nBAR. Silencio!\r\n\r\nRUP. Qué es eso?\r\n\r\nELE. Nada, papá.\r\n\r\nRUP. Vamos, á ver. (*Enseñando las tenacillas.*) Qué es esto?\r\n\r\nBAR. V. me ofende; unas tenacillas.\r\n\r\nRUP. Cuál es su uso?\r\n\r\nBAR. Su uso, su uso... Diré á V. Como hasta hoy he sido barbero ambulante, y los aguadores no se rizan el pelo con mucha frecuencia, no soy muy fuerte en eso de hacer sortijillas.\r\n\r\nRUP. (*Malo! malo!...*)\r\n\r\nBAR. Pero V. me enseñará, y con el tiempo...\r\n\r\nRUP. Me ha tomado V. por un barbero?\r\n\r\nBAR. Hombre, me parece...\r\n\r\nRUP. Pues le parece á V. muy mal, y... pocas contestaciones!\r\n\r\nBAR. (*Ay, amor!*)\r\n\r\nRUP. Tratemos ahora del salario. Cuánto pretende usted ganar?\r\n\r\nBAR. Oh! no reñiremos por eso.\r\n\r\nRUP. Sin embargo, es necesario...\r\n\r\nBAR. Pues, deme V. un par de duros.\r\n\r\nRUP. Mensuales?\r\n\r\nBAR. O anuales, como V. quiera.\r\n\r\nRUP. (*Ese desinterés me parece sospechoso.*) (*Alto.*) Está bien, amigo Gil. (*Bartolomé mira á todos lados.*) Qué busca V?\r\n\r\nBAR. Creí que hablaba V. con alguien.\r\n\r\nRUP. Con quién habia de hablar?\r\n\r\nBAR. Con ese caballero Gil.\r\n\r\nRUP. Pero V. no se llama...\r\n\r\nBAR. Qué cabeza la mia!... Lo habia olvidado!\r\n\r\nRUP. (*Hum! Ese detalle es sospechoso! No parará mucho en mi casa!*) Ea! la hora adelanta y siento que suben la escalera... A trabajar bien... y, sobre todo, pierda V. sus aficiones de cortador.\r\n\r\nBAR. Sí, señor.",
+        "locuciones": [
+          {
+            "p": "ESCENA VI",
+            "t": "Los mismos y BARTOLOMÉ con otro trage y patilla corrida.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Es esta la barbería de D. Ruperto?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sí señor.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "El que ha encargado dependientes, al vaciador de la Plaza.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "El mismo; V. será por acaso?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No, señor, no soy por acaso; soy Gil, de profesion peluquero.",
+            "tac": "Manipular"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y tiene V. práctica en el oficio?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Puedo vanagloriarme de ello.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Voy á examinarle.*) (*Alto.*) Veamos la marcha que sigue V. para hacer la barba.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Oh! muy sencilla. En cuanto llega un parroquiano, le siento en un sillon; lleno de agua la brocha, le paso la bacía por la cara, despues afilo la piedra en la navaja, y le quito á las barbas todo el semblante.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Perfectamente! Y si el parroquiano tiene granos?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Se los corto.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y si tiene berrugas?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Se las corto.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Y si tiene una erupcion?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Se la corto.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Hombre! V. todo lo corta! Ha sido V. cortador?\r\n\r\n(*Modifico mi opinion; no le creo muy hábil.*) Pasemos á otra cosa. (*Vá al fondo y vuelve con unas tenacillas.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Rápidamente á Elena.*) Elena, soy yo; tu Bartolomé.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "Ah! qué atrevimiento.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Silencio!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Qué es eso?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Nada, papá.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Vamos, á ver. (*Enseñando las tenacillas.*) Qué es esto?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BAR V",
+            "t": "me ofende; unas tenacillas.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Cuál es su uso?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Su uso, su uso... Diré á V. Como hasta hoy he sido barbero ambulante, y los aguadores no se rizan el pelo con mucha frecuencia, no soy muy fuerte en eso de hacer sortijillas.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Malo! malo!...*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pero V. me enseñará, y con el tiempo...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Me ha tomado V. por un barbero?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Hombre, me parece...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pues le parece á V. muy mal, y... pocas contestaciones!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Ay, amor!*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Tratemos ahora del salario. Cuánto pretende usted ganar?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Oh! no reñiremos por eso.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Sin embargo, es necesario...",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pues, deme V. un par de duros.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Mensuales?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "O anuales, como V. quiera.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Ese desinterés me parece sospechoso.*) (*Alto.*) Está bien, amigo Gil. (*Bartolomé mira á todos lados.*) Qué busca V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Creí que hablaba V. con alguien.",
+            "tac": "Manipular"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Con quién habia de hablar?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Con ese caballero Gil.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Pero V. no se llama...",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Qué cabeza la mia!... Lo habia olvidado!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Hum! Ese detalle es sospechoso! No parará mucho en mi casa!*) Ea! la hora adelanta y siento que suben la escalera... A trabajar bien... y, sobre todo, pierda V. sus aficiones de cortador.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Sí, señor.",
+            "tac": "Informar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.VII",
+        "sentimiento": 0.265625,
+        "subjetividad": 0.825,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1268,
+        "acto": "I",
+        "escena": "VII",
+        "texto": "ESCENA VII.\r\n\r\nDichos y TOBÍAS.\r\n\r\nTOB. Maestro; á afeitarme pronto, y bien, si quiere usted que le dé propina.\r\n\r\nRUP. Qué veo! Tobías...\r\n\r\nTOB. Sí, señor; Tobías que vuelve á cumplir su palabra; Tobías que viene á su establecimiento público, con el derecho de cualquier ciudadano que tenga un real.\r\n\r\nELE. (*Tobías y Bartolomé juntos!*)\r\n\r\nRUP. Comprendo el asesinato.\r\n\r\nTOB. Vamos, pocas esclamaciones y á afeitarme.\r\n\r\nRUP. V. tiene derecho á pisar esta sala; pero yo lo tengo á impedirle que vea á mi hija. Elena, al comedor...\r\n\r\nBAR. (Por qué guarda á su hija?)\r\n\r\nELE. Pero, papá...\r\n\r\nRUP. (*Empujándola.*) Al comedor, he dicho; y en cuanto á V., Gil, afeite bien al señor, (*Marcando mucho.*) segun su sistema, y no me avise hasta que se haya consumado la obra.\r\n\r\nBAR. (Este debe ser el amante... Si mis dudas se confirman, ya puede hacer acopio de telas de araña para restañar la sangre!)",
+        "locuciones": [
+          {
+            "p": "ESCENA VII",
+            "t": "Dichos y TOBÍAS.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Maestro; á afeitarme pronto, y bien, si quiere usted que le dé propina.",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Qué veo! Tobías...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Sí, señor; Tobías que vuelve á cumplir su palabra; Tobías que viene á su establecimiento público, con el derecho de cualquier ciudadano que tenga un real.",
+            "tac": "Informar"
+          },
+          {
+            "p": "ELENA",
+            "t": "(*Tobías y Bartolomé juntos!*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "Comprendo el asesinato.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Vamos, pocas esclamaciones y á afeitarme.",
+            "tac": "Informar"
+          },
+          {
+            "p": "RUP V",
+            "t": "tiene derecho á pisar esta sala; pero yo lo tengo á impedirle que vea á mi hija. Elena, al comedor...",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(Por qué guarda á su hija?)",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "ELENA",
+            "t": "Pero, papá...",
+            "tac": "Informar"
+          },
+          {
+            "p": "DON RUPERTO",
+            "t": "(*Empujándola.*) Al comedor, he dicho; y en cuanto á V., Gil, afeite bien al señor, (*Marcando mucho.*) segun su sistema, y no me avise hasta que se haya consumado la obra.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(Este debe ser el amante... Si mis dudas se confirman, ya puede hacer acopio de telas de araña para restañar la sangre!)",
+            "tac": "Atacar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.VIII",
+        "sentimiento": 0.4453125,
+        "subjetividad": 0.9,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1269,
+        "acto": "I",
+        "escena": "VIII",
+        "texto": "\nESCENA VIII.\nBARTOLOMÉ, TOBIAS.\n\n\nTOB. (*Se quita el tapaboca sobre el cual se sienta en el sillon y coje un periódico. Bartolomé váse y vuelve con una bacía, que coloca en el suelo; despues afila seis ú ocho navajas, cuyo corte prueba en los palos de las sillas, en la suela de sus botas y en algunos paños que corta.*) (Pues señor, así como así, mis patillas son muy desiguales, y sin ellas podré ocultarme mejor de Virginia, cuya persecucion me empieza á inquietar. Qué alma de fuego tiene esa mujer! Su amor, de fuerza de cuarenta caballos, hubiera concluido conmigo, á no haber tenido yo la precaucion de huir de su lado, y la debilidad de dejarme flechar por Elena. Pero, de algunos dias á esta parte, la he visto por esta plazuela... Habrá averiguado mi nido? Poco me importa; ya me ha despedido el lotero y puedo volar á donde me parezca.) (A Bartolomé.) Pero, no me afeita V?\nBAR. Corriendo! (*Coloca un paño á Tobías y le enjabona la cara.*)\nTOB. (Me disgusta el dependiente; tiene un aspecto tan resuelto...)\nBAR. (*Empezando á afeitarle.*) Mal recibimiento le ha hecho á V. el amo; pero yo le ruego que no haga extensivo á mí su justo enojo.\nTOB. Y qué tengo yo que ver con V. ni con su amo?\nBAR. Cierto... con la señorita Elena otra cosa seria.\nTOB. (*Incorporándose.*) Qué dice V?\nBAR. Que ya me ha hecho V. cortarle! (Es mi rival!)\nTOB. Ah! sangre, sangre!...\nBAR. No se morirá V. por esa cortadura; y sobre todo, qué culpa tengo yo de que sea V. tan nervioso!\nTOB. Paciencia!\nBAR. Eso no vale nada.\nTOB. Nada, y me corre la sangre por el cuello! Ay! segunda cortadura! Pero, se ha propuesto V. desangrarme?\nBAR. La culpa es de V., que parece tiene el baile de San Vito. Estése quieto, y acabemos la barba en paz. Hace daño?\nTOB. Ay!\nBAR. No es nada, señorito: los cañones...\nTOB. (*Levantándose furioso.*) Asesino!\nBAR. Pero, señor...\nTOB. Esto es una inícua trama; pero yo me vengaré de todos, á fé de Tobías Floro Melaza y Martinez del Villar. (Tengamos ahora paciencia, ya que estoy á medio afeitar y no puedo salir así á la calle.) (Alto.) Concluya V. su obra.\nBAR. Que concluya mi obra? De ningun modo. Yo no puedo tolerar que se me llame asesino! Está V., señor D. Tobías Floro de Merluza?\nTOB. Esto mas!\nBAR. Como V. no ha sabido nunca lo que es tener un real, y se deja las patillas por economía, todo le parece mal cuando se le limpia; V. debe afeitarse en la plaza de Pontejos, y cara al sol; pero no en un establecimiento montado al gusto del dia.\nTOB. Qué barbero tan bárbaro!\nBAR. Eh, señor mio; guárdese V. su nombre, y chiquito que viene gente.\nTOB. Y me van á ver así!\nBAR. Que le vean á V. asao!\nTOB. Pero, hombre, siquiera por el decoro de la casa!...\nBAR. Es verdad, salvemos el decoro de la casa. Entre V. ahí, y en cuanto quedemos solos, concluiré de afeitarle.\nTOB. Pero...\nBAR. Entre V. Con eso le doy tiempo de ponerse bien con Dios. (*Tobías, con una patilla afeitada y la otra no, es empujado por Bartolomé á la alcoba de Elena. Bartolomé cierra despues la puerta. Durante este instante, entra Virginia, y se sienta en el sillon.*)",
+        "locuciones": [
+          {
+            "p": "ESCENA VIII",
+            "t": "BARTOLOMÉ, TOBIAS.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(*Se quita el tapaboca sobre el cual se sienta en el sillon y coje un periódico. Bartolomé váse y vuelve con una bacía, que coloca en el suelo; despues afila seis ú ocho navajas, cuyo corte prueba en los palos de las sillas, en la suela de sus botas y en algunos paños que corta.*) (Pues señor, así como así, mis patillas son muy desiguales, y sin ellas podré ocultarme mejor de Virginia, cuya persecucion me empieza á inquietar. Qué alma de fuego tiene esa mujer! Su amor, de fuerza de cuarenta caballos, hubiera concluido conmigo, á no haber tenido yo la precaucion de huir de su lado, y la debilidad de dejarme flechar por Elena. Pero, de algunos dias á esta parte, la he visto por esta plazuela... Habrá averiguado mi nido? Poco me importa; ya me ha despedido el lotero y puedo volar á donde me parezca.) (A Bartolomé.) Pero, no me afeita V?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Corriendo! (*Coloca un paño á Tobías y le enjabona la cara.*)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(Me disgusta el dependiente; tiene un aspecto tan resuelto...)",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Empezando á afeitarle.*) Mal recibimiento le ha hecho á V. el amo; pero yo le ruego que no haga extensivo á mí su justo enojo.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Y qué tengo yo que ver con V. ni con su amo?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Cierto... con la señorita Elena otra cosa seria.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(*Incorporándose.*) Qué dice V?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que ya me ha hecho V. cortarle! (Es mi rival!)",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ah! sangre, sangre!...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No se morirá V. por esa cortadura; y sobre todo, qué culpa tengo yo de que sea V. tan nervioso!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Paciencia!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Eso no vale nada.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Nada, y me corre la sangre por el cuello! Ay! segunda cortadura! Pero, se ha propuesto V. desangrarme?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "La culpa es de V., que parece tiene el baile de San Vito. Estése quieto, y acabemos la barba en paz. Hace daño?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Ay!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No es nada, señorito: los cañones...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "(*Levantándose furioso.*) Asesino!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pero, señor...",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Esto es una inícua trama; pero yo me vengaré de todos, á fé de Tobías Floro Melaza y Martinez del Villar. (Tengamos ahora paciencia, ya que estoy á medio afeitar y no puedo salir así á la calle.) (Alto.) Concluya V. su obra.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que concluya mi obra? De ningun modo. Yo no puedo tolerar que se me llame asesino! Está V., señor D. Tobías Floro de Merluza?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Esto mas!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Como V. no ha sabido nunca lo que es tener un real, y se deja las patillas por economía, todo le parece mal cuando se le limpia; V. debe afeitarse en la plaza de Pontejos, y cara al sol; pero no en un establecimiento montado al gusto del dia.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Qué barbero tan bárbaro!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Eh, señor mio; guárdese V. su nombre, y chiquito que viene gente.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Y me van á ver así!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que le vean á V. asao!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pero, hombre, siquiera por el decoro de la casa!...",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Es verdad, salvemos el decoro de la casa. Entre V. ahí, y en cuanto quedemos solos, concluiré de afeitarle.",
+            "tac": "Informar"
+          },
+          {
+            "p": "TOBÍAS",
+            "t": "Pero...",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Entre V. Con eso le doy tiempo de ponerse bien con Dios. (*Tobías, con una patilla afeitada y la otra no, es empujado por Bartolomé á la alcoba de Elena. Bartolomé cierra despues la puerta. Durante este instante, entra Virginia, y se sienta en el sillon.*)",
+            "tac": "Informar"
+          }
+        ]
+      },
+      {
+        "label": "A.I E.IX",
+        "sentimiento": 0.3614501953125,
+        "subjetividad": 1.0,
+        "titulo_obra": "Barba y Media",
+        "publicacion_id": 413.0,
+        "doc_id": 1270,
+        "acto": "I",
+        "escena": "IX",
+        "texto": "ESCENA IX.\r\n\r\nBARTOLOMÉ, VIRGINIA.\r\n\r\nBAR. (*Mirándola.*) (Me gusta el parroquiano! A que al cabo me aficiono al oficio!) (Alto, acercándose.) Con rizado ó sin él, señora?\r\n\r\nVIR. (*Saliendo de su abstraccion.*) Decia V?...\r\n\r\nBAR. Que cómo ha de ser el peinado? Prefiere V. la moña ó la castaña?\r\n\r\nVIR. No me hable V. de castaña; con esa palabra tan prosáica, ha evocado V. en mi mente, todo un mundo de dolorosos recuerdos!\r\n\r\nBAR. (*La han engañado, hablando en plata.*) (Alto.) Entonces se decide V. por la moña...\r\n\r\nVIR. No ha conocido V. en el momento de verme, que no estoy para peinarme?\r\n\r\nBAR. Perdone V.; pero lo que he conocido al primer golpe de vista, es que no está V. para afeitarse.\r\n\r\nVIR. Nadie comprende mis pesares. Si V. supiera, jóven, si V. supiera!\r\n\r\nBAR. (*Historia tenemos.*) (*Sentándose á su lado en una silla.*) Comuníqueme V. sus penas, que yo sabré comprenderlas y hacérselas olvidar.\r\n\r\nVIR. Olvidarlas! Imposible! Yo amaba, amo todavia, amaré mientras viva, á un hombre. Comprende V?\r\n\r\nBAR. Si, comprendo, comprendo...\r\n\r\nVIR. Sabe V. lo que es amor?\r\n\r\nBAR. Como que yo tambien amo; la situacion de V. es igual exactamente á la mia; solo que es precisamente lo contrario; porque V. ama á un hombre, y yo á una mujer.\r\n\r\nVIR. (*Suspirando.*) El hombre á quien adoro, me ha olvidado, cuando por él he perdido mi bellas ilusiones, mi dulce sonrisa y mis naturales encantos.\r\n\r\nBAR. Aun conservará V. algunos encantos naturales.\r\n\r\nVIR. No, tan solo soy una sombra de lo que fuí.\r\n\r\nBAR. Pues consuélese V., repitiendo con aquel monarca: Todo se ha perdido menos el honor! Al fin y al cabo no hay mas que hacerse la ilusion.\r\n\r\nVIR. Yo no puedo hacerme semejantes ilusiones; quiero, por el contrario, apurar la amarga realidad. (*Levantándose.*) Dónde está D. Ruperto?\r\n\r\nBAR. Por vida mia! Conque es D. Ruperto... Já! já! já!.\r\n\r\nVIR. Tambien V. se burla de mi dolor?\r\n\r\nBAR. No tal; D. Ruperto es un buen hombre, á pesar de su geniazo, y todo se arreglará en beneficio de V. y mio... Voy á llamarle.\r\n\r\nVIR. (*Viendo el tapaboca de Tobías en el sillon.*) Este tapaboca! Dónde está el dueño de este tapaboca?",
+        "locuciones": [
+          {
+            "p": "ESCENA IX",
+            "t": "BARTOLOMÉ, VIRGINIA.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Mirándola.*) (Me gusta el parroquiano! A que al cabo me aficiono al oficio!) (Alto, acercándose.) Con rizado ó sin él, señora?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "(*Saliendo de su abstraccion.*) Decia V?...",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Que cómo ha de ser el peinado? Prefiere V. la moña ó la castaña?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "No me hable V. de castaña; con esa palabra tan prosáica, ha evocado V. en mi mente, todo un mundo de dolorosos recuerdos!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*La han engañado, hablando en plata.*) (Alto.) Entonces se decide V. por la moña...",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "No ha conocido V. en el momento de verme, que no estoy para peinarme?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Perdone V.; pero lo que he conocido al primer golpe de vista, es que no está V. para afeitarse.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Nadie comprende mis pesares. Si V. supiera, jóven, si V. supiera!",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "(*Historia tenemos.*) (*Sentándose á su lado en una silla.*) Comuníqueme V. sus penas, que yo sabré comprenderlas y hacérselas olvidar.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Olvidarlas! Imposible! Yo amaba, amo todavia, amaré mientras viva, á un hombre. Comprende V?",
+            "tac": "Atacar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Si, comprendo, comprendo...",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Sabe V. lo que es amor?",
+            "tac": "Seducir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Como que yo tambien amo; la situacion de V. es igual exactamente á la mia; solo que es precisamente lo contrario; porque V. ama á un hombre, y yo á una mujer.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "(*Suspirando.*) El hombre á quien adoro, me ha olvidado, cuando por él he perdido mi bellas ilusiones, mi dulce sonrisa y mis naturales encantos.",
+            "tac": "Seducir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Aun conservará V. algunos encantos naturales.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "No, tan solo soy una sombra de lo que fuí.",
+            "tac": "Informar"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Pues consuélese V., repitiendo con aquel monarca: Todo se ha perdido menos el honor! Al fin y al cabo no hay mas que hacerse la ilusion.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Yo no puedo hacerme semejantes ilusiones; quiero, por el contrario, apurar la amarga realidad. (*Levantándose.*) Dónde está D. Ruperto?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "Por vida mia! Conque es D. Ruperto... Já! já! já!.",
+            "tac": "Atacar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "Tambien V. se burla de mi dolor?",
+            "tac": "Persuadir"
+          },
+          {
+            "p": "BARTOLOMÉ",
+            "t": "No tal; D. Ruperto es un buen hombre, á pesar de su geniazo, y todo se arreglará en beneficio de V. y mio... Voy á llamarle.",
+            "tac": "Informar"
+          },
+          {
+            "p": "VIRGINIA",
+            "t": "(*Viendo el tapaboca de Tobías en el sillon.*) Este tapaboca! Dónde está el dueño de este tapaboca?",
+            "tac": "Atacar"
+          }
+        ]
+      }
+    ],
+    "reparto_detalle": [
+      {
+        "nombre": "DON RUPERTO",
+        "palabras": 1247,
+        "intervenciones": 115,
+        "palabras_por_intervencion": 10.8,
+        "top_words": [
+          {
+            "term": "qué",
+            "count": 11
+          },
+          {
+            "term": "navaja",
+            "count": 10
+          },
+          {
+            "term": "por",
+            "count": 9
+          },
+          {
+            "term": "con",
+            "count": 9
+          },
+          {
+            "term": "tiene",
+            "count": 5
+          },
+          {
+            "term": "casa",
+            "count": 5
+          },
+          {
+            "term": "mas",
+            "count": 4
+          },
+          {
+            "term": "hasta",
+            "count": 4
+          },
+          {
+            "term": "dependiente",
+            "count": 4
+          },
+          {
+            "term": "parroquiano",
+            "count": 4
+          }
+        ],
+        "distinctive_words": [
+          "navaja",
+          "dependiente",
+          "quién",
+          "parroquiano",
+          "pronto"
+        ],
+        "top_frases": [
+          {
+            "term": "de mi hija",
+            "count": 3
+          },
+          {
+            "term": "con la navaja",
+            "count": 2
+          },
+          {
+            "term": "acabo de despedir",
+            "count": 2
+          },
+          {
+            "term": "de despedir á",
+            "count": 2
+          },
+          {
+            "term": "quién es v",
+            "count": 2
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          0.05997242647058824,
+          0.0,
+          0.09375,
+          0.07648026315789473,
+          0.015625,
+          0.03571428571428571,
+          0.0744047619047619,
+          0.08333333333333333,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Atacar": 39,
+          "Persuadir": 33,
+          "Informar": 42,
+          "Seducir": 1
+        }
+      },
+      {
+        "nombre": "BARTOLOMÉ",
+        "palabras": 1231,
+        "intervenciones": 97,
+        "palabras_por_intervencion": 12.7,
+        "top_words": [
+          {
+            "term": "por",
+            "count": 10
+          },
+          {
+            "term": "con",
+            "count": 10
+          },
+          {
+            "term": "señor",
+            "count": 8
+          },
+          {
+            "term": "alcoba",
+            "count": 7
+          },
+          {
+            "term": "hija",
+            "count": 7
+          },
+          {
+            "term": "mas",
+            "count": 6
+          },
+          {
+            "term": "soy",
+            "count": 5
+          },
+          {
+            "term": "para",
+            "count": 5
+          },
+          {
+            "term": "tiene",
+            "count": 5
+          },
+          {
+            "term": "hecho",
+            "count": 5
+          }
+        ],
+        "distinctive_words": [
+          "afeitar",
+          "afeita",
+          "señor",
+          "alcoba",
+          "pues"
+        ],
+        "top_frases": [
+          {
+            "term": "ha hecho v",
+            "count": 3
+          },
+          {
+            "term": "eh señor mio",
+            "count": 2
+          },
+          {
+            "term": "no hay mas",
+            "count": 2
+          },
+          {
+            "term": "se sienta en",
+            "count": 2
+          },
+          {
+            "term": "sienta en el",
+            "count": 2
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        "sentimiento_arc": [
+          0.08333333333333333,
+          null,
+          null,
+          0.07118055555555555,
+          null,
+          null,
+          0.023809523809523808,
+          0.0,
+          0.06333333333333332,
+          0.08096590909090909
+        ],
+        "perfil_tactico": {
+          "Informar": 47,
+          "Atacar": 34,
+          "Persuadir": 13,
+          "Seducir": 1,
+          "Manipular": 2
+        }
+      },
+      {
+        "nombre": "TOBÍAS",
+        "palabras": 935,
+        "intervenciones": 63,
+        "palabras_por_intervencion": 14.8,
+        "top_words": [
+          {
+            "term": "como",
+            "count": 8
+          },
+          {
+            "term": "por",
+            "count": 7
+          },
+          {
+            "term": "con",
+            "count": 6
+          },
+          {
+            "term": "así",
+            "count": 6
+          },
+          {
+            "term": "padre",
+            "count": 5
+          },
+          {
+            "term": "dos",
+            "count": 4
+          },
+          {
+            "term": "tan",
+            "count": 4
+          },
+          {
+            "term": "puerta",
+            "count": 3
+          },
+          {
+            "term": "quiere",
+            "count": 3
+          },
+          {
+            "term": "mas",
+            "count": 3
+          }
+        ],
+        "distinctive_words": [
+          "puedo",
+          "esto",
+          "desde",
+          "porque",
+          "quiere"
+        ],
+        "top_frases": [
+          {
+            "term": "su padre de",
+            "count": 3
+          },
+          {
+            "term": "padre de v",
+            "count": 3
+          },
+          {
+            "term": "todo lo que",
+            "count": 2
+          },
+          {
+            "term": "floro melaza y",
+            "count": 2
+          },
+          {
+            "term": "melaza y martinez",
+            "count": 2
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        "sentimiento_arc": [
+          0.0625,
+          0.06060606060606061,
+          0.028125,
+          null,
+          null,
+          null,
+          null,
+          0.06666666666666667,
+          0.058333333333333334,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 28,
+          "Persuadir": 15,
+          "Atacar": 18,
+          "Manipular": 1,
+          "Seducir": 1
+        }
+      },
+      {
+        "nombre": "ELENA",
+        "palabras": 526,
+        "intervenciones": 55,
+        "palabras_por_intervencion": 9.6,
+        "top_words": [
+          {
+            "term": "padre",
+            "count": 7
+          },
+          {
+            "term": "con",
+            "count": 6
+          },
+          {
+            "term": "papá",
+            "count": 5
+          },
+          {
+            "term": "ser",
+            "count": 4
+          },
+          {
+            "term": "quiero",
+            "count": 4
+          },
+          {
+            "term": "tan",
+            "count": 4
+          },
+          {
+            "term": "mano",
+            "count": 3
+          },
+          {
+            "term": "para",
+            "count": 3
+          },
+          {
+            "term": "marido",
+            "count": 3
+          },
+          {
+            "term": "pero",
+            "count": 3
+          }
+        ],
+        "distinctive_words": [
+          "padre",
+          "papá",
+          "haga",
+          "quiero",
+          "mano"
+        ],
+        "top_frases": [
+          {
+            "term": "á mi padre",
+            "count": 2
+          },
+          {
+            "term": "respecto á mí",
+            "count": 2
+          },
+          {
+            "term": "que nos casemos",
+            "count": 2
+          },
+          {
+            "term": "que mi padre",
+            "count": 2
+          },
+          {
+            "term": "bartolomé con una",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          0.08333333333333333,
+          0.022727272727272728,
+          0.0625,
+          null,
+          null,
+          -0.015625,
+          0.0,
+          0.125,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Atacar": 11,
+          "Persuadir": 11,
+          "Informar": 32,
+          "Manipular": 1
+        }
+      },
+      {
+        "nombre": "VIRGINIA",
+        "palabras": 329,
+        "intervenciones": 29,
+        "palabras_por_intervencion": 11.3,
+        "top_words": [
+          {
+            "term": "hombre",
+            "count": 9
+          },
+          {
+            "term": "tapaboca",
+            "count": 4
+          },
+          {
+            "term": "con",
+            "count": 4
+          },
+          {
+            "term": "ese",
+            "count": 3
+          },
+          {
+            "term": "por",
+            "count": 3
+          },
+          {
+            "term": "corazon",
+            "count": 2
+          },
+          {
+            "term": "tiene",
+            "count": 2
+          },
+          {
+            "term": "cara",
+            "count": 2
+          },
+          {
+            "term": "hacer",
+            "count": 2
+          },
+          {
+            "term": "favor",
+            "count": 2
+          }
+        ],
+        "distinctive_words": [
+          "hombre",
+          "hacer",
+          "hace",
+          "ilusiones",
+          "decia"
+        ],
+        "top_frases": [
+          {
+            "term": "mi corazon me",
+            "count": 2
+          },
+          {
+            "term": "tiene cara de",
+            "count": 2
+          },
+          {
+            "term": "cara de hombre",
+            "count": 2
+          },
+          {
+            "term": "amigo de hacer",
+            "count": 2
+          },
+          {
+            "term": "de hacer un",
+            "count": 2
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "sentimiento_arc": [
+          0.15625,
+          null,
+          null,
+          null,
+          0.03125,
+          null,
+          null,
+          null,
+          null,
+          0.09659090909090909
+        ],
+        "perfil_tactico": {
+          "Atacar": 9,
+          "Informar": 13,
+          "Persuadir": 5,
+          "Seducir": 2
+        }
+      },
+      {
+        "nombre": "PROPIEDAD DE V DE LALAMA",
+        "palabras": 36,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 36.0,
+        "top_words": [
+          {
+            "term": "cómico",
+            "count": 1
+          },
+          {
+            "term": "original",
+            "count": 1
+          },
+          {
+            "term": "estrenado",
+            "count": 1
+          },
+          {
+            "term": "con",
+            "count": 1
+          },
+          {
+            "term": "gran",
+            "count": 1
+          },
+          {
+            "term": "aplauso",
+            "count": 1
+          },
+          {
+            "term": "teatro",
+            "count": 1
+          },
+          {
+            "term": "mes",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "original",
+          "cómico",
+          "estrenado",
+          "aplauso",
+          "teatro"
+        ],
+        "top_frases": [
+          {
+            "term": "biblioteca dramatica se",
+            "count": 1
+          },
+          {
+            "term": "dramatica se vende",
+            "count": 1
+          },
+          {
+            "term": "se vende lib",
+            "count": 1
+          },
+          {
+            "term": "vende lib de",
+            "count": 1
+          },
+          {
+            "term": "lib de cuesta",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          0.375,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "RUP V",
+        "palabras": 20,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 20.0,
+        "top_words": [
+          {
+            "term": "tiene",
+            "count": 1
+          },
+          {
+            "term": "derecho",
+            "count": 1
+          },
+          {
+            "term": "pisar",
+            "count": 1
+          },
+          {
+            "term": "esta",
+            "count": 1
+          },
+          {
+            "term": "sala",
+            "count": 1
+          },
+          {
+            "term": "pero",
+            "count": 1
+          },
+          {
+            "term": "tengo",
+            "count": 1
+          },
+          {
+            "term": "impedirle",
+            "count": 1
+          },
+          {
+            "term": "vea",
+            "count": 1
+          },
+          {
+            "term": "hija",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "pisar",
+          "impedirle",
+          "comedor",
+          "sala",
+          "derecho"
+        ],
+        "top_frases": [
+          {
+            "term": "tiene derecho á",
+            "count": 1
+          },
+          {
+            "term": "derecho á pisar",
+            "count": 1
+          },
+          {
+            "term": "á pisar esta",
+            "count": 1
+          },
+          {
+            "term": "pisar esta sala",
+            "count": 1
+          },
+          {
+            "term": "esta sala pero",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "BAR Y V",
+        "palabras": 10,
+        "intervenciones": 2,
+        "palabras_por_intervencion": 5.0,
+        "top_words": [
+          {
+            "term": "qué",
+            "count": 1
+          },
+          {
+            "term": "pregunta",
+            "count": 1
+          },
+          {
+            "term": "acaso",
+            "count": 1
+          },
+          {
+            "term": "medicina",
+            "count": 1
+          },
+          {
+            "term": "tiene",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "medicina",
+          "pregunta",
+          "entiendo",
+          "acaso",
+          "caso"
+        ],
+        "top_frases": [
+          {
+            "term": "qué me pregunta",
+            "count": 1
+          },
+          {
+            "term": "me pregunta entiendo",
+            "count": 1
+          },
+          {
+            "term": "pregunta entiendo yo",
+            "count": 1
+          },
+          {
+            "term": "entiendo yo acaso",
+            "count": 1
+          },
+          {
+            "term": "yo acaso de",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          0.0,
+          null,
+          null,
+          0.0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Persuadir": 2
+        }
+      },
+      {
+        "nombre": "ESCENA VI",
+        "palabras": 10,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 10.0,
+        "top_words": [
+          {
+            "term": "mismos",
+            "count": 1
+          },
+          {
+            "term": "con",
+            "count": 1
+          },
+          {
+            "term": "otro",
+            "count": 1
+          },
+          {
+            "term": "trage",
+            "count": 1
+          },
+          {
+            "term": "patilla",
+            "count": 1
+          },
+          {
+            "term": "corrida",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "trage",
+          "mismos",
+          "corrida",
+          "otro",
+          "patilla"
+        ],
+        "top_frases": [
+          {
+            "term": "los mismos y",
+            "count": 1
+          },
+          {
+            "term": "mismos y bartolomé",
+            "count": 1
+          },
+          {
+            "term": "y bartolomé con",
+            "count": 1
+          },
+          {
+            "term": "bartolomé con otro",
+            "count": 1
+          },
+          {
+            "term": "con otro trage",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA ÚLTIMA",
+        "palabras": 10,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 10.0,
+        "top_words": [
+          {
+            "term": "mismos",
+            "count": 1
+          },
+          {
+            "term": "acudiendo",
+            "count": 1
+          },
+          {
+            "term": "asustados",
+            "count": 1
+          },
+          {
+            "term": "despues",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "acudiendo",
+          "asustados",
+          "mismos",
+          "mismo",
+          "despues"
+        ],
+        "top_frases": [
+          {
+            "term": "los mismos don",
+            "count": 1
+          },
+          {
+            "term": "mismos don ruperto",
+            "count": 1
+          },
+          {
+            "term": "don ruperto y",
+            "count": 1
+          },
+          {
+            "term": "ruperto y elena",
+            "count": 1
+          },
+          {
+            "term": "y elena acudiendo",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          0.0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "BAR V",
+        "palabras": 4,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 4.0,
+        "top_words": [
+          {
+            "term": "ofende",
+            "count": 1
+          },
+          {
+            "term": "unas",
+            "count": 1
+          },
+          {
+            "term": "tenacillas",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "ofende",
+          "tenacillas",
+          "unas"
+        ],
+        "top_frases": [
+          {
+            "term": "me ofende unas",
+            "count": 1
+          },
+          {
+            "term": "ofende unas tenacillas",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA IV",
+        "palabras": 3,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 3.0,
+        "top_words": [
+          {
+            "term": "mismo",
+            "count": 1
+          }
+        ],
+        "distinctive_words": [
+          "mismo"
+        ],
+        "top_frases": [
+          {
+            "term": "el mismo virginia",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA V",
+        "palabras": 3,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 3.0,
+        "top_words": [],
+        "distinctive_words": [],
+        "top_frases": [
+          {
+            "term": "don ruperto elena",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA VII",
+        "palabras": 3,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 3.0,
+        "top_words": [],
+        "distinctive_words": [
+          "dicho"
+        ],
+        "top_frases": [
+          {
+            "term": "dichos y tobías",
+            "count": 1
+          }
+        ],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA IX",
+        "palabras": 2,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 2.0,
+        "top_words": [],
+        "distinctive_words": [],
+        "top_frases": [],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      },
+      {
+        "nombre": "ESCENA VIII",
+        "palabras": 2,
+        "intervenciones": 1,
+        "palabras_por_intervencion": 2.0,
+        "top_words": [],
+        "distinctive_words": [],
+        "top_frases": [],
+        "presencia_matriz": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "sentimiento_arc": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          0.0,
+          null
+        ],
+        "perfil_tactico": {
+          "Informar": 1
+        }
+      }
+    ],
+    "interacciones_heatmap": [
+      {
+        "p1": "ESCENA ÚLTIMA",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ESCENA ÚLTIMA",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "ESCENA ÚLTIMA",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ESCENA ÚLTIMA",
+        "valor": 1
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "ESCENA ÚLTIMA",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA ÚLTIMA",
+        "p2": "VIRGINIA",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "TOBÍAS",
+        "valor": 4
+      },
+      {
+        "p1": "ELENA",
+        "p2": "TOBÍAS",
+        "valor": 4
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "TOBÍAS",
+        "valor": 3
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "TOBÍAS",
+        "p2": "VIRGINIA",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ELENA",
+        "valor": 6
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "DON RUPERTO",
+        "valor": 4
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "DON RUPERTO",
+        "valor": 2
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "VIRGINIA",
+        "valor": 2
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ELENA",
+        "valor": 3
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "ELENA",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "VIRGINIA",
+        "valor": 1
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "BARTOLOMÉ",
+        "valor": 2
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "VIRGINIA",
+        "valor": 2
+      },
+      {
+        "p1": "BAR Y V",
+        "p2": "VIRGINIA",
+        "valor": 1
+      },
+      {
+        "p1": "PROPIEDAD DE V DE LALAMA",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "PROPIEDAD DE V DE LALAMA",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "PROPIEDAD DE V DE LALAMA",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA IV",
+        "p2": "VIRGINIA",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ESCENA IV",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ESCENA V",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "ESCENA V",
+        "valor": 1
+      },
+      {
+        "p1": "BAR V",
+        "p2": "DON RUPERTO",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ESCENA VI",
+        "valor": 1
+      },
+      {
+        "p1": "BAR V",
+        "p2": "ELENA",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "ESCENA VI",
+        "valor": 1
+      },
+      {
+        "p1": "BAR V",
+        "p2": "BARTOLOMÉ",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ESCENA VI",
+        "valor": 1
+      },
+      {
+        "p1": "BAR V",
+        "p2": "ESCENA VI",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA VII",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "ESCENA VII",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "ESCENA VII",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ESCENA VII",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA VII",
+        "p2": "RUP V",
+        "valor": 1
+      },
+      {
+        "p1": "RUP V",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "DON RUPERTO",
+        "p2": "RUP V",
+        "valor": 1
+      },
+      {
+        "p1": "ELENA",
+        "p2": "RUP V",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "RUP V",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ESCENA VIII",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA VIII",
+        "p2": "TOBÍAS",
+        "valor": 1
+      },
+      {
+        "p1": "BARTOLOMÉ",
+        "p2": "ESCENA IX",
+        "valor": 1
+      },
+      {
+        "p1": "ESCENA IX",
+        "p2": "VIRGINIA",
+        "valor": 1
+      }
+    ],
+    "personajes": [
+      [
+        "DON RUPERTO",
+        8
+      ],
+      [
+        "ELENA",
+        6
+      ],
+      [
+        "BARTOLOMÉ",
+        6
+      ],
+      [
+        "TOBÍAS",
+        5
+      ],
+      [
+        "VIRGINIA",
+        3
+      ],
+      [
+        "BAR Y V",
+        2
+      ],
+      [
+        "ESCENA ÚLTIMA",
+        1
+      ],
+      [
+        "PROPIEDAD DE V DE LALAMA",
+        1
+      ],
+      [
+        "ESCENA IV",
+        1
+      ],
+      [
+        "ESCENA V",
+        1
+      ],
+      [
+        "BAR V",
+        1
+      ],
+      [
+        "ESCENA VI",
+        1
+      ],
+      [
+        "ESCENA VII",
+        1
+      ],
+      [
+        "RUP V",
+        1
+      ],
+      [
+        "ESCENA VIII",
+        1
+      ]
+    ],
+    "total_personajes": 16,
+    "metricas_avanzadas": {
+      "ritmo_bloques": [
+        {
+          "label": "Act.I",
+          "intervenciones": 43,
+          "palabras": 453,
+          "dinamismo": 9.49,
+          "sent_acotaciones": 0.28125,
+          "texto_acotaciones": "(*Al dirigirse todos hácia la alcoba, llevando en brazos á Virginia, se presenta Tobías.*)\r\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n> Siempre en tu bien me deleito\r\n\r\n> y en complacerte me afano;\r\n\r\n> serás conmigo"
+        },
+        {
+          "label": "A.I E.I",
+          "intervenciones": 68,
+          "palabras": 883,
+          "dinamismo": 7.7,
+          "sent_acotaciones": 0.375,
+          "texto_acotaciones": "# BARBA Y MEDIA.\r\n\r\nJuguete cómico, original de D. MANUEL OSSORIO Y BERNARD, estrenado con gran aplauso en el teatro de Novedades, en el mes de Noviembre de 1869.\r\n\r\n**PERSONAJES.**\r\n\n\n\n\r\nDoña Maria R"
+        },
+        {
+          "label": "A.I E.II",
+          "intervenciones": 24,
+          "palabras": 325,
+          "dinamismo": 7.38,
+          "sent_acotaciones": 0.0,
+          "texto_acotaciones": "## ESCENA II.\r\n\r\nLos mismos, DON RUPERTO."
+        },
+        {
+          "label": "A.I E.III",
+          "intervenciones": 75,
+          "palabras": 861,
+          "dinamismo": 8.71,
+          "sent_acotaciones": 0.0,
+          "texto_acotaciones": "### ESCENA III.\n\n\nDON RUPERTO, despues BARTOLOMÉ."
+        },
+        {
+          "label": "A.I E.IV",
+          "intervenciones": 33,
+          "palabras": 228,
+          "dinamismo": 14.47,
+          "sent_acotaciones": 0.0,
+          "texto_acotaciones": "Ahora no se me escapará! Si vuelve..."
+        },
+        {
+          "label": "A.I E.V",
+          "intervenciones": 16,
+          "palabras": 223,
+          "dinamismo": 7.17,
+          "sent_acotaciones": 0,
+          "texto_acotaciones": ""
+        },
+        {
+          "label": "A.I E.VI",
+          "intervenciones": 46,
+          "palabras": 376,
+          "dinamismo": 12.23,
+          "sent_acotaciones": 0.25,
+          "texto_acotaciones": "(*Modifico mi opinion; no le creo muy hábil.*) Pasemos á otra cosa. (*Vá al fondo y vuelve con unas tenacillas.*)"
+        },
+        {
+          "label": "A.I E.VII",
+          "intervenciones": 12,
+          "palabras": 139,
+          "dinamismo": 8.63,
+          "sent_acotaciones": 0,
+          "texto_acotaciones": ""
+        },
+        {
+          "label": "A.I E.VIII",
+          "intervenciones": 31,
+          "palabras": 539,
+          "dinamismo": 5.75,
+          "sent_acotaciones": 0,
+          "texto_acotaciones": ""
+        },
+        {
+          "label": "A.I E.IX",
+          "intervenciones": 23,
+          "palabras": 344,
+          "dinamismo": 6.69,
+          "sent_acotaciones": 0,
+          "texto_acotaciones": ""
+        }
+      ],
+      "sincronia_pares": [
+        {
+          "p1": "BARTOLOMÉ",
+          "p2": "DON RUPERTO",
+          "score": -0.78
+        },
+        {
+          "p1": "DON RUPERTO",
+          "p2": "ELENA",
+          "score": 0.5
+        },
+        {
+          "p1": "DON RUPERTO",
+          "p2": "TOBÍAS",
+          "score": -0.44
+        },
+        {
+          "p1": "ELENA",
+          "p2": "TOBÍAS",
+          "score": 0.3
+        }
+      ],
+      "flujo_tactico": [
+        {
+          "Bloque": "Act.I",
+          "Táctica": "Informar",
+          "Valor": 20
+        },
+        {
+          "Bloque": "Act.I",
+          "Táctica": "Atacar",
+          "Valor": 14
+        },
+        {
+          "Bloque": "Act.I",
+          "Táctica": "Persuadir",
+          "Valor": 8
+        },
+        {
+          "Bloque": "Act.I",
+          "Táctica": "Seducir",
+          "Valor": 1
+        },
+        {
+          "Bloque": "A.I E.I",
+          "Táctica": "Informar",
+          "Valor": 41
+        },
+        {
+          "Bloque": "A.I E.I",
+          "Táctica": "Atacar",
+          "Valor": 9
+        },
+        {
+          "Bloque": "A.I E.I",
+          "Táctica": "Persuadir",
+          "Valor": 16
+        },
+        {
+          "Bloque": "A.I E.I",
+          "Táctica": "Manipular",
+          "Valor": 2
+        },
+        {
+          "Bloque": "A.I E.II",
+          "Táctica": "Atacar",
+          "Valor": 7
+        },
+        {
+          "Bloque": "A.I E.II",
+          "Táctica": "Informar",
+          "Valor": 13
+        },
+        {
+          "Bloque": "A.I E.II",
+          "Táctica": "Persuadir",
+          "Valor": 3
+        },
+        {
+          "Bloque": "A.I E.II",
+          "Táctica": "Seducir",
+          "Valor": 1
+        },
+        {
+          "Bloque": "A.I E.III",
+          "Táctica": "Atacar",
+          "Valor": 30
+        },
+        {
+          "Bloque": "A.I E.III",
+          "Táctica": "Informar",
+          "Valor": 26
+        },
+        {
+          "Bloque": "A.I E.III",
+          "Táctica": "Persuadir",
+          "Valor": 18
+        },
+        {
+          "Bloque": "A.I E.III",
+          "Táctica": "Seducir",
+          "Valor": 1
+        },
+        {
+          "Bloque": "A.I E.IV",
+          "Táctica": "Informar",
+          "Valor": 18
+        },
+        {
+          "Bloque": "A.I E.IV",
+          "Táctica": "Atacar",
+          "Valor": 9
+        },
+        {
+          "Bloque": "A.I E.IV",
+          "Táctica": "Persuadir",
+          "Valor": 6
+        },
+        {
+          "Bloque": "A.I E.V",
+          "Táctica": "Informar",
+          "Valor": 5
+        },
+        {
+          "Bloque": "A.I E.V",
+          "Táctica": "Persuadir",
+          "Valor": 6
+        },
+        {
+          "Bloque": "A.I E.V",
+          "Táctica": "Atacar",
+          "Valor": 5
+        },
+        {
+          "Bloque": "A.I E.VI",
+          "Táctica": "Informar",
+          "Valor": 20
+        },
+        {
+          "Bloque": "A.I E.VI",
+          "Táctica": "Persuadir",
+          "Valor": 13
+        },
+        {
+          "Bloque": "A.I E.VI",
+          "Táctica": "Manipular",
+          "Valor": 2
+        },
+        {
+          "Bloque": "A.I E.VI",
+          "Táctica": "Atacar",
+          "Valor": 11
+        },
+        {
+          "Bloque": "A.I E.VII",
+          "Táctica": "Informar",
+          "Valor": 8
+        },
+        {
+          "Bloque": "A.I E.VII",
+          "Táctica": "Atacar",
+          "Valor": 3
+        },
+        {
+          "Bloque": "A.I E.VII",
+          "Táctica": "Persuadir",
+          "Valor": 1
+        },
+        {
+          "Bloque": "A.I E.VIII",
+          "Táctica": "Informar",
+          "Valor": 12
+        },
+        {
+          "Bloque": "A.I E.VIII",
+          "Táctica": "Atacar",
+          "Valor": 16
+        },
+        {
+          "Bloque": "A.I E.VIII",
+          "Táctica": "Persuadir",
+          "Valor": 3
+        },
+        {
+          "Bloque": "A.I E.IX",
+          "Táctica": "Informar",
+          "Valor": 9
+        },
+        {
+          "Bloque": "A.I E.IX",
+          "Táctica": "Atacar",
+          "Valor": 7
+        },
+        {
+          "Bloque": "A.I E.IX",
+          "Táctica": "Persuadir",
+          "Valor": 5
+        },
+        {
+          "Bloque": "A.I E.IX",
+          "Táctica": "Seducir",
+          "Valor": 2
+        }
+      ]
+    },
+    "analisis_ia": null,
+    "filtro_nombre": null
+  }
+}

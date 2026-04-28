@@ -64,6 +64,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Soporte para cuando el usuario escribe manualmente y pulsa Tab/Enter
+    inputPublicacion.addEventListener('change', function() {
+        const nuevoValor = this.value.trim();
+        if (nuevoValor) {
+            console.log('[Publicación Autocomplete] Cambio detectado en publicación:', nuevoValor);
+            cargarDatosPublicacion(nuevoValor, true);
+        }
+    });
     
     function cargarDatosPublicacion(nombre, isManual = false) {
         console.log('[Publicación Autocomplete] Cargando datos para:', nombre, 'Manual:', isManual);
@@ -84,17 +93,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log('[Publicación Autocomplete] Datos recibidos:', datos);
                 
+                function setSelectValue(select, value) {
+                    if (!select || !value) return;
+                    
+                    let choicesInstance = null;
+                    if (window.choicesInstances && select.id && window.choicesInstances[select.id]) {
+                        choicesInstance = window.choicesInstances[select.id];
+                    } else if (select._choices) {
+                        choicesInstance = select._choices;
+                    }
+
+                    if (choicesInstance && typeof choicesInstance.setChoiceByValue === 'function') {
+                        choicesInstance.setChoiceByValue(String(value));
+                    } else {
+                        select.value = value;
+                    }
+                    
+                    select.setAttribute('data-value', value);
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
                 // Edición (frecuencia)
                 const campoEdicion = document.querySelector('select[name="edicion"]');
                 if (campoEdicion && datos.edicion) {
-                    const edicion = datos.edicion.toLowerCase();
-                    const opciones = Array.from(campoEdicion.options);
-                    const opcion = opciones.find(opt => opt.value.toLowerCase() === edicion);
-                    
-                    if (opcion) {
-                        campoEdicion.value = opcion.value;
-                        console.log('[Publicación Autocomplete] ✓ Edición:', opcion.value);
-                    }
+                    setSelectValue(campoEdicion, datos.edicion);
+                    console.log('[Publicación Autocomplete] ✓ Edición:', datos.edicion);
                 }
                 
                 // Ciudad
@@ -109,6 +132,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (campoPais && datos.pais_publicacion) {
                     campoPais.value = datos.pais_publicacion;
                     console.log('[Publicación Autocomplete] ✓ País:', datos.pais_publicacion);
+                }
+                
+                // Idioma
+                const campoIdioma = document.querySelector('select[name="idioma"]');
+                if (campoIdioma && datos.idioma) {
+                    let idiomaValue = datos.idioma.toLowerCase().trim();
+                    const idiomaMapping = {
+                        'español': 'es',
+                        'espanol': 'es',
+                        'spanish': 'es',
+                        'es': 'es',
+                        'italiano': 'it',
+                        'italian': 'it',
+                        'it': 'it',
+                        'francés': 'fr',
+                        'frances': 'fr',
+                        'french': 'fr',
+                        'fr': 'fr',
+                        'inglés': 'en',
+                        'ingles': 'en',
+                        'english': 'en',
+                        'en': 'en',
+                        'portugués': 'pt',
+                        'portugues': 'pt',
+                        'portuguese': 'pt',
+                        'pt': 'pt',
+                        'catalán': 'ct',
+                        'catalan': 'ct',
+                        'ct': 'ct'
+                    };
+                    if (idiomaMapping[idiomaValue]) {
+                        idiomaValue = idiomaMapping[idiomaValue];
+                    }
+                    setSelectValue(campoIdioma, idiomaValue);
+                    console.log('[Publicación Autocomplete] ✓ Idioma:', idiomaValue);
                 }
                 
                 // Institución
@@ -220,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Licencia (HERENCIA)
                 const campoLicencia = document.querySelector('select[name="licencia"]');
                 if (campoLicencia && datos.licencia) {
-                    campoLicencia.value = datos.licencia;
+                    setSelectValue(campoLicencia, datos.licencia);
                     console.log('[Publicación Autocomplete] ✓ Licencia:', datos.licencia);
                 }
 
@@ -229,26 +287,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const campoRecurso = document.getElementById('selectRecurso') || document.querySelector('select[name="tipo_recurso"]');
                 if (campoRecurso && (datos.tipo_recurso || datos.tipo_publicacion_base)) {
                     const tr = datos.tipo_recurso || datos.tipo_publicacion_base;
-                    campoRecurso.value = tr;
+                    setSelectValue(campoRecurso, tr);
                     console.log('[Publicación Autocomplete] ✓ Recurso:', tr);
-                    // Disparar cambio para cargar subgéneros
-                    campoRecurso.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 // 2. Subgénero (tipo_publicacion)
                 const campoSubgenero = document.getElementById('selectTipoPublicacion') || document.querySelector('select[name="tipo_publicacion"]');
                 if (campoSubgenero && (datos.tipo_publicacion || datos.subtipo_base)) {
                     const sp = datos.tipo_publicacion || datos.subtipo_base;
-                    // Guardamos en data-value para que el script de carga dinámica lo reconozca si aún no ha cargado
-                    campoSubgenero.setAttribute('data-value', sp);
-                    campoSubgenero.value = sp;
+                    setSelectValue(campoSubgenero, sp);
                     console.log('[Publicación Autocomplete] ✓ Subgénero:', sp);
                 }
 
                 // 3. Periodicidad
                 const campoPeriodicidad = document.getElementById('selectPeriodicidad') || document.querySelector('select[name="periodicidad"]');
                 if (campoPeriodicidad && datos.periodicidad) {
-                    campoPeriodicidad.value = datos.periodicidad;
+                    setSelectValue(campoPeriodicidad, datos.periodicidad);
                     console.log('[Publicación Autocomplete] ✓ Periodicidad:', datos.periodicidad);
                 }
                 

@@ -1476,7 +1476,7 @@ async function toggleStatusNoticia(id, btn) {
   icon.className = 'fa-solid fa-spinner fa-spin';
 
   try {
-    const response = await fetch(`/api/noticia/${id}/toggle_incluido`, {
+    const response = await fetch(`/api/noticia/toggle_incluido/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1517,12 +1517,12 @@ async function toggleStatusNoticia(id, btn) {
 
     } else {
       alert('Error al cambiar el estado de la noticia.');
-      icon.className = originalClass;
+      icon.className = oldClass;
     }
   } catch (err) {
     console.error('Error toggleStatus:', err);
     alert('Error de conexión.');
-    icon.className = originalClass;
+    icon.className = oldClass;
   }
 }
 

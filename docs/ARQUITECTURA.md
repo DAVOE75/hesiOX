@@ -988,6 +988,34 @@ proyectos_totales = proyectos_propios + compartidos
 - **Mensuales**: Actualizar dependencias
 - **Trimestrales**: Auditoría de seguridad
 
+
+## 🧬 Módulo de Atribución de Autoría y Comparativa Estilométrica (Burrows' Delta)
+
+### Visión General
+Este módulo realiza el cruce diacrónico de estilos literarios de autoría mediante el algoritmo de atribución estilométrica **Burrows' Delta**. Se procesan las Palabras Más Frecuentes (MFW) del corpus para cuantificar similitudes sintácticas inconscientes y afinidades.
+
+### Arquitectura e Implementación
+
+#### 1. Backend: Lógica Algorítmica (`advanced_analytics.py`)
+- **`atribucion_autoria(publicaciones)`**:
+  - Extrae y limpia el texto completo de las obras seleccionadas.
+  - Filtra las Palabras Más Frecuentes (top 150 MFW).
+  - Calcula puntuaciones de tipificación Z (Z-scores) de cada palabra relativas al corpus.
+  - Genera la matriz de distancias absolutas (Delta) entre cada par de obras.
+  - Computa métricas léxicas complementarias (Diversidad léxica TTR, Longitud de palabra, Densidad de puntuación y ratios de pronombres).
+
+#### 2. Rutas del API REST (`routes/analisis_avanzado.py`)
+- **`/api/analisis/atribucion`** [POST]:
+  - Endpoint seguro que extrae filtros de consulta y los identificadores específicos `documentos_ids`.
+  - Soporte nativo para caché Flask-Caching para consultas repetitivas de proximidad.
+
+#### 3. Visualización y Control Frontend (`analisis_avanzado.js`)
+- **`cargarObrasParaAtribucion()`**: Carga la lista global y puebla el selector múltiple `<select id="atribucion-obras-select">`.
+- **`ejecutarAtribucion()`**: Captura las obras solicitadas y despacha peticiones asíncronas.
+- **`renderAtribucion(data)`**: Inyecta datos en tablas Delta y renderiza el gráfico `Chart.js` en formato Radar.
+
+---
+
 ### Comandos Útiles
 
 ```bash

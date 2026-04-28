@@ -443,6 +443,36 @@ def analisis_estilometrico_route():
         return jsonify({'exito': False, 'error': str(e)}), 500
 
 
+@analisis_bp.route('/atribucion', methods=['POST'])
+@csrf.exempt
+@login_required
+def analisis_atribucion_route():
+    """Análisis de atribución de autoría y comparativa estilométrica"""
+    try:
+        data = request.get_json() or {}
+        filtros = extraer_filtros(data)
+        
+        # Intentar obtener de caché
+        resultado_cache = cache.obtener('atribucion', filtros)
+        if resultado_cache:
+            return jsonify(resultado_cache)
+        
+        # Si no hay caché, calcular
+        limite = filtros.pop('limite', 300)
+        publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=limite if (limite and limite > 0) else None)
+        publicaciones = [publicacion_to_dict(p) for p in publicaciones_db]
+        
+        resultado = analisis.atribucion_autoria(publicaciones)
+        
+        # Guardar en caché
+        cache.guardar('atribucion', filtros, resultado, limite=limite)
+        
+        return jsonify(resultado)
+    
+    except Exception as e:
+        return jsonify({'exito': False, 'error': str(e)}), 500
+
+
 @analisis_bp.route('/ngramas', methods=['POST'])
 @csrf.exempt
 @login_required

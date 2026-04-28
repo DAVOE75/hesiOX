@@ -255,6 +255,8 @@ class Publicacion(db.Model):
     nombre_autor = db.Column(db.Text)
     apellido_autor = db.Column(db.Text)
     pseudonimo = db.Column(db.Text)
+    # Visibilidad en el listado de noticias
+    visible = db.Column(db.Boolean, default=True, nullable=False)
 
     # Relación para múltiples autores
     autores = db.relationship(
@@ -580,6 +582,31 @@ class Prensa(db.Model):
 
     def __repr__(self):
         return f"<Prensa {self.id} {self.titulo}>"
+
+class EntidadFiltro(db.Model):
+    __tablename__ = "entidades_filtro"
+    id = db.Column(db.Integer, primary_key=True)
+    proyecto_id = db.Column(db.Integer, db.ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False)
+    texto = db.Column(db.Text, nullable=False)
+    label = db.Column(db.String(50)) # PER, LOC, ORG, etc.
+    accion = db.Column(db.String(20), default="ignorar") # ignorar, corregir, vincular_siempre
+    valor_corregido = db.Column(db.Text)
+    autor_bio_id = db.Column(db.Integer, db.ForeignKey("autor_bio.id"), nullable=True)
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('proyecto_id', 'texto', 'label', name='_proyecto_texto_label_uc'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'texto': self.texto,
+            'label': self.label,
+            'accion': self.accion,
+            'valor_corregido': self.valor_corregido,
+            'autor_bio_id': self.autor_bio_id
+        }
 
 # --- Modelo para Historial de Versiones (PRO) ---
 class VersionPrensa(db.Model):

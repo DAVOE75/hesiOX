@@ -136,6 +136,13 @@
           <i class="fa-solid fa-check ms-auto selection-tick"></i>
         </button>
       </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center py-2" data-analisis="atribucion">
+          <i class="fa-solid fa-fingerprint me-2" style="width: 20px;"></i>
+          <span>ATRIBUCIÓN</span>
+          <i class="fa-solid fa-check ms-auto selection-tick"></i>
+        </button>
+      </li>
     </ul>
   </div>
 
@@ -963,6 +970,76 @@
             <!-- El contenido se inyectará dinámicamente desde JS -->
           </div>
 
+          <div id="view-atribucion" class="analisis-view" style="display: none;">
+            <div class="glass-panel p-4">
+              <h3 class="text-accent mb-4" style="color: var(--ds-accent-primary) !important;"><i class="fa-solid fa-fingerprint me-2"></i>Atribución de Autoría y Comparativa</h3>
+              
+              <div class="alert" style="background: rgba(255, 152, 0, 0.1); border-left: 3px solid var(--ds-accent-primary); padding: 12px; margin-bottom: 25px; border-radius: 4px;">
+                <small style="color: var(--ds-text-main);"><i class="fa-solid fa-circle-info me-1"></i>
+                  <strong>Módulo de Estilometría:</strong> Ejecuta el algoritmo <i>Burrows' Delta</i> sobre las Palabras Más Frecuentes (MFW) para detectar proximidades estilísticas inconscientes y evolución cronológica.
+                </small>
+              </div>
+
+              <!-- Selector de Obras -->
+              <div class="row mb-4 align-items-end g-3 p-3 rounded border border-info border-opacity-10" style="background: rgba(3, 169, 244, 0.03);">
+                <div class="col-12 col-md-8">
+                  <label class="text-info small fw-bold mb-2"><i class="fa-solid fa-book-open me-2"></i>Selecciona las obras a comparar:</label>
+                  <select id="atribucion-obras-select" class="form-select bg-dark text-white border-secondary custom-scrollbar" multiple style="height: 120px; font-size: 13px;">
+                    <!-- Cargado dinámicamente por JS -->
+                  </select>
+                  <div class="form-text text-muted small mt-1"><i class="fa-solid fa-circle-question me-1"></i>Mantén pulsado <kbd class="bg-secondary text-white px-1" style="font-size: 10px;">Ctrl</kbd> o <kbd class="bg-secondary text-white px-1" style="font-size: 10px;">Cmd</kbd> para selección múltiple.</div>
+                </div>
+                <div class="col-12 col-md-4 d-grid">
+                  <button id="btn-atribucion-comparar" class="btn btn-info fw-bold py-3 text-uppercase" style="letter-spacing: 1px;">
+                    <i class="fa-solid fa-fingerprint me-2"></i>Ejecutar Comparativa
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tabla de Resultados Delta -->
+              <div class="row g-4">
+                <div class="col-12 col-xl-7">
+                  <div class="p-3 rounded border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.02);">
+                    <h5 class="text-white mb-3 small fw-bold text-uppercase" style="letter-spacing: 1px;">Matriz de Distancias (Burrows' Delta)</h5>
+                    <div class="table-responsive">
+                      <table class="table table-dark table-hover align-middle small mb-0">
+                        <thead>
+                          <tr class="text-muted opacity-75" style="font-size: 11px;">
+                            <th>Obra A</th>
+                            <th>Obra B</th>
+                            <th class="text-center">Delta</th>
+                            <th class="text-center">Afinidad</th>
+                          </tr>
+                        </thead>
+                        <tbody id="atribucion-delta-body">
+                          <!-- Inyectado por JS -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Gráfico de Radar -->
+                <div class="col-12 col-xl-5">
+                  <div class="p-3 rounded border border-secondary border-opacity-25" style="background: rgba(255,255,255,0.02); height: 100%;">
+                    <h5 class="text-white mb-3 small fw-bold text-uppercase" style="letter-spacing: 1px;">Huella Estilométrica</h5>
+                    <div style="position: relative; height: 350px;">
+                      <canvas id="chart-atribucion-radar"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="p-3 rounded border border-warning border-opacity-10" style="background: rgba(255, 152, 0, 0.03);">
+                    <h6 class="text-warning small fw-bold"><i class="fa-solid fa-barcode me-2"></i>Vocabulario Estilístico Base (MFW)</h6>
+                    <p id="atribucion-vocab-list" class="text-muted small mb-0 font-monospace opacity-75 mt-2" style="word-spacing: 10px;"></p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
 
 
         </div>
@@ -992,6 +1069,8 @@
                         <th class="text-start">Nombre Detectado</th>
                         <th></th>
                         <th>Nombre Canónico (Unificado)</th>
+                        <th>Ocultar</th>
+                        <th>Eliminar</th>
                       </tr>
                     </thead>
                     <tbody id="alias-table-body">
@@ -1146,4 +1225,9 @@
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
         <script src="{{ url_for('static', filename='js/analisis_avanzado.js') }}?v={{ range(1000, 9999) | random }}"></script>
+        <script>
+          if (typeof filtros !== 'undefined') {
+            filtros.proyecto_id = "{{ proyecto.id if proyecto else 'default' }}";
+          }
+        </script>
         {% endblock %}

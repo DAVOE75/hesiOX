@@ -48,9 +48,12 @@
               <select class="form-select bg-dark text-light border-secondary" name="tipo_recurso"
                 id="selectLoteRecurso">
                 <option value="">(No cambiar)</option>
-                {% for opt in opciones_genero %}
+                {% for opt in lote_opciones_genero %}
+
                 <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
                 {% endfor %}
+
+
               </select>
             </div>
 
@@ -59,7 +62,8 @@
               <select class="form-select bg-dark text-light border-secondary" name="tipo_publicacion" id="selectLoteTipoPublicacion">
                 <option value="">(No cambiar)</option>
                 {% set last_group = None %}
-                {% for opt in opciones_subgenero %}
+
+                {% for opt in lote_opciones_subgenero %}
                     {% if opt.grupo != last_group %}
                         {% if last_group is not none %}</optgroup>{% endif %}
                         {% if opt.grupo %}
@@ -69,6 +73,7 @@
                     {% endif %}
                     <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
                 {% endfor %}
+
                 {% if last_group is not none %}</optgroup>{% endif %}
               </select>
             </div>
@@ -77,9 +82,10 @@
               <label class="form-label text-warning">Periodicidad</label>
               <select class="form-select bg-dark text-light border-secondary" name="periodicidad" id="selectLotePeriodicidad">
                 <option value="">(No cambiar)</option>
-                {% for opt in opciones_frecuencia %}
+                {% for opt in lote_opciones_frecuencia %}
                 <option value="{{ opt.valor }}">{{ opt.etiqueta }}</option>
                 {% endfor %}
+
               </select>
             </div>
 
@@ -360,22 +366,70 @@
     const selectEdicion = document.getElementById('selectLoteEdicion');
 
     if (selectRecurso && selectEdicion) {
+      // Mapeo de valores de tipo_recurso a sus categorías de edición (igual que en form-conditional-fields.js)
+      const tipoMapping = {
+          'Periódico': 'prensa',
+          'Diario': 'prensa',
+          'Semanario': 'prensa',
+          'Revista': 'prensa',
+          'Magazine': 'prensa',
+          'Boletín': 'prensa',
+          'Gaceta': 'prensa',
+          'Anuario': 'prensa',
+          'Fascículo': 'prensa',
+          'Suplemento': 'prensa',
+          'Manuscrito': 'prensa',
+          'Legajo': 'prensa',
+          'Expediente': 'prensa',
+          'Expediente / Archivo': 'prensa',
+          'Documento histórico': 'prensa',
+          'Libro': 'libro',
+          'Colección de libros': 'libro',
+          'Mapa': 'mapa',
+          'Colección de mapas': 'mapa',
+          'Atlas': 'mapa',
+          'Grabado / Estampa': 'fotografia',
+          'Partitura': 'libro',
+          'obra_teatral': 'obra_teatral',
+          'prensa': 'prensa',
+          'folleto': 'folleto',
+          'libro': 'libro',
+          'articulo': 'articulo',
+          'tesis': 'tesis',
+          'fotografia': 'fotografia',
+          'mapa': 'mapa',
+          'otros': 'otros'
+      };
+
       selectRecurso.addEventListener('change', async (e) => {
-        const tipo = e.target.value;
-        if (!tipo) {
+        const rawTipo = e.target.value;
+        if (!rawTipo) {
           renderLoteEdiciones([]);
           return;
         }
 
+        const tipo = tipoMapping[rawTipo] || rawTipo;
+        console.log(`[Batch Edit] Fetching editions for mapped type: ${tipo} (original: ${rawTipo})`);
+
         try {
-          const response = await fetch(`/api/ediciones/${tipo}`);
-          const options = await response.json();
+          let response = await fetch(`/api/ediciones/${tipo}`);
+          let options = await response.json();
+          
+          // Fallback a prensa si no hay opciones (ej: para 'otros' o si falla el mapeo)
+          if (options.length === 0 && tipo !== 'prensa') {
+             console.log(`[Batch Edit] No editions for ${tipo}, falling back to prensa`);
+             response = await fetch('/api/ediciones/prensa');
+             options = await response.json();
+          }
+          
           renderLoteEdiciones(options);
         } catch (error) {
           console.error('[Batch Edit] Error fetching editions:', error);
         }
       });
+
     }
+
 
     function renderLoteEdiciones(options) {
       // Verificar si hay Choices.js instanciado

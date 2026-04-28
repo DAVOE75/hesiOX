@@ -1115,3 +1115,23 @@ def borrar_archivo_publicacion(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)})
+
+
+@hemerotecas_bp.route("/publicacion/toggle_visible/<int:id>")
+@login_required
+def toggle_visibilidad_publicacion(id):
+    """Alternar visibilidad de una publicación (oculta sus noticias en el listado)"""
+    publicacion = Publicacion.query.get_or_404(id)
+    proyecto = get_proyecto_activo()
+    
+    if not proyecto or publicacion.proyecto_id != proyecto.id:
+        flash("❌ No tienes permiso para modificar esta publicación", "danger")
+        return redirect(url_for("hemerotecas.lista_publicaciones"))
+        
+    publicacion.visible = not publicacion.visible
+    db.session.commit()
+    
+    estado = "ahora es visible" if publicacion.visible else "ahora está oculta"
+    flash(f"👁️ La publicación '{publicacion.nombre}' {estado}", "info")
+    return redirect(url_for("hemerotecas.lista_publicaciones"))
+

@@ -324,9 +324,13 @@ def download_project():
             for root, dirs, files in os.walk(root_dir):
                 rel_path = os.path.relpath(root, root_dir)
                 
-                # Excluir carpetas pesadas o no deseadas que no están en include_dirs pero walk sí ve
+                # Excluir carpetas pesadas o no deseadas
                 if rel_path == '.':
-                    dirs[:] = [d for d in dirs if d in include_dirs]
+                    # Opt-in: Solo carpetas especificadas
+                    dirs[:] = [d for d in dirs if d in include_dirs and d != 'exports']
+                elif 'exports' in dirs:
+                    dirs.remove('exports')
+
                 
                 # Procesar archivos
                 for file in files:

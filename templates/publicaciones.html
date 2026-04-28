@@ -53,6 +53,9 @@
     .publi-link-icon.text-warning:hover {
         color: #ffda6a !important;
     }
+    .opacity-50 {
+        opacity: 0.5 !important;
+    }
 </style>
 {% endblock %}
 
@@ -125,7 +128,7 @@
                 </thead>
                 <tbody>
                     {% for p in publicaciones %}
-                    <tr class="fila-medio">
+                    <tr class="fila-medio {{ 'opacity-50' if not p.visible else '' }}">
                         <td>
                             <strong class="text-white d-block" style="font-size: 13px;">{{ p.nombre }}</strong>
                             <div class="d-flex flex-wrap gap-1 mt-1">
@@ -213,6 +216,11 @@
                         </td>
                         <td class="text-end pe-3">
                             <div class="d-flex justify-content-end gap-1">
+                                <a href="{{ url_for('hemerotecas.toggle_visibilidad_publicacion', id=p.id_publicacion) }}"
+                                    class="btn-admin-action {{ 'btn-admin-action-info' if p.visible else 'text-muted' }}" 
+                                    title="{{ 'Ocultar noticias en el listado' if p.visible else 'Mostrar noticias en el listado' }}" style="width: 28px;">
+                                    <i class="fa-solid fa-eye{{ '' if p.visible else '-slash' }}"></i>
+                                </a>
                                 <a href="{{ url_for('hemerotecas.editar_publicacion', id=p.id_publicacion) }}"
                                     class="btn-admin-action btn-admin-action-success" title="Editar" style="width: 28px;">
                                     <i class="fa-solid fa-pen"></i>
