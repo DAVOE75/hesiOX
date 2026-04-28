@@ -139,9 +139,13 @@ def dramatico_autor():
         biografia_texto = ""
         foto_path = ""
         
+
         if bio:
             biografia_texto = bio.bibliografia or bio.estilo or ""
             foto_path = bio.foto or ""
+            if foto_path and not foto_path.startswith('/') and not foto_path.startswith('http'):
+                foto_path = f"/static/uploads/autores/{foto_path}"
+
             
         return jsonify({
             'exito': True,

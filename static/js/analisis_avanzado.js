@@ -3788,24 +3788,29 @@ function loadDramatico(data) {
                                 Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
                             </p>
                             
-                            <!-- Panel de Biografía y Datos del Autor / Estreno -->
-                            <div id="author-bio-container" class="mt-4 pt-3 border-top border-warning border-opacity-10 animate__animated animate__fadeIn" style="display: none;"></div>
 
-                            <div class="d-flex gap-4 mt-4 pt-3 border-top border-warning border-opacity-10">
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-warning border-opacity-10 flex-wrap gap-3">
+                                <div class="d-flex gap-4">
+                                    <div>
+                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Personajes Activos</div>
+                                        <div id="stat-drama-chars" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                                    </div>
+                                    <div>
+                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Segmentos Analizados</div>
+                                        <div id="stat-drama-segments" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                                    </div>
+                                    <div>
+                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Volumen Discursivo</div>
+                                        <div id="stat-drama-words" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                                    </div>
+                                </div>
+                                
 
-                                <div>
-                                    <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Personajes Activos</div>
-                                    <div id="stat-drama-chars" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                </div>
-                                <div>
-                                    <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Segmentos Analizados</div>
-                                    <div id="stat-drama-segments" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                </div>
-                                <div>
-                                    <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Volumen Discursivo</div>
-                                    <div id="stat-drama-words" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                </div>
+                                <!-- Panel de Biografía y Datos del Autor / Estreno (a la derecha) -->
+                                <div id="author-bio-container" style="display: none; flex: 1;" class="animate__animated animate__fadeIn ms-3"></div>
+
                             </div>
+
                         </div>
                         <div class="ms-3">
                             <button class="btn btn-sm fw-bold px-3" onclick="openAliasManager()" title="Unificar personajes" style="background: ${accentColor}; color: ${light ? '#fff' : '#000'};">
@@ -4142,18 +4147,21 @@ function loadDramatico(data) {
                     if (data.exito) {
                         const fotoSrc = data.foto ? data.foto : '';
                         const bioHtml = `
-                            <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 animate__animated animate__fadeIn">
-                                ${fotoSrc ? `<img src="${fotoSrc}" class="rounded border border-warning" style="width: 70px; height: 70px; object-fit: cover;" alt="${data.nombre_autor}">` : `<div class="rounded border border-secondary border-opacity-25 d-flex align-items-center justify-content-center bg-dark" style="width: 70px; height: 70px; color: ${accentColor}; font-size: 24px;"><i class="fa-solid fa-user-pen"></i></div>`}
+
+                            <div class="d-flex gap-3 align-items-center p-2 rounded bg-dark bg-opacity-25 border border-secondary border-opacity-10 animate__animated animate__fadeIn" style="width: 100%;">
+                                ${fotoSrc ? `<img src="${fotoSrc}" class="rounded-circle border border-warning" style="width: 55px; height: 55px; object-fit: cover;" alt="${data.nombre_autor}">` : `<div class="rounded-circle border border-secondary border-opacity-25 d-flex align-items-center justify-content-center bg-dark bg-opacity-50" style="width: 55px; height: 55px; color: ${accentColor}; font-size: 18px;"><i class="fa-solid fa-user-pen"></i></div>`}
                                 <div style="flex: 1;">
-                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
-                                        <h6 class="mb-0 text-warning fw-bold"><i class="fa-solid fa-feather-pointed text-warning me-2" style="font-size: 0.8rem;"></i>${data.nombre_autor}</h6>
-                                        <div class="d-flex gap-2">
-                                            ${data.fecha_estreno ? `<span class="badge bg-dark border border-warning border-opacity-25 text-warning" style="font-size: 9px;"><i class="fa-solid fa-calendar-days me-1"></i>Estreno: ${data.fecha_estreno}</span>` : ''}
-                                            ${data.teatro_estreno ? `<span class="badge bg-dark border border-warning border-opacity-25 text-warning" style="font-size: 9px;"><i class="fa-solid fa-masks-theater me-1"></i>Teatro: ${data.teatro_estreno}</span>` : ''}
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                                        <h6 class="mb-0 text-warning fw-bold" style="font-size: 0.85rem;"><i class="fa-solid fa-feather-pointed text-warning me-2" style="font-size: 0.75rem;"></i>${data.nombre_autor}</h6>
+                                        <div class="d-flex gap-1">
+                                            ${data.fecha_estreno ? `<span class="badge bg-dark bg-opacity-75 border border-warning border-opacity-20 text-warning" style="font-size: 8px; padding: 2px 4px;"><i class="fa-solid fa-calendar-days me-1"></i>${data.fecha_estreno}</span>` : ''}
+                                            ${data.teatro_estreno ? `<span class="badge bg-dark bg-opacity-75 border border-warning border-opacity-20 text-warning" style="font-size: 8px; padding: 2px 4px;"><i class="fa-solid fa-masks-theater me-1"></i>${data.teatro_estreno}</span>` : ''}
                                         </div>
                                     </div>
-                                    <p class="small text-muted mb-0" style="line-height: 1.4; font-size: 11px;">${data.biografia || 'Biografía no registrada en el gestor de identidades.'}</p>
+                                    <p class="small text-muted mb-0" style="line-height: 1.3; font-size: 11px;">${data.biografia || 'Biografía no registrada.'}</p>
                                 </div>
+
+
                             </div>
                         `;
                         bioContainer.innerHTML = bioHtml;
