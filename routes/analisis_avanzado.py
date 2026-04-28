@@ -83,9 +83,77 @@ def reuso_detalle():
     except Exception as e:
         return jsonify({'exito': False, 'error': str(e)}), 500
 
+
 # Instanciar clase de análisis
 analisis = AnalisisAvanzado(db)
 innovador = AnalisisInnovador()
+
+@analisis_bp.route('/dramatico/autor', methods=['POST'])
+@csrf.exempt
+@login_required
+def dramatico_autor():
+    """Obtiene biografía, foto y datos de estreno de una publicación"""
+    try:
+        data = request.get_json() or {}
+        obra_nombre = data.get('obra')
+        
+        if not obra_nombre:
+            return jsonify({'exito': False, 'error': 'Se requiere el nombre de la obra'}), 400
+            
+        from app import get_proyecto_activo
+        proyecto = get_proyecto_activo()
+        proyecto_id = proyecto.id if proyecto else None
+        
+        pub_query = Publicacion.query.filter_by(nombre=obra_nombre)
+        if proyecto_id:
+            pub_query = pub_query.filter_by(proyecto_id=proyecto_id)
+        pub = pub_query.first()
+        
+        if not pub:
+            return jsonify({'exito': False, 'error': 'No se encontró la publicación/obra'}), 404
+            
+        # Extraer datos de estreno de una noticia cualquiera
+        noticia = Prensa.query.filter_by(id_publicacion=pub.id_publicacion).filter(
+            or_(Prensa.fecha_original != None, Prensa.lugar_publicacion != None)
+        ).first()
+        
+        fecha_estreno = ""
+        teatro_estreno = ""
+        
+        if noticia:
+            fecha_estreno = noticia.fecha_original or ""
+            teatro_estreno = noticia.lugar_publicacion or ""
+            
+        nombre_autor = pub.nombre_autor or (noticia.nombre_autor if noticia else "")
+        apellido_autor = pub.apellido_autor or (noticia.apellido_autor if noticia else "")
+        
+        from models import AutorBio
+        bio = None
+        if nombre_autor and apellido_autor:
+            bio = AutorBio.query.filter_by(nombre=nombre_autor, apellido=apellido_autor).first()
+        elif apellido_autor:
+            bio = AutorBio.query.filter_by(apellido=apellido_autor).first()
+        elif nombre_autor:
+            bio = AutorBio.query.filter_by(nombre=nombre_autor).first()
+            
+        biografia_texto = ""
+        foto_path = ""
+        
+        if bio:
+            biografia_texto = bio.bibliografia or bio.estilo or ""
+            foto_path = bio.foto or ""
+            
+        return jsonify({
+            'exito': True,
+            'nombre_autor': f"{nombre_autor} {apellido_autor}".strip() or "Autor Desconocido",
+            'fecha_estreno': fecha_estreno,
+            'teatro_estreno': teatro_estreno,
+            'biografia': biografia_texto,
+            'foto': foto_path
+        })
+    except Exception as e:
+        return jsonify({'exito': False, 'error': str(e)}), 500
+
 
 @analisis_bp.route('/analitica-hd')
 @login_required

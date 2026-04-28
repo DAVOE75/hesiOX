@@ -3777,6 +3777,7 @@ function loadDramatico(data) {
         <div id="ia-report-container"></div>
 
         <div class="row g-4 mb-5">
+
             <div class="col-lg-8">
                 <div class="p-4 h-100 rounded border border-warning border-opacity-20" style="background: ${cardBg} !important; backdrop-filter: blur(10px); background: linear-gradient(to right, ${accentAlpha}, transparent) !important;">
                     <div class="d-flex justify-content-between align-items-center">
@@ -3786,7 +3787,12 @@ function loadDramatico(data) {
                                 Sistema de interpretación diacrónica basado en la micro-segmentación de actos y escenas. 
                                 Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
                             </p>
+                            
+                            <!-- Panel de Biografía y Datos del Autor / Estreno -->
+                            <div id="author-bio-container" class="mt-4 pt-3 border-top border-warning border-opacity-10 animate__animated animate__fadeIn" style="display: none;"></div>
+
                             <div class="d-flex gap-4 mt-4 pt-3 border-top border-warning border-opacity-10">
+
                                 <div>
                                     <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Personajes Activos</div>
                                     <div id="stat-drama-chars" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
@@ -4100,10 +4106,64 @@ function loadDramatico(data) {
     return valA - valB;
   };
 
+
+  // Mapear obras para acceso rápido
+  const mapObras = {};
+  temp.forEach(s => { 
+    if (s.publicacion_id && s.titulo_obra) {
+      mapObras[s.publicacion_id] = String(s.titulo_obra).trim(); 
+    } 
+  });
+
   const updateActosEscenas = () => {
     const obraId = document.getElementById('filtro-obra').value;
     const isAll = obraId === '' || obraId === 'all';
     const filtered = isAll ? temp : temp.filter(s => String(s.publicacion_id) === String(obraId));
+    
+    // Inyección de biografía del autor
+    const bioContainer = document.getElementById('author-bio-container');
+    if (bioContainer) {
+        if (isAll) {
+            bioContainer.style.display = 'none';
+            bioContainer.innerHTML = '';
+        } else {
+            const obraNombre = mapObras[obraId];
+            if (obraNombre) {
+                fetch('/api/analisis/dramatico/autor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ obra: obraNombre })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.exito) {
+                        const fotoSrc = data.foto ? data.foto : '';
+                        const bioHtml = `
+                            <div class="d-flex gap-3 align-items-center mt-3 p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-10 animate__animated animate__fadeIn">
+                                ${fotoSrc ? `<img src="${fotoSrc}" class="rounded border border-warning" style="width: 70px; height: 70px; object-fit: cover;" alt="${data.nombre_autor}">` : `<div class="rounded border border-secondary border-opacity-25 d-flex align-items-center justify-content-center bg-dark" style="width: 70px; height: 70px; color: ${accentColor}; font-size: 24px;"><i class="fa-solid fa-user-pen"></i></div>`}
+                                <div style="flex: 1;">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
+                                        <h6 class="mb-0 text-warning fw-bold"><i class="fa-solid fa-feather-pointed text-warning me-2" style="font-size: 0.8rem;"></i>${data.nombre_autor}</h6>
+                                        <div class="d-flex gap-2">
+                                            ${data.fecha_estreno ? `<span class="badge bg-dark border border-warning border-opacity-25 text-warning" style="font-size: 9px;"><i class="fa-solid fa-calendar-days me-1"></i>Estreno: ${data.fecha_estreno}</span>` : ''}
+                                            ${data.teatro_estreno ? `<span class="badge bg-dark border border-warning border-opacity-25 text-warning" style="font-size: 9px;"><i class="fa-solid fa-masks-theater me-1"></i>Teatro: ${data.teatro_estreno}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mb-0" style="line-height: 1.4; font-size: 11px;">${data.biografia || 'Biografía no registrada en el gestor de identidades.'}</p>
+                                </div>
+                            </div>
+                        `;
+                        bioContainer.innerHTML = bioHtml;
+                        bioContainer.style.display = 'block';
+                    }
+                })
+                .catch(err => console.error('Error al recuperar información del autor:', err));
+            }
+        }
+    }
     
     const actosUnicos = [...new Set(filtered.map(s => s.acto).filter(a => a && a !== 'None' && a !== ''))].sort(smartSort);
     const escenasUnicas = [...new Set(filtered.map(s => s.escena).filter(e => e && e !== 'None' && e !== ''))].sort(smartSort);
@@ -4122,14 +4182,11 @@ function loadDramatico(data) {
     safeUpdateSelect('filtro-escena', escenaHtml, targetEscena);
   };
 
-  // Cargar obras iniciales
-  const mapObras = {};
-  temp.forEach(s => { if (s.publicacion_id && s.titulo_obra) mapObras[s.publicacion_id] = String(s.titulo_obra).trim(); });
-  
   let obraHtml = '<option value="">(Todas las publicaciones)</option>';
   Object.entries(mapObras).sort((a,b) => a[1].localeCompare(b[1])).forEach(([id, nombre]) => {
     obraHtml += `<option value="${id}">${nombre}</option>`;
   });
+
 
   const initialObra = '';
   safeUpdateSelect('filtro-obra', obraHtml, initialObra);
