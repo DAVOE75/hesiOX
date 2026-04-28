@@ -3780,44 +3780,41 @@ function loadDramatico(data) {
 
             <div class="col-lg-8">
                 <div class="p-4 h-100 rounded border border-warning border-opacity-20" style="background: ${cardBg} !important; backdrop-filter: blur(10px); background: linear-gradient(to right, ${accentAlpha}, transparent) !important;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div style="flex: 1;">
-                            <div class="small fw-bold mb-2" style="color: ${accentColor};"><i class="fa-solid fa-circle-info me-2"></i>Objetivo del Análisis</div>
-                            <p class="small mb-0 opacity-75" style="line-height: 1.5; color: ${textMuted} !important;">
-                                Sistema de interpretación diacrónica basado en la micro-segmentación de actos y escenas. 
-                                Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
-                            </p>
-                            
 
-                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-warning border-opacity-10 flex-wrap gap-3">
-                                <div class="d-flex gap-4">
-                                    <div>
-                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Personajes Activos</div>
-                                        <div id="stat-drama-chars" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                    </div>
-                                    <div>
-                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Segmentos Analizados</div>
-                                        <div id="stat-drama-segments" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                    </div>
-                                    <div>
-                                        <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Volumen Discursivo</div>
-                                        <div id="stat-drama-words" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
-                                    </div>
-                                </div>
-                                
-
-                                <!-- Panel de Biografía y Datos del Autor / Estreno (a la derecha) -->
-                                <div id="author-bio-container" style="display: none; flex: 1;" class="animate__animated animate__fadeIn ms-3"></div>
-
-                            </div>
-
-                        </div>
-                        <div class="ms-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="small fw-bold" style="color: ${accentColor};"><i class="fa-solid fa-circle-info me-2"></i>Objetivo del Análisis</div>
+                        <div>
                             <button class="btn btn-sm fw-bold px-3" onclick="openAliasManager()" title="Unificar personajes" style="background: ${accentColor}; color: ${light ? '#fff' : '#000'};">
                                <i class="fa-solid fa-users-gear me-2"></i>Gestor Identidades
                             </button>
                         </div>
                     </div>
+                    
+                    <p class="small mb-0 opacity-75" style="line-height: 1.5; color: ${textMuted} !important;">
+                        Sistema de interpretación diacrónica basado en la micro-segmentación de actos y escenas. 
+                        Este módulo desglosa la jerarquía de poder discursivo, la red de influencias sociales y la trayectoria emocional de los personajes.
+                    </p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-warning border-opacity-10 flex-wrap gap-3">
+                        <div class="d-flex gap-4">
+                            <div>
+                                <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Personajes Activos</div>
+                                <div id="stat-drama-chars" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                            </div>
+                            <div>
+                                <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Segmentos Analizados</div>
+                                <div id="stat-drama-segments" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                            </div>
+                            <div>
+                                <div class="xsmall text-uppercase fw-bold opacity-50" style="font-size: 10px; color: ${textWhite} !important;">Volumen Discursivo</div>
+                                <div id="stat-drama-words" class="fs-4 fw-bold text-accent" style="color: ${accentColor} !important;">-</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel de Biografía y Datos del Autor / Estreno (a la derecha) -->
+                        <div id="author-bio-container" style="display: none; flex: 1;" class="animate__animated animate__fadeIn ms-3"></div>
+                    </div>
+
                 </div>
             </div>
             <div class="col-lg-4">
