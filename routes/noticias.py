@@ -28,7 +28,7 @@ noticias_bp = Blueprint('noticias', __name__)
 @noticias_bp.route('/api/cartografia_noticia_lugares_autocomplete', methods=['GET'])
 @login_required
 def cartografia_noticia_lugares_autocomplete():
-    """Devuelve nombres únicos de lugares con sus coordenadas para autocompletar."""
+    """Devuelve nombres Ãºnicos de lugares con sus coordenadas para autocompletar."""
     q = (request.args.get('q') or '').strip().lower()
     # Queremos el nombre y las coordenadas. 
     # Usamos distinct en nombre para evitar muchos duplicados visuales, 
@@ -62,7 +62,7 @@ def api_search():
     if proyecto_id:
         query = query.filter(Prensa.proyecto_id == proyecto_id)
 
-    # Filtrar por visibilidad de la publicación
+    # Filtrar por visibilidad de la publicaciÃ³n
     query = query.outerjoin(Publicacion, Prensa.id_publicacion == Publicacion.id_publicacion).filter(
         or_(
             Publicacion.visible == True,
@@ -148,24 +148,24 @@ def api_limpieza_potente():
         if not text_to_clean:
             return jsonify({'clean_text': ''})
 
-        # 1. Unir palabras cortadas por guiones de fin de línea (Ehin- gen -> Ehingen)
-        # Soporta tildes y eñes
-        text_to_clean = re.sub(r'([a-zA-ZáéíóúÁÉÍÓÚñÑ])-\s*\n\s*([a-zA-ZáéíóúÁÉÍÓÚñÑ])', r'\1\2', text_to_clean)
+        # 1. Unir palabras cortadas por guiones de fin de lÃ­nea (Ehin- gen -> Ehingen)
+        # Soporta tildes y eÃ±es
+        text_to_clean = re.sub(r'([a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃÃÃÃÃ±Ã])-\s*\n\s*([a-zA-ZÃ¡Ã©Ã­Ã³ÃºÃÃÃÃÃÃ±Ã])', r'\1\2', text_to_clean)
 
-        # 2. Eliminar basura típica de OCR (marcas de página, WM Pl, carets)
-        text_to_clean = re.sub(r'[\^\|~¬]|WM\s+Pl|por\s+España\.?\s+\d+|\d+\s+Viajes', '', text_to_clean)
+        # 2. Eliminar basura tÃ­pica de OCR (marcas de pÃ¡gina, WM Pl, carets)
+        text_to_clean = re.sub(r'[\^\|~Â¬]|WM\s+Pl|por\s+EspaÃ±a\.?\s+\d+|\d+\s+Viajes', '', text_to_clean)
 
-        # 3. Unificar líneas rotas en un flujo continuo
+        # 3. Unificar lÃ­neas rotas en un flujo continuo
         lineas = [l.strip() for l in text_to_clean.splitlines() if l.strip()]
         texto_unido = " ".join(lineas)
 
-        # 4. Normalizar espacios y anclar puntuación
+        # 4. Normalizar espacios y anclar puntuaciÃ³n
         texto_unido = re.sub(r'\s+', ' ', texto_unido)
         texto_unido = re.sub(r'\s+([.,;:])', r'\1', texto_unido)
 
-        # 5. Crear párrafos inteligentes basados en marcadores históricos
-        # Detecta "ítem" o puntos seguidos para dar estructura
-        texto_unido = texto_unido.replace(" ítem", "\n\nítem")
+        # 5. Crear pÃ¡rrafos inteligentes basados en marcadores histÃ³ricos
+        # Detecta "Ã­tem" o puntos seguidos para dar estructura
+        texto_unido = texto_unido.replace(" Ã­tem", "\n\nÃ­tem")
         texto_unido = texto_unido.replace(". ", ".\n\n")
 
         return jsonify({'clean_text': texto_unido.strip()})
@@ -184,7 +184,7 @@ def valores_unicos_prensa(columna, proyecto_id=None):
     if proyecto_id and hasattr(columna.table.c, 'proyecto_id'):
         query = query.filter(columna.table.c.proyecto_id == proyecto_id)
 
-    # Filtrar por visibilidad de la publicación si la tabla es 'prensa'
+    # Filtrar por visibilidad de la publicaciÃ³n si la tabla es 'prensa'
     if columna.table.name == 'prensa':
         query = query.outerjoin(Publicacion, Prensa.id_publicacion == Publicacion.id_publicacion).filter(
             or_(
@@ -231,7 +231,7 @@ def ordenar_por_fecha_prensa(query, descendente=False):
 # --- Helper para datos de formulario en plantillas de noticias ---
 def get_form_data_for_templates_noticias():
     idiomas = ["es", "it", "fr", "en", "pt", "ct"]
-    tipos_autor = ["anónimo", "firmado", "corresponsal"]
+    tipos_autor = ["anÃ³nimo", "firmado", "corresponsal"]
     # Solo publicaciones del proyecto activo
     proyecto = get_proyecto_activo()
     if proyecto:
@@ -242,7 +242,7 @@ def get_form_data_for_templates_noticias():
         ciudades = [r.ciudad for r in Prensa.query.with_entities(Prensa.ciudad).filter_by(proyecto_id=proyecto.id, incluido=True).distinct().order_by(Prensa.ciudad).all() if r.ciudad]
         
         # Temas: obtener y aplanar si son CSV, o mostrar distinct
-        # Simplificación: distinct de la columna
+        # SimplificaciÃ³n: distinct de la columna
         raw_temas = Prensa.query.with_entities(Prensa.temas).filter_by(proyecto_id=proyecto.id, incluido=True).distinct().all()
         temas = sorted(list(set([t.strip() for r in raw_temas if r.temas for t in r.temas.split(',') if t.strip()]))) if raw_temas else [] 
 
@@ -270,21 +270,6 @@ def get_form_data_for_templates_noticias():
         "opciones_subgenero": MetadataOption.query.filter_by(categoria='tipo_publicacion').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
         "opciones_frecuencia": MetadataOption.query.filter_by(categoria='frecuencia').order_by(MetadataOption.orden, MetadataOption.etiqueta).all(),
     }
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app
-from flask_login import login_required, current_user
-from flask import abort
-from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia
-from extensions import db
-from utils import get_proyecto_activo
-from cache_config import cache
-from datetime import datetime
-from sqlalchemy import or_, cast, String
-from analisis_cache import cache as analisis_cache_instance
-from collections import Counter
-import re
-import requests
-import spacy
-# nlp = spacy.load('es_core_news_md')  # MOVED TO LAZY LOAD
 @noticias_bp.route('/api/cartografia_noticia_add_location/<int:id>/editar', methods=['POST'])
 @csrf.exempt
 @login_required
@@ -304,8 +289,8 @@ def editar_lugar_noticia(id):
     except (TypeError, ValueError):
         frecuencia = None
     if not nombre or not nuevo_nombre or frecuencia is None or frecuencia < 1:
-        print('RETURN editar_lugar_noticia: Datos incompletos o frecuencia inválida')
-        return jsonify({'success': False, 'error': 'Datos incompletos o frecuencia inválida'}), 400
+        print('RETURN editar_lugar_noticia: Datos incompletos o frecuencia invÃ¡lida')
+        return jsonify({'success': False, 'error': 'Datos incompletos o frecuencia invÃ¡lida'}), 400
     lugar = LugarNoticia.query.filter_by(noticia_id=id, nombre=nombre).first()
     print('DEBUG editar_lugar_noticia: lugar encontrado', lugar)
     if not lugar:
@@ -351,7 +336,7 @@ def editar_lugar_noticia(id):
     return jsonify({'success': True})
  
 
-# --- API para borrar un lugar de la cartografía de la noticia ---
+# --- API para borrar un lugar de la cartografÃ­a de la noticia ---
 
 # --- API para obtener lat/lon de una ciudad por nombre ---
 @noticias_bp.route('/api/ciudad_coords', methods=['GET'])
@@ -360,7 +345,7 @@ def api_ciudad_coords():
     import unicodedata
     nombre = request.args.get('nombre')
     if not nombre:
-        return jsonify({'error': 'Falta el parámetro nombre'}), 400
+        return jsonify({'error': 'Falta el parÃ¡metro nombre'}), 400
 
     def normaliza(s):
         if not s:
@@ -387,7 +372,7 @@ def cartografia_noticia_borrar_location(id):
         data = request.get_json(force=True)
         nombre = data.get('nombre')
         if not nombre:
-            return jsonify({'success': False, 'error': 'Nombre vacío'}), 400
+            return jsonify({'success': False, 'error': 'Nombre vacÃ­o'}), 400
         # Marcar como borrado=True en todas las noticias donde aparezca ese nombre
         lugares = LugarNoticia.query.filter_by(nombre=nombre, borrado=False).all()
         if not lugares:
@@ -398,27 +383,8 @@ def cartografia_noticia_borrar_location(id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-from werkzeug.utils import secure_filename
-import os
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app
-from flask_login import login_required, current_user
-from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia
-from extensions import db
-from utils import get_proyecto_activo
-from cache_config import cache
-from datetime import datetime
-# IMPORTS PARA FILTROS AVANZADOS
-from sqlalchemy import or_, cast, String
-from analisis_cache import cache as analisis_cache_instance
-from collections import Counter
-import re
-import requests
-import spacy
 
-# nlp = spacy.load('es_core_news_md')  # MOVED TO LAZY LOAD
-
-
-# --- API para añadir manualmente una ciudad a la cartografía de la noticia ---
+# --- API para aÃ±adir manualmente una ciudad a la cartografÃ­a de la noticia ---
 from extensions import csrf
 
 @noticias_bp.route('/api/cartografia_noticia_add_location/<int:id>', methods=['POST'])
@@ -437,14 +403,14 @@ def cartografia_noticia_add_location(id):
         data = request.get_json(force=True)
     except Exception as e:
         logger.error(f"Error al parsear JSON: {e}")
-        return jsonify({'success': False, 'error': 'JSON inválido'}), 400
+        return jsonify({'success': False, 'error': 'JSON invÃ¡lido'}), 400
     logger.info('--- DEBUG add_location ---')
     logger.info(f'DATA RECIBIDA: {data}')
     raw_nombre = data.get('nombre') if data else None
     raw_busqueda = data.get('nombre_busqueda') or raw_nombre
     
     # Si parece una coordenada, no limpiar (evitar que strip('.,;') rompa el formato)
-    # Usamos re.search para ser más permisivos con posibles caracteres invisibles al inicio
+    # Usamos re.search para ser mÃ¡s permisivos con posibles caracteres invisibles al inicio
     is_coord_format = re.search(r'(-?\d+\.?\d*)\s*[,\s/|]\s*(-?\d+\.?\d*)', str(raw_busqueda))
     
     # DEBUG LOG
@@ -472,16 +438,16 @@ def cartografia_noticia_add_location(id):
     en_contenido = bool(data.get('en_contenido')) if data else False
 
     if not nombre:
-        logger.warning('Nombre vacío o no proporcionado')
-        return jsonify({'success': False, 'error': 'Nombre vacío o no proporcionado'}), 400
+        logger.warning('Nombre vacÃ­o o no proporcionado')
+        return jsonify({'success': False, 'error': 'Nombre vacÃ­o o no proporcionado'}), 400
 
-    # --- AUTO-CONTEO DE FRECUENCIA Y DETECCIÓN ---
-    # Buscamos todas las menciones en el título y contenido para actualizar frecuencia y flags
+    # --- AUTO-CONTEO DE FRECUENCIA Y DETECCIÃN ---
+    # Buscamos todas las menciones en el tÃ­tulo y contenido para actualizar frecuencia y flags
     titulo_noticia = noticia.titulo or ""
     contenido_noticia = noticia.contenido or ""
     
-    # Escapar el nombre ORIGINAL para regex y buscar de forma insensible a mayúsculas
-    # El nombre original es el que está en el texto de la noticia
+    # Escapar el nombre ORIGINAL para regex y buscar de forma insensible a mayÃºsculas
+    # El nombre original es el que estÃ¡ en el texto de la noticia
     safe_name = re.escape(nombre)
     matches_titulo = len(re.findall(safe_name, titulo_noticia, re.IGNORECASE))
     matches_contenido = len(re.findall(safe_name, contenido_noticia, re.IGNORECASE))
@@ -494,13 +460,13 @@ def cartografia_noticia_add_location(id):
         en_titulo = matches_titulo > 0
         en_contenido = matches_contenido > 0
     else:
-        # Si no se detecta en el texto (ej. se añadió a mano algo que no está literal), usamos el input
+        # Si no se detecta en el texto (ej. se aÃ±adiÃ³ a mano algo que no estÃ¡ literal), usamos el input
         frecuencia = input_frecuencia
 
     if frecuencia < 1:
-        logger.warning(f'Frecuencia resultante inválida: {frecuencia}')
-        return jsonify({'success': False, 'error': 'Frecuencia inválida'}), 400
-    # No permitir duplicados en la misma noticia - Búsqueda ROBUSTA (ilike)
+        logger.warning(f'Frecuencia resultante invÃ¡lida: {frecuencia}')
+        return jsonify({'success': False, 'error': 'Frecuencia invÃ¡lida'}), 400
+    # No permitir duplicados en la misma noticia - BÃºsqueda ROBUSTA (ilike)
     duplicados = LugarNoticia.query.filter(
         LugarNoticia.noticia_id == noticia.id,
         LugarNoticia.nombre.ilike(nombre),
@@ -509,7 +475,7 @@ def cartografia_noticia_add_location(id):
     
     existe = duplicados[0] if duplicados else None
     
-    # Si hay más de uno (duplicados accidentales), los fusionamos ahora mismo
+    # Si hay mÃ¡s de uno (duplicados accidentales), los fusionamos ahora mismo
     if len(duplicados) > 1:
         logger.warning(f"FUSIONANDO {len(duplicados)} DUPLICADOS para '{nombre}' en noticia {noticia.id}")
         for extra in duplicados[1:]:
@@ -519,13 +485,13 @@ def cartografia_noticia_add_location(id):
             db.session.delete(extra)
         db.session.commit()
     try:
-        logger.info(f'Geocodificando con nombre de búsqueda: {nombre_busqueda}')
+        logger.info(f'Geocodificando con nombre de bÃºsqueda: {nombre_busqueda}')
         lat, lon = None, None
         tipo_lugar = 'unknown'
 
-        # --- Detectar si el usuario pegó coordenadas directamente ---
+        # --- Detectar si el usuario pegÃ³ coordenadas directamente ---
         # Usamos re.search para mayor robustez
-        coord_match = re.search(r'(-?\d+\.?\d*)\s*[,\s/|]\s*(-?\d+\.?\d*)', nombre_busqueda.replace('°', ''))
+        coord_match = re.search(r'(-?\d+\.?\d*)\s*[,\s/|]\s*(-?\d+\.?\d*)', nombre_busqueda.replace('Â°', ''))
         
         if coord_match:
             try:
@@ -535,7 +501,7 @@ def cartografia_noticia_add_location(id):
             except (ValueError, TypeError) as e_float:
                 logger.error(f"Error al convertir coordenadas a float: {e_float}")
         
-        # Fallback manual si el regex falló pero is_coord_format era cierto
+        # Fallback manual si el regex fallÃ³ pero is_coord_format era cierto
         if (lat is None or lon is None) and is_coord_format:
             try:
                 # Intentar partir por coma si existe
@@ -543,7 +509,7 @@ def cartografia_noticia_add_location(id):
                     parts = nombre_busqueda.split(',')
                     lat = float(re.findall(r'-?\d+\.?\d*', parts[0])[0])
                     lon = float(re.findall(r'-?\d+\.?\d*', parts[1])[0])
-                    logger.info(f'Coordenadas extraídas por split manual: {lat}, {lon}')
+                    logger.info(f'Coordenadas extraÃ­das por split manual: {lat}, {lon}')
             except:
                 pass
 
@@ -574,46 +540,46 @@ def cartografia_noticia_add_location(id):
                         lon = float(data_geo[0]['lon'])
                         tipo_lugar = data_geo[0].get('type', 'unknown')
                     else:
-                        logger.warning(f'Nominatim no devolvió resultados válidos para "{nombre_busqueda}": {data_geo}')
+                        logger.warning(f'Nominatim no devolviÃ³ resultados vÃ¡lidos para "{nombre_busqueda}": {data_geo}')
                 else:
                     logger.error(f'Nominatim error {resp.status_code}: {resp.text}')
             except Exception as e_nom:
-                logger.error(f"Excepción en petición a Nominatim: {e_nom}")
+                logger.error(f"ExcepciÃ³n en peticiÃ³n a Nominatim: {e_nom}")
 
-            # Fallback a Gemini si Nominatim falló o no dio resultados
+            # Fallback a Gemini si Nominatim fallÃ³ o no dio resultados
             if lat is None or lon is None:
-                logger.info(f'Intentando geocodificación con IA Gemini para "{nombre_busqueda}"...')
+                logger.info(f'Intentando geocodificaciÃ³n con IA Gemini para "{nombre_busqueda}"...')
                 try:
                     from services.gemini_service import geocode_with_ai
                     contexto_geo = {
                         "titulo": noticia.titulo,
-                        "periódico": noticia.publicacion,
+                        "periÃ³dico": noticia.publicacion,
                         "contenido_snippet": noticia.contenido[:5000] if noticia.contenido else "",
-                        "mensaje": "DESAMBIGUACIÓN CRÍTICA: Identifica cuál de los posibles lugares con este nombre es el más probable según el texto."
+                        "mensaje": "DESAMBIGUACIÃN CRÃTICA: Identifica cuÃ¡l de los posibles lugares con este nombre es el mÃ¡s probable segÃºn el texto."
                     }
                     res_ai = geocode_with_ai(nombre_busqueda, contexto_geo)
                     if res_ai and res_ai.get('found'):
                         lat = res_ai.get('lat')
                         lon = res_ai.get('lon')
                         # No sobreescribimos 'nombre' para mantener el texto original de la noticia
-                        logger.info(f'Gemini desambiguó "{nombre_busqueda}" -> Coordenadas: {lat}, {lon} ({res_ai.get("explanation")})')
+                        logger.info(f'Gemini desambiguÃ³ "{nombre_busqueda}" -> Coordenadas: {lat}, {lon} ({res_ai.get("explanation")})')
                 except Exception as e_ai:
                     logger.error(f"Error en geocoding fallback IA: {e_ai}")
 
 
 
-        # Si tras Nominatim e IA seguimos sin coordenadas, permitimos añadir con 0,0 para que el usuario corrija
+        # Si tras Nominatim e IA seguimos sin coordenadas, permitimos aÃ±adir con 0,0 para que el usuario corrija
         if lat is None or lon is None:
-            # --- NUEVA LÓGICA DE UNIFICACIÓN/DESAMBIGUACIÓN (LOCAL CACHE) ---
-            # Solo buscamos en el caché local si NO es un formato de coordenadas explícito
+            # --- NUEVA LÃGICA DE UNIFICACIÃN/DESAMBIGUACIÃN (LOCAL CACHE) ---
+            # Solo buscamos en el cachÃ© local si NO es un formato de coordenadas explÃ­cito
             if not is_coord_format:
                 c_manual = Ciudad.query.filter(Ciudad.name.ilike(nombre_busqueda)).first()
                 if c_manual and c_manual.lat is not None and c_manual.lon is not None:
                     lat, lon = c_manual.lat, c_manual.lon
-                    logger.info(f'Unificación encontrada en tabla Ciudad para "{nombre_busqueda}": {lat}, {lon}')
+                    logger.info(f'UnificaciÃ³n encontrada en tabla Ciudad para "{nombre_busqueda}": {lat}, {lon}')
             
             if lat is None or lon is None:
-                logger.warning(f'No se pudo geocodificar "{nombre}". Añadiendo con (0,0) para corrección manual.')
+                logger.warning(f'No se pudo geocodificar "{nombre}". AÃ±adiendo con (0,0) para correcciÃ³n manual.')
                 lat, lon = 0.0, 0.0
 
         with open('/opt/hesiox/debug_geo.log', 'a') as f:
@@ -622,8 +588,8 @@ def cartografia_noticia_add_location(id):
 
         if existe:
             logger.info(f'Ya existe el lugar "{nombre}", actualizando...')
-            # SOLO actualizar lat/lon si hemos encontrado algo válido (distinto de 0,0)
-            # O si el usuario ha pegado coordenadas explícitamente (is_coord_format)
+            # SOLO actualizar lat/lon si hemos encontrado algo vÃ¡lido (distinto de 0,0)
+            # O si el usuario ha pegado coordenadas explÃ­citamente (is_coord_format)
             if (lat != 0.0 or lon != 0.0) or is_coord_format:
                 with open('/opt/hesiox/debug_geo.log', 'a') as f:
                     f.write(f"UPDATING EXISTE ID {existe.id} FROM ({existe.lat}, {existe.lon}) TO ({lat}, {lon})\n")
@@ -631,7 +597,7 @@ def cartografia_noticia_add_location(id):
                 existe.lat = lat
                 existe.lon = lon
             else:
-                logger.info(f'Geocodificación fallida para "{nombre}", preservando coordenadas existentes: {existe.lat}, {existe.lon}')
+                logger.info(f'GeocodificaciÃ³n fallida para "{nombre}", preservando coordenadas existentes: {existe.lat}, {existe.lon}')
             
             # Si estamos re-mapeando, actualizamos la frecuencia con el valor detectado/proporcionado
             # en lugar de sumarlo, para evitar duplicados en el conteo.
@@ -665,7 +631,7 @@ def cartografia_noticia_add_location(id):
                 frec_contenido=matches_contenido
             )
             db.session.add(lugar)
-            logger.info(f'Lugar añadido exitosamente a la noticia {noticia.id}')
+            logger.info(f'Lugar aÃ±adido exitosamente a la noticia {noticia.id}')
         db.session.commit()
         ciudad = {
             'nombre': nombre,
@@ -674,9 +640,9 @@ def cartografia_noticia_add_location(id):
             'frecuencia': lugar.frecuencia
         }
 
-        # --- PERSISTENCIA EN TABLA CIUDAD (LÓGICA DE UNIFICACIÓN) ---
-        # Si hemos encontrado coordenadas válidas, guardamos/actualizamos en la tabla Ciudad
-        # para que futuras detecciones automáticas de este mismo nombre usen estas coordenadas.
+        # --- PERSISTENCIA EN TABLA CIUDAD (LÃGICA DE UNIFICACIÃN) ---
+        # Si hemos encontrado coordenadas vÃ¡lidas, guardamos/actualizamos en la tabla Ciudad
+        # para que futuras detecciones automÃ¡ticas de este mismo nombre usen estas coordenadas.
         if lat != 0.0 or lon != 0.0:
             c_persist = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
             if not c_persist:
@@ -701,11 +667,11 @@ def cartografia_noticia_add_location(id):
     except Exception as e:
         db.session.rollback()
         import traceback
-        logger.error(f'Error al añadir/actualizar lugar: {e}')
+        logger.error(f'Error al aÃ±adir/actualizar lugar: {e}')
         logger.error(traceback.format_exc())
-        return jsonify({'success': False, 'error': f"Excepción: {e}"}), 500
+        return jsonify({'success': False, 'error': f"ExcepciÃ³n: {e}"}), 500
 
-# --- API para editar manualmente una ciudad de la cartografía de la noticia ---
+# --- API para editar manualmente una ciudad de la cartografÃ­a de la noticia ---
 @noticias_bp.route('/api/cartografia_noticia_edit_location/<int:id>', methods=['POST'], endpoint='cartografia_noticia_edit_location')
 @csrf.exempt
 @login_required
@@ -717,11 +683,11 @@ def cartografia_noticia_edit_location(id):
     nombre_anterior = data.get('nombre_anterior')
     nombre = clean_location_name(data.get('nombre', '') or data.get('lugar', ''))
     frecuencia = int(data.get('frecuencia', 1))
-    en_titulo = data.get('en_titulo') == 'Sí' if data else False
-    en_contenido = data.get('en_contenido') == 'Sí' if data else False
+    en_titulo = data.get('en_titulo') == 'SÃ­' if data else False
+    en_contenido = data.get('en_contenido') == 'SÃ­' if data else False
     
     if not nombre:
-        return jsonify({'success': False, 'error': 'El nombre de la ubicación es obligatorio'}), 400
+        return jsonify({'success': False, 'error': 'El nombre de la ubicaciÃ³n es obligatorio'}), 400
     
     # Recuperar el lugar objeto que estamos editando
     lugar = LugarNoticia.query.filter_by(noticia_id=noticia.id, nombre=nombre_anterior, borrado=False).first()
@@ -733,13 +699,13 @@ def cartografia_noticia_edit_location(id):
         # 1. FUSIONAR: Buscar si ya existe en esta noticia
         existe = LugarNoticia.query.filter_by(noticia_id=noticia.id, nombre=nombre, borrado=False).first()
         if existe and existe.id != lugar.id:
-            # Fusión: sumar frecuencia al existente y borrar el antiguo
+            # FusiÃ³n: sumar frecuencia al existente y borrar el antiguo
             existe.frecuencia += frecuencia
             # Combinar flags
             existe.en_titulo = existe.en_titulo or en_titulo
             existe.en_contenido = existe.en_contenido or en_contenido
             
-            # Si se enviaron coordenadas nuevas explícitas, actualizamos el destino también
+            # Si se enviaron coordenadas nuevas explÃ­citas, actualizamos el destino tambiÃ©n
             if 'lat' in data and 'lon' in data and data['lat'] and data['lon']:
                 try:
                     existe.lat = float(data['lat'])
@@ -750,7 +716,7 @@ def cartografia_noticia_edit_location(id):
             db.session.commit()
             return jsonify({'success': True, 'fusion': True})
         
-        # 2. COORDINADAS: Prioridad al input manual, luego caché global Ciudad
+        # 2. COORDINADAS: Prioridad al input manual, luego cachÃ© global Ciudad
         new_lat = None
         new_lon = None
         
@@ -765,17 +731,17 @@ def cartografia_noticia_edit_location(id):
         if new_lat is not None and new_lon is not None:
             lugar.lat = new_lat
             lugar.lon = new_lon
-            logger.info(f"Usando coordenadas manuales para {nombre}: {new_lat}, {new_lon}")
+            current_app.logger.info(f"Usando coordenadas manuales para {nombre}: {new_lat}, {new_lon}")
         else:
             # Si no hay manuales, buscar en tabla Ciudad (Global)
             ciudad_db = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
             if ciudad_db and ciudad_db.lat is not None and ciudad_db.lon is not None:
                 lugar.lat = ciudad_db.lat
                 lugar.lon = ciudad_db.lon
-                logger.info(f"Usando coordenadas de caché global para {nombre}: {lugar.lat}, {lugar.lon}")
+                current_app.logger.info(f"Usando coordenadas de cachÃ© global para {nombre}: {lugar.lat}, {lugar.lon}")
 
     else:
-        # Si NO cambiamos de nombre, actualizamos coordenadas si se envían
+        # Si NO cambiamos de nombre, actualizamos coordenadas si se envÃ­an
         try:
             if 'lat' in data and data['lat'] is not None and str(data['lat']).strip() != '':
                 lugar.lat = float(data['lat'])
@@ -784,7 +750,7 @@ def cartografia_noticia_edit_location(id):
         except: pass
 
     # --- PERSISTENCIA GLOBAL ---
-    # Si las coordenadas finales son válidas y no son (0,0), actualizamos la tabla Ciudad
+    # Si las coordenadas finales son vÃ¡lidas y no son (0,0), actualizamos la tabla Ciudad
     # para que este cambio sea persistente en todo el sistema.
     if lugar.lat != 0.0 or lugar.lon != 0.0:
         c_persist = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
@@ -803,7 +769,7 @@ def cartografia_noticia_edit_location(id):
     db.session.commit()
     return jsonify({'success': True})
 
-# --- API para borrar manualmente una ciudad de la cartografía de la noticia ---
+# --- API para borrar manualmente una ciudad de la cartografÃ­a de la noticia ---
 from extensions import csrf
 
 @noticias_bp.route('/api/cartografia_noticia_delete_location/<int:id>', methods=['POST'], endpoint='cartografia_noticia_delete_location')
@@ -817,7 +783,7 @@ def cartografia_noticia_delete_location(id):
         data = request.get_json(force=True)
     except Exception as e:
         print(f"[cartografia_noticia_delete_location] Error al parsear JSON: {e}")
-        return jsonify({'success': False, 'error': 'JSON inválido'}), 400
+        return jsonify({'success': False, 'error': 'JSON invÃ¡lido'}), 400
     print(f"[cartografia_noticia_delete_location] Data recibida: {data}")
     nombre = data.get('nombre') if data else None
     if not nombre:
@@ -850,7 +816,7 @@ def cartografia_noticia_delete_location(id):
 
     return jsonify({'success': True})
 
-# --- API para verificar/desverificar una ubicación ---
+# --- API para verificar/desverificar una ubicaciÃ³n ---
 @noticias_bp.route('/api/verificar_ciudad', methods=['POST'])
 @csrf.exempt
 @login_required
@@ -880,7 +846,7 @@ def api_verificar_ciudad():
             if verificada:
                 ciudad.blacklisted = False # Si se verifica, no puede estar en lista negra
             
-        # ── Sincronizar con LugarNoticia del proyecto activo ─────────────────────
+        # ââ Sincronizar con LugarNoticia del proyecto activo âââââââââââââââââââââ
         if proyecto:
             from models import LugarNoticia
             subquery = db.session.query(LugarNoticia.id).join(Prensa).filter(
@@ -899,7 +865,7 @@ def api_verificar_ciudad():
             LugarNoticia.query.filter(LugarNoticia.id.in_(ids_to_update)).update(
                 update_vals, synchronize_session=False
             )
-        # ────────────────────────────────────────────────────────────────────────
+        # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
             
         db.session.commit()
         return jsonify({'success': True, 'nombre': nombre, 'verificada': verificada})
@@ -954,7 +920,7 @@ def verificar_ubicacion(ubicacion_id):
     try:
         ubicacion = LugarNoticia.query.get(ubicacion_id)
         if not ubicacion:
-            return jsonify({'success': False, 'error': 'Ubicación no encontrada'}), 404
+            return jsonify({'success': False, 'error': 'UbicaciÃ³n no encontrada'}), 404
         
         # Get verified status from request
         data = request.get_json()
@@ -967,7 +933,7 @@ def verificar_ubicacion(ubicacion_id):
         ubicacion.verificada = verificada
         db.session.commit()
         
-        print(f"[verificar_ubicacion] Ubicación {ubicacion_id} ({ubicacion.nombre}) verificada: {verificada}")
+        print(f"[verificar_ubicacion] UbicaciÃ³n {ubicacion_id} ({ubicacion.nombre}) verificada: {verificada}")
         
         return jsonify({
             'success': True,
@@ -984,17 +950,17 @@ def verificar_ubicacion(ubicacion_id):
 @csrf.exempt
 @login_required
 def vincular_ubicacion(ubicacion_id):
-    """Toggle vinculación status of a location occurrence in a specific noticia
+    """Toggle vinculaciÃ³n status of a location occurrence in a specific noticia
     
-    Ahora maneja desvinculación por ocurrencia individual:
+    Ahora maneja desvinculaciÃ³n por ocurrencia individual:
     - Al desvincular: incrementa frecuencia_desvinculada en 1
     - Al vincular: decrementa frecuencia_desvinculada en 1  
-    - Si todas las ocurrencias están desvinculadas, marca vinculada=False
+    - Si todas las ocurrencias estÃ¡n desvinculadas, marca vinculada=False
     """
     try:
         ubicacion = LugarNoticia.query.get(ubicacion_id)
         if not ubicacion:
-            return jsonify({'success': False, 'error': 'Ubicación no encontrada'}), 404
+            return jsonify({'success': False, 'error': 'UbicaciÃ³n no encontrada'}), 404
         
         # Get vinculada status from request
         data = request.get_json()
@@ -1019,11 +985,11 @@ def vincular_ubicacion(ubicacion_id):
             else:
                 return jsonify({
                     'success': False, 
-                    'error': 'No hay más ocurrencias para desvincular'
+                    'error': 'No hay mÃ¡s ocurrencias para desvincular'
                 }), 400
         
         # Update vinculada status based on frecuencia_desvinculada
-        # Si todas las ocurrencias están desvinculadas, marcar como desvinculada
+        # Si todas las ocurrencias estÃ¡n desvinculadas, marcar como desvinculada
         if ubicacion.frecuencia_desvinculada >= ubicacion.frecuencia:
             ubicacion.vinculada = False
         # Si hay al menos una ocurrencia vinculada, marcar como vinculada
@@ -1035,7 +1001,7 @@ def vincular_ubicacion(ubicacion_id):
         # Calculate effective frequency
         frecuencia_efectiva = ubicacion.frecuencia - ubicacion.frecuencia_desvinculada
         
-        print(f"[vincular_ubicacion] Ubicación {ubicacion_id} ({ubicacion.nombre}) - "
+        print(f"[vincular_ubicacion] UbicaciÃ³n {ubicacion_id} ({ubicacion.nombre}) - "
               f"Frecuencia total: {ubicacion.frecuencia}, Desvinculadas: {ubicacion.frecuencia_desvinculada}, "
               f"Efectiva: {frecuencia_efectiva}, Vinculada: {ubicacion.vinculada}")
         
@@ -1054,7 +1020,7 @@ def vincular_ubicacion(ubicacion_id):
 
 
 def _core_batch_verificar(nombres, verificada, all_pro=False, proyecto=None):
-    """Lógica central para verificar/desverificar ubicaciones por lote"""
+    """LÃ³gica central para verificar/desverificar ubicaciones por lote"""
     if not proyecto:
         from utils import get_proyecto_activo
         proyecto = get_proyecto_activo()
@@ -1091,8 +1057,8 @@ def _core_batch_verificar(nombres, verificada, all_pro=False, proyecto=None):
     ids_to_update = [r[0] for r in subquery_ids.all()]
     updated_count = LugarNoticia.query.filter(LugarNoticia.id.in_(ids_to_update)).update(update_vals, synchronize_session=False)
     
-    # ── Sincronizar con tabla Ciudad para consistencia global ────────────────
-    # nombres_actuales debe incluir TODOS los que se han actualizado (también los borrados)
+    # ââ Sincronizar con tabla Ciudad para consistencia global ââââââââââââââââ
+    # nombres_actuales debe incluir TODOS los que se han actualizado (tambiÃ©n los borrados)
     # si queremos que el estado de 'verificada' se refleje en la tabla global Ciudad.
     if all_pro:
         nombres_actuales = [
@@ -1121,7 +1087,7 @@ def _core_batch_verificar(nombres, verificada, all_pro=False, proyecto=None):
             if lat is not None:
                 ciudad = Ciudad(name=nombre, lat=lat, lon=lon, verificada=True, blacklisted=False)
                 db.session.add(ciudad)
-    # ─────────────────────────────────────────────────────────────
+    # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     
     db.session.commit()
     return True, updated_count, 200
@@ -1261,7 +1227,7 @@ def api_get_vector_layers():
 @csrf.exempt
 @login_required
 def api_get_vector_layer(layer_id):
-    """Obtiene una capa vectorial específica"""
+    """Obtiene una capa vectorial especÃ­fica"""
     from models import VectorLayer
     from utils import get_proyecto_activo
     
@@ -1299,7 +1265,7 @@ def api_create_vector_layer():
         geojson = data.get('geojson', {"type": "FeatureCollection", "features": []})
         features = geojson.get('features', [])
         
-        # Calcular área y longitud inicial
+        # Calcular Ã¡rea y longitud inicial
         from services.geo_calculations import calculate_layer_metrics
         metrics = calculate_layer_metrics(features)
         area_total = metrics.get('area_total')
@@ -1359,7 +1325,7 @@ def api_update_vector_layer(layer_id):
     data = request.get_json()
     
     try:
-        # Actualizar campos básicos
+        # Actualizar campos bÃ¡sicos
         if 'nombre' in data:
             layer.nombre = data['nombre']
         if 'descripcion' in data:
@@ -1379,22 +1345,22 @@ def api_update_vector_layer(layer_id):
         if 'snap_enabled' in data:
             layer.snap_enabled = data['snap_enabled']
         
-        # Actualizar GeoJSON y recalcular métricas
+        # Actualizar GeoJSON y recalcular mÃ©tricas
         if 'geojson' in data:
             geojson = data['geojson']
             layer.geojson_data = json.dumps(geojson)
             
-            # Recalcular número de features
+            # Recalcular nÃºmero de features
             features = geojson.get('features', [])
             layer.num_features = len(features)
             
-            # Calcular área y longitud totales si aplica
+            # Calcular Ã¡rea y longitud totales si aplica
             from services.geo_calculations import calculate_layer_metrics
             metrics = calculate_layer_metrics(features)
             layer.area_total = metrics.get('area_total')
             layer.longitud_total = metrics.get('longitud_total')
         
-        # Actualizar vínculos con noticias
+        # Actualizar vÃ­nculos con noticias
         if 'vinculado_noticias' in data:
             layer.vinculado_noticias = json.dumps(data['vinculado_noticias'])
         
@@ -1467,7 +1433,7 @@ def api_export_vector_layer(layer_id):
     try:
         geojson = json.loads(layer.geojson_data)
         
-        # Añadir metadatos adicionales
+        # AÃ±adir metadatos adicionales
         geojson['name'] = layer.nombre
         geojson['description'] = layer.descripcion
         geojson['crs'] = {
@@ -1502,11 +1468,11 @@ def api_import_vector_layer():
         return jsonify({'error': 'No hay proyecto activo'}), 400
     
     if 'file' not in request.files:
-        return jsonify({'error': 'No se proporcionó archivo'}), 400
+        return jsonify({'error': 'No se proporcionÃ³ archivo'}), 400
     
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'Archivo vacío'}), 400
+        return jsonify({'error': 'Archivo vacÃ­o'}), 400
     
     try:
         content = file.read().decode('utf-8')
@@ -1515,7 +1481,7 @@ def api_import_vector_layer():
         geojson = json.loads(content)
         
         if geojson.get('type') != 'FeatureCollection':
-            return jsonify({'error': 'El archivo debe ser un FeatureCollection válido'}), 400
+            return jsonify({'error': 'El archivo debe ser un FeatureCollection vÃ¡lido'}), 400
         
         # Crear nueva capa con el contenido importado
         nombre = request.form.get('nombre', file.filename.rsplit('.', 1)[0])
@@ -1542,7 +1508,7 @@ def api_import_vector_layer():
         }), 201
         
     except json.JSONDecodeError:
-        return jsonify({'error': 'El archivo no es un JSON válido'}), 400
+        return jsonify({'error': 'El archivo no es un JSON vÃ¡lido'}), 400
     except Exception as e:
         db.session.rollback()
         print(f"[api_import_vector_layer] Error: {e}")
@@ -1553,7 +1519,7 @@ def api_import_vector_layer():
 @csrf.exempt
 @login_required
 def api_reorder_vector_layers():
-    """Actualiza el orden de múltiples capas vectoriales de un proyecto"""
+    """Actualiza el orden de mÃºltiples capas vectoriales de un proyecto"""
     from utils import get_proyecto_activo
     from models import VectorLayer
     from extensions import db
@@ -1585,17 +1551,17 @@ def api_reorder_vector_layers():
 @noticias_bp.route('/api/vector_layers/migrate', methods=['GET'])
 @login_required
 def api_migrate_vector_layers():
-    """Migración temporal para añadir columna 'orden' si no existe"""
+    """MigraciÃ³n temporal para aÃ±adir columna 'orden' si no existe"""
     if current_user.rol != 'admin':
         return jsonify({'error': 'Solo administradores'}), 403
     
     from extensions import db
     try:
-        # Intentar añadir la columna usando SQL crudo para mayor seguridad en migraciones manuales
+        # Intentar aÃ±adir la columna usando SQL crudo para mayor seguridad en migraciones manuales
         db.session.execute(text("ALTER TABLE vector_layers ADD COLUMN IF NOT EXISTS orden INTEGER DEFAULT 0"))
         db.session.execute(text("ALTER TABLE vector_layers ADD COLUMN IF NOT EXISTS bloqueada BOOLEAN DEFAULT FALSE"))
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Columna "orden" verificada/añadida correctamente'})
+        return jsonify({'success': True, 'message': 'Columna "orden" verificada/aÃ±adida correctamente'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1622,11 +1588,11 @@ def api_noticias_por_publicacion():
     } for n in noticias]
     return jsonify(res)
 
-# --- API para cartografía global del corpus ---
-# Cache simple para geocodificación
+# --- API para cartografÃ­a global del corpus ---
+# Cache simple para geocodificaciÃ³n
 _geo_cache = {}
 
-# --- API para gestión masiva de ubicaciones (Panel Global) ---
+# --- API para gestiÃ³n masiva de ubicaciones (Panel Global) ---
 
 @noticias_bp.route('/api/batch_geocoding', methods=['POST'])
 @login_required
@@ -1653,16 +1619,16 @@ def api_batch_geocoding():
         data_request = request.get_json() or {}
         use_ai = data_request.get('use_ai', False)
 
-        # Marcador específico según el tipo de procesamiento
+        # Marcador especÃ­fico segÃºn el tipo de procesamiento
         tag_procesado = "__PROCESSED_IA__" if use_ai else "__PROCESSED_BASE__"
         tipo_lugar = 'extraido_ai' if use_ai else 'extraido'
 
-        # Buscamos noticias que aún no han sido procesadas POR ESTE MODO específico
+        # Buscamos noticias que aÃºn no han sido procesadas POR ESTE MODO especÃ­fico
         subquery = db.session.query(LugarNoticia.noticia_id).filter(
             LugarNoticia.nombre == tag_procesado
         ).distinct()
 
-        # Si una noticia tiene lugares del tipo que buscamos, también la consideramos procesada
+        # Si una noticia tiene lugares del tipo que buscamos, tambiÃ©n la consideramos procesada
         subquery_tipo = db.session.query(LugarNoticia.noticia_id).filter(
             LugarNoticia.tipo == tipo_lugar
         ).distinct()
@@ -1681,7 +1647,7 @@ def api_batch_geocoding():
         if use_ai:
             from services.ai_service import AIService
             
-            # ── MAPA DE MODELOS (UI value → provider, model) ──────────────────────────
+            # ââ MAPA DE MODELOS (UI value â provider, model) ââââââââââââââââââââââââââ
             POTENCIA_MAP = {
                 'flash':          ('gemini', 'gemini-2.0-flash'),
                 'pro':            ('gemini', 'gemini-1.5-pro'),
@@ -1693,10 +1659,10 @@ def api_batch_geocoding():
             }
             potencia = data_request.get('potencia', 'flash')
             provider, model = POTENCIA_MAP.get(potencia, ('gemini', 'gemini-2.0-flash'))
-            # ───────────────────────────────────────────────────────────────────────────
+            # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
             
             ai_service = AIService(provider=provider, model=model, user=current_user)
-            app_logger.info(f"[BATCH-GEO] Iniciando lote IA [{potencia} → {provider}/{model}] proyecto {proyecto.id} (limit={limit})")
+            app_logger.info(f"[BATCH-GEO] Iniciando lote IA [{potencia} â {provider}/{model}] proyecto {proyecto.id} (limit={limit})")
         else:
             nlp = get_nlp()
             if not nlp: return jsonify({'error': 'Modelo de IA base no disponible'}), 500
@@ -1705,22 +1671,22 @@ def api_batch_geocoding():
         processed_this_batch = 0
         GEO_LABELS = {'LOC', 'GPE'}
         
-        # ── LISTA DE EXCLUSIÓN: LOCAL (proyecto) + GLOBAL (Ciudad blacklisted) ─────────────
+        # ââ LISTA DE EXCLUSIÃN: LOCAL (proyecto) + GLOBAL (Ciudad blacklisted) âââââââââââââ
         excluded_loc_names = {
             r[0].strip().lower() for r in db.session.query(LugarNoticia.nombre).join(Prensa).filter(
                 Prensa.proyecto_id == proyecto.id,
                 LugarNoticia.borrado == True
             ).distinct().all()
         }
-        # Cargar lista negra global de Ciudad (borradas por algún proyecto previo)
+        # Cargar lista negra global de Ciudad (borradas por algÃºn proyecto previo)
         blacklist_global = {
             r[0].strip().lower() for r in db.session.query(Ciudad.name).filter(
                 Ciudad.blacklisted == True
             ).all()
         }
-        excluded_loc_names |= blacklist_global  # unión de ambos sets
+        excluded_loc_names |= blacklist_global  # uniÃ³n de ambos sets
         app_logger.info(f"[BATCH-GEO] Exclusions: {len(excluded_loc_names)} nombres (proyecto={len(excluded_loc_names)-len(blacklist_global)}, global={len(blacklist_global)})")
-        # ─────────────────────────────────────────────────────────────────────────────
+        # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
         for noticia in noticias_pendientes:
             lugares_detectados = set()
@@ -1730,11 +1696,11 @@ def api_batch_geocoding():
             existing_loc_names = {l.nombre.strip().lower() for l in LugarNoticia.query.filter_by(noticia_id=noticia.id).all()}
 
             if use_ai:
-                # Extracción con AIService (Multi-Proveedor)
+                # ExtracciÃ³n con AIService (Multi-Proveedor)
                 pub = Publicacion.query.get(noticia.id_publicacion) if noticia.id_publicacion else None
                 contexto = {
-                    "periódico": pub.nombre if pub else "Desconocido",
-                    "año": noticia.fecha_original.year if noticia.fecha_original and hasattr(noticia.fecha_original, 'year') else None
+                    "periÃ³dico": pub.nombre if pub else "Desconocido",
+                    "aÃ±o": noticia.fecha_original.year if noticia.fecha_original and hasattr(noticia.fecha_original, 'year') else None
                 }
                 texto_completo = noticia.titulo + "\n" + (noticia.contenido or "")
                 res_ai = ai_service.extract_locations(texto_completo, contexto)
@@ -1745,7 +1711,7 @@ def api_batch_geocoding():
                         nombre = clean_location_name(nombre)
                         confidence = loc.get('confidence', 1.0)
                         
-                        # FILTRO CRÍTICO: Si la IA no está segura o es un sustantivo común, omitir
+                        # FILTRO CRÃTICO: Si la IA no estÃ¡ segura o es un sustantivo comÃºn, omitir
                         if confidence < 0.6:
                             app_logger.info(f"[BATCH-GEO] Omitiendo '{nombre}' por baja confianza ({confidence})")
                             continue
@@ -1759,7 +1725,7 @@ def api_batch_geocoding():
                             lugares_detectados.add(nombre)
                             conteo[nombre] = loc.get('importance', 1)
             else:
-                # Extracción con spaCy
+                # ExtracciÃ³n con spaCy
                 from services.gemini_service import clean_location_name, is_valid_location_in_text
                 texto_completo = (noticia.titulo or "") + "\n" + (noticia.contenido or "")
                 doc = nlp(texto_completo)
@@ -1771,7 +1737,7 @@ def api_batch_geocoding():
                     if c_loc and len(c_loc) > 2 and c_loc[0].isupper():
                         # Validar que sea una palabra completa, no parte de otra palabra
                         if is_valid_location_in_text(c_loc, texto_completo):
-                            # Solo añadir si no fue borrado globalmente
+                            # Solo aÃ±adir si no fue borrado globalmente
                             if c_loc.lower() not in excluded_loc_names:
                                 locs_cleaned.append(c_loc)
                 
@@ -1780,7 +1746,7 @@ def api_batch_geocoding():
                         if len(lugares_detectados) < 15: lugares_detectados.add(loc)
                 conteo.update([l for l in locs_cleaned if l.lower() not in existing_loc_names])
             
-            # --- DEDUPLICACIÓN DE ANIDAMIENTO ---
+            # --- DEDUPLICACIÃN DE ANIDAMIENTO ---
             if conteo:
                 from services.gemini_service import merge_nested_locations
                 conteo_dedup = merge_nested_locations(conteo)
@@ -1789,7 +1755,7 @@ def api_batch_geocoding():
 
             # Procesar y geocodificar solo los nuevos
             if not lugares_detectados:
-                # Añadimos el marcador de procesado incluso si no hay nada nuevo, para no re-intentar en bucle
+                # AÃ±adimos el marcador de procesado incluso si no hay nada nuevo, para no re-intentar en bucle
                 marca = LugarNoticia(noticia_id=noticia.id, nombre=tag_procesado, lat=0, lon=0, frecuencia=0, tipo=tipo_lugar, borrado=True)
                 db.session.add(marca)
                 db.session.commit()
@@ -1805,7 +1771,7 @@ def api_batch_geocoding():
                         lat, lon = ciudad_db.lat, ciudad_db.lon
                     else:
                         try:
-                            # Añadimos countrycodes=es para priorizar España en proyectos del Quijote/Hispánicos
+                            # AÃ±adimos countrycodes=es para priorizar EspaÃ±a en proyectos del Quijote/HispÃ¡nicos
                             resp = requests.get('https://nominatim.openstreetmap.org/search', 
                                               params={'q': lugar_nombre, 'format': 'json', 'limit': 1, 'countrycodes': 'es'}, 
                                               headers={'User-Agent': 'Hesiox-Batch-Bot/1.1'}, timeout=5)
@@ -1827,14 +1793,14 @@ def api_batch_geocoding():
                             nuevo = LugarNoticia(noticia_id=noticia.id, nombre=lugar_nombre, lat=lat, lon=lon, frecuencia=conteo.get(lugar_nombre, 1), tipo=tipo_lugar, borrado=False)
                             db.session.add(nuevo)
                 
-                # Al final de una noticia con éxito, también marcamos como procesada por este modo
+                # Al final de una noticia con Ã©xito, tambiÃ©n marcamos como procesada por este modo
                 marca = LugarNoticia(noticia_id=noticia.id, nombre=tag_procesado, lat=0, lon=0, frecuencia=0, tipo=tipo_lugar, borrado=True)
                 db.session.add(marca)
                 db.session.commit()
             
             processed_this_batch += 1
         
-        # Calcular cuántas quedan (usando la misma lógica aditiva)
+        # Calcular cuÃ¡ntas quedan (usando la misma lÃ³gica aditiva)
         remaining = Prensa.query.filter(
             Prensa.proyecto_id == proyecto.id,
             ~Prensa.id.in_(subquery),
@@ -1844,7 +1810,7 @@ def api_batch_geocoding():
         return jsonify({'status': 'processing', 'processed': processed_this_batch, 'remaining': remaining})
 
     except Exception as e:
-        app_logger.exception(f"Error crítico en api_batch_geocoding: {e}")
+        app_logger.exception(f"Error crÃ­tico en api_batch_geocoding: {e}")
         return jsonify({'error': str(e)}), 500
 
 @noticias_bp.route('/api/cartografia/gestion/borrar', methods=['POST'])
@@ -1862,7 +1828,7 @@ def gestion_borrar_ubicacion():
     if not nombre:
         return jsonify({'success': False, 'error': 'Nombre requerido'}), 400
     
-    # Marcado lógico de borrado en todas las instancias DE ESTE PROYECTO
+    # Marcado lÃ³gico de borrado en todas las instancias DE ESTE PROYECTO
     try:
         # Subquery para obtener los IDs de LugarNoticia vinculados a este proyecto
         subquery = db.session.query(LugarNoticia.id).join(Prensa).filter(
@@ -1876,7 +1842,7 @@ def gestion_borrar_ubicacion():
             {'borrado': True, 'verificada': False}, synchronize_session=False
         )
         
-        # ── LISTA NEGRA GLOBAL ──────────────────────────────────────────────────
+        # ââ LISTA NEGRA GLOBAL ââââââââââââââââââââââââââââââââââââââââââââââââââ
         # Marcar en tabla Ciudad para que todo proyecto futuro omita este nombre en NER
         ciudad = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
         if not ciudad:
@@ -1891,8 +1857,8 @@ def gestion_borrar_ubicacion():
             db.session.add(ciudad)
         else:
             ciudad.blacklisted = True
-            ciudad.verificada = False  # Si se borra, ya no está verificada
-        # ────────────────────────────────────────────────────────────────────────
+            ciudad.verificada = False  # Si se borra, ya no estÃ¡ verificada
+        # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
         
         db.session.commit()
         print(f"[gestion_borrar_ubicacion] '{nombre}' borrado ({cnt} instancias). Blacklisted globalmente.")
@@ -1928,11 +1894,11 @@ def gestion_restaurar_ubicacion():
             {'borrado': False}, synchronize_session=False
         )
         
-        # ── QUITAR DE LISTA NEGRA GLOBAL ──────────────────────────────────────
+        # ââ QUITAR DE LISTA NEGRA GLOBAL ââââââââââââââââââââââââââââââââââââââ
         ciudad = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
         if ciudad:
             ciudad.blacklisted = False
-        # ─────────────────────────────────────────────────────────────────────
+        # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
         
         db.session.commit()
         print(f"[gestion_restaurar_ubicacion] '{nombre}' restaurado ({cnt} instancias). Quitado de blacklist.")
@@ -2036,7 +2002,7 @@ def sync_lugar_noticia(nombre, proyecto_id):
     LugarNoticia.query.filter(LugarNoticia.id.in_(ids_to_delete)).delete(synchronize_session=False)
     
     # 3. Buscar candidatos (noticias que contienen el texto)
-    # Usamos búsqueda por texto plano para mayor precisión inicial
+    # Usamos bÃºsqueda por texto plano para mayor precisiÃ³n inicial
     from sqlalchemy import or_
     noticias_candidatas = Prensa.query.filter(
         Prensa.proyecto_id == proyecto_id,
@@ -2047,7 +2013,7 @@ def sync_lugar_noticia(nombre, proyecto_id):
     ).all()
     
     import re
-    # Intentamos buscar el nombre completo con límites de palabra para evitar sub-matches parciales (opcional pero recomendado)
+    # Intentamos buscar el nombre completo con lÃ­mites de palabra para evitar sub-matches parciales (opcional pero recomendado)
     # Por ahora mantenemos el re.escape simple para ser consistentes con lo que el usuario espera
     safe_name = re.escape(nombre)
     actualizados = 0
@@ -2087,10 +2053,10 @@ def sync_lugar_noticia(nombre, proyecto_id):
         ln.en_titulo = matches_titulo > 0
         ln.en_contenido = matches_contenido > 0
         
-        # CRÍTICO: Restaurar frecuencia_desvinculada guardada (no sobrescribir)
+        # CRÃTICO: Restaurar frecuencia_desvinculada guardada (no sobrescribir)
         # Si la nueva frecuencia es menor que las desvinculadas, ajustar
         if old_frec_desvinc > ln.frecuencia:
-            ln.frecuencia_desvinculada = ln.frecuencia  # No puede haber más desvinculadas que total
+            ln.frecuencia_desvinculada = ln.frecuencia  # No puede haber mÃ¡s desvinculadas que total
         else:
             ln.frecuencia_desvinculada = old_frec_desvinc
         
@@ -2099,13 +2065,13 @@ def sync_lugar_noticia(nombre, proyecto_id):
         
         actualizados += 1
     
-    # [NUEVO] Si no se encontraron menciones pero el lugar ya existía (especialmente si Verificado),
+    # [NUEVO] Si no se encontraron menciones pero el lugar ya existÃ­a (especialmente si Verificado),
     # creamos UNA referencia con frecuencia 0 para que no desaparezca del listado.
     if actualizados == 0 and ref:
         # Buscamos cualquier noticia del proyecto para colgar la referencia 0
         primera_n = Prensa.query.filter_by(proyecto_id=proyecto_id).first()
         if primera_n:
-            # Restaurar frecuencia_desvinculada si este lugar tenía una
+            # Restaurar frecuencia_desvinculada si este lugar tenÃ­a una
             old_frec_desvinc = mapa_desvinculadas.get(primera_n.id, 0)
             
             ln = LugarNoticia(
@@ -2120,7 +2086,7 @@ def sync_lugar_noticia(nombre, proyecto_id):
                 frec_titulo=0,
                 frec_contenido=0,
                 frecuencia_desvinculada=old_frec_desvinc,
-                vinculada=False  # Si frecuencia es 0, está desvinculada
+                vinculada=False  # Si frecuencia es 0, estÃ¡ desvinculada
             )
             db.session.add(ln)
             actualizados = 1
@@ -2163,7 +2129,7 @@ def api_get_contexto_lugar():
     
     nombre = request.args.get('nombre')
     if not nombre:
-        return jsonify({'success': False, 'error': 'Nombre de ubicación requerido'}), 400
+        return jsonify({'success': False, 'error': 'Nombre de ubicaciÃ³n requerido'}), 400
         
     from utils import get_proyecto_activo
     proyecto = get_proyecto_activo()
@@ -2208,25 +2174,25 @@ def api_get_contexto_lugar():
             noticia = lugar.noticia
             if not noticia: continue
             
-            # Calcular frecuencia efectiva para esta ubicación específica
+            # Calcular frecuencia efectiva para esta ubicaciÃ³n especÃ­fica
             frec_desvinculada = getattr(lugar, 'frecuencia_desvinculada', 0) or 0
             frec_efectiva = lugar.frecuencia - frec_desvinculada
             
-            # SOLO mostrar noticias donde hay al menos 1 mención vinculada
+            # SOLO mostrar noticias donde hay al menos 1 menciÃ³n vinculada
             if frec_efectiva <= 0:
                 continue
             
             # Buscar snippets siempre, especialmente para ubicaciones manuales
-            # donde el nombre en el texto podría diferir del nombre canónico
+            # donde el nombre en el texto podrÃ­a diferir del nombre canÃ³nico
             titulo_snippets = extract_snippets(noticia.titulo, nombre) if noticia.titulo else []
             contenido_snippets = extract_snippets(noticia.contenido, nombre) if noticia.contenido else []
             
             # Incluir la noticia aunque no haya snippets exactos (caso de nombres diferentes)
-            # El usuario verá al menos el título y puede verificar manualmente
+            # El usuario verÃ¡ al menos el tÃ­tulo y puede verificar manualmente
             snippets.append({
                 'noticia_id': noticia.id,
                 'lugar_id': lugar.id,
-                'titulo': noticia.titulo or 'Sin título',
+                'titulo': noticia.titulo or 'Sin tÃ­tulo',
                 'fecha': noticia.fecha_original if noticia.fecha_original else 'Sin fecha',
                 'medio': noticia.publicacion or 'Medio desconocido',
                 'titulo_snippets': titulo_snippets,
@@ -2258,7 +2224,7 @@ def api_get_contexto_lugar():
 @csrf.exempt
 def api_rebuscar_batch_ubicaciones():
     data = request.get_json()
-    nombres = data.get('nombres', []) # Si vacío, podemos rebuscar TODOS los del proyecto
+    nombres = data.get('nombres', []) # Si vacÃ­o, podemos rebuscar TODOS los del proyecto
     
     from utils import get_proyecto_activo
     proyecto = get_proyecto_activo()
@@ -2266,7 +2232,7 @@ def api_rebuscar_batch_ubicaciones():
         return jsonify({'success': False, 'error': 'No hay proyecto activo'}), 400
 
     if not nombres:
-        # Obtener todos los nombres únicos de LugarNoticia para este proyecto
+        # Obtener todos los nombres Ãºnicos de LugarNoticia para este proyecto
         nombres = [r[0] for r in db.session.query(LugarNoticia.nombre).join(Prensa).filter(
             Prensa.proyecto_id == proyecto.id,
             LugarNoticia.borrado == False
@@ -2319,7 +2285,7 @@ def api_batch_delete_ubicaciones():
             {'borrado': True, 'verificada': False}, synchronize_session=False
         )
         
-        # ── BLACKLIST GLOBAL ────────────────────────────────────────────────────
+        # ââ BLACKLIST GLOBAL ââââââââââââââââââââââââââââââââââââââââââââââââââââ
         for nombre in nombres:
             ciudad = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
             if not ciudad:
@@ -2331,7 +2297,7 @@ def api_batch_delete_ubicaciones():
             else:
                 ciudad.blacklisted = True
                 ciudad.verificada = False
-        # ────────────────────────────────────────────────────────────────────────
+        # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
         
         db.session.commit()
         return jsonify({'success': True, 'updated_count': cnt, 'message': f'Se han borrado {cnt} instancias correctamente.'})
@@ -2368,7 +2334,7 @@ def api_batch_unlink_ubicaciones():
             {'borrado': True, 'verificada': False}, synchronize_session=False
         )
         
-        # A diferencia de batch_delete, AQUÍ NO TOCAMOS LA TABLA CIUDAD (Sin lista negra)
+        # A diferencia de batch_delete, AQUÃ NO TOCAMOS LA TABLA CIUDAD (Sin lista negra)
         
         db.session.commit()
         return jsonify({'success': True, 'updated_count': cnt, 'message': f'Se han desvinculado {cnt} instancias correctamente.'})
@@ -2404,12 +2370,12 @@ def gestion_reactivar_batch_ubicaciones():
             {'borrado': False}, synchronize_session=False
         )
         
-        # ── QUITAR DE LISTA NEGRA GLOBAL ─────────────────────────────────────
+        # ââ QUITAR DE LISTA NEGRA GLOBAL âââââââââââââââââââââââââââââââââââââ
         for nombre in nombres:
             ciudad = Ciudad.query.filter(Ciudad.name.ilike(nombre)).first()
             if ciudad:
                 ciudad.blacklisted = False
-        # ─────────────────────────────────────────────────────────────────────
+        # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
         
         db.session.commit()
         return jsonify({'success': True, 'updated_count': cnt, 'message': f'Se han restaurado {cnt} instancias correctamente.'})
@@ -2448,7 +2414,7 @@ def gestion_editar_ubicacion():
             LugarNoticia.nombre.ilike(nombre_antiguo),
             LugarNoticia.borrado == False
         ).all()
-        # DEFINIR CONFLICTO: ¿Existe ya el nombre nuevo en este proyecto?
+        # DEFINIR CONFLICTO: Â¿Existe ya el nombre nuevo en este proyecto?
         conflicto = None
         if nombre_antiguo != nombre_nuevo:
             conflicto = LugarNoticia.query.join(Prensa).filter(
@@ -2458,7 +2424,7 @@ def gestion_editar_ubicacion():
             ).first()
         
         for lv in lugares_viejos:
-            # Si el nombre no cambió, solo actualizar coordenadas/frecuencia
+            # Si el nombre no cambiÃ³, solo actualizar coordenadas/frecuencia
             if nombre_antiguo == nombre_nuevo:
                 if lat is not None: 
                     lv.lat = lat
@@ -2472,9 +2438,9 @@ def gestion_editar_ubicacion():
             
             if conflicto and conflicto.id != lv.id:
                 # FUSIONAR: Sumar frecuencia y borrar el viejo
-                print(f"[FUSIÓN] Fusionando {lv.nombre} (freq={lv.frecuencia}) con {conflicto.nombre} (freq={conflicto.frecuencia})")
+                print(f"[FUSIÃN] Fusionando {lv.nombre} (freq={lv.frecuencia}) con {conflicto.nombre} (freq={conflicto.frecuencia})")
                 conflicto.frecuencia += lv.frecuencia
-                print(f"[FUSIÓN] Nueva frecuencia de {conflicto.nombre}: {conflicto.frecuencia}")
+                print(f"[FUSIÃN] Nueva frecuencia de {conflicto.nombre}: {conflicto.frecuencia}")
                 if lat is not None: 
                     conflicto.lat = lat
                     conflicto.verificada = True
@@ -2517,7 +2483,7 @@ def gestion_editar_ubicacion():
                         lugares[0].frecuencia = max(1, lugares[0].frecuencia + diff)
                 except (ValueError, TypeError): pass
 
-            # 4. Ajustar Frecuencias Título/Contenido
+            # 4. Ajustar Frecuencias TÃ­tulo/Contenido
             if target_frec_titulo is not None:
                 try:
                     target_frec_titulo = int(target_frec_titulo)
@@ -2545,7 +2511,7 @@ def gestion_editar_ubicacion():
         
         if ciudad_vieja:
             if ciudad_nueva and ciudad_vieja.id != ciudad_nueva.id:
-                # Fusión Global: El destino ya existe. Borramos la referencia al nombre antiguo.
+                # FusiÃ³n Global: El destino ya existe. Borramos la referencia al nombre antiguo.
                 print(f"[CIUDAD] Fusionando globalmente {ciudad_vieja.name} -> {ciudad_nueva.name}")
                 db.session.delete(ciudad_vieja)
                 if lat is not None: ciudad_nueva.lat = lat
@@ -2579,7 +2545,7 @@ def gestion_editar_ubicacion():
 @login_required
 @csrf.exempt
 def api_cambiar_tipo_masivo():
-    """Cambiar el tipo_lugar de múltiples ubicaciones a la vez"""
+    """Cambiar el tipo_lugar de mÃºltiples ubicaciones a la vez"""
     from utils import get_proyecto_activo
     proyecto = get_proyecto_activo()
     if not proyecto:
@@ -2613,12 +2579,12 @@ def api_cambiar_tipo_masivo():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ==================== GESTIÓN DE TIPOS DE UBICACIÓN ====================
+# ==================== GESTIÃN DE TIPOS DE UBICACIÃN ====================
 
 @noticias_bp.route('/api/tipos-ubicacion/listar', methods=['GET'])
 @login_required
 def api_tipos_ubicacion_listar():
-    """Listar todos los tipos de ubicación disponibles"""
+    """Listar todos los tipos de ubicaciÃ³n disponibles"""
     from models import TipoUbicacion
     try:
         incluir_inactivos = request.args.get('incluir_inactivos', 'false').lower() == 'true'
@@ -2644,13 +2610,13 @@ def api_tipos_ubicacion_listar():
 @login_required
 @csrf.exempt
 def api_tipos_ubicacion_restaurar(codigo):
-    """Restaurar un tipo de ubicación desactivado por su código"""
+    """Restaurar un tipo de ubicaciÃ³n desactivado por su cÃ³digo"""
     from models import TipoUbicacion
     tipo = TipoUbicacion.query.filter_by(codigo=codigo).first()
     if not tipo:
-        return jsonify({'success': False, 'error': f'No se encontró ningún tipo con código "{codigo}"'}), 404
+        return jsonify({'success': False, 'error': f'No se encontrÃ³ ningÃºn tipo con cÃ³digo "{codigo}"'}), 404
     if tipo.activo:
-        return jsonify({'success': True, 'message': 'El tipo ya está activo', 'tipo': tipo.to_dict()})
+        return jsonify({'success': True, 'message': 'El tipo ya estÃ¡ activo', 'tipo': tipo.to_dict()})
     try:
         tipo.activo = True
         db.session.commit()
@@ -2664,7 +2630,7 @@ def api_tipos_ubicacion_restaurar(codigo):
 @login_required
 @csrf.exempt
 def api_tipos_ubicacion_crear():
-    """Crear un nuevo tipo de ubicación"""
+    """Crear un nuevo tipo de ubicaciÃ³n"""
     from models import TipoUbicacion
     data = request.get_json()
     print(f"[api_tipos_ubicacion_crear] Payload: {data}")
@@ -2679,14 +2645,14 @@ def api_tipos_ubicacion_crear():
     orden = data.get('orden', 999)
     
     if not codigo or not nombre:
-        return jsonify({'success': False, 'error': 'Código y nombre son obligatorios'}), 400
+        return jsonify({'success': False, 'error': 'CÃ³digo y nombre son obligatorios'}), 400
 
     
     # Verificar si ya existe (activo o no)
     existe = TipoUbicacion.query.filter_by(codigo=codigo).first()
     if existe:
         if existe.activo:
-            return jsonify({'success': False, 'error': f'Ya existe un tipo activo con código "{codigo}"'}), 400
+            return jsonify({'success': False, 'error': f'Ya existe un tipo activo con cÃ³digo "{codigo}"'}), 400
         else:
             # Reactivar el tipo desactivado con los nuevos datos
             try:
@@ -2732,7 +2698,7 @@ def api_tipos_ubicacion_crear():
 @login_required
 @csrf.exempt
 def api_tipos_ubicacion_editar(tipo_id):
-    """Editar un tipo de ubicación existente"""
+    """Editar un tipo de ubicaciÃ³n existente"""
     from models import TipoUbicacion
     data = request.get_json()
     
@@ -2748,7 +2714,7 @@ def api_tipos_ubicacion_editar(tipo_id):
                 # Verificar unicidad
                 existe = TipoUbicacion.query.filter_by(codigo=nuevo_codigo).first()
                 if existe:
-                    return jsonify({'success': False, 'error': f'El código "{nuevo_codigo}" ya está en uso'}), 400
+                    return jsonify({'success': False, 'error': f'El cÃ³digo "{nuevo_codigo}" ya estÃ¡ en uso'}), 400
                 tipo.codigo = nuevo_codigo
         if 'nombre' in data:
             tipo.nombre = data['nombre'].strip()
@@ -2778,7 +2744,7 @@ def api_tipos_ubicacion_editar(tipo_id):
 @login_required
 @csrf.exempt
 def api_tipos_ubicacion_eliminar(tipo_id):
-    """Eliminar (desactivar) un tipo de ubicación"""
+    """Eliminar (desactivar) un tipo de ubicaciÃ³n"""
     from models import TipoUbicacion
     
     tipo = TipoUbicacion.query.get(tipo_id)
@@ -2786,7 +2752,7 @@ def api_tipos_ubicacion_eliminar(tipo_id):
         return jsonify({'success': False, 'error': 'Tipo no encontrado'}), 404
     
     try:
-        # No eliminamos físicamente, solo desactivamos
+        # No eliminamos fÃ­sicamente, solo desactivamos
         tipo.activo = False
         db.session.commit()
         
@@ -2828,7 +2794,7 @@ def api_unificar_duplicados():
             # Mapeo por noticia para evitar duplicados en la misma noticia
             noticias_map = {} # nid -> canon_record_for_this_news
             
-            # Elegir nombre canónico (el que tenga más mayúsculas)
+            # Elegir nombre canÃ³nico (el que tenga mÃ¡s mayÃºsculas)
             items_cajas = sorted(items, key=lambda x: sum(1 for c in x.nombre if c.isupper()), reverse=True)
             canon_name = items_cajas[0].nombre
 
@@ -2881,16 +2847,16 @@ def gestion_crear_ubicacion():
         
         db.session.commit()
         
-        # --- SINCRONIZACIÓN PROACTIVA (Alma y Corazón) ---
+        # --- SINCRONIZACIÃN PROACTIVA (Alma y CorazÃ³n) ---
         # Si hay un proyecto activo, buscamos menciones de este lugar en el corpus
         # para que aparezca en el mapa inmediatamente.
         if proyecto:
             act, cre = sync_lugar_noticia(nombre, proyecto.id)
             db.session.commit()
-            msg = f"Ubicación '{nombre}' guardada. Se han detectado y mapeado {cre} nuevas menciones en el proyecto '{proyecto.nombre}'."
+            msg = f"UbicaciÃ³n '{nombre}' guardada. Se han detectado y mapeado {cre} nuevas menciones en el proyecto '{proyecto.nombre}'."
             return jsonify({'success': True, 'message': msg, 'created': cre})
         
-        return jsonify({'success': True, 'message': 'Ubicación de referencia creada globalmente.'})
+        return jsonify({'success': True, 'message': 'UbicaciÃ³n de referencia creada globalmente.'})
     except Exception as e:
         db.session.rollback()
         print(f"[gestion_crear_ubicacion] Error: {e}")
@@ -2910,12 +2876,12 @@ def api_get_ciudad_by_name(nombre):
             'lat': ciudad.lat,
             'lon': ciudad.lon
         })
-    return jsonify({'success': False, 'error': 'Ubicación no encontrada en base de datos global'}), 404
+    return jsonify({'success': False, 'error': 'UbicaciÃ³n no encontrada en base de datos global'}), 404
 @noticias_bp.route('/api/cartografia_corpus/embeddings', methods=['GET'])
 # @login_required
 def cartografia_corpus_embeddings_api():
     """
-    API para visualización 3D de embeddings del corpus con Clustering.
+    API para visualizaciÃ³n 3D de embeddings del corpus con Clustering.
     """
     from utils import get_proyecto_activo
     proyecto = get_proyecto_activo()
@@ -2942,13 +2908,13 @@ def cartografia_corpus_embeddings_api():
             vectors.append(n.embedding_vector)
             metadata.append({
                 'id': n.id,
-                'titulo': (n.titulo[:60] + '...') if n.titulo and len(n.titulo) > 60 else (n.titulo or 'Sin título'),
+                'titulo': (n.titulo[:60] + '...') if n.titulo and len(n.titulo) > 60 else (n.titulo or 'Sin tÃ­tulo'),
                 'fecha': str(n.fecha_original) if n.fecha_original else '',
                 'publicacion': n.publicacion or ''
             })
 
     if not vectors:
-        return jsonify({'success': False, 'error': 'No se encontraron vectores válidos'}), 404
+        return jsonify({'success': False, 'error': 'No se encontraron vectores vÃ¡lidos'}), 404
 
     try:
         import numpy as np
@@ -2957,17 +2923,17 @@ def cartografia_corpus_embeddings_api():
         
         X = np.array(vectors)
         
-        # 1. Reducción de dimensionalidad (3D para el efecto "Universo")
-        # Aumentamos min_dist para separar más las "constelaciones" (clusters)
+        # 1. ReducciÃ³n de dimensionalidad (3D para el efecto "Universo")
+        # Aumentamos min_dist para separar mÃ¡s las "constelaciones" (clusters)
         reducer = UMAP(n_neighbors=25, min_dist=0.8, n_components=dim, random_state=42)
         X_embedded = reducer.fit_transform(X)
 
-        # --- NEW: PROYECCIÓN ESFÉRICA DE BÓVEDA (Hemisferio) ---
+        # --- NEW: PROYECCIÃN ESFÃRICA DE BÃVEDA (Hemisferio) ---
         def to_spherical_vault(x, y, z, R=350):
             norm = np.sqrt(x**2 + y**2 + z**2) + 1e-9
-            # Forzamos forma de bóveda (Hemisferio superior)
+            # Forzamos forma de bÃ³veda (Hemisferio superior)
             x_norm, y_norm, z_norm = x/norm, y/norm, z/norm
-            # Usamos abs(y) para la bóveda
+            # Usamos abs(y) para la bÃ³veda
             y_vault = abs(y_norm) 
             depth_jitter = np.random.uniform(0.9, 1.1)
             return x_norm * R * depth_jitter, y_vault * R * depth_jitter, z_norm * R * depth_jitter
@@ -2976,7 +2942,7 @@ def cartografia_corpus_embeddings_api():
         for i in range(len(X_embedded)):
             X_spherical[i, 0], X_spherical[i, 1], X_spherical[i, 2] = to_spherical_vault(X_embedded[i, 0], X_embedded[i, 1], X_embedded[i, 2])
 
-        # 2. Clustering: Dinámico (Keywords) o Automático (K-Means)
+        # 2. Clustering: DinÃ¡mico (Keywords) o AutomÃ¡tico (K-Means)
         import json
         custom_clusters_json = request.args.get('custom_clusters')
         custom_clusters = None
@@ -2990,7 +2956,7 @@ def cartografia_corpus_embeddings_api():
         n_clusters = 8 # Default
         
         if custom_clusters and len(custom_clusters) > 0:
-            # --- MODO CONSTELACIONES DINÁMICAS (Orientado por el Usuario) ---
+            # --- MODO CONSTELACIONES DINÃMICAS (Orientado por el Usuario) ---
             cluster_ids = sorted(custom_clusters.keys())
             n_clusters = len(cluster_ids)
             
@@ -3002,7 +2968,7 @@ def cartografia_corpus_embeddings_api():
                 for idx, c_id in enumerate(cluster_ids):
                     keywords = custom_clusters[c_id].get('keywords', [])
                     if not keywords: continue
-                    # Puntuación simple por coincidencia de palabras (se puede mejorar a embeddings)
+                    # PuntuaciÃ³n simple por coincidencia de palabras (se puede mejorar a embeddings)
                     score = sum(1 for k in keywords if k.lower().strip() in doc_text)
                     if score > max_score:
                         max_score = score
@@ -3010,12 +2976,12 @@ def cartografia_corpus_embeddings_api():
                 cluster_labels.append(best_cluster)
             cluster_labels = np.array(cluster_labels)
         else:
-            # --- MODO AUTOMÁTICO (K-Means) ---
+            # --- MODO AUTOMÃTICO (K-Means) ---
             n_clusters = min(8, len(vectors))
             kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init='auto')
             cluster_labels = kmeans.fit_predict(X)
         
-        # Preparar puntos con Dimensión 4 (Tiempo)
+        # Preparar puntos con DimensiÃ³n 4 (Tiempo)
         points = []
         for i in range(len(metadata)):
             # Extraer timestamp para el slider temporal
@@ -3035,7 +3001,7 @@ def cartografia_corpus_embeddings_api():
                 'id': metadata[i]['id'],
                 'titulo': metadata[i]['titulo'],
                 'fecha': metadata[i]['fecha'],
-                'timestamp': ts, # Dimensión 4
+                'timestamp': ts, # DimensiÃ³n 4
                 'publicacion': metadata[i]['publicacion'],
                 'cluster': int(cluster_labels[i])
             }
@@ -3044,7 +3010,7 @@ def cartografia_corpus_embeddings_api():
         # 3. Metadatos de Cluster (Palabras clave y Centros)
         cluster_metadata = {}
         for c_id in range(n_clusters):
-            # Obtener títulos de este cluster para "extraer" palabras (si no es custom)
+            # Obtener tÃ­tulos de este cluster para "extraer" palabras (si no es custom)
             if custom_clusters:
                 c_key = sorted(custom_clusters.keys())[c_id]
                 top_words = custom_clusters[c_key].get('keywords', [])
@@ -3054,7 +3020,7 @@ def cartografia_corpus_embeddings_api():
                 import re
                 clean_text = re.sub(r'[^\w\s]', '', all_text)
                 all_words = clean_text.split()
-                stops = {'de', 'la', 'el', 'en', 'y', 'a', 'los', 'que', 'del', 'se', 'las', 'por', 'un', 'con', 'no', 'una', 'su', 'al', 'es', 'lo', 'como', 'más', 'para'}
+                stops = {'de', 'la', 'el', 'en', 'y', 'a', 'los', 'que', 'del', 'se', 'las', 'por', 'un', 'con', 'no', 'una', 'su', 'al', 'es', 'lo', 'como', 'mÃ¡s', 'para'}
                 words = [w for w in all_words if len(w) > 3 and w not in stops]
                 top_words = [w[0] for w in Counter(words).most_common(5)]
 
@@ -3093,7 +3059,7 @@ def cartografia_corpus_embeddings_api():
     except Exception as e:
         import traceback
         error_msg = traceback.format_exc()
-        current_app.logger.error(f"Error en reducción de dimensionalidad: {error_msg}")
+        current_app.logger.error(f"Error en reducciÃ³n de dimensionalidad: {error_msg}")
         return jsonify({'success': False, 'error': str(e), 'traceback': error_msg}), 500
 
 
@@ -3144,7 +3110,7 @@ def cartografia_corpus_api():
     if not noticia_ids:
         return {'ciudades': []}
     
-    # Obtener lugares guardados para estas noticias (borrado según toggle, con coordenadas)
+    # Obtener lugares guardados para estas noticias (borrado segÃºn toggle, con coordenadas)
     from sqlalchemy.orm import joinedload
     lugares_query = LugarNoticia.query.options(joinedload(LugarNoticia.noticia)).filter(
         LugarNoticia.noticia_id.in_(noticia_ids),
@@ -3152,9 +3118,9 @@ def cartografia_corpus_api():
         LugarNoticia.lon.isnot(None)
     )
 
-    # Filtrar por Tipo de Lugar si viene en los parámetros
+    # Filtrar por Tipo de Lugar si viene en los parÃ¡metros
     if tipo_lugar and tipo_lugar != '':
-        # Soporte para búsqueda exacta o contenida (pues tipo_lugar puede ser CSV)
+        # Soporte para bÃºsqueda exacta o contenida (pues tipo_lugar puede ser CSV)
         from sqlalchemy import or_
         lugares_query = lugares_query.filter(or_(
             LugarNoticia.tipo_lugar.ilike(f"{tipo_lugar}"),
@@ -3169,8 +3135,8 @@ def cartografia_corpus_api():
         # Gestor view: Muestra TODAS las ubicaciones del proyecto (verificadas y pendientes, vinculadas y desvinculadas)
         lugares_query = lugares_query.filter(LugarNoticia.borrado == False)
     else:
-        # Map view: SOLO ubicaciones verificadas (es ubicación real) y con al menos 1 mención vinculada al proyecto
-        # La vinculación se valida después por frecuencia_efectiva > 0
+        # Map view: SOLO ubicaciones verificadas (es ubicaciÃ³n real) y con al menos 1 menciÃ³n vinculada al proyecto
+        # La vinculaciÃ³n se valida despuÃ©s por frecuencia_efectiva > 0
         lugares_query = lugares_query.filter(
             LugarNoticia.verificada == True, 
             LugarNoticia.borrado == False
@@ -3189,14 +3155,14 @@ def cartografia_corpus_api():
         'frecuencia_total': 0,  # Total sin filtrar (para referencia)
         'frecuencia_desvinculada': 0,  # Total de desvinculadas
         'frec_titulo': 0, 'frec_contenido': 0, 
-        'tipo_lugar': 'unknown',  # Clasificación geográfica
+        'tipo_lugar': 'unknown',  # ClasificaciÃ³n geogrÃ¡fica
         'temas': defaultdict(int),
         'fechas_mencion': [],
         'ultima_mencion': None,
         'verified': False,
         'deleted': False,
         'blacklisted': False,
-        'vinculada': True,  # Si todas las ocurrencias están desvinculadas, será False
+        'vinculada': True,  # Si todas las ocurrencias estÃ¡n desvinculadas, serÃ¡ False
         'noticias_list': [] # list of {id, titulo}
     })
     
@@ -3222,12 +3188,12 @@ def cartografia_corpus_api():
         grupos[key]['frec_titulo'] += getattr(lugar, 'frec_titulo', 0)
         grupos[key]['frec_contenido'] += getattr(lugar, 'frec_contenido', 0)
         
-        # Guardar la fecha más reciente de publicación para este lugar
+        # Guardar la fecha mÃ¡s reciente de publicaciÃ³n para este lugar
         if lugar.noticia and lugar.noticia.fecha_original:
             current_date = grupos[key]['ultima_mencion']
             if not current_date or lugar.noticia.fecha_original > current_date:
                 grupos[key]['ultima_mencion'] = lugar.noticia.fecha_original
-            # Registrar fecha para el gráfico de actividad (Altair)
+            # Registrar fecha para el grÃ¡fico de actividad (Altair)
             grupos[key]['fechas_mencion'].append(lugar.noticia.fecha_original)
                 
         # Agregar temas
@@ -3245,11 +3211,11 @@ def cartografia_corpus_api():
                 grupos[key]['noticias_list'].append({
                     'id': lugar.noticia.id,
                     'titulo': lugar.noticia.titulo,
-                    'publicacion': lugar.noticia.publicacion  # Agregar publicación para filtros cartográficos
+                    'publicacion': lugar.noticia.publicacion  # Agregar publicaciÃ³n para filtros cartogrÃ¡ficos
                 })
         
-        # --- VERIFICACIÓN ---
-        # Si el lugar está marcado como verificado, el grupo también
+        # --- VERIFICACIÃN ---
+        # Si el lugar estÃ¡ marcado como verificado, el grupo tambiÃ©n
         if getattr(lugar, 'verificada', False):
             grupos[key]['verified'] = True
         if getattr(lugar, 'borrado', False):
@@ -3272,7 +3238,7 @@ def cartografia_corpus_api():
     import altair as alt
     import pandas as pd
     
-    # Convertir a lista y generar Mini Gráficos (Altair Sparkline)
+    # Convertir a lista y generar Mini GrÃ¡ficos (Altair Sparkline)
     ciudades = []
     
     for nombre, data in grupos.items():
@@ -3318,7 +3284,7 @@ def cartografia_corpus_api():
             'frecuencia_desvinculada': data['frecuencia_desvinculada'],  # Total desvinculadas
             'frec_titulo': data['frec_titulo'],
             'frec_contenido': data['frec_contenido'],
-            'tipo_lugar': data.get('tipo_lugar', 'unknown'),  # Tipo geográfico
+            'tipo_lugar': data.get('tipo_lugar', 'unknown'),  # Tipo geogrÃ¡fico
             'ultima_mencion': data['ultima_mencion'] if data['ultima_mencion'] else None,
             'trends_data': trends_data,
             'temas': dict(data['temas']),
@@ -3329,11 +3295,11 @@ def cartografia_corpus_api():
             'noticias': data.get('noticias_list', [])[:50] # Limitar a 50 para no inflar el JSON
         })
     
-    # --- CÁLCULO DE FLUJOS (CONNECTIONS) ---
+    # --- CÃLCULO DE FLUJOS (CONNECTIONS) ---
     flows = []
     
-    # 1. Obtener coordenadas de los lugares de publicación (Source)
-    # Agrupamos noticias por lugar_publicacion (o ciudad de la publicación como fallback)
+    # 1. Obtener coordenadas de los lugares de publicaciÃ³n (Source)
+    # Agrupamos noticias por lugar_publicacion (o ciudad de la publicaciÃ³n como fallback)
     from sqlalchemy import func
     
     # Origen = Prensa.lugar_publicacion OR Publicacion.ciudad
@@ -3352,7 +3318,7 @@ def cartografia_corpus_api():
     for nombre_origen, _ in origenes:
         if not nombre_origen: continue
         clean_name = nombre_origen.strip()
-        # Intentamos buscar en tabla Ciudad (insensible a mayúsculas)
+        # Intentamos buscar en tabla Ciudad (insensible a mayÃºsculas)
         c = Ciudad.query.filter(Ciudad.name.ilike(clean_name)).first()
         if c and c.lat and c.lon:
             origen_coords[nombre_origen] = {'lat': c.lat, 'lon': c.lon}
@@ -3378,7 +3344,7 @@ def cartografia_corpus_api():
     for origen_nombre, dest_nombre, dest_lat, dest_lon in q_flows:
         if not origen_nombre or origen_nombre not in origen_coords: continue
         
-        # Key única para el arco
+        # Key Ãºnica para el arco
         flow_key = (origen_nombre, dest_nombre)
         flow_counts[flow_key] += 1
         
@@ -3405,12 +3371,12 @@ def cartografia_corpus_api():
             'origin_name': data['origin_name']
         })
 
-    # Calcular rango de fechas (años) global para el slider
+    # Calcular rango de fechas (aÃ±os) global para el slider
     from sqlalchemy import func
     min_anio = db.session.query(func.min(Prensa.anio)).filter(Prensa.proyecto_id == proyecto.id, Prensa.incluido == True).scalar() or 1900
     max_anio = db.session.query(func.max(Prensa.anio)).filter(Prensa.proyecto_id == proyecto.id, Prensa.incluido == True).scalar() or 2025
 
-    # --- CÁLCULO DE CONSTELACIONES NARRATIVAS (Agrupación por Noticia) ---
+    # --- CÃLCULO DE CONSTELACIONES NARRATIVAS (AgrupaciÃ³n por Noticia) ---
     # Esto permite conectar lugares que se mencionan juntos en la misma historia
     constellations = defaultdict(list)
     for l in lugares:
@@ -3420,7 +3386,7 @@ def cartografia_corpus_api():
             'lon': l.lon
         })
     
-    # Filtrar solo noticias con más de 1 lugar para crear conexiones
+    # Filtrar solo noticias con mÃ¡s de 1 lugar para crear conexiones
     constellation_list = []
     for nid, pts in constellations.items():
         if len(pts) > 1:
@@ -3429,12 +3395,12 @@ def cartografia_corpus_api():
                 'points': pts
             })
 
-    # --- CÁLCULO DE TRAYECTORIAS NARRATIVAS (Experimental) ---
+    # --- CÃLCULO DE TRAYECTORIAS NARRATIVAS (Experimental) ---
     trajectories = []
     include_trajectories = request.args.get('include_trajectories') == 'true'
     
     if include_trajectories:
-        # Limitamos a un número razonable de trayectorias para no saturar el mapa
+        # Limitamos a un nÃºmero razonable de trayectorias para no saturar el mapa
         MAX_TRAJECTORIES = 200
         
         # Consultamos noticias con sus lugares y contenido
@@ -3447,21 +3413,21 @@ def cartografia_corpus_api():
         docs_traj = q_traj.all()
         
         for doc in docs_traj:
-            # Obtenemos lugares válidos
+            # Obtenemos lugares vÃ¡lidos
             valid_locs = [l for l in doc.lugares if not l.borrado and l.lat and l.lon]
             
             if len(valid_locs) < 2:
                 continue
                 
-            # Ordenar por aparición en el texto
-            # Estrategia: Buscar la primera aparición del nombre en el contenido
-            # Si no tiene contenido, usar título. Si no, orden por defecto (id)
+            # Ordenar por apariciÃ³n en el texto
+            # Estrategia: Buscar la primera apariciÃ³n del nombre en el contenido
+            # Si no tiene contenido, usar tÃ­tulo. Si no, orden por defecto (id)
             texto_base = (doc.titulo or "") + " " + (doc.contenido or "")
             texto_lower = texto_base.lower()
             
             def get_position(loc):
                 pos = texto_lower.find(loc.nombre.lower())
-                if pos == -1: return 999999 # Al final si no se encuentra (raro si fue extraído)
+                if pos == -1: return 999999 # Al final si no se encuentra (raro si fue extraÃ­do)
                 return pos
             
             # Ordenar
@@ -3471,8 +3437,8 @@ def cartografia_corpus_api():
             points = []
             seen_coords = set()
             for l in sorted_locs:
-                # Evitar duplicados consecutivos exactos o muy cercanos podría ser útil, 
-                # pero para narrativa A -> A -> B es válido (retorno).
+                # Evitar duplicados consecutivos exactos o muy cercanos podrÃ­a ser Ãºtil, 
+                # pero para narrativa A -> A -> B es vÃ¡lido (retorno).
                 # Sin embargo, leaflet curve necesita puntos distintos para curvas bonitas o manejar bucles.
                 # Dejamos tal cual por ahora.
                 points.append({
@@ -3490,7 +3456,7 @@ def cartografia_corpus_api():
                 })
 
     # --- FILTRADO FINAL PARA MAPA CORPUS (NO GESTOR) ---
-    # En el mapa corpus, solo mostrar ubicaciones con al menos 1 mención vinculada
+    # En el mapa corpus, solo mostrar ubicaciones con al menos 1 menciÃ³n vinculada
     if not all_states and not solo_borrados:
         ciudades = [c for c in ciudades if c.get('frecuencia', 0) > 0]
 
@@ -3531,7 +3497,7 @@ def topografia_semantica_view():
         import re
         def extract_year(val):
             if not val: return None
-            # Buscar 4 dígitos seguidos
+            # Buscar 4 dÃ­gitos seguidos
             match = re.search(r'\d{4}', str(val))
             return int(match.group(0)) if match else None
 
@@ -3558,8 +3524,8 @@ def topografia_semantica_view():
 @login_required
 def cartografia_semantica_api():
     """
-    API experimental para la Topografía Semántica.
-    Calcula la "elevación" de un concepto en el territorio.
+    API experimental para la TopografÃ­a SemÃ¡ntica.
+    Calcula la "elevaciÃ³n" de un concepto en el territorio.
     """
     concepto = request.args.get('concepto', '').strip().lower()
     proyecto_id = request.args.get('proyecto_id') or 1 # Fallback
@@ -3570,7 +3536,7 @@ def cartografia_semantica_api():
 
     from services.ai_service import AIService
     
-    # Seleccionar proveedor y modelo según potencia
+    # Seleccionar proveedor y modelo segÃºn potencia
     potencia_ia = request.args.get('potencia', 'flash') 
     provider = 'gemini'
     model = 'gemini-2.0-flash'
@@ -3589,31 +3555,31 @@ def cartografia_semantica_api():
     
     terminos = [concepto]
     
-    # Intentar expansión con IA
+    # Intentar expansiÃ³n con IA
     try:
         service = AIService(provider=provider, model=model, user=current_user)
         if service.is_configured():
             contexto = {
                 "proyecto_id": proyecto_id, 
                 "tipo": "prensa_historica",
-                "instruccion": f"Genera términos específicos para '{concepto}'. NO mezcles este concepto con otros temas ajenos. Mantén la pureza semántica del término."
+                "instruccion": f"Genera tÃ©rminos especÃ­ficos para '{concepto}'. NO mezcles este concepto con otros temas ajenos. MantÃ©n la pureza semÃ¡ntica del tÃ©rmino."
             }
             expansion_ai = service.expand_semantic_concept(concepto, contexto)
             if expansion_ai:
-                # Normalizar a minúsculas para evitar fallos de coincidencia en Python post-SQL
+                # Normalizar a minÃºsculas para evitar fallos de coincidencia en Python post-SQL
                 expansion_ai = [t.lower().strip() for t in expansion_ai]
                 terminos.extend(expansion_ai)
     except Exception as e:
         print(f"Error AI Semantic Expansion: {e}")
 
-    # Fallback si falla la IA o no hay resultados (Diccionario mínimo)
+    # Fallback si falla la IA o no hay resultados (Diccionario mÃ­nimo)
     if len(terminos) == 1:
         expansion_fallback = {
-            'miedo': ['terror', 'pánico', 'alarma', 'susto', 'horror', 'temor'],
-            'guerra': ['batalla', 'combate', 'fuego', 'tropas', 'cañones', 'sangre'],
-            'progreso': ['ferrocarril', 'industria', 'comercio', 'adelanto', 'civilización'],
+            'miedo': ['terror', 'pÃ¡nico', 'alarma', 'susto', 'horror', 'temor'],
+            'guerra': ['batalla', 'combate', 'fuego', 'tropas', 'caÃ±ones', 'sangre'],
+            'progreso': ['ferrocarril', 'industria', 'comercio', 'adelanto', 'civilizaciÃ³n'],
             'paz': ['tratado', 'armisticio', 'concordia', 'tranquilidad'],
-            'enfermedad': ['cólera', 'fiebre', 'peste', 'contagio', 'muerte', 'virus']
+            'enfermedad': ['cÃ³lera', 'fiebre', 'peste', 'contagio', 'muerte', 'virus']
         }
         if concepto in expansion_fallback:
             terminos.extend(expansion_fallback[concepto])
@@ -3621,7 +3587,7 @@ def cartografia_semantica_api():
     # Deduplicar
     terminos = list(dict.fromkeys(terminos))
         
-    # --- 2. Búsqueda y Puntuación ---
+    # --- 2. BÃºsqueda y PuntuaciÃ³n ---
     from models import Prensa, LugarNoticia
     from sqlalchemy import or_, func
 
@@ -3631,7 +3597,7 @@ def cartografia_semantica_api():
     publicacion = request.args.get('publicacion')
     noticia_id = request.args.get('noticia_id')
 
-    # Necesitamos ID para agrupar, fecha (año) para el time-lapse y el contenido para el sentimiento
+    # Necesitamos ID para agrupar, fecha (aÃ±o) para el time-lapse y el contenido para el sentimiento
     query = db.session.query(
         LugarNoticia.lat, 
         LugarNoticia.lon, 
@@ -3662,7 +3628,7 @@ def cartografia_semantica_api():
     if filters:
         query = query.filter(or_(*filters))
         
-    # Ejecutar (Límite dinámico para geosemántica)
+    # Ejecutar (LÃ­mite dinÃ¡mico para geosemÃ¡ntica)
     try:
         limit_val = int(request.args.get('limit', 2000))
     except:
@@ -3673,14 +3639,14 @@ def cartografia_semantica_api():
     else:
         results = query.all()
     
-    # --- 3. Procesamiento (Agregación + Sentimiento Opcional) ---
+    # --- 3. Procesamiento (AgregaciÃ³n + Sentimiento Opcional) ---
     include_sentiment = request.args.get('sentiment') == 'true'
     sentiment_limit = int(request.args.get('sentiment_limit', 40))
-    # Seguridad: Admitir 0 (desactivado), Máximo 100
+    # Seguridad: Admitir 0 (desactivado), MÃ¡ximo 100
     sentiment_limit = max(0, min(100, sentiment_limit))
     
     puntos_raw = []
-    # Usar dict para analizar sentimiento solo una vez por noticia única
+    # Usar dict para analizar sentimiento solo una vez por noticia Ãºnica
     noticias_unicas = {} # id -> texto
     
     for lat, lon, freq, fecha, contenido, prensa_id, nombre in results:
@@ -3692,7 +3658,7 @@ def cartografia_semantica_api():
                 match = re.search(r'\d{4}', str(fecha))
                 if match: year = int(match.group(0))
         
-        # Identificar términos que activaron este punto (huellas semánticas)
+        # Identificar tÃ©rminos que activaron este punto (huellas semÃ¡nticas)
         txt = contenido.lower()
         matched = [t for t in terminos if t in txt]
 
@@ -3708,7 +3674,7 @@ def cartografia_semantica_api():
         })
         
         if include_sentiment and prensa_id not in noticias_unicas:
-            # Respetar el límite configurado por el usuario (o administrador)
+            # Respetar el lÃ­mite configurado por el usuario (o administrador)
             if len(noticias_unicas) < sentiment_limit:
                 noticias_unicas[prensa_id] = contenido[:500]
 
@@ -3772,7 +3738,7 @@ def toggle_incluido(id):
 @login_required
 def interpretar_topografia_api():
     """
-    API para generar una lectura interpretativa de la topografía semántica.
+    API para generar una lectura interpretativa de la topografÃ­a semÃ¡ntica.
     """
     try:
         data = request.get_json()
@@ -3784,10 +3750,10 @@ def interpretar_topografia_api():
         puntos = data.get('puntos', [])
         
         if not concepto or not puntos:
-            return jsonify({'error': f'Faltan datos para la interpretación (Concepto: {bool(concepto)}, Puntos: {len(puntos)})'}), 400
+            return jsonify({'error': f'Faltan datos para la interpretaciÃ³n (Concepto: {bool(concepto)}, Puntos: {len(puntos)})'}), 400
             
         # Crear un resumen de los puntos para el prompt
-        # Guard con validación de llaves
+        # Guard con validaciÃ³n de llaves
         valid_puntos = [p for p in puntos if all(k in p for k in ('lat', 'lon', 'weight'))]
         if not valid_puntos:
             return jsonify({'error': 'Los puntos proporcionados no tienen el formato correcto (requieren lat, lon, weight)'}), 400
@@ -3800,7 +3766,7 @@ def interpretar_topografia_api():
         doc_ids = [p.get('prensa_id') for p in puntos_ordenados if p.get('prensa_id')]
         
         if doc_ids:
-            # Traer contenido y títulos de los documentos top
+            # Traer contenido y tÃ­tulos de los documentos top
             docs = Prensa.query.filter(Prensa.id.in_(doc_ids)).all()
             doc_map = {d.id: d for d in docs}
             
@@ -3829,23 +3795,23 @@ def interpretar_topografia_api():
             "evidencias": evidencias
         }
         
-        logging.info(f"[INTERPRETAR] Solicitando interpretación para concepto: {concepto}")
+        logging.info(f"[INTERPRETAR] Solicitando interpretaciÃ³n para concepto: {concepto}")
         lectura = interpret_semantic_topography_map(concepto, terminos, resumen_puntos, contexto)
         
         if not lectura:
-            logging.error(f"[INTERPRETAR] Gemini retornó vacío para concepto: {concepto}")
-            return jsonify({'error': 'No se pudo generar la lectura IA (Gemini retornó vacío)'}), 500
+            logging.error(f"[INTERPRETAR] Gemini retornÃ³ vacÃ­o para concepto: {concepto}")
+            return jsonify({'error': 'No se pudo generar la lectura IA (Gemini retornÃ³ vacÃ­o)'}), 500
             
         return jsonify({'lectura': lectura})
     except Exception as e:
-        logging.exception(f"Error crítico en interpretar_topografia_api: {e}")
+        logging.exception(f"Error crÃ­tico en interpretar_topografia_api: {e}")
         return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
 
 @noticias_bp.route('/api/cartografia/semantica/detalles')
 @login_required
 def cartografia_semantica_detalles_api():
     """
-    Devuelve noticias específicas para un concepto en un punto geográfico.
+    Devuelve noticias especÃ­ficas para un concepto en un punto geogrÃ¡fico.
     Utilizado por el 'Explorador de Cumbres'.
     """
     concepto = request.args.get('concepto', '').strip()
@@ -3854,10 +3820,10 @@ def cartografia_semantica_detalles_api():
     proyecto_id = request.args.get('proyecto_id')
     
     if not concepto or not lat or not lon:
-        return jsonify({'error': 'Faltan parámetros'}), 400
+        return jsonify({'error': 'Faltan parÃ¡metros'}), 400
         
-    # Buscamos términos expandidos para ser precisos
-    # (En producción esto debería estar cacheado)
+    # Buscamos tÃ©rminos expandidos para ser precisos
+    # (En producciÃ³n esto deberÃ­a estar cacheado)
     from services.ai_service import AIService
     service = AIService()
     contexto = {"proyecto_id": proyecto_id}
@@ -3908,7 +3874,7 @@ def cartografia_semantica_detalles_api():
     import re
     noticias = []
     for t, f, c, nid in results:
-        # Extraer fragmento relevante (alrededor del primer término encontrado)
+        # Extraer fragmento relevante (alrededor del primer tÃ©rmino encontrado)
         snippet = ""
         if c:
             c_low = c.lower()
@@ -3927,7 +3893,7 @@ def cartografia_semantica_detalles_api():
             else:
                 snippet = c[:300] + "..."
 
-            # Resaltar términos (subrayado sutil vía CSS)
+            # Resaltar tÃ©rminos (subrayado sutil vÃ­a CSS)
             for term in terminos:
                 try:
                     pattern = re.compile(re.escape(term), re.IGNORECASE)
@@ -3948,8 +3914,8 @@ def cartografia_semantica_detalles_api():
 @login_required
 def cartografia_rareza_api():
     """
-    API para la Brújula de Rarezas (Detección de Anomalías).
-    Identifica puntos geográficos con discurso singular.
+    API para la BrÃºjula de Rarezas (DetecciÃ³n de AnomalÃ­as).
+    Identifica puntos geogrÃ¡ficos con discurso singular.
     """
     from services.ai_service import AIService 
     from advanced_analytics import AnalisisAvanzado
@@ -3993,7 +3959,7 @@ def cartografia_rareza_api():
     if noticia_id:
         query = query.filter(Prensa.id == noticia_id)
     
-    # Límite de seguridad para análisis en tiempo real
+    # LÃ­mite de seguridad para anÃ¡lisis en tiempo real
     try:
         limit_val = int(request.args.get('limit', 3000))
         if limit_val <= 0: limit_val = 50000 # Caso "TODOS" con tope razonable
@@ -4015,10 +3981,10 @@ def cartografia_rareza_api():
             'titulo': titulo or ''
         })
         
-    # Análisis
+    # AnÃ¡lisis
     analisis = AnalisisAvanzado(db)
     
-    # Parámetros opcionales
+    # ParÃ¡metros opcionales
     top_k = int(request.args.get('top_k', 60))
     potencia_ia = request.args.get('potencia', 'flash') 
     
@@ -4039,7 +4005,7 @@ def cartografia_rareza_api():
     try:
         resultado = analisis.detectar_anomalias_geograficas(docs, precision_geo=3, top_k=top_k, ai_service=service)
     except Exception as e:
-        current_app.logger.error(f"Error en Brújula de Rarezas: {e}")
+        current_app.logger.error(f"Error en BrÃºjula de Rarezas: {e}")
         return jsonify({'error': str(e)}), 500
         
     return jsonify(resultado)
@@ -4051,7 +4017,7 @@ def cartografia_corpus_export():
     import json
     from flask import Response
     
-    # Reutilizar lógica de filtrado de cartografia_corpus_api
+    # Reutilizar lÃ³gica de filtrado de cartografia_corpus_api
     fecha_desde = request.args.get('fecha_desde')
     fecha_hasta = request.args.get('fecha_hasta')
     publicacion = request.args.get('publicacion')
@@ -4137,7 +4103,7 @@ def cartografia_corpus_export():
                 })
                 
         else:
-            # Exportar Nodos (Points) - Lógica existente mejorada
+            # Exportar Nodos (Points) - LÃ³gica existente mejorada
             lugares = LugarNoticia.query.filter(
                 LugarNoticia.noticia_id.in_(noticia_ids),
                 LugarNoticia.borrado == False,
@@ -4174,7 +4140,7 @@ def cartografia_corpus_export():
 @noticias_bp.route('/noticias/<int:id>', methods=['GET'])
 @login_required
 def detalle_noticia_corto(id):
-    """Ruta alternativa más corta para detalle de noticia"""
+    """Ruta alternativa mÃ¡s corta para detalle de noticia"""
     return detalle_noticia(id)
 
 # --- Vista de detalle de noticia ---
@@ -4247,7 +4213,7 @@ def detalle_noticia(id):
                          prev_id=prev_id, next_id=next_id,
                          prev_id_fecha=prev_id_fecha, next_id_fecha=next_id_fecha)
 
-# --- API para cartografía de la noticia ---
+# --- API para cartografÃ­a de la noticia ---
 @noticias_bp.route('/api/cartografia_noticia/<int:id>', methods=['GET'])
 @login_required
 def cartografia_noticia(id):
@@ -4262,30 +4228,30 @@ def cartografia_noticia(id):
 
     proyecto_id = noticia.proyecto_id if hasattr(noticia, 'proyecto_id') else None
     
-    # 1. Metadatos básicos (Optimizado: Solo los necesarios para el proyecto)
+    # 1. Metadatos bÃ¡sicos (Optimizado: Solo los necesarios para el proyecto)
     idiomas = valores_unicos_prensa(Prensa.idioma, proyecto_id) if proyecto_id else []
     tipos_autor = valores_unicos_prensa(Prensa.tipo_autor, proyecto_id) if proyecto_id else []
     
-    # 2. Extracción de ubicaciones (NLP)
+    # 2. ExtracciÃ³n de ubicaciones (NLP)
     ubicaciones_detectadas = set()
     conteo = Counter()
     
     from services.gemini_service import clean_location_name
     
-    # ── LISTA NEGRA GLOBAL: cargar nombres blacklisted en Ciudad ──────────────────
+    # ââ LISTA NEGRA GLOBAL: cargar nombres blacklisted en Ciudad ââââââââââââââââââ
     blacklist_global_ner = {
         r[0].strip().lower() for r in db.session.query(Ciudad.name).filter(
             Ciudad.blacklisted == True
         ).all()
     }
-    # También excluir los borrados de este proyecto específico
+    # TambiÃ©n excluir los borrados de este proyecto especÃ­fico
     nombres_borrados_proyecto = {
         r[0].strip().lower() for r in db.session.query(LugarNoticia.nombre).filter_by(
             noticia_id=id, borrado=True
         ).all()
     }
     excludes_ner = blacklist_global_ner | nombres_borrados_proyecto
-    # ─────────────────────────────────────────────────────────────────────────────
+    # âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     
     nlp = get_nlp()
     if nlp:
@@ -4301,7 +4267,7 @@ def cartografia_noticia(id):
             ubicaciones_detectadas.update(locs_c)
             conteo.update(locs_c)
             
-        # Procesar título
+        # Procesar tÃ­tulo
         if noticia.titulo:
             doc_t = nlp(noticia.titulo)
             raw_locs_t = [ent.text.strip() for ent in doc_t.ents if ent.label_ in ('LOC', 'GPE') and len(ent.text.strip()) > 2]
@@ -4310,7 +4276,7 @@ def cartografia_noticia(id):
             conteo.update(locs_t)
 
 
-    # --- DEDUPLICACIÓN DE ANIDAMIENTO ---
+    # --- DEDUPLICACIÃN DE ANIDAMIENTO ---
     if conteo:
         from services.gemini_service import merge_nested_locations
         conteo_dedup = merge_nested_locations(conteo)
@@ -4319,7 +4285,7 @@ def cartografia_noticia(id):
         # pero actualizamos para reflejar los nombres filtrados
         conteo = Counter(conteo_dedup)
 
-    # 3. Guardar nuevos lugares detectados (Geocodificación con caché interna)
+    # 3. Guardar nuevos lugares detectados (GeocodificaciÃ³n con cachÃ© interna)
     if ubicaciones_detectadas:
         # Obtener nombres borrados GLOBALMENTE (Solo nombres para ahorrar memoria)
         nombres_borrados = {
@@ -4342,7 +4308,7 @@ def cartografia_noticia(id):
             if nombre in nombres_borrados or nombre in nombres_actuales:
                 continue
                 
-            # Intentar obtener de la caché local (Tabla Ciudad)
+            # Intentar obtener de la cachÃ© local (Tabla Ciudad)
             ciudad_db = Ciudad.query.filter_by(name=nombre).first()
             lat, lon = None, None
             tipo_geografico = 'unknown' # Para LugarNoticia.tipo_lugar
@@ -4351,7 +4317,7 @@ def cartografia_noticia(id):
                 lat, lon = ciudad_db.lat, ciudad_db.lon
                 tipo_geografico = ciudad_db.tipo_lugar or 'unknown'
             else:
-                # Si no está en caché, geocodificar externamente
+                # Si no estÃ¡ en cachÃ©, geocodificar externamente
                 try:
                     resp = requests.get('https://nominatim.openstreetmap.org/search', 
                                      params={'q': nombre, 'format': 'json', 'limit': 1},
@@ -4384,7 +4350,7 @@ def cartografia_noticia(id):
                 db.session.add(nuevo)
                 db.session.commit()
 
-    # 4. Obtener resultados finales para la UI (Agregación y Verificación)
+    # 4. Obtener resultados finales para la UI (AgregaciÃ³n y VerificaciÃ³n)
     lugares_bd = LugarNoticia.query.filter_by(noticia_id=id, borrado=False).all()
     ciudades_map = {} # Diccionario para agregar por nombre normalizado
     
@@ -4398,9 +4364,9 @@ def cartografia_noticia(id):
     for l in lugares_bd:
         key = l.nombre.lower().strip()
         
-        # Determinar si está verificado (usar campo verificada del modelo)
+        # Determinar si estÃ¡ verificado (usar campo verificada del modelo)
         is_verified = l.verificada if hasattr(l, 'verificada') else False
-        # También considerar verificado si existe en tabla Ciudad (retrocompatibilidad)
+        # TambiÃ©n considerar verificado si existe en tabla Ciudad (retrocompatibilidad)
         if not is_verified and key in ciudades_verificadas_db:
             c_db = ciudades_verificadas_db[key]
             if c_db.lat is not None and c_db.lon is not None:
@@ -4414,18 +4380,18 @@ def cartografia_noticia(id):
         frec_efectiva = l.frecuencia - frec_desvinculada
         
         if key in ciudades_map:
-            # Si ya existe, nos quedamos con la frecuencia MÁXIMA (asumimos que son duplicados redundantes)
+            # Si ya existe, nos quedamos con la frecuencia MÃXIMA (asumimos que son duplicados redundantes)
             existente = ciudades_map[key]
-            existente['id'] = l.id  # Actualizar con el último ID
+            existente['id'] = l.id  # Actualizar con el Ãºltimo ID
             existente['frecuencia'] = max(existente['frecuencia'], l.frecuencia)
             existente['frecuencia_desvinculada'] = frec_desvinculada
             existente['frecuencia_efectiva'] = max(existente.get('frecuencia_efectiva', 0), frec_efectiva)
             existente['en_titulo'] = existente['en_titulo'] or l.en_titulo
             existente['en_contenido'] = existente['en_contenido'] or l.en_contenido
-            # Mantenemos las coordenadas del último registro procesado (asumimos consistencia o última corrección)
+            # Mantenemos las coordenadas del Ãºltimo registro procesado (asumimos consistencia o Ãºltima correcciÃ³n)
             existente['lat'] = l.lat 
             existente['lon'] = l.lon
-            # Si alguno está verificado, el agregado también (aunque la lógica de arriba ya lo cubre por nombre)
+            # Si alguno estÃ¡ verificado, el agregado tambiÃ©n (aunque la lÃ³gica de arriba ya lo cubre por nombre)
             existente['verified'] = is_verified
             # Mantener vinculada status
             existente['vinculada'] = is_vinculada
@@ -4485,11 +4451,11 @@ def cartografia_noticia(id):
 
 
 
-# --- API: valores únicos filtrados para selects dependientes (AJAX avanzado) ---
+# --- API: valores Ãºnicos filtrados para selects dependientes (AJAX avanzado) ---
 @noticias_bp.route('/api/valores_filtrados', methods=['GET'])
 @login_required
 def api_valores_filtrados():
-    """Devuelve los valores únicos posibles para cada filtro según los filtros actuales"""
+    """Devuelve los valores Ãºnicos posibles para cada filtro segÃºn los filtros actuales"""
     proyecto = get_proyecto_activo()
     columna_especifica = request.args.get("columna")
 
@@ -4500,7 +4466,7 @@ def api_valores_filtrados():
             "autores": [], "fechas": [], "numeros": [], "publicaciones": [], "ciudades": [], "paises": [], "temas": []
         })
 
-    # Mapear parámetros del frontend a campos del modelo
+    # Mapear parÃ¡metros del frontend a campos del modelo
     filtros = {}
     # Autor puede venir como 'autor' o 'nombre_autor'
     autor = request.args.get('autor', '').strip() or request.args.get('nombre_autor', '').strip()
@@ -4525,7 +4491,7 @@ def api_valores_filtrados():
                 continue  # No filtrar por la misma columna
             
             if k == 'autor':
-                # Usar hybrid_property Prensa.autor para búsqueda exacta normalizada
+                # Usar hybrid_property Prensa.autor para bÃºsqueda exacta normalizada
                 q = q.filter(func.lower(func.trim(Prensa.autor)) == normalizar_valor(v))
             elif k in ["publicacion", "ciudad", "pais_publicacion", "fecha_original"]:
                 q = q.filter(func.lower(func.trim(getattr(Prensa, k))) == normalizar_valor(v))
@@ -4572,7 +4538,7 @@ def api_valores_filtrados():
             
         return sorted(valores_norm.values(), key=lambda x: x.lower())
 
-    # Función especial para autores (combina nombre y apellido)
+    # FunciÃ³n especial para autores (combina nombre y apellido)
     def valores_autores(filtros_activos):
         q = Prensa.query.filter_by(proyecto_id=proyecto.id)
         
@@ -4645,12 +4611,12 @@ def api_map_data():
 
     if 'publicacion' in filtros:
         val = filtros['publicacion']
-        print(f"[MAPA] Filtro publicación: {val}")
+        print(f"[MAPA] Filtro publicaciÃ³n: {val}")
         if isinstance(val, list):
             query = query.filter(Prensa.publicacion.in_(val))
         elif val and val != "todas":
             query = query.filter(Prensa.publicacion == val)
-        print(f"[MAPA] Resultados tras filtro publicación: {query.count()}")
+        print(f"[MAPA] Resultados tras filtro publicaciÃ³n: {query.count()}")
 
     if 'ciudad' in filtros:
         val = filtros['ciudad']
@@ -4673,10 +4639,10 @@ def api_map_data():
         if c_norm not in ciudades_data:
             city_obj = get_or_create_city_with_coords(db.session, c_norm)
             
-            # Intento de geocodificación si faltan coordenadas o provincia
+            # Intento de geocodificaciÃ³n si faltan coordenadas o provincia
             # (Re-geocodificamos si falta provincia para rellenar el dato nuevo)
             if city_obj and (city_obj.lat is None or city_obj.lon is None or city_obj.provincia is None):
-                # Solo loguear si es un caso "nuevo" o de backfill explícito para no spammeando
+                # Solo loguear si es un caso "nuevo" o de backfill explÃ­cito para no spammeando
                 print(f"[NOMINATIM] Buscando datos para: {c_norm}")
                 lat, lon, addr, status, provincia = geocode_city(c_norm, country_name=noticia.pais_publicacion)
                 
@@ -4757,7 +4723,7 @@ def api_map_distribution():
 
     # REPLICAR FILTROS SIMPLES
     
-    # Soporte para múltiples valores (listas)
+    # Soporte para mÃºltiples valores (listas)
     publicaciones = request.args.getlist('publicacion')
     ciudades = request.args.getlist('ciudad')
     
@@ -4765,7 +4731,7 @@ def api_map_distribution():
          query = query.filter(Prensa.publicacion.in_(publicaciones))
          
     if ciudades and 'todos' not in [c.lower() for c in ciudades]:
-         # Aquí filtramos por el nombre de ciudad en la noticia
+         # AquÃ­ filtramos por el nombre de ciudad en la noticia
          query = query.filter(Prensa.ciudad.in_(ciudades))
 
     filtros = {k: request.args.get(k) for k in request.args.keys()}
@@ -4783,8 +4749,8 @@ def api_map_distribution():
         if prov:
             # Normalizar nombre para coincidir con GeoJSON
             nombre = prov.strip()
-            # Agregar al acumulado (por si varias ciudades tienen misma provincia con variaciones de nombre minúsculas)
-            # Aunque group_by Ciudad.provincia debería ser único si la DB está bien.
+            # Agregar al acumulado (por si varias ciudades tienen misma provincia con variaciones de nombre minÃºsculas)
+            # Aunque group_by Ciudad.provincia deberÃ­a ser Ãºnico si la DB estÃ¡ bien.
             if nombre in result:
                 result[nombre] += count
             else:
@@ -4798,8 +4764,8 @@ def api_map_distribution():
 @noticias_bp.route('/filtrar', methods=['GET'])
 @login_required
 def filtrar():
-    # Si la petición no es AJAX (por ejemplo, al volver atrás en el navegador), 
-    # redirigimos a la vista completa de la lista con los mismos parámetros.
+    # Si la peticiÃ³n no es AJAX (por ejemplo, al volver atrÃ¡s en el navegador), 
+    # redirigimos a la vista completa de la lista con los mismos parÃ¡metros.
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest' and request.args.get('ajax') != '1':
         return redirect(url_for('noticias.listar', **request.args))
 
@@ -4933,7 +4899,7 @@ def filtrar():
         query = query.filter(Prensa.incluido.is_(True))
     elif filtros["incluido"] == "no":
         query = query.filter(Prensa.incluido.is_(False))
-    # Ordenar por fecha de menos reciente a más reciente (ascendente)
+    # Ordenar por fecha de menos reciente a mÃ¡s reciente (ascendente)
     query = ordenar_por_fecha_prensa(query, descendente=False)
     # Evitar duplicados por joins agrupando por el ID primario
     query = query.group_by(Prensa.id)
@@ -4948,8 +4914,8 @@ def filtrar():
     
     # Si hay filtros aplicados, el sistema original mostraba todo (total_paginas=1)
     # pero vamos a permitir que noticias_por_pagina funcione siempre si se desea.
-    # No obstante, el código original en la línea 1484 detecta hay_filtros
-    # y las líneas 1487-1488 aplican paginación igualmente.
+    # No obstante, el cÃ³digo original en la lÃ­nea 1484 detecta hay_filtros
+    # y las lÃ­neas 1487-1488 aplican paginaciÃ³n igualmente.
     
     registros_raw = query.offset((page - 1) * por_pagina).limit(por_pagina).all()
     total_paginas = (total // por_pagina) + (1 if total % por_pagina else 0)
@@ -4960,12 +4926,12 @@ def filtrar():
     for r in registros_raw:
         try:
             r.id = int(r.id)
-            print(f"Fecha: {getattr(r, 'fecha_original', None)}, Publicación: {getattr(r, 'publicacion', None)}, Título: {getattr(r, 'titulo', None)}")
+            print(f"Fecha: {getattr(r, 'fecha_original', None)}, PublicaciÃ³n: {getattr(r, 'publicacion', None)}, TÃ­tulo: {getattr(r, 'titulo', None)}")
             registros.append(r)
         except (ValueError, TypeError):
             continue
     
-    # Calcular valores únicos SOBRE LOS FILTROS ACTUALES (sin ORDER BY)
+    # Calcular valores Ãºnicos SOBRE LOS FILTROS ACTUALES (sin ORDER BY)
     # Crear query base solo con filtros, sin ordenamiento
     query_base = Prensa.query.filter_by(proyecto_id=proyecto.id)
     for k, v in filtros.items():
@@ -4989,16 +4955,16 @@ def filtrar():
         query_base = query_base.filter(Prensa.incluido.is_(False))
     
     def valores_filtrados(columna):
-        """Obtiene valores únicos de una columna en la query filtrada (sin ORDER BY)"""
+        """Obtiene valores Ãºnicos de una columna en la query filtrada (sin ORDER BY)"""
         valores = set()
-        # Usamos distinct(columna) para obtener valores únicos reales
+        # Usamos distinct(columna) para obtener valores Ãºnicos reales
         for r in query_base.with_entities(columna).distinct().all():
             val = r[0]
             if val and str(val).strip():
                 valores.add(str(val).strip())
         return sorted(list(valores))
     
-    # Valores dinámicos basados en los filtros actuales
+    # Valores dinÃ¡micos basados en los filtros actuales
     # Get authors in "Apellido, Nombre" format from filtered results
     autores_set = {r[0] for r in query_base.with_entities(Prensa.autor).distinct().all() if r[0]}
     autores_filtrados = sorted(list(autores_set), key=lambda x: x.lower())
@@ -5026,7 +4992,7 @@ def filtrar():
         temas_list=temas_filtrados,
         noticias_por_pagina=noticias_por_pagina
     )
-    # Devolver también los valores únicos de los filtros (dinámicos)
+    # Devolver tambiÃ©n los valores Ãºnicos de los filtros (dinÃ¡micos)
     return jsonify({
         "html": html,
         "autores": autores_filtrados,
@@ -5042,7 +5008,7 @@ def filtrar():
 @noticias_bp.route("/actualizar_nota/<int:id>", methods=["POST"])
 @login_required
 def actualizar_nota(id):
-    """Actualizar nota de una noticia de prensa vía AJAX"""
+    """Actualizar nota de una noticia de prensa vÃ­a AJAX"""
     data = request.get_json(silent=True) or {}
     nueva_nota = (data.get("nota") or "").strip()
     registro = db.session.get(Prensa, id)
@@ -5057,7 +5023,7 @@ def actualizar_nota(id):
 @noticias_bp.route('/cartografia/gestor')
 @login_required
 def gestor_ubicaciones_view():
-    """Vista dedicada para la gestión del corpus de ubicaciones."""
+    """Vista dedicada para la gestiÃ³n del corpus de ubicaciones."""
     proyecto = get_proyecto_activo()
     return render_template('gestor_ubicaciones.html', proyecto_id=proyecto.id if proyecto else None, proyecto_activo=proyecto)
 
@@ -5069,7 +5035,7 @@ def listar():
     proyecto = get_proyecto_activo()
     if not proyecto:
         if Proyecto.query.count() == 0:
-            flash("👋 Bienvenido! Crea tu primer proyecto para empezar.", "info")
+            flash("ð Bienvenido! Crea tu primer proyecto para empezar.", "info")
             return redirect(url_for("proyectos.crear"))
         return redirect(url_for("proyectos.listar"))
 
@@ -5093,7 +5059,7 @@ def listar():
             "periodicidad",
         ]
     }
-    # Alias: q también sirve como búsqueda
+    # Alias: q tambiÃ©n sirve como bÃºsqueda
     if not filtros.get("busqueda") and request.args.get("q"):
         filtros["busqueda"] = request.args.get("q", "").strip()
     filtros["incluido"] = request.args.get("incluido", "todos")
@@ -5137,7 +5103,7 @@ def listar():
                 
                 if solo_vinculadas:
                     # Filtrar solo menciones vinculadas: donde (frecuencia - frecuencia_desvinculada) > 0
-                    # Esto excluye registros donde TODAS las menciones están desvinculadas del proyecto
+                    # Esto excluye registros donde TODAS las menciones estÃ¡n desvinculadas del proyecto
                     query = query.join(LugarNoticia).filter(
                         LugarNoticia.nombre == v,
                         LugarNoticia.borrado == False,
@@ -5172,7 +5138,7 @@ def listar():
                 if condiciones:
                     query = query.filter(or_(*condiciones))
             elif k == "fecha_original":
-                # Buscar en múltiples formatos posibles (YYYY-MM-DD, DD/MM/YYYY, D/M/YYYY)
+                # Buscar en mÃºltiples formatos posibles (YYYY-MM-DD, DD/MM/YYYY, D/M/YYYY)
                 formatos = {v}  # Usar set para evitar duplicados
                 try:
                     dt = None
@@ -5227,7 +5193,7 @@ def listar():
     print("[DEBUG] Query SQL:", str(query.statement.compile(compile_kwargs={"literal_binds": True})))
     sys.stdout.flush()
     if filtros["busqueda"]:
-        # Join con AutorPrensa para búsqueda global
+        # Join con AutorPrensa para bÃºsqueda global
         query = query.outerjoin(AutorPrensa)
         for p in filtros["busqueda"].split():
             term = f"%{p}%"
@@ -5251,7 +5217,7 @@ def listar():
         query = query.filter(Prensa.incluido.is_(True))
     elif filtros["incluido"] == "no":
         query = query.filter(Prensa.incluido.is_(False))
-    # Forzar ordenamiento por fecha y publicación
+    # Forzar ordenamiento por fecha y publicaciÃ³n
     query = ordenar_por_fecha_prensa(query, descendente=False)
     # Evitar duplicados por joins agrupando por el ID primario
     query = query.group_by(Prensa.id)
@@ -5298,7 +5264,7 @@ def listar():
     # Ordenar fechas (descendente) para dropdown
     fechas_unicas = sorted(list(set([f for f in fechas_raw if fecha_to_dt(f)])), key=fecha_to_dt, reverse=True)
     
-    # Formatear estéticamente para el usuario (DD/MM/YYYY)
+    # Formatear estÃ©ticamente para el usuario (DD/MM/YYYY)
     fechas = []
     for f in fechas_unicas:
         dt = fecha_to_dt(f)
@@ -5374,7 +5340,7 @@ def listar():
 
 # --- Crear noticia de prensa ---
 def save_base64_image(b64_string, noticia_id):
-    """Guarda una imagen en Base64 proveniente del OCR como un archivo físico y devuelve el nombre del archivo."""
+    """Guarda una imagen en Base64 proveniente del OCR como un archivo fÃ­sico y devuelve el nombre del archivo."""
     if not b64_string:
         return None
     try:
@@ -5388,7 +5354,7 @@ def save_base64_image(b64_string, noticia_id):
             data = b64_string
             
         img_data = base64.b64decode(data)
-        # Generar nombre único con ID de noticia para rastreo
+        # Generar nombre Ãºnico con ID de noticia para rastreo
         filename = f"ocr_vinculado_{noticia_id}_{uuid.uuid4().hex[:6]}.png"
         upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
         
@@ -5418,12 +5384,12 @@ def crear_noticia_view(get_proyecto_activo_func):
     pub = None
     proyecto = get_proyecto_activo_func()
     if not proyecto:
-        flash("⚠️ Debes seleccionar un proyecto antes de crear noticias", "warning")
+        flash("â ï¸ Debes seleccionar un proyecto antes de crear noticias", "warning")
         return redirect(url_for("proyectos.listar"))
     precargados = {key: request.args.get(key) for key in request.args}
     
     if request.method == "POST":
-        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        # 1. GESTIÃN DE MÃLTIPLES AUTORES Y PSEUDÃNIMO
         pseudonimo = (request.form.get("pseudonimo") or "").strip()
         nombres_lista = request.form.getlist("nombre_autor[]")
         apellidos_lista = request.form.getlist("apellido_autor[]")
@@ -5462,7 +5428,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 f.write(f"  {k}: {vals}\n")
             f.write("-" * 30 + "\n")
 
-    # Establecer tipo de recurso por defecto según el tipo de proyecto
+    # Establecer tipo de recurso por defecto segÃºn el tipo de proyecto
     if not precargados.get("tipo_recurso"):
         if proyecto.tipo == "libros":
             precargados["tipo_recurso"] = "libro"
@@ -5489,7 +5455,7 @@ def crear_noticia_view(get_proyecto_activo_func):
         anio_str = (request.form.get("anio") or "").strip()
         tipo_recurso = (request.form.get("tipo_recurso") or "").strip()
 
-        # --- Lógica de Fecha Automática para Libros ---
+        # --- LÃ³gica de Fecha AutomÃ¡tica para Libros ---
         if tipo_recurso == "libro" and anio_str.isdigit() and not fecha_original:
             fecha_original = f"01/01/{anio_str}"
 
@@ -5517,7 +5483,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 pub = Publicacion(nombre=nombre_pub, proyecto_id=proyecto.id)
                 db.session.add(pub)
                 db.session.flush()
-            # Heredar campos de la publicación si están vacíos en el formulario
+            # Heredar campos de la publicaciÃ³n si estÃ¡n vacÃ­os en el formulario
             campos_pub = {
                 "idioma": request.form.get("idioma") or pub.idioma,
                 "licencia": request.form.get("licencia") or pub.licencia or "CC BY 4.0",
@@ -5528,7 +5494,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 "apellido_autor": request.form.get("apellido_autor") or pub.apellido_autor,
                 "pseudonimo": request.form.get("pseudonimo") or pub.pseudonimo,
             }
-            # Heredar fuente/institución de la hemeroteca asociada a la publicación
+            # Heredar fuente/instituciÃ³n de la hemeroteca asociada a la publicaciÃ³n
             if pub.hemeroteca_id:
                 from models import Hemeroteca
                 hemeroteca = Hemeroteca.query.get(pub.hemeroteca_id)
@@ -5612,7 +5578,7 @@ def crear_noticia_view(get_proyecto_activo_func):
             pais_publicacion=campos_pub["pais_publicacion"],
             formato_fuente=campos_pub["formato_fuente"],
             referencias_relacionadas=request.form.get("referencias_relacionadas"),
-            archivo_pdf=request.form.get("archivo_pdf"),
+            # archivo_pdf is processed via upload later,
             fuente=request.form.get("fuente") or fuente_heredada,
             imagen_scan=request.form.get("imagen_scan"),
             texto_original=request.form.get("texto_original"),
@@ -5632,7 +5598,7 @@ def crear_noticia_view(get_proyecto_activo_func):
         # 2.5 GUARDAR AUTORES RELACIONADOS
         for aut in autores_objs:
             nuevo.autores.append(aut)
-        # Guardar imágenes adjuntas (múltiples)
+        # Guardar imÃ¡genes adjuntas (mÃºltiples)
         imagenes_files = request.files.getlist("imagen_scan")
         from models import ImagenPrensa
         for file in imagenes_files:
@@ -5644,7 +5610,21 @@ def crear_noticia_view(get_proyecto_activo_func):
                 nueva_img = ImagenPrensa(prensa_id=nuevo.id, filename=filename)
                 db.session.add(nueva_img)
 
-        # ── Sincronizar Temas (Modelo Tema) ──
+        # Guardar PDFs adjuntos (mÃºltiples)
+        pdf_files = request.files.getlist("archivo_pdf_upload")
+        saved_pdfs = []
+        for file in pdf_files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
+                ruta = os.path.join(upload_folder, filename)
+                file.save(ruta)
+                saved_pdfs.append(filename)
+                
+        if saved_pdfs:
+            nuevo.archivo_pdf = ",".join(saved_pdfs)
+
+        # ââ Sincronizar Temas (Modelo Tema) ââ
         if temas_final:
             nombres_temas = [t.strip() for t in temas_final.split(',') if t.strip()]
             from models import Tema
@@ -5658,17 +5638,34 @@ def crear_noticia_view(get_proyecto_activo_func):
                 temas_objs.append(t_obj)
             nuevo.temas_rel = temas_objs
 
-        db.session.commit()
+        # --- NUEVO: Procesar Spatial Index (ocr_map) ---
+        ocr_map_str = request.form.get("ocr_map")
+        if ocr_map_str:
+            try:
+                if isinstance(ocr_map_str, str):
+                    nuevo.ocr_map = json.loads(ocr_map_str)
+                else:
+                    nuevo.ocr_map = ocr_map_str
+                print(f"[OCR] Spatial Index (ocr_map) persistido para noticia {nuevo.id}")
+            except Exception as e:
+                print(f"[OCR ERROR] Fallo al parsear ocr_map: {e}")
 
         # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
         ocr_b64 = request.form.get("ocr_image_base64")
         if ocr_b64:
+            from utils import save_base64_image
             filename_ocr = save_base64_image(ocr_b64, nuevo.id)
             if filename_ocr:
-                nueva_img_ocr = ImagenPrensa(prensa_id=nuevo.id, filename=filename_ocr)
+                # Si tenemos el ocr_map, lo guardamos también en la imagen para acceso directo
+                nueva_img_ocr = ImagenPrensa(
+                    prensa_id=nuevo.id, 
+                    filename=filename_ocr,
+                    ocr_map=nuevo.ocr_map # Copiamos el mapa a la imagen específica
+                )
                 db.session.add(nueva_img_ocr)
-                db.session.commit()
-                print(f"[OCR] Imagen vinculada persistida para noticia {nuevo.id}")
+                print(f"[OCR] Imagen vinculada preparada para noticia {nuevo.id} con mapa de coordenadas")
+
+        db.session.commit()
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
             return jsonify({
@@ -5677,7 +5674,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 "id": nuevo.id
             })
 
-        flash("✅ Noticia guardada correctamente.", "success")
+        flash("â Noticia guardada correctamente.", "success")
         return redirect(url_for("noticias.listar", highlight_id=nuevo.id))
     next_url = None
     autores_json = "[]"
@@ -5744,7 +5741,7 @@ def editar(id):
         anio_val = (request.form.get("anio") or "").strip()
         tipo_rec = (request.form.get("tipo_recurso") or "").strip()
 
-        # --- Lógica de Fecha Automática para Libros ---
+        # --- LÃ³gica de Fecha AutomÃ¡tica para Libros ---
         if tipo_rec == "libro" and anio_val.isdigit() and not fecha_orig:
             fecha_orig = f"01/01/{anio_val}"
 
@@ -5756,7 +5753,7 @@ def editar(id):
         noticia.paginas = request.form.get("paginas")
         noticia.url = request.form.get("url")
         noticia.fecha_consulta = request.form.get("fecha_consulta")
-        # 1. GESTIÓN DE MÚLTIPLES AUTORES Y PSEUDÓNIMO
+        # 1. GESTIÃN DE MÃLTIPLES AUTORES Y PSEUDÃNIMO
         noticia.pseudonimo = (request.form.get("pseudonimo") or "").strip()
         
         nombres_lista = request.form.getlist("nombre_autor[]")
@@ -5764,7 +5761,7 @@ def editar(id):
         tipos_lista = request.form.getlist("tipo_autor[]")
         anonimos_raw = request.form.getlist("es_anonimo_raw[]")
 
-        # Limpiar autores antiguos usando la relación
+        # Limpiar autores antiguos usando la relaciÃ³n
         noticia.autores = []
         db.session.flush()
         
@@ -5790,7 +5787,7 @@ def editar(id):
                 noticia.nombre_autor = nom if not es_anon else None
                 noticia.apellido_autor = ape if not es_anon else None
                 if es_anon:
-                    noticia.autor = "Anónimo"
+                    noticia.autor = "AnÃ³nimo"
                 else:
                     if ape and nom: noticia.autor = f"{ape}, {nom}"
                     elif ape: noticia.autor = ape
@@ -5813,7 +5810,7 @@ def editar(id):
         
         noticia.temas = temas_final
         
-        # ── Sincronizar Temas (Modelo Tema) ──
+        # ââ Sincronizar Temas (Modelo Tema) ââ
         nombres_temas = [t.strip() for t in temas_final.split(',') if t.strip()]
         from models import Tema
         temas_objs = []
@@ -5827,6 +5824,18 @@ def editar(id):
         noticia.temas_rel = temas_objs
         noticia.notas = request.form.get("notas")
         
+        # --- NUEVO: Procesar Spatial Index (ocr_map) ---
+        ocr_map_str = request.form.get("ocr_map")
+        if ocr_map_str:
+            try:
+                if isinstance(ocr_map_str, str):
+                    noticia.ocr_map = json.loads(ocr_map_str)
+                else:
+                    noticia.ocr_map = ocr_map_str
+                print(f"[OCR] Spatial Index (ocr_map) actualizado para noticia {noticia.id}")
+            except Exception as e:
+                print(f"[OCR ERROR] Fallo al parsear ocr_map: {e}")
+
         # Procesar contenido de texto (directo desde el formulario o desde archivo .txt subido)
         txt_file = request.files.get("archivo_texto")
         form_content = request.form.get("contenido")
@@ -5864,7 +5873,7 @@ def editar(id):
         noticia.pais_publicacion = request.form.get("pais_publicacion")
         noticia.formato_fuente = request.form.get("formato_fuente")
         noticia.referencias_relacionadas = request.form.get("referencias_relacionadas")
-        noticia.archivo_pdf = request.form.get("archivo_pdf")
+        # archivo_pdf is processed via file upload below
         noticia.fuente = request.form.get("fuente")
         noticia.tipo_publicacion = request.form.get("tipo_publicacion")
         noticia.periodicidad = request.form.get("periodicidad")
@@ -5881,7 +5890,7 @@ def editar(id):
         noticia.contenido_diplomatico = request.form.get("contenido_diplomatico")
         noticia.contenido_critico = request.form.get("contenido_critico")
         
-        # Guardar imágenes adjuntas (múltiples)
+        # Guardar imÃ¡genes adjuntas (mÃºltiples)
         imagenes_files = request.files.getlist("imagen_scan")
         from models import ImagenPrensa
         for file in imagenes_files:
@@ -5892,20 +5901,42 @@ def editar(id):
                 file.save(ruta)
                 nueva_img = ImagenPrensa(prensa_id=noticia.id, filename=filename)
                 db.session.add(nueva_img)
+        
+        # Guardar PDFs adjuntos (mÃºltiples)
+        pdf_files = request.files.getlist("archivo_pdf_upload")
+        saved_pdfs = []
+        for file in pdf_files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                upload_folder = current_app.config.get("UPLOAD_FOLDER", "static/uploads")
+                ruta = os.path.join(upload_folder, filename)
+                file.save(ruta)
+                saved_pdfs.append(filename)
+                
+        if saved_pdfs:
+            existing_pdf = noticia.archivo_pdf or ""
+            all_pdfs = [p.strip() for p in existing_pdf.split(",") if p.strip()] + saved_pdfs
+            noticia.archivo_pdf = ",".join(all_pdfs)
+            
         db.session.commit()
 
         # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
         ocr_b64 = request.form.get("ocr_image_base64")
         if ocr_b64:
+            from utils import save_base64_image
             filename_ocr = save_base64_image(ocr_b64, noticia.id)
             if filename_ocr:
-                nueva_img_ocr = ImagenPrensa(prensa_id=noticia.id, filename=filename_ocr)
+                nueva_img_ocr = ImagenPrensa(
+                    prensa_id=noticia.id, 
+                    filename=filename_ocr,
+                    ocr_map=noticia.ocr_map
+                )
                 db.session.add(nueva_img_ocr)
                 db.session.commit()
-                print(f"[OCR] Imagen vinculada persistida para noticia {noticia.id}")
+                print(f"[OCR] Imagen vinculada persistida para noticia {noticia.id} con mapa de coordenadas")
 
-        # --- GESTIÓN DE VERSIONES (PRO) ---
-        comentario = request.form.get("comentario_version") or "Actualización de ficha"
+        # --- GESTIÃN DE VERSIONES (PRO) ---
+        comentario = request.form.get("comentario_version") or "ActualizaciÃ³n de ficha"
         version = VersionPrensa(
             prensa_id=noticia.id,
             user_id=current_user.id if current_user.is_authenticated else None,
@@ -5933,9 +5964,9 @@ def editar(id):
                 "id": noticia.id
             })
 
-        flash("✅ Noticia actualizada correctamente.", "success")
+        flash("â Noticia actualizada correctamente.", "success")
         return redirect(url_for("noticias.listar", highlight_id=noticia.id))
-    # --- LÓGICA DE NAVEGACIÓN (SWITCHER) ---
+    # --- LÃGICA DE NAVEGACIÃN (SWITCHER) ---
     sql_case = r"""
         CASE 
             WHEN fecha_original ~ '^\d{2}/\d{2}/\d{4}$' THEN to_date(fecha_original, 'DD/MM/YYYY')
@@ -5947,7 +5978,7 @@ def editar(id):
     """
     
     try:
-        # Obtener valor de ordenación actual
+        # Obtener valor de ordenaciÃ³n actual
         current_date_val = db.session.execute(
             text(f"SELECT ({sql_case}) FROM prensa WHERE id = :id"),
             {'id': id}
@@ -5988,7 +6019,7 @@ def editar(id):
             'cur_id': id
         }).scalar()
         
-        # Totales y posición
+        # Totales y posiciÃ³n
         total_count = db.session.query(Prensa).filter(Prensa.proyecto_id == noticia.proyecto_id).count()
         current_pos = db.session.execute(
             text(f"""
@@ -6009,7 +6040,7 @@ def editar(id):
             'current_pos': current_pos
         }
     except Exception as e:
-        print(f"[ERROR] Navegación switcher: {e}")
+        print(f"[ERROR] NavegaciÃ³n switcher: {e}")
         nav_data = {'prev_id': None, 'next_id': None, 'total_count': 0, 'current_pos': 0}
 
     # GET o fallback: mostrar formulario con datos actuales
@@ -6037,7 +6068,7 @@ def editar(id):
 @noticias_bp.route('/duplicar/<int:noticia_id>', methods=['GET'], endpoint='noticia_duplicar')
 @login_required
 def noticia_duplicar(noticia_id):
-    """Duplicar noticia de prensa y redirigir a edición del nuevo registro"""
+    """Duplicar noticia de prensa y redirigir a ediciÃ³n del nuevo registro"""
     original = db.session.get(Prensa, noticia_id)
     if not original:
         flash('Noticia original no encontrada', 'danger')
@@ -6206,6 +6237,39 @@ def api_noticias_simple_list():
         
     return jsonify(data)
 
+import fitz  # PyMuPDF
+
+@noticias_bp.route('/api/noticia/render_pdf_page/<path:filename>')
+@login_required
+def api_noticia_render_pdf_page(filename):
+    """Renderiza una página de un PDF como imagen JPG al vuelo"""
+    try:
+        page_num = request.args.get('page', 0, type=int)
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
+        
+        # Seguridad: evitar path traversal
+        filename = os.path.basename(filename)
+        path = os.path.join(upload_folder, filename)
+        
+        if not os.path.exists(path):
+            # Fallback a ruta absoluta
+            path = os.path.abspath(path)
+            if not os.path.exists(path):
+                return "Archivo no encontrado", 404
+                
+        doc = fitz.open(path)
+        if page_num < 0 or page_num >= len(doc):
+            page_num = 0
+            
+        page = doc.load_page(page_num)
+        # Usar una matriz para aumentar la resolución (zoom 2x = 144 DPI aprox)
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        img_data = pix.tobytes("jpg")
+        
+        return Response(img_data, mimetype='image/jpeg')
+    except Exception as e:
+        return str(e), 500
+
 @noticias_bp.route('/api/noticia/contenido/<int:id>', methods=['GET'])
 @login_required
 def api_noticia_contenido(id):
@@ -6214,26 +6278,38 @@ def api_noticia_contenido(id):
     if not noticia:
         return jsonify({'error': 'Not encontrada'}), 404
         
-    # Renderizar plantilla parcial si quisiéramos, pero devolver JSON es más flexible
-    # Determinar imágenes (prioridad: imagen_scan > ImagenPrensa records)
+    # Determinar imágenes y sus mapas OCR
     imagenes = []
-    with open('/opt/hesiox/api_debug.log', 'a') as f:
-        f.write(f"\n[DEBUG API] --- Request for ID: {id} ---\n")
-        f.write(f"imagen_scan: {noticia.imagen_scan}\n")
-        imgs_asociadas = noticia.imagenes.all()
-        f.write(f"Encontradas: {len(imgs_asociadas)}\n")
-        for img in imgs_asociadas:
-            url = url_for('static', filename=f'uploads/{img.filename}')
-            f.write(f" - Image: {img.filename}, URL: {url}\n")
-            if url not in imagenes:
-                imagenes.append(url)
+    ocr_maps_by_url = {}
+    
+    imgs_asociadas = noticia.imagenes.all()
+    for img in imgs_asociadas:
+        url = url_for('static', filename=f'uploads/{img.filename}')
+        if url not in imagenes:
+            imagenes.append(url)
+            if img.ocr_map:
+                ocr_maps_by_url[url] = img.ocr_map
         
     # [FIX] Priorizar imagen_scan como primera imagen si existe
-    if noticia.imagen_scan:
-        url_scan = url_for('static', filename=f'uploads/{noticia.imagen_scan}')
-        if url_scan not in imagenes:
-            imagenes.insert(0, url_scan)
-        f.write(f"Total imagenes final: {len(imagenes)}\n")
+    if noticia.imagen_scan and noticia.imagen_scan.lower() not in ['none', 'null', '']:
+        scans = [s.strip() for s in noticia.imagen_scan.split(',') if s.strip()]
+        for scan in reversed(scans):
+            if scan.lower() not in ['none', 'null', '']:
+                url_scan = url_for('static', filename=f'uploads/{scan}')
+                if url_scan not in imagenes:
+                    imagenes.insert(0, url_scan)
+                    # La imagen_scan principal podría usar el ocr_map general de la noticia
+                    if noticia.ocr_map:
+                        ocr_maps_by_url[url_scan] = noticia.ocr_map
+
+    # Determinar PDFs
+    archivos_pdf = []
+    if noticia.archivo_pdf:
+        for pdf in [p.strip() for p in noticia.archivo_pdf.split(',') if p.strip()]:
+            if pdf.startswith('http'):
+                archivos_pdf.append(pdf)
+            else:
+                archivos_pdf.append(url_for('static', filename=f'uploads/{pdf}'))
 
     # Determinar tipo de proyecto
     tipo_proyecto = "generico"
@@ -6245,10 +6321,13 @@ def api_noticia_contenido(id):
         'titulo': noticia.titulo,
         'publicacion': noticia.publicacion,
         'fecha': str(noticia.fecha_original) if noticia.fecha_original else "",
-        'contenido_html': noticia.contenido, # Asumimos que es HTML seguro o se procesa en front
-        'texto_puro': limpieza_profunda_ocr(noticia.contenido) if noticia.contenido else "", # Versión limpia
+        'contenido_html': noticia.contenido,
+        'texto_puro': limpieza_profunda_ocr(noticia.contenido) if noticia.contenido else "",
         'url_imagen': imagenes[0] if imagenes else None,
         'imagenes': imagenes,
+        'ocr_map': noticia.ocr_map,
+        'ocr_maps_by_url': ocr_maps_by_url,
+        'archivos_pdf': archivos_pdf,
         'tipo_proyecto': tipo_proyecto,
         'incluido': noticia.incluido,
         'url_detalle': url_for('noticias.detalle_noticia', id=noticia.id),
@@ -6266,7 +6345,7 @@ def api_publicaciones_list():
         print("[DEBUG] No hay proyecto activo.")
         return jsonify([])
     
-    # Usar tabla Publicacion que es mucho más rápida y correcta como fuente de verdad
+    # Usar tabla Publicacion que es mucho mÃ¡s rÃ¡pida y correcta como fuente de verdad
     publicaciones = db.session.query(Publicacion.nombre)\
         .filter_by(proyecto_id=proyecto.id)\
         .order_by(Publicacion.nombre)\
@@ -6308,7 +6387,7 @@ def api_resumir_noticia(id):
 @login_required
 @csrf.exempt
 def api_update_noticia_content(id):
-    """Actualiza rápidamente el contenido de una noticia (unificando vistas)"""
+    """Actualiza rÃ¡pidamente el contenido de una noticia (unificando vistas)"""
     noticia = db.session.get(Prensa, id)
     if not noticia:
         return jsonify({'error': 'Noticia no encontrada'}), 404
@@ -6328,7 +6407,7 @@ def api_update_noticia_content(id):
             
         db.session.commit()
         
-        # Invalidar caché de análisis ya que el contenido cambió
+        # Invalidar cachÃ© de anÃ¡lisis ya que el contenido cambiÃ³
         try:
             from analisis_cache import cache as analisis_cache_instance
             analisis_cache_instance.limpiar_todo()
@@ -6373,7 +6452,7 @@ def noticia_generar_pdf_final():
         pdf_buffer = generar_pdf_noticia_simple(noticia_data)
         
         # Nombre del archivo
-        # Sanitizar título para nombre de archivo
+        # Sanitizar tÃ­tulo para nombre de archivo
         titulo_limpio = re.sub(r'[^\w\s-]', '', noticia_data.get('titulo', 'noticia'))[:50]
         filename = f"{titulo_limpio}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
@@ -6407,7 +6486,7 @@ def gestor_temas():
         if accion == "renombrar":
             tema_new = request.form.get("tema_new", "").strip()
             if not tema_new:
-                flash("El nuevo nombre no puede estar vacío.", "danger")
+                flash("El nuevo nombre no puede estar vacÃ­o.", "danger")
             else:
                 # 1. Actualizar el modelo Tema
                 obj_tema = Tema.query.filter_by(proyecto_id=proyecto.id, nombre=tema_old).first()
@@ -6426,14 +6505,14 @@ def gestor_temas():
                             p.temas = ", ".join(final_tags)
                     
                     db.session.commit()
-                    flash(f"✅ Se ha renombrado '{tema_old}' a '{tema_new}'.", "success")
+                    flash(f"â Se ha renombrado '{tema_old}' a '{tema_new}'.", "success")
                 else:
-                    flash(f"❌ No se encontró el tema '{tema_old}'.", "danger")
+                    flash(f"â No se encontrÃ³ el tema '{tema_old}'.", "danger")
         
         elif accion == "crear":
             tema_new = request.form.get("tema_new", "").strip()
             if not tema_new:
-                flash("El nombre del tema no puede estar vacío.", "danger")
+                flash("El nombre del tema no puede estar vacÃ­o.", "danger")
             else:
                 # Verificar si ya existe
                 existe = Tema.query.filter_by(proyecto_id=proyecto.id, nombre=tema_new).first()
@@ -6441,9 +6520,9 @@ def gestor_temas():
                     nuevo_tema = Tema(proyecto_id=proyecto.id, nombre=tema_new)
                     db.session.add(nuevo_tema)
                     db.session.commit()
-                    flash(f"✨ El tema '{tema_new}' ha sido creado.", "success")
+                    flash(f"â¨ El tema '{tema_new}' ha sido creado.", "success")
                 else:
-                    flash(f"⚠️ El tema '{tema_new}' ya existe.", "info")
+                    flash(f"â ï¸ El tema '{tema_new}' ya existe.", "info")
             
         return redirect(url_for("noticias.gestor_temas"))
 
@@ -6451,7 +6530,7 @@ def gestor_temas():
     temas_list = Tema.query.filter_by(proyecto_id=proyecto.id).order_by(Tema.nombre).all()
     temas_stats = []
     for t in temas_list:
-        # Contar artículos asociados vía relación
+        # Contar artÃ­culos asociados vÃ­a relaciÃ³n
         cantidad = t.articulos.count()
         temas_stats.append({"nombre": t.nombre, "cantidad": cantidad})
     
@@ -6473,7 +6552,7 @@ def api_get_temas():
     temas_persistentes = Tema.query.filter_by(proyecto_id=proyecto.id).order_by(Tema.nombre).all()
     
     # 2. Calcular conteo de uso en Prensa
-    # OPTIMIZACIÓN: Solo traer la columna temas
+    # OPTIMIZACIÃN: Solo traer la columna temas
     todas = Prensa.query.with_entities(Prensa.temas).filter(Prensa.proyecto_id == proyecto.id, Prensa.temas.isnot(None), Prensa.temas != '').all()
     
     conteo_uso = {}
@@ -6482,7 +6561,7 @@ def api_get_temas():
         for t in tags:
             conteo_uso[t] = conteo_uso.get(t, 0) + 1
             
-    # También contar uso en Publicaciones (opcional, pero recomendado para completitud)
+    # TambiÃ©n contar uso en Publicaciones (opcional, pero recomendado para completitud)
     todas_pub = Publicacion.query.with_entities(Publicacion.tema).filter(Publicacion.proyecto_id == proyecto.id, Publicacion.tema.isnot(None), Publicacion.tema != '').all()
     for p in todas_pub:
         tags = [t.strip() for t in (p[0] or "").split(",") if t.strip()]
@@ -6499,7 +6578,7 @@ def api_get_temas():
             "cantidad": conteo_uso.get(t.nombre, 0)
         })
         
-    # 4. (Opcional) Temas que están en Prensa pero no en la tabla Tema (por si acaso quedaron huérfanos)
+    # 4. (Opcional) Temas que estÃ¡n en Prensa pero no en la tabla Tema (por si acaso quedaron huÃ©rfanos)
     for t_nombre, count in conteo_uso.items():
         if not any(ts["nombre"] == t_nombre for ts in temas_stats):
             temas_stats.append({
@@ -6535,7 +6614,7 @@ def api_renombrar_tema():
         # Check if new name exists
         existing_new = Tema.query.filter_by(proyecto_id=proyecto.id, nombre=tema_new).first()
         if existing_new:
-            # Si ya existe el nuevo, borramos el viejo y las referencias apuntarán al nuevo
+            # Si ya existe el nuevo, borramos el viejo y las referencias apuntarÃ¡n al nuevo
             db.session.delete(tema_obj)
         else:
             tema_obj.nombre = tema_new
@@ -6651,7 +6730,7 @@ def api_noticia_analizar_ner(id):
     """
     noticia = db.session.get(Prensa, id)
     if not noticia or not noticia.contenido:
-        return jsonify({"success": False, "error": "Contenido no disponible o vacío"}), 400
+        return jsonify({"success": False, "error": "Contenido no disponible o vacÃ­o"}), 400
     
     try:
         from services.prosopografia_service import ProsopografiaService
@@ -6688,7 +6767,7 @@ def api_noticia_analizar_ner(id):
 @noticias_bp.route("/api/noticias/<int:id>/entidades/ignorar-global", methods=["POST"])
 @login_required
 def api_noticia_entidad_ignorar_global(id):
-    """Añade una entidad al diccionario de ignoradas (aprendizaje)"""
+    """AÃ±ade una entidad al diccionario de ignoradas (aprendizaje)"""
     noticia = db.session.get(Prensa, id)
     if not noticia:
         return jsonify({"success": False, "error": "Noticia no encontrada"}), 404
@@ -6708,13 +6787,13 @@ def api_noticia_entidad_ignorar_global(id):
         res = svc.aprender_ignorada(texto, label)
         
         if res:
-            # Eliminarla también de la noticia actual
+            # Eliminarla tambiÃ©n de la noticia actual
             entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
             entidades = [e for e in entidades if not (e['texto'] == texto and e['label'] == label)]
             noticia.entidades_ner = entidades
             db.session.commit()
             
-            return jsonify({"success": True, "message": f"'{texto}' añadido al diccionario de ignorados."})
+            return jsonify({"success": True, "message": f"'{texto}' aÃ±adido al diccionario de ignorados."})
         else:
             return jsonify({"success": False, "error": "Ya existe en el diccionario o error de base de datos"}), 400
     except Exception as e:
@@ -6734,11 +6813,11 @@ def api_noticia_entidad_vincular(id):
     autor_bio_id = data.get('autor_bio_id')
     
     if idx is None or not autor_bio_id:
-        return jsonify({"success": False, "error": "Parámetros insuficientes"}), 400
+        return jsonify({"success": False, "error": "ParÃ¡metros insuficientes"}), 400
         
     entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
     if idx >= len(entidades):
-        return jsonify({"success": False, "error": "Índice fuera de rango"}), 400
+        return jsonify({"success": False, "error": "Ãndice fuera de rango"}), 400
         
     entidades[idx]['autor_bio_id'] = autor_bio_id
     noticia.entidades_ner = entidades
@@ -6759,11 +6838,11 @@ def api_noticia_entidades_lote(id):
     accion = data.get('accion') # 'eliminar' o 'ignorar_global'
     
     if not indices or not accion:
-        return jsonify({"success": False, "error": "Parámetros insuficientes"}), 400
+        return jsonify({"success": False, "error": "ParÃ¡metros insuficientes"}), 400
         
     entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
     
-    # Ordenar índices de mayor a menor para borrar sin alterar los anteriores
+    # Ordenar Ã­ndices de mayor a menor para borrar sin alterar los anteriores
     indices_sorted = sorted([int(i) for i in indices], reverse=True)
     
     try:
@@ -6784,7 +6863,7 @@ def api_noticia_entidades_lote(id):
         
         return jsonify({
             "success": True, 
-            "message": f"Acción '{accion}' aplicada a {len(indices)} entidades correctamente."
+            "message": f"AcciÃ³n '{accion}' aplicada a {len(indices)} entidades correctamente."
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -6801,11 +6880,11 @@ def api_noticia_entidad_eliminar(id):
     idx = data.get('index')
     
     if idx is None:
-        return jsonify({"success": False, "error": "Índice no proporcionado"}), 400
+        return jsonify({"success": False, "error": "Ãndice no proporcionado"}), 400
         
     entidades = list(noticia.entidades_ner) if noticia.entidades_ner else []
     if idx >= len(entidades):
-        return jsonify({"success": False, "error": "Índice fuera de rango"}), 400
+        return jsonify({"success": False, "error": "Ãndice fuera de rango"}), 400
         
     entidades.pop(idx)
     noticia.entidades_ner = entidades
@@ -6824,15 +6903,15 @@ def noticia_exportar_tei(noticia_id):
         
     from xml.sax.saxutils import escape as xml_escape
     
-    # Construcción básica de TEI
+    # ConstrucciÃ³n bÃ¡sica de TEI
     tei = f'''<?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
 <TEI xmlns="http://www.tei-c.org/ns/1.0">
   <teiHeader>
     <fileDesc>
       <titleStmt>
-        <title>{xml_escape(noticia.titulo or 'Sin título')}</title>
-        <author>{xml_escape(noticia.autor or 'Anónimo')}</author>
+        <title>{xml_escape(noticia.titulo or 'Sin tÃ­tulo')}</title>
+        <author>{xml_escape(noticia.autor or 'AnÃ³nimo')}</author>
       </titleStmt>
       <publicationStmt>
         <publisher>Proyecto HESIOX</publisher>
@@ -6868,10 +6947,10 @@ def noticia_exportar_tei(noticia_id):
 @noticias_bp.route("/api/versiones/<int:version_id>")
 @login_required
 def api_get_version(version_id):
-    """Obtiene los datos de una versión específica para su recuperación en el editor"""
+    """Obtiene los datos de una versiÃ³n especÃ­fica para su recuperaciÃ³n en el editor"""
     version = db.session.get(VersionPrensa, version_id)
     if not version:
-        return jsonify({"success": False, "error": "Versión no encontrada"}), 404
+        return jsonify({"success": False, "error": "VersiÃ³n no encontrada"}), 404
         
     return jsonify({
         "success": True,
@@ -6883,3 +6962,191 @@ def api_get_version(version_id):
             "notas": version.notas
         }
     })
+
+@noticias_bp.route('/api/noticia/<int:id>/eliminar_pdf/<path:filename>', methods=['POST'])
+@login_required
+def eliminar_pdf(id, filename):
+    try:
+        noticia = Prensa.query.get(id)
+        if not noticia:
+            return jsonify({'success': False, 'error': 'Noticia no encontrada'}), 404
+        
+        if noticia.archivo_pdf:
+            pdfs = [p.strip() for p in noticia.archivo_pdf.split(',') if p.strip()]
+            if filename in pdfs:
+                pdfs.remove(filename)
+                noticia.archivo_pdf = ",".join(pdfs)
+                db.session.commit()
+                return jsonify({'success': True})
+                
+        return jsonify({'success': False, 'error': f'Archivo "{filename}" no encontrado en esta noticia'}), 404
+    except Exception as e:
+        import traceback
+        with open('/tmp/hesiox_debug.log', 'a') as f:
+            f.write(f"\nERROR eliminar_pdf: {str(e)}\n{traceback.format_exc()}\n")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+import base64
+@noticias_bp.route('/api/noticia/ai_vision_highlight', methods=['POST'])
+@login_required
+def api_noticia_ai_vision_highlight():
+    """Genera resaltados de bounding box para un tÃ©rmino usando Gemini."""
+    try:
+        data = request.get_json()
+        noticia_id = data.get('id')
+        term = data.get('term')
+        
+        if not noticia_id or not term:
+            return jsonify({'success': False, 'error': 'ID y tÃ©rmino requeridos'}), 400
+            
+        noticia = db.session.get(Prensa, noticia_id)
+        if not noticia:
+            return jsonify({'success': False, 'error': 'Noticia no encontrada'}), 404
+            
+        # Determinar si es PDF o Imagen
+        is_pdf = False
+        file_path = None
+        file_url = None
+        
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
+        
+        if noticia.imagen_scan and noticia.imagen_scan.lower() not in ['none', 'null', '']:
+            first_img = [s.strip() for s in noticia.imagen_scan.split(',') if s.strip() and s.lower() not in ['none', 'null', '']][0]
+            file_path = os.path.join(upload_folder, first_img)
+            file_url = url_for('static', filename=f'uploads/{first_img}')
+        elif noticia.archivo_pdf and noticia.archivo_pdf.lower() not in ['none', 'null', '']:
+            first_pdf = [p.strip() for p in noticia.archivo_pdf.split(',') if p.strip() and p.lower() not in ['none', 'null', '']][0]
+            file_path = os.path.join(upload_folder, first_pdf)
+            file_url = url_for('static', filename=f'uploads/{first_pdf}')
+            is_pdf = True
+        else:
+            # Check associated images
+            imgs_asociadas = noticia.imagenes.all()
+            if imgs_asociadas:
+                first_img = imgs_asociadas[0].filename
+                file_path = os.path.join(upload_folder, first_img)
+                file_url = url_for('static', filename=f'uploads/{first_img}')
+            else:
+                return jsonify({'success': False, 'error': 'La noticia no tiene imagen ni PDF asociados.'}), 400
+
+        # --- 1. BUSCAR EN SPATIAL INDEX (ocr_map) ---
+        ocr_map = noticia.ocr_map
+        found_boxes = []
+        
+        # Si el ocr_map es un string, lo parseamos
+        if isinstance(ocr_map, str):
+            try:
+                ocr_map = json.loads(ocr_map)
+            except:
+                ocr_map = None
+
+        if ocr_map and isinstance(ocr_map, list):
+            search_term = term.lower().strip()
+            words_in_term = search_term.split()
+            
+            if len(words_in_term) == 1:
+                # Búsqueda de palabra única
+                for item in ocr_map:
+                    if item.get('word', '').lower() == search_term:
+                        found_boxes.append(item.get('bbox'))
+            else:
+                # Búsqueda de frase consecutiva
+                for i in range(len(ocr_map) - len(words_in_term) + 1):
+                    match = True
+                    for j in range(len(words_in_term)):
+                        if ocr_map[i+j].get('word', '').lower() != words_in_term[j]:
+                            match = False
+                            break
+                    if match:
+                        for j in range(len(words_in_term)):
+                            found_boxes.append(ocr_map[i+j].get('bbox'))
+        
+        if found_boxes:
+            print(f"[AI Vision] Coincidencias encontradas en Spatial Index para '{term}'.")
+            return jsonify({
+                'success': True,
+                'boxes': found_boxes,
+                'file_url': file_url,
+                'is_pdf': is_pdf,
+                'source': 'spatial_index'
+            })
+
+        # --- 2. FALLBACK A AI VISION (GEMINI) ---
+        if not os.path.exists(file_path):
+            # Try absolute path fallback if relative fails
+            abs_path = os.path.abspath(file_path)
+            if not os.path.exists(abs_path):
+                return jsonify({'success': False, 'error': f'El archivo físico no existe en {file_path}'}), 404
+            file_path = abs_path
+            
+        with open(file_path, "rb") as f:
+            encoded_string = base64.b64encode(f.read()).decode('utf-8')
+            
+        mime_type = "image/jpeg"
+        if file_path.lower().endswith('.png'):
+            mime_type = "image/png"
+        elif file_path.lower().endswith('.pdf'):
+            mime_type = "application/pdf"
+            
+        image_data = f"data:{mime_type};base64,{encoded_string}"
+        
+        # High precision prompt for pixel-perfect highlights
+        prompt = f"""
+        Encuentra todas las apariciones exactas de la palabra o frase "{term}" en el documento adjunto.
+        Para cada coincidencia, proporciona un "bounding box" (caja delimitadora) normalizado.
+        
+        INSTRUCCIONES DE PRECISIÃN ABSOLUTA:
+        1. Las coordenadas deben ser nÃºmeros enteros entre 0 y 1000.
+        2. El formato de cada caja debe ser un array: [ymin, xmin, ymax, xmax].
+        3. AJUSTE PIXEL-PERFECT: La caja debe ceÃ±irse ÃNICAMENTE a los pÃ­xeles que forman las letras de la palabra solicitada.
+           - EXCLUYE CUALQUIER ESPACIO en blanco antes o despuÃ©s de la palabra.
+           - EXCLUYE SIGNOS DE PUNTUACIÃN adyacentes (comas, puntos, etc.).
+           - NO incluyas el espacio en blanco interlineal (arriba/abajo).
+           - La caja debe empezar EXACTAMENTE en el primer pÃ­xel de tinta de la primera letra 
+             y terminar EXACTAMENTE en el Ãºltimo pÃ­xel de tinta de la Ãºltima letra.
+        
+        Responde EXCLUSIVAMENTE en formato JSON:
+        {{
+            "boxes": [
+                [ymin, xmin, ymax, xmax]
+            ]
+        }}
+        Si no hay coincidencias, devuelve "boxes": [].
+        """
+        
+        from services.ai_service import AIService
+        ai_service = AIService(provider='gemini', model='gemini-1.5-pro-latest', user=current_user)
+        response_text = ai_service.generate_content(prompt, temperature=0.0, image_data=image_data)
+        
+        if not response_text:
+            return jsonify({'success': False, 'error': 'El servicio de IA no devolviÃ³ respuesta.'}), 500
+            
+        import json, re
+        boxes = []
+        try:
+            # Clean possible markdown wrap
+            clean_text = response_text.strip()
+            if clean_text.startswith('```json'):
+                clean_text = clean_text[7:]
+            if clean_text.endswith('```'):
+                clean_text = clean_text[:-3]
+            clean_text = clean_text.strip()
+            
+            parsed = json.loads(clean_text)
+            if 'boxes' in parsed:
+                boxes = parsed['boxes']
+        except Exception as e:
+            current_app.logger.error(f"[AI Vision] JSON Parsing Error: {e} | Text: {response_text}")
+            return jsonify({'success': False, 'error': f'Error procesando respuesta de IA: {str(e)}'}), 500
+            
+        return jsonify({
+            'success': True,
+            'boxes': boxes,
+            'file_url': file_url,
+            'is_pdf': is_pdf
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"[AI Vision] Exception: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500

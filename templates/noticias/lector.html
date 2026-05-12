@@ -15,6 +15,271 @@
         flex-direction: column !important;
     }
 
+    /* Mark highlighting */
+    mark {
+        background-color: rgba(255, 235, 59, 0.4);
+        color: inherit;
+        border-radius: 2px;
+        padding: 0 2px;
+    }
+
+    mark.mark-active {
+        background-color: #ff9800 !important;
+        color: #000 !important;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+        font-weight: bold;
+    }
+
+    /* AI Vision Highlights */
+    .vision-highlight {
+        position: absolute;
+        background-color: rgba(255, 152, 0, 0.25);
+        border: 2px solid #ff9800;
+        pointer-events: auto;
+        z-index: 10000;
+        border-radius: 2px;
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+        transition: opacity 0.3s, transform 0.2s, background-color 0.2s;
+        cursor: pointer;
+        box-sizing: border-box; /* Critical for coordinate precision */
+    }
+    
+    .vision-highlight:hover {
+        background-color: rgba(255, 152, 0, 0.7);
+        box-shadow: 0 0 25px rgba(255, 152, 0, 0.9);
+        transform: scale(1.05);
+        z-index: 10001;
+    }
+
+    .vision-highlight.active {
+        border: 3px solid #fff;
+        box-shadow: 0 0 30px #ff9800;
+        animation: vision-pulse-active 1.5s infinite;
+    }
+    
+    @keyframes vision-pulse-active {
+        0% { transform: scale(1); box-shadow: 0 0 20px #ff9800; }
+        50% { transform: scale(1.1); box-shadow: 0 0 40px #ff9800; }
+        100% { transform: scale(1); box-shadow: 0 0 20px #ff9800; }
+    }
+    
+    #vision-highlights-container {
+        position: absolute;
+        pointer-events: none;
+        z-index: 999;
+        transform-origin: 50% 50%;
+    }
+
+    /* RIGHT SIDEBAR PANEL */
+    #reader-sidebar-panel {
+        width: 320px;
+        background: var(--ds-bg-sidebar);
+        border-left: 1px solid var(--ds-border-color);
+        display: none;
+        flex-direction: column;
+        z-index: 10;
+        transition: width 0.3s ease;
+    }
+
+    .sidebar-section {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--ds-accent-primary);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .location-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.2s ease;
+        cursor: default;
+    }
+
+    .location-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 152, 0, 0.3);
+    }
+
+    .location-card.linked {
+        border-left: 3px solid #ff9800; /* Naranja Sirio (Modo Oscuro) */
+    }
+
+    [data-theme="light"] .location-card.linked {
+        border-left: 3px solid #294a60; /* Azul Sirio (Modo Claro) */
+    }
+
+    .location-card.unlinked {
+        border-left: 3px solid #666;
+        opacity: 0.8;
+    }
+
+    .location-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #fff;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .location-meta {
+        font-size: 0.7rem;
+        color: #888;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .location-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        color: #aaa;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 11px;
+    }
+
+    .action-btn:hover {
+        background: var(--ds-accent-primary);
+        color: #000;
+        border-color: var(--ds-accent-primary);
+        transform: translateY(-2px);
+    }
+
+    .action-btn.active-link { color: #4caf50; }
+    .action-btn.active-unlink { color: #ff9800; }
+    .action-btn.active-vision { color: #00bcd4; }
+    .action-btn.active-verify { color: #2196f3; }
+
+    /* Fix image transition for smooth centering */
+    #doc-image-scan, #vision-highlights-container {
+        transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    
+    .is-dragging #doc-image-scan, 
+    .is-dragging #vision-highlights-container {
+        transition: none !important;
+    }
+
+    .text-accent {
+        color: #ff9800 !important;
+    }
+
+    /* Sirio Search Style */
+    .search-sirio-wrapper {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        height: 38px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: visible;
+    }
+    .search-sirio-wrapper:focus-within {
+        border-color: #ff9800;
+        background: rgba(255, 152, 0, 0.05);
+        box-shadow: 0 0 8px rgba(255, 152, 0, 0.2);
+    }
+    .search-sirio-wrapper input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        outline: none;
+        width: 180px;
+        text-transform: uppercase;
+    }
+    .search-sirio-wrapper input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+    .search-sirio-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 4px 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+    }
+    .search-sirio-btn:hover {
+        color: #ff9800;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .search-sirio-count {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: #ff9800;
+        opacity: 0.8;
+        min-width: 45px;
+        text-align: center;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 0 5px;
+        padding: 0 5px;
+    }
+
+    /* Fix button contrast in Lector (Editando / Guardar) */
+    .btn-sirio-primary .btn-text,
+    .btn-sirio-primary i {
+        color: #fff !important;
+    }
+
+    /* Dark mode specifically: Black text on orange for high contrast */
+    html:not([data-theme='light']) .btn-sirio-primary .btn-text,
+    html:not([data-theme='light']) .btn-sirio-primary i {
+        color: #000 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Disable hover effects for these buttons to keep them solid */
+    #btn-editar-inline.btn-sirio-primary:hover,
+    #btn-save-content:hover {
+        transform: none !important;
+        box-shadow: none !important;
+        background: var(--ds-accent-primary) !important;
+        opacity: 1 !important;
+    }
+
+    html:not([data-theme='light']) #btn-editar-inline.btn-sirio-primary:hover,
+    html:not([data-theme='light']) #btn-save-content:hover {
+        background: #cd7b00 !important;
+    }
+
     /* Buttons in Header */
     .desktop-header .btn-sirio,
     .desktop-header .btn {
@@ -527,38 +792,68 @@
         cursor: pointer;
     }
 
-    body.focus-mode #btn-exit-focus {
+body.focus-mode #btn-exit-focus {
         display: flex;
     }
 </style>
 {% endblock %}
 
 {% block top_actions %}
-<div class="d-flex gap-1" id="header-reader-tabs">
-    <button class="btn-sirio btn-sirio-secondary active" id="btn-tab-detalle" onclick="switchReaderTab('detalle-tab')"
-        title="Vista Detalle">
-        <i class="fa-solid fa-file-lines"></i> <span class="btn-text">Detalle</span>
-    </button>
-    <button class="btn-sirio btn-sirio-secondary" id="btn-tab-fragmentos" onclick="switchReaderTab('fragmentos-tab')"
-        title="Vista Fragmentos">
-        <i class="fa-solid fa-align-left"></i> <span class="btn-text">Fragmentos</span>
-    </button>
-    <button class="btn-sirio btn-sirio-secondary" id="btn-tab-texto" onclick="switchReaderTab('texto-tab')"
-        title="Texto Puro">
-        <i class="fa-solid fa-font"></i> <span class="btn-text">Texto</span>
-    </button>
-</div>
-<div class="vr mx-2 opacity-25" style="height: 24px; align-self: center;"></div>
+        <!-- BUSCADOR DE TEXTO ESTILO SIRIO (A LA IZQUIERDA) -->
+        <div class="search-sirio-wrapper me-3" title="Buscar en el documento (OCR + PDF)">
+            <i class="fa-solid fa-magnifying-glass text-muted me-2" style="font-size: 13px;"></i>
+            <input type="text" id="reader-search-input" placeholder="BUSCAR EN TEXTO..." autocomplete="off">
+            
+            <div id="search-count" class="search-sirio-count">0/0</div>
+            
+            <div class="d-flex align-items-center">
+                <button type="button" class="search-sirio-btn" id="reader-search-prev" title="Resultado Anterior">
+                    <i class="fa-solid fa-chevron-up" style="font-size: 11px;"></i>
+                </button>
+                <button type="button" class="search-sirio-btn" id="reader-search-next" title="Siguiente Resultado">
+                    <i class="fa-solid fa-chevron-down" style="font-size: 11px;"></i>
+                </button>
+
+                <div class="vr mx-1 opacity-25" style="height: 16px;"></div>
+                
+                <button type="button" class="search-sirio-btn text-accent" id="btn-vision-search" title="Resaltado por IA (Vision Search)">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 13px;"></i>
+                </button>
+            </div>
+            <!-- Progress Bar IA -->
+            <div id="vision-progress-bar" style="position: absolute; bottom: -1px; left: 0; width: 0%; height: 2px; background: #ff9800; transition: width 4s cubic-bezier(0.1, 0.5, 0.1, 1); display: none; z-index: 10; border-radius: 0 0 4px 4px; box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);"></div>
+        </div>
+
+        <div class="vr me-3 opacity-25" style="height: 24px; align-self: center;"></div>
+
+        <div class="d-flex gap-1" id="header-reader-tabs">
+            <button class="btn-sirio btn-sirio-secondary active" id="btn-tab-detalle" onclick="switchReaderTab('detalle-tab')"
+                title="Vista Detalle">
+                <i class="fa-solid fa-file-lines"></i> <span class="btn-text">Detalle</span>
+            </button>
+            <button class="btn-sirio btn-sirio-secondary" id="btn-tab-fragmentos" onclick="switchReaderTab('fragmentos-tab')"
+                title="Vista Fragmentos">
+                <i class="fa-solid fa-align-left"></i> <span class="btn-text">Fragmentos</span>
+            </button>
+            <button class="btn-sirio btn-sirio-secondary" id="btn-tab-texto" onclick="switchReaderTab('texto-tab')"
+                title="Texto Puro">
+                <i class="fa-solid fa-font"></i> <span class="btn-text">Texto</span>
+            </button>
+        </div>
+
+        <div class="vr mx-2 opacity-25" style="height: 24px; align-self: center;"></div>
+
 <div class="d-flex gap-1">
-    <button id="btn-editar-inline" class="btn-sirio btn-sirio-secondary disabled" title="Editar">
+    <button id="btn-editar-inline" class="btn-sirio btn-sirio-secondary" title="Editar Contenido">
         <i class="fa-solid fa-pen-to-square"></i> <span class="btn-text">Editar</span>
     </button>
-    <div id="edit-actions" class="d-flex gap-1" style="display: none !important;">
-        <button id="btn-save-content" class="btn-sirio btn-sirio-primary" title="Guardar">
-            <i class="fa-solid fa-floppy-disk"></i> <span class="btn-text">Guardar</span>
-        </button>
-        <button id="btn-cancel-edit" class="btn-sirio" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>
-    </div>
+    <button id="btn-save-content" class="btn-sirio btn-sirio-primary" style="display: none;" title="Guardar Cambios">
+        <i class="fa-solid fa-floppy-disk"></i> <span class="btn-text">Guardar</span>
+    </button>
+    <button id="btn-cancel-edit" class="btn-sirio" style="display: none;" title="Cancelar Edición">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+
     <button id="btn-resumir-ia" class="btn-sirio btn-sirio-secondary disabled" title="Resumir IA">
         <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> <span class="btn-text">Resumir IA</span>
     </button>
@@ -781,15 +1076,58 @@
                 <button class="btn-image-action" onclick="rotateImage()" title="Girar 90°"><i class="fa-solid fa-arrow-rotate-right"></i></button>
                 <button class="btn-image-action" onclick="resetImage()" title="Restablecer"><i class="fa-solid fa-arrows-to-dot"></i></button>
                 <div class="toolbar-divider"></div>
+                <button class="btn-image-action" onclick="toggleSidebar()" title="Gestionar Ubicaciones"><i class="fa-solid fa-map-location-dot"></i></button>
+                <div class="toolbar-divider"></div>
                 <button class="btn-image-action action-danger" onclick="toggleImagePanel()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="image-viewer-container"
-                class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden position-relative"
-                style="background-color: var(--ds-bg-app);">
-                <img id="doc-image-scan" src="" alt="Scan" style="max-width: 90%; max-height: 90%;">
+            <div id="image-viewer-container" class="h-100 w-100 position-relative d-flex justify-content-center align-items-center"
+            style="overflow: hidden; background: #000;">
+            
+            <!-- Wrapper for coordinated transforms -->
+            <div id="image-transform-wrapper" style="position: relative; display: flex; align-items: center; justify-content: center; transform-origin: center center; width: 100%; height: 100%;">
+                <!-- Shrink-wrap box that perfectly matches image dimensions -->
+                <div id="vision-alignment-box" style="position: relative; display: inline-block; line-height: 0;">
+                    <img id="doc-image-scan" src="" alt="Scan" 
+                        style="max-width: 95vw; max-height: 95vh; display: none; pointer-events: none; transition: none; vertical-align: middle;">
+                    
+                    <div id="vision-highlights-container" 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Viewer (Standard) -->
+            <iframe id="doc-pdf-viewer" src="" class="h-100 w-100 border-0"
+                style="display: none; background: #fff;"></iframe>
                 <div id="investigator-lens"
                     style="position: absolute; width: 180px; height: 180px; border: 3px solid var(--ds-accent-primary); border-radius: 50%; display: none; pointer-events: none; z-index: 1000; background-color: #000;">
                 </div>
+            </div>
+        </div>
+
+        <!-- NEW ADMINISTRATIVE SIDEBAR (Right) -->
+        <div id="reader-sidebar-panel" class="h-100 overflow-hidden">
+            <div class="sidebar-section d-flex align-items-center justify-content-between" style="padding: 15px 20px;">
+                <h6 class="sidebar-title mb-0">ADMINISTRACIÓN</h6>
+                <button class="btn-sirio btn-sirio-secondary" style="padding: 2px 8px; font-size: 9px;" onclick="toggleSidebar()">OCULTAR</button>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>UBICACIONES DETECTADAS</span>
+                    <button class="btn btn-xs btn-outline-primary" onclick="showAddLocationModal()"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="sidebar-locations-list" class="overflow-auto" style="max-height: calc(100vh - 250px);">
+                    <!-- Populated via JS -->
+                    <div class="text-center py-4 opacity-50"><i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando...</div>
+                </div>
+            </div>
+
+            <div class="mt-auto p-3 border-top border-secondary">
+                <button class="btn-sirio btn-sirio-secondary w-100 mb-2" onclick="window.location.reload()">
+                    <i class="fa-solid fa-arrows-rotate me-2"></i>REFRESCAR DATOS
+                </button>
+                <div class="x-small text-muted text-center opacity-50">HesiOX v3.0 | Admin Panel</div>
             </div>
         </div>
     </div>
@@ -858,6 +1196,8 @@
         const imagePanel = document.getElementById('reader-image-panel');
         const textPanel = document.getElementById('reader-text-panel');
         const imgElement = document.getElementById('doc-image-scan');
+        const transformWrapper = document.getElementById('image-transform-wrapper');
+        const imgContainer = document.getElementById('image-viewer-container');
         const divider = document.getElementById('reader-divider');
         const container = document.getElementById('reader-container');
 
@@ -867,6 +1207,7 @@
         let isEditing = false;
         let originalContent = "";
         let originalTitle = ""; // Fix: Declare variable
+        let currentPdfs = []; // Global for search sync
         let scale = 1, pannedX = 0, pannedY = 0, rotation = 0;
         let isDragging = false, startX = 0, startY = 0;
 
@@ -932,18 +1273,49 @@
                     currentImageIdx = 0;
                     console.log("[Reader] News loaded. Images:", currentImages);
 
-                    if (currentImages.length > 0) {
-                        console.log("[Reader] Displaying panel. URL:", currentImages[0]);
-                        imgElement.src = currentImages[0];
+                    // PDF handling
+                    currentPdfs = data.archivos_pdf || [];
+                    const pdfViewer = document.getElementById('doc-pdf-viewer');
+                    const imgViewer = document.getElementById('doc-image-scan');
+                    const imgToolbar = document.querySelector('.reader-image-toolbar');
+                    const imgTransformWrapper = document.getElementById('image-transform-wrapper');
+
+                    if (currentPdfs.length > 0) {
+                        console.log("[Reader] Displaying PDF panel. URL:", currentPdfs[0]);
+                        imagePanel.style.display = 'block';
+                        divider.style.display = 'flex';
+                        textPanel.style.width = '50%'; imagePanel.style.width = '50%';
+                        
+                        imgToolbar.style.display = 'none';
+                        imgViewer.style.display = 'none';
+                        if (imgTransformWrapper) imgTransformWrapper.style.display = 'none';
+                        pdfViewer.style.display = 'block';
+                        const searchTerm = searchInput ? searchInput.value.trim() : "";
+                        let pdfUrl = currentPdfs[0];
+                        if (searchTerm.length >= 2) {
+                            pdfUrl += `#search="${encodeURIComponent(searchTerm)}"`;
+                        }
+                        pdfViewer.src = pdfUrl;
+                    } else if (currentImages.length > 0) {
+                        console.log("[Reader] Displaying Image panel. URL:", currentImages[0]);
+                        imgViewer.src = currentImages[0];
                         imagePanel.style.display = 'block';
                         divider.style.display = 'flex';
                         textPanel.style.width = '75%'; imagePanel.style.width = '25%';
+                        
+                        imgToolbar.style.display = 'flex';
+                        imgViewer.style.display = 'block';
+                        if (imgTransformWrapper) imgTransformWrapper.style.display = 'flex';
+                        pdfViewer.style.display = 'none';
+                        pdfViewer.src = '';
+
                         resetImage();
                         updateImageToolbar();
                     } else {
-                        console.log("[Reader] No images found. Hiding panel.");
+                        console.log("[Reader] No images/pdfs found. Hiding panel.");
                         imagePanel.style.display = 'none'; divider.style.display = 'none';
                         textPanel.style.width = '100%';
+                        pdfViewer.src = '';
                     }
 
 
@@ -1089,8 +1461,6 @@
 
 
         // Image Zoom Logic
-        const imgContainer = document.getElementById('image-viewer-container');
-
         window.zoomImage = (d) => {
             scale = Math.max(0.1, Math.min(5, scale + d));
             updateTransform();
@@ -1109,8 +1479,192 @@
             updateTransform();
         };
 
+        // Sidebar Toggle
+        window.toggleSidebar = () => {
+            const sidebar = document.getElementById('reader-sidebar-panel');
+            if (sidebar.style.display === 'flex') {
+                sidebar.style.display = 'none';
+                imagePanel.style.width = '50%';
+                textPanel.style.width = '50%';
+            } else {
+                sidebar.style.display = 'flex';
+                imagePanel.style.width = '40%';
+                textPanel.style.width = '40%';
+                loadSidebarLocations();
+            }
+            setTimeout(syncContainer, 310);
+        };
+
+        // Centering logic for Vision Search Highlights
+        window.scrollToHighlight = (box) => {
+            const [ymin, xmin, ymax, xmax] = box;
+            const img = document.getElementById('doc-image-scan');
+            const container = document.getElementById('image-viewer-container');
+            
+            if (!img || !container || img.offsetWidth === 0) return;
+
+            // Dimensions and target point
+            const iw = img.offsetWidth;
+            const ih = img.offsetHeight;
+            const cx = (xmin + xmax) / 2;
+            const cy = (ymin + ymax) / 2;
+
+            // Point in actual image pixels
+            const tx = (cx / 1000) * iw;
+            const ty = (cy / 1000) * ih;
+
+            // Target scale for focus
+            scale = 2.8; // Slightly more zoom for better focus
+            
+            // Calculate pan to center (tx, ty)
+            // Since transform-wrapper is centered, pannedX=0 means image center is at viewport center
+            pannedX = (iw / 2 - tx) * scale;
+            pannedY = (ih / 2 - ty) * scale;
+            
+            updateTransform();
+
+            // Visual feedback: Highlight active box
+            document.querySelectorAll('.vision-highlight').forEach(h => {
+                h.classList.remove('active');
+                // Check if this highlight corresponds to the current box
+                const hTop = parseFloat(h.style.top);
+                const hLeft = parseFloat(h.style.left);
+                if (Math.abs(hTop - (ymin/10)) < 0.05 && Math.abs(hLeft - (xmin/10)) < 0.05) {
+                    h.classList.add('active');
+                }
+            });
+        };
+
+        // ADMIN SIDEBAR LOGIC
+        async function loadSidebarLocations() {
+            const list = document.getElementById('sidebar-locations-list');
+            if (!currentNewsId) return;
+            
+            try {
+                const res = await fetch(`/api/cartografia_noticia/${currentNewsId}`);
+                const data = await res.json();
+                
+                if (data.ciudades && data.ciudades.length > 0) {
+                    list.innerHTML = data.ciudades.map(l => {
+                        const isLinked = l.vinculada !== false;
+                        return `
+                        <div class="location-card ${isLinked ? 'linked' : 'unlinked'}" onclick="highlightTextInReader('${l.nombre.replace(/'/g, "\\'")}')" style="cursor: pointer;">
+                            <span class="location-name">${l.nombre.toUpperCase()}</span>
+                            <div class="location-meta">
+                                <span><i class="fa-solid fa-hashtag me-1"></i>${l.frecuencia}</span>
+                                <span><i class="fa-solid fa-map-pin me-1"></i>${l.lat.toFixed(4)}, ${l.lon.toFixed(4)}</span>
+                            </div>
+                            <div class="location-actions">
+                                <button class="action-btn active-vision" onclick="visionSearchTerm('${l.nombre.replace(/'/g, "\\'")}')" title="Buscar en Imagen (IA)">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                                <button class="action-btn ${isLinked ? 'active-link' : 'active-unlink'}" onclick="vincularLugarLector(${l.id}, ${!isLinked})" title="${isLinked ? 'Desvincular' : 'Vincular'}">
+                                    <i class="fa-solid fa-${isLinked ? 'link' : 'link-slash'}"></i>
+                                </button>
+                                <button class="action-btn" onclick="editarLugarLector(${l.id}, '${l.nombre.replace(/'/g, "\\'")}', ${l.frecuencia})" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="action-btn text-danger" onclick="borrarLugarLector(${l.id}, '${l.nombre.replace(/'/g, "\\'")}')" title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    list.innerHTML = '<div class="text-center py-5 text-muted small">No hay ubicaciones vinculadas</div>';
+                }
+            } catch (e) {
+                console.error("Error loading sidebar locations:", e);
+                list.innerHTML = '<div class="text-center py-4 text-danger small">Error de conexión</div>';
+            }
+        }
+
+        window.highlightTextInReader = (term) => {
+            const container = document.getElementById('doc-contenido');
+            if (!container) return;
+            
+            const instance = new Mark(container);
+            instance.unmark();
+            instance.mark(term, {
+                "className": "mark-active",
+                "separateWordSearch": false,
+                "acrossElements": true,
+                "done": () => {
+                    const firstMatch = container.querySelector('.mark-active');
+                    if (firstMatch) {
+                        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+        };
+
+        window.visionSearchTerm = (term) => {
+            const searchInput = document.getElementById('reader-search-input');
+            if (searchInput) {
+                searchInput.value = term;
+                document.getElementById('btn-vision-search').click();
+            }
+        };
+
+        window.vincularLugarLector = async (id, willVincular) => {
+            try {
+                const res = await fetch(`/api/ubicacion/${id}/vincular`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ vinculada: willVincular })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(willVincular ? "Lugar vinculado correctamente" : "Lugar desvinculado", "success");
+                    loadSidebarLocations();
+                }
+            } catch (e) { showToast("Error al vincular", "danger"); }
+        };
+
+        window.borrarLugarLector = async (id, nombre) => {
+            if (!confirm(`¿Estás seguro de que deseas eliminar "${nombre}" de esta noticia?`)) return;
+            try {
+                const res = await fetch(`/api/cartografia_noticia_add_location/${currentNewsId}/borrar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ nombre: nombre })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Lugar eliminado", "info");
+                    loadSidebarLocations();
+                }
+            } catch (e) { showToast("Error al eliminar", "danger"); }
+        };
+
+        window.editarLugarLector = (id, nombre, frecuencia) => {
+            const nuevoNombre = prompt("Editar nombre del lugar:", nombre);
+            if (nuevoNombre === null) return;
+            const nuevaFrec = prompt("Editar frecuencia:", frecuencia);
+            if (nuevaFrec === null) return;
+            
+            fetch(`/api/cartografia_noticia_add_location/${currentNewsId}/editar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify({ 
+                    nombre: nombre, 
+                    nuevo_nombre: nuevoNombre, 
+                    frecuencia: parseInt(nuevaFrec),
+                    en_titulo: false,
+                    en_contenido: true
+                })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    showToast("Lugar actualizado", "success");
+                    loadSidebarLocations();
+                }
+            });
+        };
+
         function updateTransform() {
-            imgElement.style.transform = `translate(${pannedX}px, ${pannedY}px) scale(${scale}) rotate(${rotation}deg)`;
+            if (!transformWrapper) return;
+            const transform = `translate(${pannedX}px, ${pannedY}px) scale(${scale}) rotate(${rotation}deg)`;
+            transformWrapper.style.transform = transform;
         }
 
         // Wheel Zoom
@@ -1230,19 +1784,23 @@
             window.dispatchEvent(new Event('resize'));
         };
 
-        // irALugarEnMapa Stub for Lector
+        // irALugarEnMapa Enhanced for Lector + Vision
         window.irALugarEnMapa = (nombre) => {
             console.log("[Lector] Buscando fragmento:", nombre);
+            
+            // If image panel is open, trigger vision search too
+            if (imagePanel && imagePanel.style.display !== 'none') {
+                visionSearchTerm(nombre);
+            }
+
             // Switch to Detail view first
             switchReaderTab('detalle-tab');
 
             // Small delay to ensure tab is visible
             setTimeout(() => {
-                // Search for text in docContenido
                 const text = docContenido.innerText;
                 const index = text.toLowerCase().indexOf(nombre.toLowerCase());
                 if (index !== -1) {
-                    // Create a range to scroll to
                     const walker = document.createTreeWalker(docContenido, NodeFilter.SHOW_TEXT, null, false);
                     let currentPos = 0;
                     let node;
@@ -1251,29 +1809,81 @@
                             const range = document.createRange();
                             range.setStart(node, index - currentPos);
                             range.setEnd(node, Math.min(index - currentPos + nombre.length, node.length));
-
-                            // Scroll to parent element or range
                             node.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                            // Visual highlight effect
                             const em = document.createElement('mark');
-                            em.style.backgroundColor = 'rgba(255, 152, 0, 0.4)';
-                            em.style.color = 'inherit';
-                            em.style.transition = 'background 1s';
+                            em.className = 'mark-active';
                             range.surroundContents(em);
                             setTimeout(() => {
-                                // Remove highlight
                                 const parent = em.parentNode;
                                 while (em.firstChild) parent.insertBefore(em.firstChild, em);
                                 parent.removeChild(em);
                                 parent.normalize();
-                            }, 2000);
+                            }, 3000);
                             break;
                         }
                         currentPos += node.length;
                     }
                 }
             }, 300);
+        };
+
+        // UI HELPERS
+        window.showToast = (msg, icon = 'success') => {
+            if (typeof Swal !== 'undefined') {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: '#1a1a1a',
+                    color: '#fff'
+                });
+                Toast.fire({ icon: icon, title: msg });
+            } else {
+                console.log("Toast:", msg);
+            }
+        };
+
+        window.showAddLocationModal = () => {
+            if (typeof Swal === 'undefined') return alert("SweetAlert2 no cargado");
+            
+            Swal.fire({
+                title: 'Añadir Ubicación',
+                html: `
+                    <input id="swal-name" class="swal2-input" placeholder="Nombre del lugar">
+                    <input id="swal-frec" class="swal2-input" type="number" placeholder="Frecuencia" value="1">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                background: '#1a1a1a',
+                color: '#fff',
+                preConfirm: () => {
+                    const nombre = document.getElementById('swal-name').value;
+                    const frecuencia = document.getElementById('swal-frec').value;
+                    if (!nombre) return Swal.showValidationMessage('El nombre es obligatorio');
+                    return { nombre, frecuencia };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/api/cartografia_noticia_add_location/${currentNewsId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ 
+                            nombre: result.value.nombre, 
+                            frecuencia: parseInt(result.value.frecuencia),
+                            en_titulo: false,
+                            en_contenido: true
+                        })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) {
+                            showToast("Lugar añadido", "success");
+                            loadSidebarLocations();
+                        }
+                    });
+                }
+            });
         };
 
         // Resume AI
@@ -1563,27 +2173,6 @@
             }
         });
 
-        // --- NAVIGATION UPDATE LOGIC ---
-        function updateNavButtons() {
-            if (!choiceNot) return;
-            const val = selectNoticia.value;
-            const options = Array.from(selectNoticia.options).filter(opt => opt.value);
-            const index = options.findIndex(opt => opt.value == val);
-
-            btnPrev.disabled = (index <= 0);
-            btnNext.disabled = (index === -1 || index >= options.length - 1);
-            btnPrev.onclick = () => { if (index > 0) changeNews(options[index - 1].value); };
-            btnNext.onclick = () => { if (index < options.length - 1) changeNews(options[index + 1].value); };
-        }
-        function changeNews(id) {
-            selectNoticia.value = id;
-            choiceNot.setChoiceByValue(id.toString());
-            selectNoticia.dispatchEvent(new Event('change'));
-        }
-        // Hook into change events
-        const originalPubChange = selectPublicacion.onchange; // Note: onchange vs addEventListener might conflict if not careful, sticking to listeners
-        // We need to call updateNavButtons after loading list
-
         // COPY TEXT
         window.copiarTextoPuro = () => { navigator.clipboard.writeText(docTextoPuro.textContent); alert("Copiado."); };
 
@@ -1635,6 +2224,121 @@
             transition: background-color 0.5s ease, box-shadow 0.5s ease;
         }
         */
+        // (Sentinel for sentiment pulse bar)
+
+        // --- INTEGRATED SEARCH LOGIC (OCR + PDF Sync) ---
+        const searchInput = document.getElementById('reader-search-input');
+        const searchPrev = document.getElementById('reader-search-prev');
+        const searchNext = document.getElementById('reader-search-next');
+        const searchCount = document.getElementById('search-count');
+        const pdfViewer = document.getElementById('doc-pdf-viewer');
+        
+        let marker = null;
+        let currentMatchIndex = 0;
+        let totalMatches = 0;
+
+        if (searchInput) {
+            // Debounce search to avoid heavy processing
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const term = this.value.trim();
+                searchTimeout = setTimeout(() => performSearch(term), 300);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (e.shiftKey) navigateSearch(-1);
+                    else navigateSearch(1);
+                }
+            });
+
+            searchPrev.onclick = () => navigateSearch(-1);
+            searchNext.onclick = () => navigateSearch(1);
+        }
+
+        function performSearch(term) {
+            if (!marker) marker = new Mark(docContenido);
+            marker.unmark();
+            currentMatchIndex = 0;
+            totalMatches = 0;
+            searchCount.textContent = "0/0";
+
+            if (!term || term.length < 2) {
+                updatePdfSearch(null);
+                return;
+            }
+
+            marker.mark(term, {
+                separateWordSearch: false,
+                acrossElements: true,
+                done: function(count) {
+                    totalMatches = count;
+                    if (totalMatches > 0) {
+                        currentMatchIndex = 1;
+                        searchCount.textContent = `1/${totalMatches}`;
+                        scrollToMatch(0);
+                    } else {
+                        searchCount.textContent = "0/0";
+                    }
+                }
+            });
+
+            updatePdfSearch(term);
+        }
+
+        function navigateSearch(direction) {
+            if (totalMatches === 0) return;
+            currentMatchIndex += direction;
+            if (currentMatchIndex > totalMatches) currentMatchIndex = 1;
+            if (currentMatchIndex < 1) currentMatchIndex = totalMatches;
+            
+            searchCount.textContent = `${currentMatchIndex}/${totalMatches}`;
+            scrollToMatch(currentMatchIndex - 1);
+        }
+
+        function scrollToMatch(index) {
+            const matches = docContenido.querySelectorAll('mark');
+            if (matches[index]) {
+                // Remove active class from others
+                matches.forEach(m => m.classList.remove('mark-active'));
+                matches[index].classList.add('mark-active');
+                matches[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function updatePdfSearch(term) {
+            if (!pdfViewer || !pdfViewer.src || pdfViewer.style.display === 'none') return;
+            
+            const currentBase = pdfViewer.src.split('#')[0];
+            let newUrl = currentBase;
+
+            if (term && term.length >= 2) {
+                // Formato ultra-compatible para Chromium: #search=término (sin comillas para palabras simples)
+                const cleanTerm = term.replace(/"/g, '').trim();
+                if (cleanTerm) {
+                    // Si contiene espacios, usamos comillas. Si no, directo.
+                    const searchParam = cleanTerm.includes(' ') ? `"${cleanTerm}"` : cleanTerm;
+                    newUrl = `${currentBase}#search=${encodeURIComponent(searchParam)}`;
+                }
+            }
+
+            if (pdfViewer.src === newUrl) return;
+
+            console.log("[Reader] PDF Sync ->", newUrl);
+
+            try {
+                // Forzar re-procesamiento asignando el src de nuevo
+                pdfViewer.src = newUrl;
+                // Pequeño truco para algunos navegadores: 
+                // Si el hash no cambia visualmente el scroll, re-enfocar el iframe
+                pdfViewer.contentWindow.focus();
+            } catch (e) {
+                pdfViewer.src = newUrl;
+            }
+        }
+
         // --- KEYBOARD SHORTCUTS ---
         document.addEventListener('keydown', (e) => {
             if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.contentEditable === 'true') {
@@ -1681,6 +2385,186 @@
             }
         }
 
+        // =========================================================================
+        // AI VISION HIGHLIGHT (Gemini-Powered)
+        // =========================================================================
+        const btnVisionSearch = document.getElementById('btn-vision-search');
+        const visionContainer = document.getElementById('vision-highlights-container');
+
+        if (btnVisionSearch) {
+            btnVisionSearch.addEventListener('click', async () => {
+                const term = searchInput.value.trim();
+                if (!term || term.length < 2) {
+                    showToast("Por favor, introduce una palabra para buscar con IA.", "warning");
+                    return;
+                }
+
+                if (!currentNewsId) return;
+
+                // Feedback visual
+                btnVisionSearch.classList.add('fa-spin');
+                btnVisionSearch.style.color = '#ffeb3b';
+                
+                const progressBar = document.getElementById('vision-progress-bar');
+                if (progressBar) {
+                    progressBar.style.display = 'block';
+                    progressBar.style.width = '0%';
+                    progressBar.style.transition = 'width 5s cubic-bezier(0.1, 0.5, 0.1, 1)';
+                    setTimeout(() => { progressBar.style.width = '90%'; }, 50);
+                }
+                
+                // Limpiar resaltados previos
+                visionContainer.innerHTML = '';
+
+                try {
+                    const response = await fetch("{{ url_for('noticias.api_noticia_ai_vision_highlight') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ id: currentNewsId, term: term })
+                    });
+
+                    const data = await response.json();
+                    if (data.success && data.boxes) {
+                        renderVisionHighlights(data.boxes, data.file_url, data.is_pdf, term);
+                        
+                        if (data.is_pdf) {
+                            showToast("Documento PDF detectado. Se recomienda visualizar como imagen para ver el resaltado IA.", "info");
+                        } else {
+                            showToast("Resaltado IA generado con éxito.", "info");
+                        }
+                    } else {
+                        showToast(data.error || "No se encontraron coincidencias visuales con IA.", "warning");
+                    }
+                } catch (e) {
+                    console.error("AI Vision Error:", e);
+                    showToast("Error al conectar con el servicio de IA.", "danger");
+                } finally {
+                    btnVisionSearch.classList.remove('fa-spin');
+                    btnVisionSearch.style.color = '';
+                    if (progressBar) {
+                        progressBar.style.transition = 'width 0.3s ease';
+                        progressBar.style.width = '100%';
+                        setTimeout(() => { 
+                            progressBar.style.display = 'none'; 
+                            progressBar.style.width = '0%';
+                        }, 500);
+                    }
+                }
+            });
+        }
+
+        function renderVisionHighlights(boxes, fileUrl = null, isPdf = false, term = "") {
+            console.log("[Vision] Rendering highlights. Is PDF?", isPdf);
+            const visionContainer = document.getElementById('vision-highlights-container');
+            const img = document.getElementById('doc-image-scan');
+            const viewerContainer = document.getElementById('image-viewer-container');
+            const wrapper = document.getElementById('image-transform-wrapper');
+            
+            if (!img || !visionContainer) return;
+
+            visionContainer.innerHTML = '';
+            
+            // Determine if we have a valid image to show
+            const hasImage = (fileUrl && (fileUrl.toLowerCase().endsWith('.jpg') || fileUrl.toLowerCase().endsWith('.png') || fileUrl.toLowerCase().endsWith('.jpeg'))) || currentImages.length > 0;
+
+            if (hasImage || isPdf) {
+                // Show image components
+                viewerContainer.style.display = 'flex';
+                imagePanel.style.display = 'block';
+                if (wrapper) wrapper.style.display = 'flex';
+                document.getElementById('doc-pdf-viewer').style.display = 'none';
+
+                if (fileUrl && (fileUrl.toLowerCase().endsWith('.jpg') || fileUrl.toLowerCase().endsWith('.png') || fileUrl.toLowerCase().endsWith('.jpeg'))) {
+                    img.src = fileUrl;
+                    img.style.display = 'block';
+                } else if (currentImages.length > 0) {
+                    img.src = currentImages[0];
+                    img.style.display = 'block';
+                } else if (isPdf) {
+                    // FALLBACK PREMIUM: Renderizar el PDF como imagen al vuelo
+                    const fileName = fileUrl.split('/').pop().split('#')[0];
+                    img.src = `/api/noticia/render_pdf_page/${fileName}?page=0`;
+                    img.style.display = 'block';
+                    showToast("Generando vista previa del PDF para el resaltado IA...", "info");
+                }
+            } else {
+                // Fallback to PDF if no image
+                const pdfViewer = document.getElementById('doc-pdf-viewer');
+                pdfViewer.style.display = 'block';
+                viewerContainer.style.display = 'none';
+                img.style.display = 'none';
+
+                // Usar búsqueda nativa del navegador en el PDF como fallback
+                if (isPdf && term && pdfViewer.src) {
+                    const baseUrl = pdfViewer.src.split('#')[0];
+                    pdfViewer.src = `${baseUrl}#search=${encodeURIComponent(term)}`;
+                }
+            }
+
+            const syncContainer = () => {
+                if (!img || img.offsetWidth === 0) return;
+                
+                // Forzar que el contenedor de alineación tenga el tamaño exacto de la imagen
+                const alignBox = document.getElementById('vision-alignment-box');
+                if (alignBox) {
+                    alignBox.style.width = img.offsetWidth + 'px';
+                    alignBox.style.height = img.offsetHeight + 'px';
+                }
+                
+                visionContainer.style.width = '100%';
+                visionContainer.style.height = '100%';
+                visionContainer.style.display = 'block';
+            };
+            
+            img.onload = syncContainer;
+            syncContainer();
+            setTimeout(syncContainer, 100);
+            
+            window.addEventListener('resize', syncContainer);
+
+            boxes.forEach((box, idx) => {
+                const [ymin, xmin, ymax, xmax] = box;
+                const highlight = document.createElement('div');
+                highlight.className = 'vision-highlight';
+                
+                // 0-1000 mapped to 0-100% with precision + subtle corrections
+                const horizontalOffset = 2; // 0.2% right shift
+                const verticalOffset = 3;   // 0.3% up shift
+                highlight.style.top = ((ymin - verticalOffset) / 10).toFixed(4) + '%';
+                highlight.style.left = ((xmin + horizontalOffset) / 10).toFixed(4) + '%';
+                highlight.style.width = ((xmax - xmin) / 10).toFixed(4) + '%';
+                highlight.style.height = ((ymax - ymin) / 10).toFixed(4) + '%';
+                
+                highlight.onclick = (e) => {
+                    e.stopPropagation();
+                    scrollToHighlight(box);
+                    // Visual feedback
+                    document.querySelectorAll('.vision-highlight').forEach(h => h.classList.remove('active'));
+                    highlight.classList.add('active');
+                };
+                
+                visionContainer.appendChild(highlight);
+            });
+            
+            if (boxes.length > 0) {
+                setTimeout(() => {
+                    syncContainer();
+                    scrollToHighlight(boxes[0]);
+                }, 300);
+            }
+        }
+
+        function showToast(msg, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style = `position: fixed; bottom: 24px; right: 24px; background: rgba(20,20,20,0.9); backdrop-filter: blur(8px); color: #fff; padding: 12px 24px; border-radius: 12px; z-index: 10000; border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${type === 'danger' ? '#f44336' : (type === 'warning' ? '#ff9800' : '#03a9f4')}; box-shadow: 0 8px 32px rgba(0,0,0,0.5); font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; transition: all 0.3s ease;`;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
     });
 </script>
 {% endblock %}

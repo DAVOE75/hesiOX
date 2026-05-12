@@ -433,6 +433,15 @@ OCR (Optical Character Recognition) es la tecnología que convierte imágenes de
 3. Formatos soportados: JPG, PNG, GIF, TIFF
 4. Puedes subir **múltiples imágenes** a la vez
 
+### 8.1 Indizado Espacial (OCR Map) y Highlighting IA
+
+El sistema hesiOX implementa un motor de **Indizado Espacial de Alta Fidelidad**. A diferencia de los sistemas de OCR convencionales que solo devuelven texto plano, hesiOX captura y persiste las coordenadas exactas (*bounding boxes*) de cada palabra detectada en el documento.
+
+**Beneficios del Indizado Espacial**:
+- **Resaltado Instantáneo**: Al buscar un término en el modo Lector, el sistema localiza las coordenadas en la base de datos local y resalta el texto sobre la imagen original de forma inmediata.
+- **Búsqueda Visual con IA (Gemini)**: Permite a la IA de Gemini Vision analizar el contexto espacial para identificar entidades y conceptos complejos directamente sobre la geografía del documento.
+- **Fallback Híbrido**: El sistema busca primero en el índice espacial local (`ocr_map`) para ahorrar latencia y llamadas a la API de IA, recurriendo a Gemini Vision solo si el término no está indexado.
+
 #### Proceso Automático
 
 1. **Subida**: Las imágenes se cargan al servidor

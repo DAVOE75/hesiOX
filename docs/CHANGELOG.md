@@ -4,6 +4,15 @@ Registro completo de versiones y mejoras del sistema hesiOX.
 
 ---
 
+## [2.8.1] - 2026-05-12
+
+### 🔍 Estabilización de Indizado Espacial OCR y Highlighting IA
+- **Indizado Espacial de Alta Fidelidad**: Implementación de persistencia robusta para `ocr_map` (JSONB) en modelos `Prensa` e `ImagenPrensa`, capturando coordenadas exactas de palabras.
+- **Búsqueda Instantánea en el Lector**: El motor de búsqueda visual ahora realiza un primer barrido sobre el índice espacial local, permitiendo resaltados inmediatos sin latencia de IA.
+- **Fallback Híbrido Gemini Vision**: Integración optimizada que recurre a la API de Gemini solo cuando el término no está indexado localmente, maximizando la eficiencia y reduciendo costes.
+- **Sincronización Administrativa**: Mejora en las rutas de gestión de noticias para asegurar la integridad de los datos espaciales y la propagación de cambios en ubicaciones a través de todo el proyecto.
+- **Optimización del Reader API**: El punto de acceso `/api/noticia/contenido` ahora consolida metadatos espaciales de múltiples fuentes para una visualización fluida en el frontend.
+
 ## [2.8.0] - 2026-03-16
 
 ### 🛠️ Mejoras en Gestión de Temas y Publicaciones
