@@ -17728,7 +17728,7 @@
     }
 
     // Línea real consolidada
-    elevationLine = L.polyline(initialLatLngs, { color: '#ff9800', weight: 4 }).addTo(window._mapaCorpus);
+    window.elevationLine = L.polyline(initialLatLngs, { color: '#ff9800', weight: 4 }).addTo(window._mapaCorpus);
     
     // Línea elástica (rubberband)
     elevationTempLine = L.polyline([], { 
@@ -17752,7 +17752,7 @@
 
     elevationDrawHandler = function (e) {
       const latlng = e.latlng;
-      elevationLine.addLatLng(latlng);
+      window.elevationLine.addLatLng(latlng);
       
       // Marcador visual para feedback inmediato
       const marker = L.circleMarker(latlng, {
@@ -17764,13 +17764,13 @@
       }).addTo(window._mapaCorpus);
       elevationMarkers.push(marker);
 
-      if (elevationLine.getLatLngs().length === 1) {
+      if (window.elevationLine.getLatLngs().length === 1) {
           showMapToast('Mueve el ratón y haz clic para el siguiente punto. Doble clic para terminar.', '#ff9800');
       }
     };
 
     elevationMoveHandler = function (e) {
-      const points = elevationLine.getLatLngs();
+      const points = window.elevationLine.getLatLngs();
       if (points.length > 0) {
         const lastPoint = points[points.length - 1];
         elevationTempLine.setLatLngs([lastPoint, e.latlng]);
@@ -17799,9 +17799,9 @@
       elevationDrawHandler = null;
       elevationMoveHandler = null;
     }
-    if (elevationLine) {
-      window._mapaCorpus.removeLayer(elevationLine);
-      elevationLine = null;
+    if (window.elevationLine) {
+      window._mapaCorpus.removeLayer(window.elevationLine);
+      window.elevationLine = null;
     }
     if (elevationTempLine) {
       window._mapaCorpus.removeLayer(elevationTempLine);
@@ -17822,7 +17822,7 @@
   }
 
   async function finishElevationProfile() {
-    const latlngs = elevationLine.getLatLngs();
+    const latlngs = window.elevationLine.getLatLngs();
     if (latlngs.length < 2) {
       deactivateElevationProfile();
       return;
@@ -18526,21 +18526,21 @@
                 const geo = typeof layer.geojson === 'string' ? JSON.parse(layer.geojson) : layer.geojson;
                 
                 // 1. Reconstruir la línea en el mapa
-                if (elevationLine && window._mapaCorpus.hasLayer(elevationLine)) window._mapaCorpus.removeLayer(elevationLine);
+                if (window.elevationLine && window._mapaCorpus.hasLayer(window.elevationLine)) window._mapaCorpus.removeLayer(window.elevationLine);
                 if (elevationTempLine) window._mapaCorpus.removeLayer(elevationTempLine);
                 elevationHighlightLayer.clearLayers();
                 
                 const coords = geo.features[0].geometry.coordinates;
                 const latlngs = coords.map(c => [c[1], c[0]]);
                 
-                elevationLine = L.polyline(latlngs, {
+                window.elevationLine = L.polyline(latlngs, {
                     color: '#ff9800',
                     weight: 4,
                     dashArray: '5, 10'
                 }).addTo(window._mapaCorpus);
                 
-                elevationLine.feature = geo.features[0];
-                window._mapaCorpus.fitBounds(elevationLine.getBounds());
+                window.elevationLine.feature = geo.features[0];
+                window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
                 
                 // 2. Cargar los datos de elevación guardados
                 currentElevationData = geo.features[0].properties.data;
@@ -18611,14 +18611,14 @@
           if (!layer) return;
 
           const geo = typeof layer.geojson === "string" ? JSON.parse(layer.geojson) : layer.geojson;
-          if (elevationLine && window._mapaCorpus.hasLayer(elevationLine)) window._mapaCorpus.removeLayer(elevationLine);
+          if (window.elevationLine && window._mapaCorpus.hasLayer(window.elevationLine)) window._mapaCorpus.removeLayer(window.elevationLine);
           if (elevationTempLine) window._mapaCorpus.removeLayer(elevationTempLine);
           elevationHighlightLayer.clearLayers();
           const coords = geo.features[0].geometry.coordinates;
           const latlngs = coords.map(c => [c[1], c[0]]);
-          elevationLine = L.polyline(latlngs, { color: "#ff9800", weight: 4, dashArray: "5, 10" }).addTo(window._mapaCorpus);
-          elevationLine.feature = geo.features[0];
-          window._mapaCorpus.fitBounds(elevationLine.getBounds());
+          window.elevationLine = L.polyline(latlngs, { color: "#ff9800", weight: 4, dashArray: "5, 10" }).addTo(window._mapaCorpus);
+          window.elevationLine.feature = geo.features[0];
+          window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
           window.currentElevationData = geo.features[0].properties.data;
           window.currentProfileLoadedID = layer.id;
           let panel = document.getElementById("elevation-profile-panel");
