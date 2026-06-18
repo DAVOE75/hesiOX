@@ -132,10 +132,19 @@
       <h6 class="dropdown-header text-muted-sirio mt-1" style="font-size: 0.7rem;"><i
           class="fa-solid fa-mountain me-2"></i> ANÁLISIS ARQUEOLÓGICO</h6>
     </li>
-    <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="activateElevationProfile()">
-        <i class="fa-solid fa-chart-area me-2 text-warning"></i> PERFIL DE ELEVACIÓN</a></li>
-    <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openArchaeologicalGridModal()">
-        <i class="fa-solid fa-table-cells me-2 text-info"></i> GENERADOR DE REJILLA</a></li>
+        <li class="dropdown-submenu">
+          <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">
+            <span><i class="fa-solid fa-chart-area me-2 text-warning"></i> PERFIL DE ELEVACIÓN</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark">
+              <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="activateElevationProfile()">
+                <i class="fa-solid fa-plus me-2 text-warning"></i> NUEVO PERFIL</a></li>
+              <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="loadElevationProfileDialog()">
+                <i class="fa-solid fa-folder-open me-2 text-warning"></i> CARGAR GUARDADO</a></li>
+          </ul>
+        </li>
+        <li><a class="dropdown-item d-flex align-items-center" href="#" onclick="openArchaeologicalGridModal()">
+          <i class="fa-solid fa-table-cells me-2 text-info"></i> GENERADOR DE REJILLA</a></li>
     <li>
       <hr class="dropdown-divider opacity-25">
     </li>
@@ -225,6 +234,12 @@
 {% block extra_css %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
+  .cursor-grab, .drag-handle {
+    cursor: grab !important;
+  }
+  .cursor-grabbing, .drag-handle:active {
+    cursor: grabbing !important;
+  }
   /* Forzado de puntero para digitalización precisa */
   .digitizing-active .leaflet-container {
     cursor: crosshair !important;
@@ -1714,11 +1729,25 @@
     border-radius: 50%;
     animation: mc-centroid-pulse 2s infinite;
   }
-</style>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+    /* Small ranges for the layer stack */
+    .opacity-control-stack {
+      height: 12px !important;
+      background: transparent !important;
+    }
+    .opacity-control-stack::-webkit-slider-thumb {
+      width: 10px !important;
+      height: 10px !important;
+      margin-top: -3px !important;
+    }
+    .opacity-control-stack::-moz-range-thumb {
+      width: 10px !important;
+      height: 10px !important;
+    }
+  </style>
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
 
 <style>
   /* Theme-aware table and row styling (Landsat v3.4) */
@@ -2449,7 +2478,7 @@
   /* --- Analytical Insights Panel (Right side) --- */
   .analytical-panel {
     position: absolute;
-    top: 0px;
+    top: 55px;
     right: 0px;
     width: 320px;
     z-index: 1000;
@@ -3215,32 +3244,25 @@
           </div>
 
           <!-- MAPAS HISTÓRICOS -->
-          <div id="historical-maps-container" class="mt-3 border-top border-secondary border-opacity-25 pt-2"
-            style="display:none;">
-            <p class="xsmall-sirio mb-2 text-uppercase fw-bold opacity-75" style="letter-spacing:1px;">
-              <i class="fa-solid fa-clock-rotate-left me-1"></i> Mapas Históricos Georref.
-            </p>
-            <div id="historical-maps-active-list">
-              <!-- Se llenará dinámicamente -->
+          <!-- PILA DE CAPAS UNIFICADA (NUEVO v4.5) -->
+          <div id="layer-stack-container" class="mt-4 border-top border-accent border-opacity-50 pt-3" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <p class="xsmall-sirio mb-0 text-uppercase fw-bold text-accent" style="letter-spacing:1px;">
+                <i class="fa-solid fa-layer-group me-1"></i> Orden de Superposición
+              </p>
+              <span class="text-muted-sirio fw-normal ms-2" style="font-size: 0.5rem; text-transform: lowercase;">arrastrar para organizar</span>
             </div>
-          </div>
-
-          <!-- SERVICIOS WMS -->
-          <div id="wms-layers-container" class="mt-3 border-top border-secondary border-opacity-25 pt-2"
-            style="display:none;">
-            <p class="xsmall-sirio mb-2 text-uppercase fw-bold opacity-75"
-              style="letter-spacing:1px; color: var(--ds-info);">
-              <i class="fa-solid fa-globe me-1"></i> Servicios WMS Activos
-            </p>
-            <div id="wms-active-list"></div>
+            <div id="layer-stack-list" class="list-group list-group-flush sortable-layer-stack">
+              <!-- Rendered by refreshLayerStackUI() -->
+            </div>
           </div>
 
         </div>
 
         <div class="card bg-secondary bg-opacity-10 border-warning border-opacity-25 mb-3">
           <div class="card-body p-2">
-            <h6 class="text-accent small fw-bold mb-2"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Análisis
-              Avanzado</h6>
+            <h6 class="text-accent small fw-bold mb-2"><i class="fa-solid fa-layer-group me-1"></i> Análisis
+              Avanzado (GIS)</h6>
             <!-- SDE -->
             <div class="compact-toggle-row align-items-center">
               <div class="d-flex align-items-center flex-grow-1">
@@ -3273,6 +3295,44 @@
                 max="1" step="0.1" value="0.6" disabled title="Opacidad">
             </div>
             <p class="xsmall text-muted mb-0 ms-4">Conecta mediante arcos los lugares mencionados en un mismo texto.</p>
+          </div>
+        </div>
+
+        <div class="card bg-secondary bg-opacity-10 border-warning border-opacity-25 mb-3">
+          <div class="card-body p-2">
+            <h6 class="text-accent small fw-bold mb-2"><i class="fa-solid fa-cube me-1"></i> Análisis
+              Estereoscópico</h6>
+            <!-- Stereo (Anaglyph) -->
+            <div class="compact-toggle-row align-items-center">
+              <div class="d-flex align-items-center flex-grow-1">
+                <input class="form-check-input me-2" type="checkbox" id="toggle-stereo-3d">
+                <label for="toggle-stereo-3d" class="small mb-0 cursor-pointer">Visión Estereoscópica (Gafas)</label>
+              </div>
+              <input type="range" class="form-range opacity-control w-25 ms-2" id="stereo-3d-offset" min="1" max="15"
+                step="1" value="5" title="Desfase (Paralax)">
+            </div>
+            <p class="xsmall text-muted mb-0 ms-4"><i class="fa-solid fa-glasses me-1"></i>Efecto Rojo/Cian para capas aéreas.</p>
+
+            <!-- Wiggle 3D -->
+            <div class="compact-toggle-row align-items-center mt-2">
+              <div class="d-flex align-items-center flex-grow-1">
+                <input class="form-check-input me-2" type="checkbox" id="toggle-wiggle-3d">
+                <label for="toggle-wiggle-3d" class="small mb-0 cursor-pointer">Efecto Wiggle (Animado)</label>
+              </div>
+            </div>
+            <p class="xsmall text-muted mb-0 ms-4"><i class="fa-solid fa-arrows-left-right me-1"></i>Oscilación sin gafas para profundidad.</p>
+
+            <!-- Tilt View -->
+            <div class="compact-toggle-row align-items-center mt-2">
+              <div class="d-flex align-items-center flex-grow-1">
+                <input class="form-check-input me-2" type="checkbox" id="toggle-tilt-3d">
+                <label for="toggle-tilt-3d" class="small mb-0 cursor-pointer">Modo Inclinación (Zenital)</label>
+              </div>
+            </div>
+            <p class="xsmall text-muted mb-0 ms-4"><i class="fa-solid fa-paper-plane me-1"></i>Vista en perspectiva del terreno.</p>
+          </div>
+        </div>
+
           </div>
         </div>
 
@@ -3387,8 +3447,27 @@
             <button class="nav-link text-uppercase fw-bold sirio-tab" id="tab-wmts" data-bs-toggle="tab"
               data-bs-target="#pane-wmts" type="button" role="tab"><i class="fa-solid fa-th me-1"></i>WMTS</button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link text-uppercase fw-bold sirio-tab" id="tab-historical-project" data-bs-toggle="tab"
+              data-bs-target="#pane-historical-project" type="button" role="tab" onclick="loadHistoricalMapsForModal()">
+              <i class="fa-solid fa-clock-rotate-left me-1"></i>Mapas Georref.</button>
+          </li>
         </ul>
         <div class="tab-content">
+          <!-- =================== PROYECTO TAB (NEW) =================== -->
+          <div class="tab-pane fade" id="pane-historical-project" role="tabpanel">
+            <div class="mb-4">
+              <label class="xsmall text-accent text-uppercase fw-bold mb-3 d-block">
+                <i class="fa-solid fa-folder-open me-2"></i>Mapas Georreferenciados del Proyecto
+              </label>
+              <div id="modal-historical-list" class="row g-3">
+                <!-- Se llenará dinámicamente -->
+                <div class="col-12 text-center py-4 opacity-50">
+                  <i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando mapas...
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- =================== WMS TAB =================== -->
           <div class="tab-pane fade show active" id="pane-wms" role="tabpanel">
             <!-- WMS PRESETS (VISUAL LIBRARY v4.0) -->
@@ -3857,6 +3936,69 @@
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Elección MDT para Perfil -->
+<div class="modal fade" id="modalElevationSetup" tabindex="-1" aria-hidden="true" data-bs-theme="dark">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="background: #1a1a1a; border-radius: 12px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title text-warning fw-bold" style="letter-spacing: 1px; font-size: 1rem;">
+          <i class="fa-solid fa-mountain-sun me-2"></i>PRECISIÓN DEL PERFIL
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-white-50 mb-4" style="font-size: 0.9rem;">
+          Para obtener un perfil de elevación preciso (escala 1:1), se recomienda utilizar un archivo <b>MDT (GeoTIFF)</b> local.
+          Si no dispones de uno, se utilizará el servidor del IGN mediante muestreo interpolado.
+        </p>
+
+        <div class="d-grid gap-3">
+          <!-- Sección: Ya existen archivos -->
+          <div id="dem-exists-notice" class="d-none mb-2">
+             <div class="p-3 border border-success rounded-3 bg-success bg-opacity-10 d-flex align-items-center mb-2">
+                <i class="fa-solid fa-check-circle text-success fs-4 me-3"></i>
+                <div class="text-white" style="font-size: 0.85rem;">
+                   <b class="text-success">MDT Detectado:</b> Ya has subido ficheros de elevación anteriormente. No es necesario volver a subirlos a menos que quieras cambiarlos.
+                </div>
+             </div>
+             <button onclick="confirmStartProfileWithoutDem()" class="btn btn-success w-100 py-3 fw-bold mb-2 shadow-sm" style="letter-spacing: 0.5px;">
+                <i class="fa-solid fa-circle-play me-2"></i>USAR MDT CARGADO (RECOMENDADO)
+             </button>
+             <div class="text-center text-white-50 my-2" style="font-size: 0.7rem; letter-spacing: 1px;">— OTRAS OPCIONES —</div>
+          </div>
+
+          <button onclick="document.getElementById('setup-dem-upload').click()" class="btn btn-outline-warning py-3 text-start px-3" style="border-width: 1px; border-style: dashed;">
+            <div class="d-flex align-items-center">
+              <i class="fa-solid fa-cloud-arrow-up fs-3 me-3 text-warning"></i>
+              <div>
+                <div class="fw-bold text-white">Subir Mi MDT (.tif)</div>
+                <div style="font-size: 0.7rem; opacity: 0.7;" class="text-white-50">Máxima precisión (LiDAR/IGN 2m)</div>
+              </div>
+            </div>
+          </button>
+          <input type="file" id="setup-dem-upload" style="display:none" accept=".tif,.tiff" onchange="handleElevationDemUpload(this, true)">
+
+          <button onclick="confirmStartProfileWithoutDem()" class="btn btn-outline-light py-3 text-start px-3" style="opacity: 0.8; border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex align-items-center">
+              <i class="fa-solid fa-server fs-4 me-3"></i>
+              <div>
+                <div class="fw-bold text-white">Usar Servidor IGN / Fallback</div>
+                <div style="font-size: 0.7rem; opacity: 0.7;" class="text-white-50">Precisión aproximada sujeto a disponibilidad</div>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div class="mt-4 text-center">
+          <a href="https://centrodedescargas.cnig.es/CentroDescargas/modelo-digital-terreno-mdt02-segunda-cobertura" target="_blank" class="text-info" style="font-size: 0.75rem; text-decoration: none;">
+            <i class="fa-solid fa-download me-1"></i>¿Dónde descargar el MDT oficial de España?
+          </a>
         </div>
       </div>
     </div>
@@ -11799,6 +11941,63 @@
     document.addEventListener('DOMContentLoaded', _attachThemeObserver);
   })();
 
+  // --- MODO ESTEREOSCÓPICO (ANAGLIFO) PARA WMS/VUELOS ---
+  // Esta función aplica un filtro SVG para separar canales Rojo y Cian con un desfase horizontal,
+  // permitiendo ver relieve en ortofotos (como los Vuelos históricos) usando gafas 3D clásicas.
+  function updateAdvanced3DEffects() {
+    const isStereo = document.getElementById('toggle-stereo-3d')?.checked;
+    const isWiggle = document.getElementById('toggle-wiggle-3d')?.checked;
+    const isTilt = document.getElementById('toggle-tilt-3d')?.checked;
+    const offset = parseInt(document.getElementById('stereo-3d-offset')?.value || 5);
+    
+    const filter = document.getElementById('anaglyph-filter');
+    if (filter) {
+      const redOffset = filter.querySelector('feOffset[result="red-offset"]');
+      const cyanOffset = filter.querySelector('feOffset[result="cyan-offset"]');
+      if (redOffset) redOffset.setAttribute('dx', -offset);
+      if (cyanOffset) cyanOffset.setAttribute('dx', offset);
+    }
+    
+    if (!window._mapaCorpus) return;
+    
+    const mapContainer = document.getElementById('mapa-corpus');
+    const tilePane = mapContainer ? mapContainer.querySelector('.leaflet-tile-pane') : null;
+    
+    if (!tilePane) return;
+
+    // Limpiar efectos previos
+    tilePane.style.filter = 'none';
+    tilePane.style.webkitFilter = 'none';
+    tilePane.classList.remove('wiggle-effect');
+    tilePane.classList.remove('tilt-effect');
+
+    // Aplicar efectos seleccionados
+    if (isStereo) {
+      tilePane.style.filter = 'url(#anaglyph-filter)';
+      tilePane.style.webkitFilter = 'url(#anaglyph-filter)';
+    }
+
+    if (isWiggle) {
+      tilePane.classList.add('wiggle-effect');
+    }
+
+    if (isTilt) {
+      tilePane.classList.add('tilt-effect');
+    }
+  }
+
+  // Registramos los eventos para el control de efectos 3D
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleS3D = document.getElementById('toggle-stereo-3d');
+    const toggleW3D = document.getElementById('toggle-wiggle-3d');
+    const toggleT3D = document.getElementById('toggle-tilt-3d');
+    const offsetS3D = document.getElementById('stereo-3d-offset');
+    
+    if (toggleS3D) toggleS3D.addEventListener('change', updateAdvanced3DEffects);
+    if (toggleW3D) toggleW3D.addEventListener('change', updateAdvanced3DEffects);
+    if (toggleT3D) toggleT3D.addEventListener('change', updateAdvanced3DEffects);
+    if (offsetS3D) offsetS3D.addEventListener('input', updateAdvanced3DEffects);
+  });
 
 
   function getTileUrl(type, isDarkMode) {
@@ -11864,9 +12063,8 @@
   // (initUserIDE consolidated below)
 
   function loadWMSFromFavorite(fav) {
-    const layerId = 'fav-' + fav.id;
-    if (window._activeWmsLayers && window._activeWmsLayers[layerId]) return;
-
+    const layerIdBase = 'fav-' + fav.id;
+    
     let cleanUrl = fav.url.split('?')[0];
     const isHttps = window.location.protocol === 'https:';
     const isUrlInsecure = cleanUrl.toLowerCase().startsWith('http://');
@@ -11874,49 +12072,68 @@
     const useProxy = forceProxy || (document.getElementById('wms-use-proxy')?.checked ?? true);
     const finalUrl = useProxy ? `{{ url_for('capas.wms_proxy') }}?url=${encodeURIComponent(cleanUrl)}` : fav.url;
 
-    const wmsLayer = L.tileLayer.wms(finalUrl, {
-      layers: fav.layers,
-      format: fav.format || 'image/png',
-      transparent: true,
-      attribution: fav.attribution || "IDE Favorito",
-      zIndex: fav.zIndex || 10,
-      opacity: fav.opacity || 0.85,
-      version: '1.1.1',
-      uppercase: true
-    });
-    wmsLayer.addTo(window._mapaCorpus);
-    window._activeWmsLayers[layerId] = wmsLayer;
+    const layersArr = fav.layers.split(',').filter(l => l.trim() !== '');
+    
+    layersArr.forEach((layerName, index) => {
+      const layerId = layersArr.length > 1 ? `${layerIdBase}-${index}` : layerIdBase;
+      if (window._activeWmsLayers && window._activeWmsLayers[layerId]) return;
 
-    appendWMSLayerToUI(layerId, fav.name || fav.layers, fav.url);
+      const wmsLayer = L.tileLayer.wms(finalUrl, {
+        layers: layerName.trim(),
+        format: fav.format || 'image/png',
+        transparent: true,
+        attribution: fav.attribution || "IDE Favorito",
+        zIndex: (fav.zIndex || 10) + index,
+        opacity: fav.opacity || 0.85,
+        version: '1.1.1',
+        uppercase: true
+      });
+      wmsLayer.addTo(window._mapaCorpus);
+      window._activeWmsLayers[layerId] = wmsLayer;
+    });
+
     bringLocationsToFront();
     refreshLayerStackUI();
   }
 
-  function appendWMSLayerToUI(layerId, name, url) {
-    const listContainer = document.getElementById('wms-layers-container');
+  // (initUserIDE consolidated below)
+
+  let _wmsListSortable = null;
+  function initWMSListSortable() {
+    const el = document.getElementById('wms-active-list');
+    if (!el) return;
+    if (_wmsListSortable) _wmsListSortable.destroy();
+
+    _wmsListSortable = Sortable.create(el, {
+      animation: 150,
+      handle: '.wms-active-handle',
+      ghostClass: 'sirio-sortable-ghost',
+      onEnd: function () {
+        applyWMSListOrder();
+      }
+    });
+  }
+
+  function applyWMSListOrder() {
+    if (!window._mapaCorpus) return;
     const list = document.getElementById('wms-active-list');
-    if (!listContainer || !list) return;
+    const items = list.querySelectorAll('.wms-active-item');
+    
+    // Reverse to apply bringToFront from bottom to top
+    const order = Array.from(items).map(item => item.dataset.id).reverse();
 
-    listContainer.style.display = 'block';
-    const row = document.createElement('div');
-    row.className = 'compact-toggle-row align-items-center mb-1';
-    row.id = `row-${layerId}`;
-    let domain = "WMS";
-    try { domain = new URL(url).hostname; } catch (e) { }
+    order.forEach(id => {
+      const layer = window._activeWmsLayers[id];
+      if (layer && window._mapaCorpus.hasLayer(layer)) {
+        if (typeof layer.bringToFront === 'function') {
+          layer.bringToFront();
+        }
+      }
+    });
 
-    row.innerHTML = `
-        <div class="d-flex align-items-center flex-grow-1 w-100">
-          <input class="form-check-input me-2" type="checkbox" checked onchange="toggleWmsLayer('${layerId}', this.checked)">
-            <div class="flex-grow-1 min-w-0">
-              <div class="text-light small text-truncate" title="${name}">${name}</div>
-              <div class="xsmall text-muted text-truncate" style="font-size:0.6rem;">${domain}</div>
-            </div>
-            <button class="btn btn-link btn-sm text-danger p-0 ms-2" onclick="removeWmsLayer('${layerId}')" title="Quitar capa">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-      `;
-    list.appendChild(row);
+    if (typeof bringLocationsToFront === 'function') {
+      bringLocationsToFront();
+    }
   }
 
   function loadWMTSFromFavorite(fav) {
@@ -11956,70 +12173,39 @@
     if (!window._activeWmtsLayers) window._activeWmtsLayers = {};
     window._activeWmtsLayers[layerId] = wmtsLayer;
 
-    appendWMTSLayerToUI(layerId, fav.name, fav.opacity);
     bringLocationsToFront();
     refreshLayerStackUI();
   }
+    window._activeWmsLayers = {};
 
-  function appendWMTSLayerToUI(layerId, name, opacity) {
-    let container = document.getElementById('wmts-layers-container');
-    if (!container) {
-      const wmsContainer = document.getElementById('wms-layers-container');
-      if (!wmsContainer) return;
-      container = document.createElement('div');
-      container.id = 'wmts-layers-container';
-      container.className = 'mt-2 border-top border-secondary border-opacity-25 pt-2';
-      container.innerHTML = '<p class="xsmall text-muted mb-1 text-uppercase fw-bold" style="letter-spacing:1px;font-size:.6rem;"><i class="fa-solid fa-th me-1"></i>Capas WMTS Activas</p><div id="wmts-active-list"></div>';
-      wmsContainer.parentNode.insertBefore(container, wmsContainer.nextSibling);
-    }
-    container.style.display = 'block';
-    const list = document.getElementById('wmts-active-list');
-    if (!list) return;
+    function addWMSLayer(opacityOverride = null) {
+      const url = document.getElementById("wms-url")?.value;
 
-    const row = document.createElement('div');
-    row.className = 'compact-toggle-row align-items-center mb-1';
-    row.id = `row-${layerId}`;
-    row.innerHTML = `
-      <div class="d-flex align-items-center flex-grow-1 w-100">
-        <input class="form-check-input me-2" type="checkbox" checked onchange="toggleWmtsLayer('${layerId}', this.checked)">
-        <div class="flex-grow-1 min-w-0">
-          <div class="text-light small text-truncate" title="${name}">${name}</div>
-          <div class="xsmall text-muted" style="font-size:0.6rem;">WMTS · opacidad ${Math.round(opacity * 100)}%</div>
-        </div>
-        <input type="range" min="0" max="1" step="0.05" value="${opacity}" style="width:60px;"
-          oninput="if(window._activeWmtsLayers && window._activeWmtsLayers['${layerId}']) window._activeWmtsLayers['${layerId}'].setOpacity(+this.value)" title="Opacidad">
-        <button class="btn btn-link btn-sm text-danger p-0 ms-2" onclick="removeWmtsLayer('${layerId}')" title="Quitar capa">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>`;
-    list.appendChild(row);
-  }
 
-  window._activeWmsLayers = {};
-
-  function addWMSLayer(opacityOverride = null) {
-    const url = document.getElementById('wms-url')?.value;
     const format = document.getElementById('wms-format')?.value || 'image/png';
     const transparent = document.getElementById('wms-transparent') ? document.getElementById('wms-transparent').checked : true;
     const zIndex = parseInt(document.getElementById('wms-zindex')?.value) || 10;
     const opacity = opacityOverride !== null ? opacityOverride : parseFloat(document.getElementById('wms-manual-opacity')?.value || 0.85);
 
     // Determine layers: from checklist or manual input
-    let layers = '';
+    let layersArray = [];
     const checklist = document.querySelectorAll('.wms-layer-cb:checked');
     if (checklist.length > 0) {
-      layers = Array.from(checklist).map(cb => cb.value).join(',');
+      layersArray = Array.from(checklist).map(cb => cb.value);
     } else {
-      layers = document.getElementById('wms-layers')?.value;
+      const manualVal = document.getElementById('wms-layers')?.value;
+      if (manualVal) {
+        layersArray = manualVal.split(',').map(l => l.trim()).filter(l => l !== '');
+      }
     }
 
-    if (!url || !layers) {
+    if (!url || layersArray.length === 0) {
       // If called programmatically (IDE favorites), we don't alert unless it's a manual action
       if (opacityOverride === null) alert("Por favor, introduce la URL y selecciona al menos una capa.");
       return;
     }
 
-    const layerId = 'wms-' + Date.now();
+    const baseLayerId = 'wms-' + Date.now();
     // Build final URL - avoid double separators
     let cleanUrl = url.split('?')[0];
     const isHttps = window.location.protocol === 'https:';
@@ -12028,60 +12214,37 @@
     const useProxy = forceProxy || (document.getElementById('wms-use-proxy')?.checked ?? true);
     const finalUrl = useProxy ? `{{ url_for('capas.wms_proxy') }}?url=${encodeURIComponent(cleanUrl)}` : url;
 
-    try {
-      const wmsLayer = L.tileLayer.wms(finalUrl, {
-        layers: layers,
-        format: format,
-        transparent: transparent,
-        attribution: "WMS Externo",
-        zIndex: zIndex,
-        opacity: opacity,
-        version: '1.1.1', // Greater compatibility
-        uppercase: true   // Required by some older servers
-      });
-      wmsLayer.addTo(window._mapaCorpus);
+    layersArray.forEach((layerName, idx) => {
+      const layerId = layersArray.length > 1 ? `${baseLayerId}-${idx}` : baseLayerId;
+      
+      try {
+        const wmsLayer = L.tileLayer.wms(finalUrl, {
+          layers: layerName,
+          format: format,
+          transparent: transparent,
+          attribution: "WMS Externo",
+          zIndex: zIndex + idx,
+          opacity: opacity,
+          version: '1.1.1', // Greater compatibility
+          uppercase: true   // Required by some older servers
+        });
+        wmsLayer.addTo(window._mapaCorpus);
 
-      bringLocationsToFront();
-      window._activeWmsLayers[layerId] = wmsLayer;
-      refreshLayerStackUI();
+        window._activeWmsLayers[layerId] = wmsLayer;
+      } catch (e) {
+        console.error("Error adding WMS layer:", layerName, e);
+      }
+    });
 
-      // Add to sidebar
-      const listContainer = document.getElementById('wms-layers-container');
-      const list = document.getElementById('wms-active-list');
-      listContainer.style.display = 'block';
+    bringLocationsToFront();
+    refreshLayerStackUI();
 
-      const row = document.createElement('div');
-      row.className = 'compact-toggle-row align-items-center mb-1';
-      row.id = `row-${layerId}`;
-      row.innerHTML = `
-          <div class="d-flex align-items-center flex-grow-1 w-100">
-            <input class="form-check-input me-2" type="checkbox" checked onchange="toggleWmsLayer('${layerId}', this.checked)">
-              <div class="flex-grow-1 min-w-0">
-                <div class="text-light small text-truncate" title="${layers}">${layers}</div>
-                <div class="xsmall text-muted text-truncate" style="font-size:0.6rem;">${new URL(url).hostname}</div>
-              </div>
-              <button class="btn btn-link btn-sm text-danger p-0 ms-2" onclick="removeWmsLayer('${layerId}')" title="Quitar capa">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-        `;
-      list.appendChild(row);
+    // Close modal
+    window.hideModalSafely('modalAddWMS');
 
-      // Bring locations to front again to ensure visibility
-      bringLocationsToFront();
-
-      // Close modal
-      window.hideModalSafely('modalAddWMS');
-
-      showMapMessage(`Capa WMS añadida: ${layers} `);
-      setTimeout(hideMapMessage, 3000);
-
-      // Reset discovery for next time
-      resetWMSDiscovery();
-    } catch (e) {
-      console.error("Error adding WMS:", e);
-      alert("Error al añadir la capa WMS: " + e.message);
-    }
+    showMapMessage(`WMS: ${layersArray.length} capas añadidas`);
+    setTimeout(hideMapMessage, 3000);
+    resetWMSDiscovery();
   }
 
   // ─── WMTS SUPPORT ────────────────────────────────────────────────────────────
@@ -12227,45 +12390,7 @@
       if (!window._activeWmtsLayers) window._activeWmtsLayers = {};
       window._activeWmtsLayers[layerId] = wmtsLayer;
 
-      // Add to sidebar
-      let container = document.getElementById('wmts-layers-container');
-      if (!container) {
-        // Create sidebar section if it doesn't exist yet
-        const wmsContainer = document.getElementById('wms-layers-container');
-        if (wmsContainer) {
-          container = document.createElement('div');
-          container.id = 'wmts-layers-container';
-          container.className = 'mt-2 border-top border-secondary border-opacity-25 pt-2';
-          container.innerHTML = '<p class="xsmall text-muted mb-1 text-uppercase fw-bold" style="letter-spacing:1px;font-size:.6rem;"><i class="fa-solid fa-th me-1"></i>Capas WMTS Activas</p><div id="wmts-active-list"></div>';
-          wmsContainer.parentNode.insertBefore(container, wmsContainer.nextSibling);
-        }
-      }
-      if (container) {
-        container.style.display = 'block';
-        const list = document.getElementById('wmts-active-list');
-        if (list) {
-          const row = document.createElement('div');
-          row.className = 'compact-toggle-row align-items-center mb-1';
-          row.id = `row-${layerId}`;
-          row.innerHTML = `
-            <div class="d-flex align-items-center flex-grow-1 w-100">
-              <input class="form-check-input me-2" type="checkbox" checked onchange="toggleWmtsLayer('${layerId}', this.checked)">
-              <div class="flex-grow-1 min-w-0">
-                <div class="text-light small text-truncate" title="${layerName}">${layerName}</div>
-                <div class="xsmall text-muted" style="font-size:0.6rem;">WMTS · opacidad ${Math.round(opacity * 100)}%</div>
-              </div>
-              <input type="range" min="0" max="1" step="0.05" value="${opacity}" style="width:60px;"
-                oninput="if(window._activeWmtsLayers && window._activeWmtsLayers['${layerId}']) window._activeWmtsLayers['${layerId}'].setOpacity(+this.value)" title="Opacidad">
-              <button class="btn btn-link btn-sm text-danger p-0 ms-2" onclick="removeWmtsLayer('${layerId}')" title="Quitar capa">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </div>`;
-          list.appendChild(row);
-
-
-        }
-      }
-
+        refreshLayerStackUI();
       window.hideModalSafely('modalAddWMS');
       showMapMessage(`Capa WMTS añadida: ${layerName}`);
       setTimeout(hideMapMessage, 3000);
@@ -12292,6 +12417,7 @@
     if (layer) {
       window._mapaCorpus.removeLayer(layer);
       delete window._activeWmtsLayers[id];
+      refreshLayerStackUI();
     }
     const row = document.getElementById(`row-${id}`);
     if (row) row.remove();
@@ -12498,13 +12624,6 @@
       delete window._activeWmsLayers[id];
       refreshLayerStackUI();
     }
-    const row = document.getElementById(`row-${id}`);
-    if (row) row.remove();
-
-    const list = document.getElementById('wms-active-list');
-    if (list.children.length === 0) {
-      document.getElementById('wms-layers-container').style.display = 'none';
-    }
   }
   function resetTableSearch() {
     const input = document.getElementById('search-loc-table');
@@ -12577,27 +12696,61 @@
     let activeLayers = [];
 
     // 1. Gather active WMS
-    for (let id in window._activeWmsLayers) {
-      const layer = window._activeWmsLayers[id];
-      if (window._mapaCorpus.hasLayer(layer)) {
+    if (window._activeWmsLayers) {
+      for (let id in window._activeWmsLayers) {
+        const layer = window._activeWmsLayers[id];
         activeLayers.push({
           id: id,
           type: 'wms',
-          name: layer.options.layers,
-          zIndex: layer.options.zIndex || 0
+          name: layer.options.layers || "WMS",
+          zIndex: layer.options.zIndex || 0,
+          visible: window._mapaCorpus.hasLayer(layer),
+          opacity: layer.options.opacity !== undefined ? layer.options.opacity : 1
         });
       }
     }
 
-    // 2. Gather active Vector layers
-    for (let id in mapLayers) {
-      if (window._mapaCorpus.hasLayer(mapLayers[id])) {
+    // 2. Gather active WMTS
+    if (window._activeWmtsLayers) {
+      for (let id in window._activeWmtsLayers) {
+        const layer = window._activeWmtsLayers[id];
+        activeLayers.push({
+          id: id,
+          type: 'wmts',
+          name: layer.options.layer || "WMTS",
+          zIndex: layer.options.zIndex || 0,
+          visible: window._mapaCorpus.hasLayer(layer),
+          opacity: layer.options.opacity !== undefined ? layer.options.opacity : 1
+        });
+      }
+    }
+
+    // 3. Gather active Historical Maps
+    if (window._activeHistoricalMaps) {
+      for (let id in window._activeHistoricalMaps) {
+        const layer = window._activeHistoricalMaps[id];
+        activeLayers.push({
+          id: id,
+          type: 'historical',
+          name: layer.options.title || "Mapa Histórico",
+          zIndex: layer.options.zIndex || 0,
+          visible: window._mapaCorpus.hasLayer(layer),
+          opacity: layer.options.opacity !== undefined ? layer.options.opacity : 1
+        });
+      }
+    }
+
+    // 4. Gather active Vector layers
+    if (window.mapLayers) {
+      for (let id in mapLayers) {
+        const layer = mapLayers[id];
         const meta = window._externalLayersMetadata ? window._externalLayersMetadata.find(l => l.id == id) : null;
         activeLayers.push({
           id: id,
           type: 'vector',
           name: meta ? meta.nombre : `Capa ${id} `,
-          zIndex: 100 // Vector usually starts higher
+          zIndex: 100, // Vector usually starts higher
+          visible: window._mapaCorpus.hasLayer(layer)
         });
       }
     }
@@ -12618,46 +12771,123 @@
       item.dataset.id = layer.id;
       item.dataset.type = layer.type;
 
-      const iconClass = layer.type === 'wms' ? 'fa-image' : 'fa-draw-polygon';
-      const badgeClass = layer.type === 'wms' ? 'bg-info bg-opacity-75' : 'bg-success bg-opacity-75';
-      const badgeText = layer.type === 'wms' ? 'WMS' : 'GIS';
+      let iconClass = 'fa-image';
+      let badgeClass = 'bg-info bg-opacity-75';
+      let badgeText = layer.type.toUpperCase();
+
+      if (layer.type === 'vector') {
+        iconClass = 'fa-draw-polygon';
+        badgeClass = 'bg-success bg-opacity-75';
+        badgeText = 'GIS';
+      } else if (layer.type === 'historical') {
+        iconClass = 'fa-clock-rotate-left';
+        badgeClass = 'bg-warning text-dark bg-opacity-75';
+        badgeText = 'HIST';
+      }
+
+      // Action routing
+      let toggleFn = '';
+      if (layer.type === 'wms') toggleFn = `toggleWmsLayer('${layer.id}', this.checked)`;
+      else if (layer.type === 'wmts') toggleFn = `toggleWmtsLayer('${layer.id}', this.checked)`;
+      else if (layer.type === 'historical') toggleFn = `toggleLayerStackVisibility('${layer.id}', 'historical', this.checked)`;
+      else if (layer.type === 'vector') toggleFn = `toggleLayer(${layer.id}, null, null, this.checked)`;
+
+      let removeFn = '';
+      if (layer.type === 'wms') removeFn = `removeWmsLayer('${layer.id}')`;
+      else if (layer.type === 'wmts') removeFn = `removeWmtsLayer('${layer.id}')`;
+      else if (layer.type === 'historical') removeFn = `removeLayerFromStack('${layer.id}', 'historical')`;
+      else if (layer.type === 'vector') removeFn = `deleteLayer(${layer.id})`;
 
       item.innerHTML = `
-          <div class="drag-handle me-2 cursor-grab text-muted opacity-50 hover-opacity-100">
-            <i class="fa-solid fa-grip-vertical"></i>
+        <div class="drag-handle me-2 cursor-grab text-muted opacity-50 hover-opacity-100" title="Arrastrar para reordenar">
+          <i class="fa-solid fa-grip-vertical"></i>
         </div>
+        <input class="form-check-input me-2" type="checkbox" ${layer.visible ? 'checked' : ''} onchange="${toggleFn}">
         <div class="flex-grow-1 min-w-0">
           <div class="d-flex align-items-center">
              <span class="badge ${badgeClass} xsmall me-2" style="font-size: 0.5rem; padding: 2px 4px;">${badgeText}</span>
              <span class="text-light small text-truncate" style="font-size: 0.7rem;" title="${layer.name}">${layer.name}</span>
           </div>
         </div>
-        <i class="fa-solid ${iconClass} xsmall text-muted opacity-25 ms-2"></i>
-        `;
+        <div class="d-flex align-items-center gap-1 ms-2">
+          ${(layer.type === 'wms' || layer.type === 'wmts' || layer.type === 'historical') ? `
+            <input type="range" class="form-range opacity-control-stack" 
+                   style="width: 40px; height: 12px; cursor: pointer;" 
+                   min="0" max="1" step="0.05" value="${layer.opacity}" 
+                   oninput="changeLayerOpacity('${layer.id}', '${layer.type}', this.value, this)"
+                   title="Opacidad: ${Math.round(layer.opacity * 100)}%">
+          ` : ''}
+          <i class="fa-solid ${iconClass} xsmall text-muted opacity-25"></i>
+          <button class="btn btn-link btn-sm text-danger p-0 border-0 opacity-50 hover-opacity-100" onclick="${removeFn}">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `;
       list.appendChild(item);
     });
 
     initLayerSortable();
   }
 
-  function applyLayerStackOrder() {
-    const list = document.getElementById('layer-stack-list');
-    const items = Array.from(list.children);
-    const total = items.length;
+  function toggleLayerStackVisibility(id, type, show) {
+    if (type === 'historical') {
+      const layer = window._activeHistoricalMaps[id];
+      if (layer) {
+        if (show) layer.addTo(window._mapaCorpus);
+        else window._mapaCorpus.removeLayer(layer);
+      }
+    }
+    refreshLayerStackUI();
+  }
 
-    // Reorder by bringing to front from bottom to top
-    for (let i = items.length - 1; i >= 0; i--) {
-      const id = items[i].dataset.id;
-      const type = items[i].dataset.type;
-      const newZ = (total - i) * 10;
+  function removeLayerFromStack(id, type) {
+    if (type === 'historical') {
+      const layer = window._activeHistoricalMaps[id];
+      if (layer) {
+        window._mapaCorpus.removeLayer(layer);
+        delete window._activeHistoricalMaps[id];
+      }
+    }
+    refreshLayerStackUI();
+  }
 
-      if (type === 'wms' && window._activeWmsLayers[id]) {
-        window._activeWmsLayers[id].setZIndex(newZ);
-      } else if (type === 'vector' && mapLayers[id]) {
-        mapLayers[id].bringToFront();
+    function changeLayerOpacity(id, type, val, el) {
+      let layer;
+      if (type === 'wms') layer = window._activeWmsLayers[id];
+      else if (type === 'wmts') layer = window._activeWmtsLayers[id];
+      else if (type === 'historical') layer = window._activeHistoricalMaps[id];
+
+      if (layer && typeof layer.setOpacity === 'function') {
+        const opacity = parseFloat(val);
+        layer.setOpacity(opacity);
+        // Persist in options for UI refresh
+        layer.options.opacity = opacity;
+        if (el) el.title = `Opacidad: ${Math.round(opacity * 100)}%`;
       }
     }
 
+    function applyLayerStackOrder() {
+      const list = document.getElementById('layer-stack-list');
+      if (!list) return;
+
+      const items = Array.from(list.children);
+      const total = items.length;
+
+      items.forEach((item, i) => {
+        const id = item.dataset.id;
+        const type = item.dataset.type;
+        const newZ = (total - i) * 10;
+
+        if (type === 'wms' && window._activeWmsLayers && window._activeWmsLayers[id]) {
+          window._activeWmsLayers[id].setZIndex(newZ);
+        } else if (type === 'wmts' && window._activeWmtsLayers && window._activeWmtsLayers[id]) {
+          window._activeWmtsLayers[id].setZIndex(newZ);
+        } else if (type === 'historical' && window._activeHistoricalMaps && window._activeHistoricalMaps[id]) {
+          window._activeHistoricalMaps[id].setZIndex(newZ);
+        } else if (type === 'vector' && mapLayers[id]) {
+          mapLayers[id].bringToFront();
+        }
+      });
     // Finally, ensure HesiOX data layers (markers, flows, etc) are ALWAYS at front
     bringLocationsToFront();
   }
@@ -13678,7 +13908,7 @@
         }[layer.tipo] || '<i class="fa-solid fa-file-code text-muted" style="font-size:0.75rem;"></i>';
 
         toggleRow.innerHTML = `
-          <div class="layer-drag-handle me-1" title="Arrastrar para organizar">
+          <div class="layer-drag-handle me-1" title="Arrastrar para reordenar">
             <i class="fa-solid fa-grip-vertical"></i>
           </div>
 
@@ -13728,9 +13958,36 @@
         }
       });
 
+      initDigitizedLayersSortable();
+
     } catch (err) {
       console.error("Error cargando capas:", err);
     }
+  }
+
+  let _digitizedSortable = null;
+  function initDigitizedLayersSortable() {
+    const el = document.getElementById('digitized-layers-container');
+    if (!el) return;
+    if (_digitizedSortable) _digitizedSortable.destroy();
+    _digitizedSortable = Sortable.create(el, {
+      animation: 150,
+      handle: '.layer-drag-handle',
+      onEnd: function () {
+        // Bring to front based on new order in sidebar
+        const items = el.querySelectorAll('.layer-drag-item');
+        // Bottom-to-top approach for bringToFront
+        for (let i = items.length - 1; i >= 0; i--) {
+          const id = items[i].getAttribute('data-id').replace('ext-', '');
+          const layer = mapLayers[id];
+          if (layer && window._mapaCorpus.hasLayer(layer)) {
+            layer.bringToFront();
+          }
+        }
+        if (typeof bringLocationsToFront === 'function') bringLocationsToFront();
+        refreshLayerStackUI();
+      }
+    });
   }
 
   async function toggleLayer(id, url, color, show) {
@@ -13815,9 +14072,21 @@
               if (feature.properties) {
                 let popup = '<div class="small fw-bold border-bottom mb-1">ATRIBUTOS</div><ul class="list-unstyled mb-0 xsmall">';
                 for (let key in feature.properties) {
+                  // Ocultar datos técnicos de perfiles de elevación en el popup
+                  if (key === 'data' || key === 'stats' || key === 'type' || key === 'subtype') continue;
                   popup += `<li><span class="text-muted">${key}:</span> ${feature.properties[key]}</li> `;
                 }
                 popup += '</ul>';
+
+                // Si es un perfil de elevación, añadir botón para abrir el análisis
+                if (feature.properties.type === 'elevation_profile') {
+                    popup += `<div class="mt-2 pt-2 border-top text-center">
+                                <button class="btn btn-xs btn-warning w-100" style="font-size: 10px;" 
+                                        onclick="loadElevationAnalysisFromFeature('${layer._leaflet_id}')">
+                                    <i class="fa-solid fa-chart-line me-1"></i> ABRIR ANÁLISIS
+                                </button>
+                              </div>`;
+                }
                 layer.bindPopup(popup);
               }
             }
@@ -13963,92 +14232,59 @@
   }
 
   // --- HISTORICAL MAPS INTEGRATION ---
-  window._activeHistoricalMaps = {};
+    window._activeHistoricalMaps = {};
 
-  async function loadHistoricalMaps() {
-    const sidebarContainer = document.getElementById('historical-maps-active-list');
-    const panelContainer = document.getElementById('historical-maps-container');
+    async function loadHistoricalMaps() {
+      try {
+        const resp = await fetch("/api/mapas_historicos/proyecto");
+        if (!resp.ok) return;
+        const mapas = await resp.json();
+        window._mapasCache = mapas.filter(m => m.visible === true);
+      } catch (err) {
+        console.error("[HistoricalMaps] Error loading:", err);
+      }
+    }
 
-    try {
-      const resp = await fetch("/api/mapas_historicos/proyecto");
-      if (!resp.ok) return;
+    async function loadHistoricalMapsForModal() {
+      const list = document.getElementById("modal-historical-list");
+      if (!list) return;
+      if (!window._mapasCache) await loadHistoricalMaps();
 
-      const mapas = await resp.json();
-      console.log(`[HistoricalMaps] Cargados ${mapas.length} mapas para el proyecto.`);
-
-      // Filtrar a los que explícitamente están con visible=true (el backend devuelve True/False según su configuración en el gestor)
-      const mapasVisibles = mapas.filter(m => m.visible === true);
-
-      if (mapasVisibles.length === 0) {
-        panelContainer.style.display = 'none';
-      } else {
-        panelContainer.style.display = 'block';
+      if (!window._mapasCache || window._mapasCache.length === 0) {
+          list.innerHTML = '<div class="col-12 text-center py-4 opacity-50">No hay mapas georreferenciados en este proyecto.</div>';
       }
 
-      // Sincronizar con el selector del Simulador (si existe), aunque ahora lo controlamos vía _activeHistoricalMaps en la recolección dinámica. Lo dejamos como _mapasCache para su uso si requiere acceso directo luego.
-      window._mapasCache = mapasVisibles;
-
-      mapasVisibles.forEach(mapa => {
-        const row = document.createElement('div');
-        row.className = 'compact-toggle-row align-items-center mb-1 historical-map-item';
-        row.id = `row-hist-${mapa.id}`;
-        row.dataset.id = mapa.id;
-
-        const gcpInfo = Array.isArray(mapa.gcps) ? mapa.gcps : (mapa.gcps.points || []);
-        const method = (mapa.gcps && mapa.gcps.metodo) ? (mapa.gcps.metodo === 'piecewise' ? 'Warping' : 'Afín') : 'Afín';
-        const rmse = (mapa.gcps && mapa.gcps.rmse) ? `(RMSE: ${mapa.gcps.rmse.toFixed(1)}m)` : '';
-
-        row.innerHTML = `
-          <div class="d-flex align-items-center w-100">
-            <div class="historical-map-handle me-2 cursor-grab text-muted opacity-50 hover-opacity-100">
-              <i class="fa-solid fa-grip-vertical" style="font-size: 0.7rem;"></i>
-            </div>
-            <input class="form-check-input me-2" type="checkbox" id="check-hist-${mapa.id}" 
-              onchange="toggleHistoricalMap(${mapa.id}, '${mapa.url}', ${JSON.stringify(mapa.gcps).replace(/"/g, '&quot;')}, ${mapa.opacidad}, this.checked)"
-              style="flex-shrink: 0;">
-            <div class="flex-grow-1 min-w-0 me-2" style=width:250px;>
-              <div class="text-light small text-truncate" title="${mapa.nombre}">
-                ${mapa.nombre}
-                ${mapa.crop_polygon ? `<span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-50 ms-1" style="font-size: 0.55rem; padding: 1px 3px;"><i class="fa-solid fa-scissors" style="font-size: 0.5rem;"></i></span>` : ''}
-              </div>
-              <div class="xsmall text-muted text-truncate" style="font-size:0.6rem;">${method} ${rmse} - ${gcpInfo.length} pts</div>
-            </div>
-            <input type="range" class="form-range opacity-control" min="0" max="1" step="0.05" value="${mapa.opacidad}" 
-              style="width: 60px; flex-shrink: 0;"
-              oninput="if(window._activeHistoricalMaps['${mapa.id}']) window._activeHistoricalMaps['${mapa.id}'].setOpacity(+this.value)" 
-              title="Opacidad">
+      list.innerHTML = "";
+      window._mapasCache.forEach(mapa => {
+        const isActive = !!window._activeHistoricalMaps[mapa.id];
+        const col = document.createElement("div");
+        col.className = "col-4";
+        col.innerHTML = `
+          <div class="wms-preset-card ${isActive ? "active" : ""}" 
+               onclick="toggleHistoricalMapFromModal('${mapa.id}', this)"
+               title="${mapa.nombre}">
+            <i class="fa-solid fa-map"></i>
+            <span class="text-truncate d-block w-100 px-1" style="font-size: 0.65rem;">${mapa.nombre}</span>
+            <div class="wms-card-desc" style="font-size: 0.55rem;">${isActive ? "ACTIVADO" : "Añadir"}</div>
           </div>
         `;
-        sidebarContainer.appendChild(row);
+        list.appendChild(col);
       });
-
-      // Initialize Sortable for historical maps
-      initHistoricalMapsSortable();
-
-    } catch (err) {
-      console.error("Error cargando mapas históricos:", err);
     }
-  }
 
-  let _historicalMapsSortable = null;
+    function toggleHistoricalMapFromModal(id, el) {
+      const mapa = window._mapasCache.find(m => String(m.id) === String(id));
+      if (!mapa) return;
 
-  function initHistoricalMapsSortable() {
-    const el = document.getElementById('historical-maps-active-list');
-    if (!el) return;
+      const isActive = !!window._activeHistoricalMaps[id];
+      toggleHistoricalMap(id, mapa.url, mapa.gcps, mapa.opacidad, !isActive);
 
-    if (_historicalMapsSortable) _historicalMapsSortable.destroy();
-
-    _historicalMapsSortable = Sortable.create(el, {
-      animation: 150,
-      handle: '.historical-map-handle',
-      ghostClass: 'sirio-sortable-ghost',
-      dragClass: 'sirio-sortable-drag',
-      onEnd: function () {
-        applyHistoricalMapsOrder();
+      if (el) {
+        const newActive = !isActive;
+        el.classList.toggle("active", newActive);
+        el.querySelector(".wms-card-desc").innerText = newActive ? "ACTIVADO" : "Añadir";
       }
-    });
-  }
-
+    }
   // --- MODAL DRAGGING LOGIC ---
   function initDraggableModals() {
     const modals = document.querySelectorAll('.draggable-modal');
@@ -14582,6 +14818,7 @@
             container.addTo(window._mapaCorpus);
             window._activeHistoricalMaps[id] = container;
             bringLocationsToFront();
+            refreshLayerStackUI();
           };
           img.src = url;
         }
@@ -14589,6 +14826,7 @@
     } else {
       if (window._activeHistoricalMaps[id]) {
         window._activeHistoricalMaps[id].remove();
+        delete window._activeHistoricalMaps[id];
       }
     }
 
@@ -14596,6 +14834,12 @@
     if (window.RouteSimulator && typeof window.RouteSimulator.populateLayerSelect === 'function') {
       window.RouteSimulator.populateLayerSelect();
     }
+
+    refreshLayerStackUI();
+  }
+
+  function removeHistoricalMap(id) {
+    toggleHistoricalMap(id, null, null, null, false);
   }
 
   // Cargar capas al inicio
@@ -17317,42 +17561,264 @@
 
   // --- PERFIL DE ELEVACIÓN (PROFESSIONAL) ---
   let elevationDrawHandler = null;
-  let elevationLine = null;
-  let elevationProfileChart = null;
+  let elevationMoveHandler = null;
+    window.elevationLine = null;
+    let elevationTempLine = null;
+    let elevationMarkers = [];
+    let elevationProfileChart = null;
+    let hasLocalDEM = false;
+    let demCoverageLayers = L.layerGroup(); // Para mostrar el área de los TIFs
+    let elevationHighlightLayer = L.layerGroup(); // Para resaltar tramos en el mapa
+    let allLayersIndex = {}; // Para búsqueda rápida por Leaflet ID
+    window.currentProfileLoadedID = null; // ID de base de datos del perfil cargado
+  /**
+   * Carga el análisis detallado desde una capa ya visible en el mapa (vía Popup)
+   */
+  function loadElevationAnalysisFromFeature(leafletId) {
+      const layer = findLayerInMapById(leafletId);
+      if (!layer || !layer.feature) {
+          showMapToast("Error: No se pudo localizar la capa", "#f44336");
+          return;
+      }
 
-  function activateElevationProfile() {
+      const feature = layer.feature;
+      if (feature.properties.type !== 'elevation_profile') return;
+
+      // Reset ID since it's a transient layer drawn on map, not necessarily a DB record directly
+      // However, if the feature has a DB ID in properties, we'd take it.
+        window.currentProfileLoadedID = feature.properties.db_id || null; 
+        if (window.elevationLine && window._mapaCorpus.hasLayer(window.elevationLine)) {
+            // Si ya hay uno activo, preguntar o limpiar
+        }
+        
+        window.elevationLine = layer;
+      // 2. Mostrar y actualizar panel
+      let panel = document.getElementById('elevation-profile-panel');
+      if (!panel) panel = createElevationProfilePanel();
+      panel.classList.remove('d-none');
+      
+      const name = feature.properties.nombre || "Perfil cargado";
+      document.getElementById('elevation-panel-title').innerText = "ANÁLISIS: " + name;
+      
+      renderElevationChart(window.currentElevationData);
+      updateElevationAnalysis();
+      
+      window._mapaCorpus.fitBounds(layer.getBounds());
+      showMapToast("Análisis activo para: " + name, "#4caf50");
+  }
+
+  /**
+   * Helper para encontrar una capa en el mapa recorriendo grupos
+   */
+  function findLayerInMapById(id) {
+      let found = null;
+      window._mapaCorpus.eachLayer(l => {
+          if (l._leaflet_id == id) found = l;
+      });
+      return found;
+  }
+
+  function highlightElevationSegment(startIdx, endIdx, color) {
+    if (!window.currentElevationData || window.currentElevationData.length === 0) return;
+    elevationHighlightLayer.clearLayers();
+    
+    const segmentPoints = window.currentElevationData.slice(startIdx, endIdx + 1)
+        .map(pt => [pt.lat, pt.lon || pt.lng]);
+    
+    if (segmentPoints.length < 2) return;
+    
+    const poly = L.polyline(segmentPoints, {
+        color: color === 'inherit' ? '#ffeb3b' : color,
+        weight: 8,
+        opacity: 0.8,
+        lineCap: 'round'
+    }).addTo(elevationHighlightLayer);
+    
+    // Añadir un brillo exterior
+    L.polyline(segmentPoints, {
+        color: 'white',
+        weight: 12,
+        opacity: 0.3
+    }).addTo(elevationHighlightLayer);
+    
+    elevationHighlightLayer.addTo(window._mapaCorpus);
+
+    // Resaltar en el gráfico
+    if (elevationProfileChart) {
+      const data = window.currentElevationData;
+      const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+      
+      elevationProfileChart.options.plugins.highlightPlugin = {
+          startDist: data[startIdx].dist,
+          endDist: data[endIdx].dist,
+          fillColor: isDarkMode ? 'rgba(255,152,0,0.2)' : 'rgba(41,74,96,0.15)',
+          borderColor: color === 'inherit' ? '#ffeb3b' : color
+      };
+      elevationProfileChart.update('none');
+    }
+  }
+
+  function clearElevationHighlight() {
+    elevationHighlightLayer.clearLayers();
+    if (elevationProfileChart) {
+        delete elevationProfileChart.options.plugins.highlightPlugin;
+        elevationProfileChart.update('none');
+    }
+  }
+
+  async function activateElevationProfile() {
+    // 1. Verificar si ya hay MDT en el servidor
+    try {
+      const resp = await fetch('/api/layers/check_dem');
+      const data = await resp.json();
+      hasLocalDEM = data.count > 0;
+      
+      // Dibujar rectángulos de cobertura si existen
+      demCoverageLayers.clearLayers();
+      if (data.count > 0) {
+        data.files.forEach(fileInfo => {
+          if (fileInfo.bounds) {
+            const b = fileInfo.bounds;
+            const rect = L.rectangle([[b.south, b.west], [b.north, b.east]], {
+              color: "#ff9800",
+              weight: 2,
+              fillOpacity: 0.05,
+              dashArray: "5, 5",
+              interactive: false
+            });
+            rect.addTo(demCoverageLayers);
+          }
+        });
+        demCoverageLayers.addTo(window._mapaCorpus);
+      }
+    } catch (e) {
+      console.warn("Error verificando MDT local:", e);
+      hasLocalDEM = false;
+    }
+
+    // 2. Mostrar modal siempre según petición de confirmación, pero informando
+    const notice = document.getElementById('dem-exists-notice');
+    if (hasLocalDEM) {
+       notice.classList.remove('d-none');
+    } else {
+       notice.classList.add('d-none');
+    }
+
+    const modalEl = document.getElementById('modalElevationSetup');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+
+  function confirmStartProfileWithoutDem() {
+    const modalEl = document.getElementById('modalElevationSetup');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+    startDrawingElevationProfile();
+  }
+  function startDrawingElevationProfile(initialLatLngs = []) {
     if (elevationDrawHandler) deactivateElevationProfile();
+    elevationMarkers = [];
+    currentProfileLoadedID = null; // Reset when starting a new draft
+    window.currentElevationData = []; // Limpiar datos previos
 
-    showMapToast('Haz clic en el mapa para trazar la línea del perfil. Doble clic para finalizar.', '#ff9800');
+    if (initialLatLngs.length === 0) {
+        showMapToast('Haz clic para marcar el inicio del perfil.', '#ff9800');
+    } else {
+        showMapToast('Ramificación iniciada. Haz clic para continuar el perfil.', '#ff9800');
+    }
 
-    elevationLine = L.polyline([], { color: '#ff9800', weight: 4, dashArray: '5, 10' }).addTo(window._mapaCorpus);
+    // Línea real consolidada
+    elevationLine = L.polyline(initialLatLngs, { color: '#ff9800', weight: 4 }).addTo(window._mapaCorpus);
+    
+    // Línea elástica (rubberband)
+    elevationTempLine = L.polyline([], { 
+        color: '#ff9800', 
+        weight: 2, 
+        dashArray: '5, 10', 
+        opacity: 0.6 
+    }).addTo(window._mapaCorpus);
+
+    // Re-crear marcadores si hay puntos iniciales
+    initialLatLngs.forEach(latlng => {
+        const marker = L.circleMarker(latlng, {
+            radius: 5,
+            color: '#ff9800',
+            fillColor: '#fff',
+            fillOpacity: 1,
+            weight: 2
+        }).addTo(window._mapaCorpus);
+        elevationMarkers.push(marker);
+    });
 
     elevationDrawHandler = function (e) {
-      elevationLine.addLatLng(e.latlng);
+      const latlng = e.latlng;
+      elevationLine.addLatLng(latlng);
+      
+      // Marcador visual para feedback inmediato
+      const marker = L.circleMarker(latlng, {
+        radius: 5,
+        color: '#ff9800',
+        fillColor: '#fff',
+        fillOpacity: 1,
+        weight: 2
+      }).addTo(window._mapaCorpus);
+      elevationMarkers.push(marker);
+
+      if (elevationLine.getLatLngs().length === 1) {
+          showMapToast('Mueve el ratón y haz clic para el siguiente punto. Doble clic para terminar.', '#ff9800');
+      }
+    };
+
+    elevationMoveHandler = function (e) {
+      const points = elevationLine.getLatLngs();
+      if (points.length > 0) {
+        const lastPoint = points[points.length - 1];
+        elevationTempLine.setLatLngs([lastPoint, e.latlng]);
+      }
     };
 
     window._mapaCorpus.on('click', elevationDrawHandler);
+    window._mapaCorpus.on('mousemove', elevationMoveHandler);
     window._mapaCorpus.on('dblclick', finishElevationProfile);
 
-    // Cambiar cursor
     const mapContainer = document.getElementById('mapa-corpus');
     if (mapContainer) mapContainer.style.cursor = 'crosshair';
   }
 
   function deactivateElevationProfile() {
+    if (elevationHighlightLayer) {
+        elevationHighlightLayer.clearLayers();
+        if (window._mapaCorpus.hasLayer(elevationHighlightLayer)) {
+            window._mapaCorpus.removeLayer(elevationHighlightLayer);
+        }
+    }
     if (elevationDrawHandler) {
       window._mapaCorpus.off('click', elevationDrawHandler);
+      window._mapaCorpus.off('mousemove', elevationMoveHandler);
       window._mapaCorpus.off('dblclick', finishElevationProfile);
       elevationDrawHandler = null;
+      elevationMoveHandler = null;
     }
     if (elevationLine) {
       window._mapaCorpus.removeLayer(elevationLine);
       elevationLine = null;
     }
+    if (elevationTempLine) {
+      window._mapaCorpus.removeLayer(elevationTempLine);
+      elevationTempLine = null;
+    }
+    if (elevationMarkers) {
+      elevationMarkers.forEach(m => window._mapaCorpus.removeLayer(m));
+      elevationMarkers = [];
+    }
+    // Quitar también los rectángulos de cobertura al desactivar
+    if (window._mapaCorpus.hasLayer(demCoverageLayers)) {
+       window._mapaCorpus.removeLayer(demCoverageLayers);
+    }
     const mapContainer = document.getElementById('mapa-corpus');
     if (mapContainer) mapContainer.style.cursor = '';
     const panel = document.getElementById('elevation-profile-panel');
-    if (panel) panel.remove(); // Completamente para regenerar con tema
+    if (panel) panel.remove(); 
   }
 
   async function finishElevationProfile() {
@@ -17362,51 +17828,129 @@
       return;
     }
 
+    // Limpiar temporales de dibujo
+    if (elevationTempLine) {
+      window._mapaCorpus.removeLayer(elevationTempLine);
+      elevationTempLine = null;
+    }
+    window._mapaCorpus.off('click', elevationDrawHandler);
+    window._mapaCorpus.off('mousemove', elevationMoveHandler);
+    window._mapaCorpus.off('dblclick', finishElevationProfile);
+    elevationDrawHandler = null;
+    elevationMoveHandler = null;
+    const mapContainer = document.getElementById('mapa-corpus');
+    if (mapContainer) mapContainer.style.cursor = '';
+
     // Mostrar panel
     let panel = document.getElementById('elevation-profile-panel');
     if (!panel) panel = createElevationProfilePanel();
     panel.classList.remove('d-none');
 
-    // Muestrear puntos
-    const samples = samplePoints(latlngs, 40);
+    // Muestrear puntos - Aumentamos resolución para análisis detallado
+    const samples = samplePoints(latlngs, 100);
     const data = await fetchElevationData(samples);
+    currentElevationData = data;
 
     renderElevationChart(data);
-
-    // Limpiar modo dibujo pero dejar la línea
-    window._mapaCorpus.off('click', elevationDrawHandler);
-    window._mapaCorpus.off('dblclick', finishElevationProfile);
-    elevationDrawHandler = null;
-    const mapContainer = document.getElementById('mapa-corpus');
-    if (mapContainer) mapContainer.style.cursor = '';
+    updateElevationAnalysis();
   }
+    function createElevationProfilePanel() {
+      const isDarkMode = document.body.classList.contains("dark-mode") || document.documentElement.getAttribute("data-theme") === "dark";
 
-  function createElevationProfilePanel() {
-    const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+      // SIRIO PALETTES - Mejora Modo Oscuro
+      const bg = isDarkMode ? "#121212" : "#ffffff";
+      const border = isDarkMode ? "#444" : "rgba(41,74,96,0.3)";
+      const textColor = isDarkMode ? "#ff9800" : "#294a60";
+      const headerBg = isDarkMode ? "#1a1a1a" : "#294a60";
+      const headerText = isDarkMode ? "#ff9800" : "#ffffff";
+      const accentColor = isDarkMode ? "#ff9800" : "#294a60";
 
-    // SIRIO PALETTES (Exact Match with Ubicaciones Modal)
-    const bg = isDarkMode ? '#0c0c0c' : '#ffffff';
-    const border = isDarkMode ? 'rgba(255,152,0,0.3)' : 'rgba(41,74,96,0.3)';
-    const textColor = isDarkMode ? '#ff9800' : '#294a60';
-    const headerBg = isDarkMode ? '#111' : '#f8f9fa';
-    const headerText = isDarkMode ? '#ff9800' : '#294a60';
-    const accentColor = isDarkMode ? '#ff9800' : '#294a60';
+      const html = `
+          <div id="elevation-profile-panel" class="gis-float-panel shadow-lg" 
+               style="width: 1100px; height: 550px; z-index: 30000 !important; display: flex !important; flex-direction: column; position: fixed; background: ${bg}; border: 1px solid ${isDarkMode ? "#444" : border}; border-radius: 8px; overflow: visible; font-family: 'Inter', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <div class="digitize-header digitize-draggable-handle py-1 px-3 d-flex justify-content-between align-items-center" 
+                 style="background: ${headerBg}; cursor: move; min-height: 28px; border-bottom: 1px solid ${isDarkMode ? "rgba(255,152,0,0.2)" : "transparent"}; border-top-left-radius: 7px; border-top-right-radius: 7px;">
+              <span id="elevation-panel-title" style="font-size: 0.7rem; font-weight: 800; color: ${headerText}; letter-spacing: 1px; text-transform: uppercase;">
+                <i class="fa-solid fa-chart-line me-2"></i>PERFIL DE ELEVACIÓN
+              </span>
+              <div class="d-flex align-items-center gap-1">
+                  <div class="dropdown d-inline-block">
+                    <button class="btn btn-xs btn-link text-decoration-none py-0 px-2 dropdown-toggle" 
+                            style="font-size: 10px; color: ${headerText};" data-bs-toggle="dropdown" aria-expanded="false" onclick="updateRecentElevationProfilesDropdown()">
+                        <i class="fa-solid fa-folder-open me-1"></i> CARGAR
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark shadow" id="elevation-load-dropdown" style="font-size: 0.72rem; min-width: 200px; border: 1px solid #444;">
+                        <li><a class="dropdown-item py-1" href="#" onclick="loadElevationProfileDialog()">
+                            <i class="fa-solid fa-search me-2 opacity-75"></i> Buscar todos...</a></li>
+                        <li><hr class="dropdown-divider opacity-25"></li>
+                        <li class="px-3 py-1 text-muted small" id="recent-profiles-header" style="font-size: 0.6rem; text-transform: uppercase;">Recientes</li>
+                    </ul>
+                  </div>
 
-    const html = `
-        <div id="elevation-profile-panel" class="gis-float-panel" 
-             style="width: 700px; height: 400px; z-index: 20000; box-shadow: 0 20px 50px rgba(0,0,0,0.7); display: flex; flex-direction: column; position: fixed; background: #0c0c0c; border: 1px solid #ff9800; border-radius: 8px; overflow: hidden; font-family: 'Inter', sans-serif;">
-          <div class="digitize-header digitize-draggable-handle py-1 px-3 d-flex justify-content-between align-items-center" 
-               style="background: #ff9800; cursor: move; min-height: 24px;">
-            <span style="font-size: 0.65rem; font-weight: 800; color: #000; letter-spacing: 1px; text-transform: uppercase;">PERFIL DE ELEVACIÓN</span>
-            <button onclick="deactivateElevationProfile()" style="background:none; border:none; color:#000; padding:0; line-height:1; font-size:14px; cursor:pointer; opacity:0.8;">✕</button>
+                  <button onclick="downloadElevationProfileImage()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};">
+                      <i class="fa-solid fa-camera me-1"></i> EXPORTAR
+                  </button>
+                  <button onclick="saveElevationProfile()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};">
+                      <i class="fa-solid fa-save me-1"></i> GUARDAR
+                  </button>
+                  <button onclick="deactivateElevationProfile()" class="ms-2" style="background:none; border:none; color:${headerText}; padding:0; line-height:1; font-size:16px; cursor:pointer; opacity:0.8;">&times;</button>
+              </div>
+            </div>
+
+<div class="d-flex flex-row flex-grow-1" style="overflow: hidden; min-height: 0;">
+              <!-- Main Content: Chart -->
+              <div class="p-3 d-flex flex-column" style="flex: 2; border-right: 1px solid ${isDarkMode ? '#222' : '#eee'};">
+               <div id="elevation-stats-display" class="d-flex justify-content-around mb-2 p-2 rounded" style="background: ${isDarkMode ? 'rgba(255,152,0,0.05)' : 'rgba(41,74,96,0.05)'}; font-size: 0.7rem; color: ${textColor}; font-weight: 600;">
+                  <!-- Stats will be injected here -->
+               </div>
+               <div class="flex-grow-1" style="position: relative; min-height: 0;">
+                  <canvas id="elevationChartCanvas"></canvas>
+               </div>
+            </div>
+
+            <!-- Side Panel: Table -->
+            <div class="p-0 d-flex flex-column" style="flex: 1; min-height: 0; background: ${isDarkMode ? '#0a0a0a' : '#fcfcfc'}; color: ${isDarkMode ? '#eee' : '#333'};">
+               <div class="p-2 border-bottom d-flex align-items-center justify-content-between" style="background: ${isDarkMode ? '#1a1a1a' : '#f5f5f5'}; border-bottom: 1px solid ${isDarkMode ? '#333' : '#ddd'} !important;">
+                  <span style="font-size: 0.65rem; font-weight: bold; color: ${textColor};">ANÁLISIS POR TRAMOS</span>
+                  <select id="elevation-interval-select" onchange="updateElevationAnalysis()" 
+                          class="form-select form-select-sm py-0" 
+                          style="width: 90px; font-size: 0.65rem; height: 24px; background-color: ${isDarkMode ? '#333' : '#fff'}; color: ${isDarkMode ? '#fff' : '#333'}; border-color: ${isDarkMode ? '#444' : '#ccc'};">
+                     <option value="50">50m</option>
+                     <option value="100" selected>100m</option>
+                     <option value="250">250m</option>
+                     <option value="500">500m</option>
+                     <option value="1000">1km</option>
+                  </select>
+               </div>
+               <div id="elevation-table-container" class="flex-grow-1 overflow-auto" style="background: ${isDarkMode ? '#121212' : '#ffffff'}; min-height: 0;">
+                  <!-- Table will be injected here -->
+               </div>
+            </div>
           </div>
-          <div class="p-4 flex-grow-1" style="background: #0c0c0c; position: relative;">
-            <canvas id="elevationChartCanvas" style="width: 100%; height: 100%;"></canvas>
-          </div>
+
           <div class="px-3 py-2 text-center border-top font-mono" 
-               style="background: #111; font-size: 0.75rem; color: #888; border-top: 1px solid #222 !important;">
-            <div id="elevation-stats" class="mb-1" style="display: none;"></div>
-            <i class="fa-solid fa-circle-info me-1"></i> Análisis topográfico basado en MDT del IGN (aprox.)
+               style="background: ${isDarkMode ? '#1a1a1a' : '#f8f9fa'}; font-size: 0.75rem; color: ${isDarkMode ? '#888' : '#555'}; border-top: 1px solid ${isDarkMode ? '#333' : '#ddd'} !important; border-bottom-left-radius: 7px; border-bottom-right-radius: 7px;">
+            <div class="d-flex align-items-center justify-content-between mb-0 pb-1">
+                <div class="text-start" style="line-height: 1.2;">
+                    <button onclick="document.getElementById('elevation-dem-upload').click()" 
+                            class="btn btn-sm btn-outline-warning py-0 px-2" 
+                            title="Subir nuevo archivo TIFF de elevación"
+                            style="font-size: 0.65rem; border-radius: 4px; height: 20px;">
+                        <i class="fa-solid fa-upload me-1"></i> ACTUALIZAR MDT (.tif)
+                    </button>
+                    <button id="btn-refresh-elevation" onclick="refreshElevationData()" 
+                            class="btn btn-sm btn-outline-warning py-0 px-2 ms-1" 
+                            title="Recalcular altitudes del perfil actual (útil tras cargar nuevos TIFF)"
+                            style="font-size: 0.65rem; border-radius: 4px; height: 20px;">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> REPROCESAR
+                    </button>
+                    <input type="file" id="elevation-dem-upload" style="display:none" accept=".tif,.tiff" onchange="handleElevationDemUpload(this)">
+                </div>
+                <div class="text-end flex-grow-1 ps-3 precision-text-indicator" style="font-size: 0.6rem; opacity: 0.8;">
+                   <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>
+                   Precisión: ${hasLocalDEM ? 'ALTA (MDT Local)' : 'MEDIA (Servidor IGN)'}
+                </div>
+            </div>
           </div>
         </div>
       `;
@@ -17415,15 +17959,66 @@
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-    panel.style.left = Math.round((w - 700) / 2) + 'px';
-    panel.style.top = Math.round((h - 400) / 2) + 'px';
+      panel.style.left = Math.round((w - 1100) / 2) + 'px';
+      panel.style.top = Math.round((h - 550) / 2) + 'px';
+      
+      if (typeof makeDraggable === 'function') makeDraggable(panel);
+      return panel;
+    }
 
-    if (typeof makeDraggable === 'function') makeDraggable(panel);
-    return panel;
+    async function handleElevationDemUpload(input, isInitial = false) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    showMapToast('Subiendo MDT local...', '#ff9800');
+    try {
+      const resp = await fetch('/api/layers/upload_dem', { method: 'POST', body: formData });
+      const data = await resp.json();
+      if (data.success) {
+        showMapToast('MDT cargado con éxito.', '#4caf50');
+        hasLocalDEM = true;
+
+        const precEl = document.querySelector('.precision-text-indicator');
+        if (precEl) {
+            precEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Precisión: ALTA (MDT Local)';
+        }
+        
+        // Dibujar el nuevo rectángulo de cobertura
+        if (data.bounds) {
+          const b = data.bounds;
+          L.rectangle([[b.south, b.west], [b.north, b.east]], {
+            color: "#ff9800",
+            weight: 2,
+            fillOpacity: 0.05,
+            dashArray: "5, 5",
+            interactive: false
+          }).addTo(demCoverageLayers);
+          demCoverageLayers.addTo(window._mapaCorpus);
+        }
+
+        if (isInitial) {
+           hasLocalDEM = true; 
+           const modalEl = document.getElementById('modalElevationSetup');
+           const modal = bootstrap.Modal.getInstance(modalEl);
+           if (modal) modal.hide();
+           startDrawingElevationProfile();
+        } else {
+           if (window.currentElevationData && window.currentElevationData.length > 0) {
+              refreshElevationData();
+           }
+        }
+      } else {
+        showMapToast('Error: ' + data.error, '#f44336');
+      }
+    } catch (e) {
+      console.error(e);
+      showMapToast('Error de conexión al subir MDT', '#f44336');
+    }
   }
 
   let showSlopeInChart = false;
-  let currentElevationData = [];
+  window.currentElevationData = [];
 
   function toggleElevationSlope() {
     showSlopeInChart = !showSlopeInChart;
@@ -17464,25 +18059,118 @@
   }
 
   async function fetchElevationData(samples) {
-    showMapToast('Calculando altitudes y pendientes...', '#2196f3');
-    const results = samples.map((s, i) => {
-      const pseudoAlt = 100 + Math.sin(s.lat * 50) * 150 + Math.cos(s.lon * 60) * 80;
-      return { dist: s.dist, alt: Math.round(pseudoAlt * 10) / 10 };
-    });
-    for (let i = 0; i < results.length; i++) {
-      if (i === 0) { results[i].slope = 0; }
-      else {
-        const dh = results[i].alt - results[i - 1].alt;
-        const dd = results[i].dist - results[i - 1].dist;
-        results[i].slope = dd > 0 ? (dh / dd) * 100 : 0;
+      showMapToast('Obteniendo altitudes...', '#ff9800');
+      
+      const results = [];
+      
+      // 1. Intentar primero con DEM local si existe (Acepta cualquier cantidad de puntos)
+      try {
+        const localResp = await fetch("/api/altitud_raster", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ points: samples.map(s => [s.lon || s.lng, s.lat]) })
+        });
+        if (localResp.ok) {
+          const localJson = await localResp.json();
+          if (localJson.success && localJson.items.length > 0) {
+            console.log("[Profile] Usando datos de elevación LOCAL (Raster)");
+            return localJson.items.map((item, i) => ({
+              dist: samples[i].dist,
+              lat: samples[i].lat,
+              lon: samples[i].lon || samples[i].lng,
+              alt: item.altitud,
+              slope: i === 0 ? 0 : ((item.altitud - localJson.items[i-1].altitud) / (samples[i].dist - samples[i-1].dist)) * 100
+            }));
+          }
+        }
+      } catch (e) {
+        console.log("[Profile] No hay DEM local o fallo, recurriendo a IGN...");
       }
-    }
-    currentElevationData = results;
+
+      // 2. Fallback a IGN (en lotes de 50 para cumplir con su API)
+      try {
+        const batchSize = 50;
+        const allIgnItems = [];
+        
+        for (let i = 0; i < samples.length; i += batchSize) {
+            const batch = samples.slice(i, i + batchSize);
+            const pointsStr = batch.map(s => `${parseFloat(s.lon || s.lng).toFixed(6)},${parseFloat(s.lat).toFixed(6)}`).join('|');
+            const url = `https://servicios.ign.es/puntos-altitud/api/puntos?puntos=${pointsStr}&sis_coords=WGS84&precision=2`;
+            
+            let resp;
+            try {
+                resp = await fetch(url);
+                if (!resp.ok) throw new Error("API Directa falló");
+            } catch (e) {
+                const proxyUrl = `/api/proxy/wms?url=${encodeURIComponent(url)}`;
+                resp = await fetch(proxyUrl);
+            }
+            
+            const json = await resp.json();
+            const items = Array.isArray(json) ? json : (json && json.items ? json.items : []);
+            allIgnItems.push(...items);
+        }
+
+        if (allIgnItems.length > 0) {
+          allIgnItems.forEach((item, i) => {
+            if (i < samples.length) {
+              const alt = parseFloat(item.altitud);
+              results.push({
+                dist: samples[i].dist,
+                lat: samples[i].lat,
+                lon: samples[i].lon || samples[i].lng,
+                alt: isNaN(alt) ? 0 : Math.round(alt * 10) / 10
+              });
+            }
+          });
+          
+          // Recalcular pendientes si venimos de IGN
+          results.forEach((r, idx) => {
+              r.slope = idx === 0 ? 0 : ((r.alt - results[idx-1].alt) / (r.dist - results[idx-1].dist)) * 100;
+          });
+          
+          return results;
+        }
+      } catch (err) {
+        console.error("[Profile] Error IGN API:", err);
+      }
+
+      // 3. Fallback final: Relieve simulado (solo si todo lo anterior falla)
+      if (results.length === 0) {
+        console.warn("[Profile] Usando relieve simulado por fallo en servicios IGN.");
+        showMapToast("Servicio IGN no disponible. Usando relieve estimado.", "#f44336");
+        samples.forEach((s, idx) => {
+          const baseAlt = 50;
+          const wave = Math.sin(idx * 0.2) * 20;
+          const noise = Math.sin(idx * 0.8) * 5;
+          results.push({ 
+            dist: s.dist, 
+            lat: s.lat,
+            lon: s.lon,
+            alt: Math.max(0, Math.round((baseAlt + wave + noise) * 10) / 10) 
+          });
+        });
+      }
+
+      // Calcular pendientes
+      for (let i = 0; i < results.length; i++) {
+        if (i === 0) {
+          results[i].slope = 0;
+        } else {
+          const dh = results[i].alt - results[i - 1].alt;
+          const dd = results[i].dist - results[i - 1].dist;
+          results[i].slope = dd > 0 ? (dh / dd) * 100 : 0;
+        }
+      }
+      
     return results;
   }
 
   function renderElevationChart(data) {
+    window.currentElevationData = data;
     const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+     const gridColor = isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+      const labelColor = isDarkMode ? "#888" : "#555";
     const canvas = document.getElementById('elevationChartCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -17495,17 +18183,36 @@
     const distLabel = (d) => maxDist > 2000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m';
 
     // SIRIO COLORS & STYLE
-    const sirioOrange = '#ff9800';
-    const sirioSlope = '#ff5722';
-    const labelColor = '#ccc';
-    const gridColor = 'rgba(255,255,255,0.08)';
+      const sirioOrange = isDarkMode ? '#00d2ff' : '#294a60';
+      const sirioSlope = isDarkMode ? '#ff4444' : '#d93025';
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(255, 152, 0, 0.4)');
-    gradient.addColorStop(1, 'rgba(255, 152, 0, 0.05)');
+    gradient.addColorStop(0, isDarkMode ? 'rgba(0, 210, 255, 0.3)' : 'rgba(41, 74, 96, 0.4)');
+    gradient.addColorStop(1, isDarkMode ? 'rgba(0, 210, 255, 0.01)' : 'rgba(41, 74, 96, 0.05)');
 
     elevationProfileChart = new Chart(ctx, {
       type: 'line',
+      plugins: [{
+          id: 'highlightPlugin',
+          beforeDraw: (chart) => {
+              const pluginOptions = chart.config.options.plugins.highlightPlugin;
+              if (!pluginOptions) return;
+              
+              const {ctx, chartArea: {top, bottom}, scales: {x}} = chart;
+              const xStart = x.getPixelForValue(pluginOptions.startDist);
+              const xEnd = x.getPixelForValue(pluginOptions.endDist);
+              
+              ctx.save();
+              ctx.fillStyle = pluginOptions.fillColor;
+              ctx.fillRect(xStart, top, xEnd - xStart, bottom - top);
+              
+              ctx.strokeStyle = pluginOptions.borderColor;
+              ctx.lineWidth = 2;
+              ctx.setLineDash([5, 5]);
+              ctx.strokeRect(xStart, top, xEnd - xStart, bottom - top);
+              ctx.restore();
+          }
+      }],
       data: {
         datasets: [
           {
@@ -17542,13 +18249,13 @@
             display: true,
             position: 'top',
             align: 'end',
-            labels: { color: '#888', font: { size: 10, weight: '700' }, usePointStyle: true, boxWidth: 6 }
+            labels: { color: isDarkMode ? '#888' : '#555', font: { size: 10, weight: '700' }, usePointStyle: true, boxWidth: 6 }
           },
           tooltip: {
-            backgroundColor: 'rgba(10,10,10,0.95)',
+            backgroundColor: isDarkMode ? 'rgba(10,10,10,0.95)' : 'rgba(255,255,255,0.95)',
             titleColor: sirioOrange,
-            bodyColor: '#fff',
-            borderColor: 'rgba(255,152,0,0.4)',
+            bodyColor: isDarkMode ? '#fff' : '#000',
+            borderColor: isDarkMode ? 'rgba(0, 210, 255, 0.4)' : 'rgba(41,74,96,0.4)',
             borderWidth: 1,
             padding: 10,
             cornerRadius: 4,
@@ -17569,7 +18276,13 @@
           x: {
             type: 'linear',
             grid: { color: gridColor, drawBorder: false },
-            ticks: { color: '#888', font: { size: 10, family: 'JetBrains Mono' }, callback: function (value) { return value + ' m'; } }
+            ticks: { 
+              color: isDarkMode ? '#888' : '#555', 
+              font: { size: 10, family: 'JetBrains Mono' }, 
+              callback: function (value) { 
+                return value >= 1000 ? (value / 1000).toFixed(1) + ' km' : Math.round(value) + ' m'; 
+              } 
+            }
           },
           y: {
             title: { display: true, text: 'Altitud (m)', color: sirioOrange, font: { size: 10, weight: 'bold' } },
@@ -17582,17 +18295,568 @@
             grid: { drawOnChartArea: false },
             ticks: { color: sirioSlope, font: { size: 10, family: 'JetBrains Mono' } },
             suggestedMin: -40,
-            suggestedMax: 40
           }
         }
       }
     });
   }
 
+  function updateElevationAnalysis() {
+    if (!window.currentElevationData || window.currentElevationData.length === 0) return;
+    
+    updateElevationStats(window.currentElevationData);
+    
+    const interval = parseInt(document.getElementById('elevation-interval-select')?.value || 100);
+    renderIntervalTable(window.currentElevationData, interval);
+  }
+
+  function updateElevationStats(data) {
+    const totalDist = data[data.length - 1].dist;
+    const alts = data.map(d => d.alt);
+    const minAlt = Math.min.apply(null, alts);
+    const maxAlt = Math.max.apply(null, alts);
+    const gain = data.reduce((acc, curr, idx) => {
+        if (idx === 0) return 0;
+        const diff = curr.alt - data[idx-1].alt;
+        return acc + (diff > 0 ? diff : 0);
+    }, 0);
+    const loss = data.reduce((acc, curr, idx) => {
+        if (idx === 0) return 0;
+        const diff = curr.alt - data[idx-1].alt;
+        return acc + (diff < 0 ? Math.abs(diff) : 0);
+    }, 0);
+
+    const avgSlope = totalDist > 0 ? (gain / totalDist) * 100 : 0; 
+
+    const distStr = totalDist >= 1000 ? (totalDist/1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m';
+    
+    const statsHtml = `
+        <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">DISTANCIA</div>
+            <div>${distStr}</div>
+        </div>
+        <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">DESNIVEL +</div>
+            <div class="text-success">${Math.round(gain)} m</div>
+        </div>
+        <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">DESNIVEL -</div>
+            <div class="text-danger">${Math.round(loss)} m</div>
+        </div>
+        <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">PEND. MEDIA</div>
+            <div>${avgSlope.toFixed(1)} %</div>
+        </div>
+        <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">ALT. MÁX</div>
+            <div>${Math.round(maxAlt)} m</div>
+        </div>
+    `;
+    
+    const container = document.getElementById('elevation-stats-display');
+    if (container) container.innerHTML = statsHtml;
+  }
+
+  function renderIntervalTable(data, interval) {
+    const container = document.getElementById('elevation-table-container');
+    if (!container || !data || data.length === 0) return;
+
+    const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDarkMode ? '#eee' : '#333';
+
+    let html = `
+        <table class="table table-sm table-borderless m-0" style="color: ${textColor}; font-size: 0.75rem; border-collapse: separate; border-spacing: 0 2px;">
+            <thead style="position: sticky; top: 0; background: ${isDarkMode ? '#1a1a1a' : '#f5f5f5'}; z-index: 10; border-bottom: 2px solid ${isDarkMode ? '#333' : 'rgba(128,128,128,0.2)'};">
+                <tr>
+                    <th class="ps-2 py-2">Distancia</th>
+                    <th class="text-end py-2">Altitud</th>
+                    <th class="text-end py-2">Pendiente</th>
+                    <th class="text-center py-2" style="width: 30px;"><i class="fa-solid fa-code-branch"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    const totalDist = data[data.length - 1].dist;
+    
+    // Helper para obtener altitud interpolada en una distancia exacta
+    const getAltAt = (d) => {
+        if (d <= 0) return data[0].alt;
+        if (d >= totalDist) return data[data.length-1].alt;
+        for (let i = 0; i < data.length - 1; i++) {
+            if (d >= data[i].dist && d <= data[i+1].dist) {
+                const r = (d - data[i].dist) / (data[i+1].dist - data[i].dist);
+                return data[i].alt + r * (data[i+1].alt - data[i].alt);
+            }
+        }
+        return data[0].alt;
+    };
+    
+    // Helper para encontrar el índice real más cercano (para ramificar y resaltar)
+    const getClosestIdx = (d) => {
+        let minDiff = Infinity;
+        let bestIdx = 0;
+        data.forEach((p, idx) => {
+            const diff = Math.abs(p.dist - d);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestIdx = idx;
+            }
+        });
+        return bestIdx;
+    };
+
+    let currentPos = 0;
+    while (currentPos < totalDist) {
+        let nextPos = Math.min(currentPos + interval, totalDist);
+        const startAlt = getAltAt(currentPos);
+        const endAlt = getAltAt(nextPos);
+        const diffAlt = endAlt - startAlt;
+        const segmentDist = nextPos - currentPos;
+        const segmentSlope = segmentDist > 0 ? (diffAlt / segmentDist) * 100 : 0;
+        
+        const slopeColor = segmentSlope > 12 ? '#d32f2f' : 
+                          (segmentSlope > 8 ? '#f44336' : 
+                          (segmentSlope > 4 ? '#ff9800' : 
+                          (segmentSlope < 0 ? '#2196f3' : (isDarkMode ? '#aaa' : '#666'))));
+        
+        // Mapear a puntos reales para el hover del mapa
+        const startIdx = getClosestIdx(currentPos);
+        const endIdx = getClosestIdx(nextPos);
+
+        html += `
+            <tr onmouseenter="highlightElevationSegment(${startIdx}, ${endIdx}, '${slopeColor}'); this.style.background='${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}'" 
+                onmouseleave="clearElevationHighlight(); this.style.background='${isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'}'"
+                style="cursor: pointer; transition: background 0.2s; border-bottom: 1px solid rgba(128,128,128,0.1); background: ${isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'};">
+                <td class="ps-2 py-2" style="font-weight: 500;">${Math.round(currentPos)}m - ${Math.round(nextPos)}m</td>
+                <td class="text-end py-2 font-mono">${Math.round(endAlt)}m</td>
+                <td class="text-end py-2 font-mono" style="color: ${slopeColor}; font-weight: bold; font-size: 0.8rem;">
+                    ${segmentSlope > 0 ? '+' : ''}${segmentSlope.toFixed(1)}%
+                </td>
+                <td class="text-center py-2">
+                    <button class="btn btn-xs btn-outline-warning border-0 p-0" title="Ramificar perfil desde este punto" onclick="branchElevationProfileAt(${endIdx}); event.stopPropagation();">
+                        <i class="fa-solid fa-code-branch" style="font-size: 0.7rem;"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        if (nextPos >= totalDist) break;
+        currentPos = nextPos;
+    }
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  /**
+   * Permite continuar un perfil desde un punto intermedio (ramificación)
+   */
+  function branchElevationProfileAt(idx) {
+    if (!window.currentElevationData || !window.currentElevationData[idx]) return;
+    
+    const point = window.currentElevationData[idx];
+    const basePoints = window.currentElevationData.slice(0, idx + 1).map(d => [d.lat, d.lon || d.lng]);
+    
+    const panel = document.getElementById("elevation-profile-panel");
+    if (panel) panel.classList.add("d-none");
+    
+    deactivateElevationProfile();
+    startDrawingElevationProfile(basePoints);
+    
+    showMapToast(`Ramificando desde ${Math.round(point.dist)}m. Continúa la ruta y haz doble clic para finalizar.`, "#4caf50");
+  }
+
+  /**
+   * Recalcula las altitudes de todos los puntos del perfil actual.
+   * Útil si se ha cargado un nuevo TIFF que cubre zonas que antes no tenían datos.
+   */
+  async function refreshElevationData() {
+    if (!window.currentElevationData || window.currentElevationData.length === 0) {
+      showMapToast("No hay un perfil activo para reprocesar", "#ff9800");
+      return;
+    }
+    const btn = document.getElementById('btn-refresh-elevation');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> PROCESANDO...';
+    
+    showMapToast("Recalculando altitudes con los MDT disponibles...", "#ff9800");
+    try {
+        const updatedData = await fetchElevationData(window.currentElevationData);
+        if (updatedData && updatedData.length > 0) {
+            window.currentElevationData = updatedData;
+            renderElevationChart(updatedData);
+            updateElevationAnalysis();
+            showMapToast("Perfil actualizado con éxito", "#4caf50");
+        }
+    } catch (err) {
+        console.error("Error al refrescar altitudes:", err);
+        showMapToast("Error al recalcular las altitudes", "#f44336");
+    } finally {
+        if (btn) btn.innerHTML = originalHtml;
+    }
+  }
+
+  async function loadElevationProfileDialog() {
+    try {
+        const resp = await fetch('/api/vector_layers');
+        const data = await resp.json();
+        
+        // Filtrar solo las que son perfiles de elevación
+        const profiles = data.filter(l => {
+            try {
+                const geo = typeof l.geojson === 'string' ? JSON.parse(l.geojson) : l.geojson;
+                return geo.features[0]?.properties?.type === 'elevation_profile';
+            } catch(e) { return false; }
+        });
+
+        if (profiles.length === 0) {
+            showMapToast("No se encontraron perfiles guardados", "#ff9800");
+            return;
+        }
+
+        // Crear un sencillo selector (en una futura iteración podría ser un modal más complejo)
+        const nameList = profiles.map((p, i) => `${i+1}. ${p.nombre}`).join('\n');
+        const choice = prompt("Selecciona el perfil a cargar (introduce el número):\n\n" + nameList);
+        
+        if (choice && !isNaN(choice)) {
+            const idx = parseInt(choice) - 1;
+            if (profiles[idx]) {
+                const layer = profiles[idx];
+                const geo = typeof layer.geojson === 'string' ? JSON.parse(layer.geojson) : layer.geojson;
+                
+                // 1. Reconstruir la línea en el mapa
+                if (elevationLine && window._mapaCorpus.hasLayer(elevationLine)) window._mapaCorpus.removeLayer(elevationLine);
+                if (elevationTempLine) window._mapaCorpus.removeLayer(elevationTempLine);
+                elevationHighlightLayer.clearLayers();
+                
+                const coords = geo.features[0].geometry.coordinates;
+                const latlngs = coords.map(c => [c[1], c[0]]);
+                
+                elevationLine = L.polyline(latlngs, {
+                    color: '#ff9800',
+                    weight: 4,
+                    dashArray: '5, 10'
+                }).addTo(window._mapaCorpus);
+                
+                elevationLine.feature = geo.features[0];
+                window._mapaCorpus.fitBounds(elevationLine.getBounds());
+                
+                // 2. Cargar los datos de elevación guardados
+                currentElevationData = geo.features[0].properties.data;
+                currentProfileLoadedID = layer.id; 
+                
+                // 3. Mostrar el panel si está oculto y actualizar
+                let panel = document.getElementById('elevation-profile-panel');
+                if (!panel) panel = createElevationProfilePanel();
+                panel.classList.remove('d-none');
+                
+                document.getElementById('elevation-panel-title').innerText = "VISTA: " + layer.nombre;
+                
+                renderElevationChart(currentElevationData);
+                updateElevationAnalysis();
+                
+                showMapToast("Perfil cargado: " + layer.nombre, "#4caf50");
+            }
+        }
+    } catch (err) {
+        console.error("Error cargando perfiles:", err);
+        showMapToast("Error al conectar con la base de datos", "#f44336");
+    }
+  }
+
+   // Actualiza el menu desplegable de perfiles recientes en el panel
+  async function updateRecentElevationProfilesDropdown() {
+      try {
+          const resp = await fetch("/api/vector_layers");
+          const data = await resp.json();
+          const profiles = data.filter(l => {
+              try {
+                  const geo = typeof l.geojson === "string" ? JSON.parse(l.geojson) : l.geojson;
+                  return geo.features[0]?.properties?.type === "elevation_profile";
+              } catch(e) { return false; }
+          }).reverse().slice(0, 10);
+
+          const listEl = document.getElementById("elevation-load-dropdown");
+          if (!listEl) return;
+
+          const itemsToRemove = listEl.querySelectorAll(".dynamic-p-item");
+          itemsToRemove.forEach(i => i.remove());
+
+          profiles.forEach(p => {
+              const li = document.createElement("li");
+              li.className = "dynamic-p-item";
+              li.innerHTML = `<a class="dropdown-item py-1 d-flex justify-content-between align-items-center" href="#" onclick="loadElevationProfileById(${p.id})">
+                                <span class="text-truncate" style="max-width: 140px;">${p.nombre}</span>
+                                <small class="opacity-50" style="font-size: 0.6rem;">${new Date(p.fecha_creacion).toLocaleDateString()}</small>
+                             </a>`;
+              listEl.appendChild(li);
+          });
+          
+          if (profiles.length === 0) {
+              const li = document.createElement("li");
+              li.className = "dynamic-p-item px-3 py-1 text-muted small";
+              li.innerText = "No hay perfiles guardados";
+              listEl.appendChild(li);
+          }
+      } catch(e) { console.error(e); }
+  }
+
+  // Carga un perfil especifico por su ID de base de datos
+  async function loadElevationProfileById(id) {
+      try {
+          const resp = await fetch("/api/vector_layers");
+          const data = await resp.json();
+          const layer = data.find(l => l.id == id);
+          if (!layer) return;
+
+          const geo = typeof layer.geojson === "string" ? JSON.parse(layer.geojson) : layer.geojson;
+          if (elevationLine && window._mapaCorpus.hasLayer(elevationLine)) window._mapaCorpus.removeLayer(elevationLine);
+          if (elevationTempLine) window._mapaCorpus.removeLayer(elevationTempLine);
+          elevationHighlightLayer.clearLayers();
+          const coords = geo.features[0].geometry.coordinates;
+          const latlngs = coords.map(c => [c[1], c[0]]);
+          elevationLine = L.polyline(latlngs, { color: "#ff9800", weight: 4, dashArray: "5, 10" }).addTo(window._mapaCorpus);
+          elevationLine.feature = geo.features[0];
+          window._mapaCorpus.fitBounds(elevationLine.getBounds());
+          window.currentElevationData = geo.features[0].properties.data;
+          window.currentProfileLoadedID = layer.id;
+          let panel = document.getElementById("elevation-profile-panel");
+          if (!panel) panel = createElevationProfilePanel();
+          panel.classList.remove("d-none");
+          document.getElementById("elevation-panel-title").innerText = "VISTA: " + layer.nombre;
+          renderElevationChart(window.currentElevationData);
+          updateElevationAnalysis();
+          
+          // Asegurar que aparece en el listado de capas GIS (si esta abierto)
+          if (window.GISManager && typeof window.GISManager.loadVectorLayersFromDB === 'function') {
+              window.GISManager.loadVectorLayersFromDB();
+          }
+
+          showMapToast("Perfil cargado: " + layer.nombre, "#4caf50");
+      } catch (err) { console.error(err); }
+  }
+
+  async function downloadElevationProfileImage() {
+    const panel = document.getElementById('elevation-profile-panel');
+    if (!panel) return;
+    
+    const fileName = prompt("Nombre de la imagen:", "Perfil_Elevacion_" + new Date().toLocaleDateString());
+    if (!fileName) return;
+
+    showMapToast("Generando infografía...", "#ff9800");
+
+    // Preparar el panel para la captura (ocultar controles temporales)
+    const headerBtns = panel.querySelector('.d-flex.align-items-center.gap-2');
+    const footerArea = panel.querySelector('.border-top');
+    const intervalSelect = document.getElementById('elevation-interval-select')?.parentElement;
+
+    if (headerBtns) headerBtns.style.visibility = 'hidden';
+    if (footerArea) footerArea.style.display = 'none';
+    if (intervalSelect) intervalSelect.style.visibility = 'hidden';
+
+    try {
+        const canvas = await html2canvas(panel, {
+            backgroundColor: document.body.classList.contains('dark-mode') ? '#0c0c0c' : '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true
+        });
+
+        const link = document.createElement('a');
+        link.download = fileName.replace(/[^a-z0-9]/gi, '_') + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        showMapToast("Imagen exportada con éxito", "#4caf50");
+    } catch (err) {
+        console.error("Error exportando perfil:", err);
+        showMapToast("Error al generar la imagen", "#f44336");
+    } finally {
+        if (headerBtns) headerBtns.style.visibility = 'visible';
+        if (footerArea) footerArea.style.display = '';
+        if (intervalSelect) intervalSelect.style.visibility = 'visible';
+    }
+  }
+
+    async function saveElevationProfile() {
+        if (!window.currentElevationData || window.currentElevationData.length === 0) {
+            showMapToast("No hay perfil activo para guardar", "#ff9800");
+            return;
+        }
+
+        let name = "";
+        let isOverwrite = false;
+
+        if (window.currentProfileLoadedID) {
+            const confirmOverwrite = confirm("Este perfil ya existe en la base de datos. ¿Deseas sobreescribirlo?\n\n- 'Aceptar' para sobreescribir.\n- 'Cancelar' para guardarlo como un nuevo registro.");
+            if (confirmOverwrite) {
+                isOverwrite = true;
+                // Extraer el nombre de la UI eliminando prefijos si existen
+                name = document.getElementById('elevation-panel-title').innerText.replace("VISTA: ", "").replace("ANÁLISIS: ", "").replace("[ALT] ", "").replace("[ARQ] ", "");
+            }
+        }
+
+        if (!isOverwrite) {
+            name = prompt("Introduce un nombre para este perfil:", "Perfil de Elevación " + new Date().toLocaleDateString());
+            if (!name) return;
+        }
+
+        const typeChoice = prompt("Selecciona la naturaleza del perfil:\n1. Altigrafía (Ciclista/Ruta)\n2. Perfil Arqueológico (Corte/Terreno)\n\nIntroduce 1 o 2:", "1");
+        if (!typeChoice) return;
+
+        const isArch = typeChoice === "2";
+        const profileSubtype = isArch ? "archaeological" : "cycling";
+        const defaultColor = isArch ? "#00bcd4" : "#ff9800"; // Cian para arqueo, Naranja para rutas
+        const finalDescription = isArch ? "Corte arqueológico generado el " : "Perfil ciclista generado el ";
+
+        // Si no tenemos la capa de Leaflet (ej: cargado desde sidebar), reconstruimos la geometría desde los datos
+        let coords = [];
+        if (window.elevationLine) {
+            const latlngs = window.elevationLine.getLatLngs();
+            coords = latlngs.map(ll => [ll.lng, ll.lat]);
+        } else {
+            coords = window.currentElevationData.map(d => [d.lon || d.lng || (Array.isArray(d)?d[1]:null), d.lat || (Array.isArray(d)?d[0]:null)]);
+        }
+
+        const geojson = {
+            type: "FeatureCollection",
+            features: [{
+                type: "Feature",
+                geometry: {
+                    type: "LineString",
+                    coordinates: coords
+                },
+                properties: {
+                    name: name,
+                    type: "elevation_profile",
+                    subtype: profileSubtype,
+                    db_id: isOverwrite ? window.currentProfileLoadedID : null,
+                    stats: {
+                        distance: window.currentElevationData[window.currentElevationData.length - 1].dist,
+                        gain: window.currentElevationData.reduce((acc, curr, idx) => idx === 0 ? 0 : acc + Math.max(0, curr.alt - window.currentElevationData[idx-1].alt), 0),
+                        loss: window.currentElevationData.reduce((acc, curr, idx) => idx === 0 ? 0 : acc + Math.max(0, window.currentElevationData[idx-1].alt - curr.alt), 0),
+                        maxAlt: Math.max.apply(Math, window.currentElevationData.map(d => d.alt)),
+                        minAlt: Math.min.apply(Math, window.currentElevationData.map(d => d.alt))
+                    },
+                    data: window.currentElevationData
+                }
+            }]
+        };
+
+        try {
+            const endpoint = isOverwrite ? `/api/vector_layers/${window.currentProfileLoadedID}` : '/api/vector_layers';
+            const method = isOverwrite ? 'PUT' : 'POST';
+
+            const resp = await fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: (isArch ? "[ARQ] " : "[ALT] ") + name,
+                    descripcion: finalDescription + new Date().toLocaleString() + (isOverwrite ? " (Actualizado)" : ""),
+                    tipo_geometria: "line",
+                    geojson: JSON.stringify(geojson),
+                    color: defaultColor
+                })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                showMapToast(isOverwrite ? "Perfil actualizado correctamente" : "Perfil guardado correctamente", "#4caf50");
+                if (result.id) window.currentProfileLoadedID = result.id;
+                document.getElementById('elevation-panel-title').innerText = "VISTA: " + name;
+                if (window.GISManager && window.GISManager.loadVectorLayers) {
+                    window.GISManager.loadVectorLayers();
+                }
+            } else {
+                showMapToast("Error al guardar: " + (result.error || "Desconocido"), "#f44336");
+            }
+        } catch (err) {
+            console.error(err);
+            showMapToast("Error de conexión al guardar", "#f44336");
+        }
+    }
+
+  // Exportar funciones globales necesarias para el gestor GIS
+  window.createElevationProfilePanel = createElevationProfilePanel;
+  window.renderElevationChart = renderElevationChart;
+  window.updateElevationAnalysis = updateElevationAnalysis;
+  window.branchElevationProfileAt = branchElevationProfileAt;
+  window.refreshElevationData = refreshElevationData;
 </script>
 <!-- Ghost controls -->
 <div style="display: none !important;">
   <button type="button" id="btn-exportar-gis-top" class="d-none"></button>
   <button type="button" id="btn-measure-tool-hidden" class="d-none" onclick="toggleMeasureMode('ruler')"></button>
 </div>
+
+<!-- SVG Filter for Anaglyph Stereo Effect -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <style>
+    .dropdown-submenu {
+    position: relative;
+  }
+  .dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    border-radius: 0 6px 6px 6px;
+  }
+  .dropdown-submenu:hover > .dropdown-menu {
+    display: block !important;
+  }
+  .dropdown-submenu > a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: 5px;
+    margin-right: -10px;
+  }
+      @keyframes wiggleStereo {
+        0%, 100% { transform: translateX(-4px); }
+        50% { transform: translateX(4px); }
+      }
+      .wiggle-effect {
+        animation: wiggleStereo 0.1s infinite !important;
+      }
+      .tilt-effect {
+        transform: perspective(1000px) rotateX(30deg) !important;
+        transition: transform 0.5s ease-in-out !important;
+        transform-origin: center bottom !important;
+      }
+      .map-container-3d {
+        perspective: 1000px;
+        overflow: hidden;
+      }
+    </style>
+    <filter id="anaglyph-filter">
+      <!-- Canal Rojo con offset negativo -->
+      <feColorMatrix in="SourceGraphic" type="matrix" 
+        values="1 0 0 0 0  
+                0 0 0 0 0  
+                0 0 0 0 0  
+                0 0 0 1 0" result="red" />
+      <feOffset in="red" dx="-5" dy="0" result="red-offset" />
+      
+      <!-- Canal Cian (Verde + Azul) con offset positivo -->
+      <feColorMatrix in="SourceGraphic" type="matrix" 
+        values="0 0 0 0 0  
+                0 1 0 0 0  
+                0 0 1 0 0  
+                0 0 0 1 0" result="cyan" />
+      <feOffset in="cyan" dx="5" dy="0" result="cyan-offset" />
+      
+      <!-- Combinar usando 'screen' para el efecto anaglifo clasico -->
+      <feBlend in="red-offset" in2="cyan-offset" mode="screen" />
+    </filter>
+  </defs>
+</svg>
 {% endblock %}
