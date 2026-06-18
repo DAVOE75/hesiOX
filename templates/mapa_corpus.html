@@ -17718,7 +17718,7 @@
   function startDrawingElevationProfile(initialLatLngs = []) {
     if (elevationDrawHandler) deactivateElevationProfile();
     elevationMarkers = [];
-    currentProfileLoadedID = null; // Reset when starting a new draft
+    window.currentProfileLoadedID = null; // Reset when starting a new draft
     window.currentElevationData = []; // Limpiar datos previos
 
     if (initialLatLngs.length === 0) {
@@ -17849,7 +17849,7 @@
     // Muestrear puntos - Aumentamos resolución para análisis detallado
     const samples = samplePoints(latlngs, 100);
     const data = await fetchElevationData(samples);
-    currentElevationData = data;
+    window.currentElevationData = data;
 
     renderElevationChart(data);
     updateElevationAnalysis();
@@ -18543,8 +18543,8 @@
                 window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
                 
                 // 2. Cargar los datos de elevación guardados
-                currentElevationData = geo.features[0].properties.data;
-                currentProfileLoadedID = layer.id; 
+                window.currentElevationData = geo.features[0].properties.data;
+                window.currentProfileLoadedID = layer.id || layer.db_id || layer.feature?.properties?.db_id; 
                 
                 // 3. Mostrar el panel si está oculto y actualizar
                 let panel = document.getElementById('elevation-profile-panel');
@@ -18620,7 +18620,7 @@
           window.elevationLine.feature = geo.features[0];
           window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
           window.currentElevationData = geo.features[0].properties.data;
-          window.currentProfileLoadedID = layer.id;
+          window.currentProfileLoadedID = layer.id || layer.db_id || layer.feature?.properties?.db_id;
           let panel = document.getElementById("elevation-profile-panel");
           if (!panel) panel = createElevationProfilePanel();
           panel.classList.remove("d-none");
@@ -18714,7 +18714,7 @@
         // Si no tenemos la capa de Leaflet (ej: cargado desde sidebar), reconstruimos la geometría desde los datos
         let coords = [];
         if (window.elevationLine) {
-            const latlngs = window.elevationLine.getLatLngs();
+            const latlngs = (window.elevationLine && typeof window.elevationLine.getLatLngs === "function") ? window.elevationLine.getLatLngs() : []
             coords = latlngs.map(ll => [ll.lng, ll.lat]);
         } else {
             coords = window.currentElevationData.map(d => [d.lon || d.lng || (Array.isArray(d)?d[1]:null), d.lat || (Array.isArray(d)?d[0]:null)]);
