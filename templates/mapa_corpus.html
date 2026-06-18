@@ -18756,7 +18756,7 @@
                     nombre: (isArch ? "[ARQ] " : "[ALT] ") + name,
                     descripcion: finalDescription + new Date().toLocaleString() + (isOverwrite ? " (Actualizado)" : ""),
                     tipo_geometria: "line",
-                    geojson: JSON.stringify(geojson),
+                    geojson: geojson,
                     color: defaultColor
                 })
             });
