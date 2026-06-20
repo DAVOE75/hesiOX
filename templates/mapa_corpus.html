@@ -18094,10 +18094,17 @@
             <!-- Side Panel: Table -->
             <div class="p-0 d-flex flex-column" style="flex: 1; min-height: 0; background: ${sidePanelBg}; color: ${bodyTextColor};">
                <div class="p-2 border-bottom d-flex align-items-center justify-content-between" style="background: ${isDarkMode ? '#1a1a1a' : '#f5f5f5'}; border-bottom: 1px solid ${isDarkMode ? '#333' : '#ddd'} !important;">
-                  <span style="font-size: 0.65rem; font-weight: bold; color: ${textColor};">ANÁLISIS POR TRAMOS</span>
+                  <div class="d-flex align-items-center gap-2">
+                      <span style="font-size: 0.65rem; font-weight: bold; color: ${textColor};" title="Velocidad base en llano">CÁLCULO T:</span>
+                      <input type="number" id="elevation-speed-input" onchange="updateElevationAnalysis()" 
+                             class="form-control form-control-sm py-0 px-1" 
+                             value="4.0" step="0.5" min="0.5" 
+                             style="width: 45px; font-size: 0.65rem; height: 22px; background: ${isDarkMode ? '#333' : '#fff'}; color: ${isDarkMode ? '#fff' : '#333'}; border: 1px solid ${isDarkMode ? '#444' : '#ccc'};">
+                      <span style="font-size: 0.6rem; color: #888;">km/h</span>
+                  </div>
                   <select id="elevation-interval-select" onchange="updateElevationAnalysis()" 
                           class="form-select form-select-sm py-0" 
-                          style="width: 90px; font-size: 0.65rem; height: 24px; background-color: ${isDarkMode ? '#333' : '#fff'}; color: ${isDarkMode ? '#fff' : '#333'}; border-color: ${isDarkMode ? '#444' : '#ccc'};">
+                          style="width: 75px; font-size: 0.65rem; height: 24px; background-color: ${isDarkMode ? '#333' : '#fff'}; color: ${isDarkMode ? '#fff' : '#333'}; border-color: ${isDarkMode ? '#444' : '#ccc'};">
                      <option value="10">10m</option>
                      <option value="50">50m</option>
                      <option value="100" selected>100m</option>
@@ -18819,10 +18826,10 @@
     const straightDist = window.L ? L.latLng(pStart.lat, pStart.lon || pStart.lng).distanceTo(L.latLng(pEnd.lat, pEnd.lon || pEnd.lng)) : totalDist;
     const sinuosity = straightDist > 0 ? (totalDist / straightDist) : 1;
     
-    // Regla de Naismith: 4km/h base + 1min por cada 10m de ascenso
-    // (15 min por km) + (0.1 min por metro de desnivel)
-    const baseTimeMinutes = (totalDist / 1000) * 15;
-    const extraTimeMinutes = gain * 0.1;
+    // Naismith adaptable según medio de transporte
+    const speedKmh = parseFloat(document.getElementById('elevation-speed-input')?.value || 4.0);
+    const baseTimeMinutes = (totalDist / 1000) * (60 / speedKmh);
+    const extraTimeMinutes = gain * 0.1; // 1 min por cada 10m de ascenso (Estándar Naismith)
     const totalTimeMinutes = baseTimeMinutes + extraTimeMinutes;
     const hours = Math.floor(totalTimeMinutes / 60);
     const minutes = Math.round(totalTimeMinutes % 60);
