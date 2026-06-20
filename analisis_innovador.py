@@ -141,23 +141,13 @@ class AnalisisInnovador:
             size=60
         )
         
-        # Línea (suavizada o directa según cantidad de puntos)
-        if len(df) > 3:
-            # Línea suavizada (LOESS)
-            line = base.transform_loess('idx', 'sentimiento').mark_line(
-                color=accent_color,
-                size=4,
-                interpolate='monotone'
-            )
-            chart_content = points + line
-        else:
-            # Si hay pocos puntos, dibujar una linea directa
-            line = base.mark_line(
-                color=accent_color,
-                size=3,
-                opacity=0.8
-            )
-            chart_content = points + line
+        # Línea suavizada conectando todos los puntos reales
+        line = base.mark_line(
+            color=accent_color,
+            size=4,
+            interpolate='monotone'
+        )
+        chart_content = points + line
             
         chart = chart_content.properties(
             width='container',

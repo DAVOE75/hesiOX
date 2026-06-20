@@ -1,0 +1,325 @@
+{% extends "base_desktop.html" %}
+
+{% block page_title %}Atribución Estilométrica - Módulo Teatral{% endblock %}
+
+{% block top_actions %}
+<div class="d-flex align-items-center gap-2">
+    <!-- Botón Manual -->
+    <a href="#" class="btn btn-sirio-sm btn-outline-secondary d-flex align-items-center gap-2 px-3" title="Ver Manual del Módulo">
+        <i class="fa-solid fa-book"></i>
+        <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">MANUAL</span>
+    </a>
+
+    <!-- Botón Captura -->
+    <button class="btn btn-sirio-sm btn-outline-secondary d-flex align-items-center gap-2 px-3" onclick="window.print()" title="Imprimir / Guardar PDF">
+        <i class="fa-solid fa-camera"></i>
+        <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">CAPTURA</span>
+    </button>
+
+    <div class="vr mx-1 opacity-25" style="height: 20px;"></div>
+
+    <!-- Selector de IA -->
+    <div class="btn btn-sirio-sm btn-outline-secondary d-flex align-items-center gap-2 px-2" style="height: 28px; background: rgba(0,0,0,0.2);">
+        <i class="fa-solid fa-microchip text-warning small"></i>
+        <select id="ai-model-selector" class="form-select form-select-sm border-0 bg-transparent text-light fw-bold py-0" style="font-size: 0.65rem; min-width: 120px; box-shadow: none; cursor: pointer;">
+            <option value="gemini:pro" selected>GEMINI 1.5 PRO</option>
+            <option value="openai:gpt-4o">GPT-4o (OPENAI)</option>
+            <option value="anthropic:claude-3-5-sonnet">CLAUDE 3.5 SONNET</option>
+            <option value="local:deepseek-v3">DEEPSEEK V3</option>
+        </select>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .glass-panel {
+        background: var(--ds-bg-panel);
+        border: 1px solid var(--ds-border-color);
+        border-radius: 8px;
+        box-shadow: var(--ds-shadow-sm);
+    }
+
+    /* Caja de Info Adaptativa */
+    .info-sirio {
+        background: var(--ds-bg-app);
+        border-left: 4px solid var(--ds-accent-primary);
+        padding: 20px;
+        border-radius: 4px;
+        margin-bottom: 30px;
+        border: 1px solid var(--ds-border-color);
+        border-left-width: 4px;
+    }
+    
+    [data-theme="light"] .info-sirio {
+        background: rgba(var(--ds-accent-rgb), 0.03);
+    }
+
+    [data-theme="dark"] .info-sirio {
+        background: rgba(255, 152, 0, 0.03);
+        border-left-color: #ff9800;
+    }
+
+    /* CUSTOM CHOICES.JS STYLING - Adaptativo */
+    .choices__inner {
+        background: var(--ds-bg-app) !important;
+        border: 1px solid var(--ds-border-color) !important;
+        border-radius: 6px !important;
+        padding: 6px 12px !important;
+        min-height: 48px !important;
+        transition: all 0.2s ease;
+    }
+
+    .choices.is-focused .choices__inner {
+        border-color: var(--ds-accent-primary) !important;
+        box-shadow: 0 0 0 3px var(--ds-accent-alpha) !important;
+    }
+
+    .choices__list--multiple .choices__item {
+        background: var(--ds-bg-app) !important;
+        border: 1px solid var(--ds-border-color) !important;
+        border-radius: 4px !important;
+        color: var(--ds-text-main) !important;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px !important;
+        margin: 2px 4px 2px 0 !important;
+    }
+    
+    [data-theme="light"] .choices__list--multiple .choices__item {
+        background: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+    }
+
+    .choices__list--dropdown {
+        background: var(--ds-bg-panel) !important;
+        border: 1px solid var(--ds-border-color) !important;
+        box-shadow: var(--ds-shadow-lg) !important;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: var(--ds-accent-primary) !important;
+        color: #fff !important;
+    }
+
+    .sirio-badge {
+        background: var(--ds-accent-alpha);
+        color: var(--ds-accent-primary);
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 9px;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+
+    [data-theme="dark"] .sirio-badge {
+        background: rgba(255, 152, 0, 0.1);
+        color: #ff9800;
+    }
+
+    .btn-sirio-premium {
+        background: var(--ds-accent-primary);
+        color: #fff !important;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 24px;
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-sirio-premium:hover {
+        background: var(--ds-accent-hover, var(--ds-accent-primary));
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        filter: brightness(1.1);
+    }
+
+    .btn-sirio-premium:active {
+        transform: translateY(0);
+    }
+
+    .section-label {
+        font-size: 11px;
+        color: var(--ds-text-muted);
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .sirio-card {
+        background: var(--ds-bg-panel);
+        border: 1px solid var(--ds-border-color);
+        border-radius: 8px;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .vocab-list-container {
+        background: var(--ds-bg-app);
+        border-radius: 6px;
+        padding: 15px;
+        max-height: 120px;
+        overflow-y: auto;
+        font-size: 11px;
+        color: var(--ds-text-muted);
+        line-height: 1.8;
+    }
+
+    .table-sirio thead th {
+        background: var(--ds-accent-primary) !important;
+        color: #fff !important;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none !important;
+        padding: 12px 15px !important;
+    }
+
+    [data-theme="dark"] .table-sirio thead th {
+        background: #ff9800 !important;
+        color: #000 !important;
+    }
+
+    .table-sirio tbody tr {
+        border-bottom: 1px solid var(--ds-border-color);
+        transition: background 0.2s;
+    }
+
+    .table-sirio tbody tr:hover {
+        background: rgba(var(--ds-accent-rgb), 0.03);
+    }
+
+    .sirio-badge {
+        background: var(--ds-bg-app);
+        border: 1px solid var(--ds-border-color);
+        color: var(--ds-text-muted);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div id="view-atribucion" class="analisis-view">
+        <div class="glass-panel p-4">
+            <h3 class="text-accent mb-4" style="color: var(--ds-accent-primary) !important;"><i class="fa-solid fa-fingerprint me-2"></i>Atribución de Autoría y Comparativa</h3>
+            
+            <div class="info-sirio d-flex align-items-center">
+                <div class="me-3 p-2 rounded-circle" style="background: var(--ds-accent-alpha); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fa-solid fa-microchip" style="color: var(--ds-accent-primary); font-size: 1.2rem;"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px; color: var(--ds-accent-primary);">Módulo de Estilometría Avanzada</h6>
+                    <p class="mb-0 xsmall text-muted" style="line-height: 1.4;">
+                        Ejecución del algoritmo <strong>Burrows' Delta</strong> sobre MFW (Most Frequent Words). Detección de proximidades estilísticas y cronológicas mediante análisis estadístico multivariable.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Selector de Obras -->
+            <div class="p-4 mb-5 glass-panel" style="background: var(--ds-bg-app); border-color: var(--ds-border-color);">
+                <div class="row align-items-center g-4">
+                    <div class="col-12 col-lg-6">
+                        <span class="section-label"><i class="fa-solid fa-layer-group me-1"></i> Corpus de Comparación</span>
+                        <select id="atribucion-obras-select" class="form-select" multiple>
+                            <!-- Cargado dinámicamente por JS -->
+                        </select>
+                        <div class="mt-2 xsmall text-muted opacity-50"><i class="fa-solid fa-circle-info me-1"></i>Selecciona al menos dos obras para generar la matriz de afinidad.</div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <span class="section-label"><i class="fa-solid fa-microchip me-1"></i> MFW (Vocabulario Evaluado)</span>
+                        <select id="atribucion-mfw-select" class="form-select" style="background: var(--ds-bg-app); border-color: var(--ds-border-color); color: var(--ds-text-main);">
+                            <option value="150">150 palabras (Rápido)</option>
+                            <option value="300">300 palabras (Estándar)</option>
+                            <option value="500" selected>500 palabras (Exhaustivo)</option>
+                            <option value="1000">1000 palabras (Académico)</option>
+                            <option value="2000">2000 palabras (Crítico)</option>
+                        </select>
+                        <div class="mt-2 xsmall text-muted opacity-50">A mayor vocabulario, más precisión en obras largas.</div>
+                    </div>
+                    
+                    <div class="col-12 col-lg-3 text-lg-end">
+                        <button id="btn-atribucion-comparar" class="btn btn-sirio-premium w-100 w-lg-auto" style="min-height: 48px;">
+                            <i class="fa-solid fa-bolt-lightning me-2"></i>Iniciar Análisis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor para Interpretación IA -->
+            <div id="atribucion-ai-container"></div>
+
+            <!-- Tabla de Resultados Delta -->
+            <div class="row g-4">
+                <div class="col-12 col-xl-7">
+                    <div class="sirio-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 small fw-bold text-uppercase" style="letter-spacing: 1px; color: var(--ds-accent-primary);">
+                                <i class="fa-solid fa-table-cells me-2"></i>Matriz de Distancias (Delta)
+                            </h5>
+                            <span class="sirio-badge">Burrows Delta Method</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sirio align-middle small mb-0">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fa-solid fa-file-signature me-2"></i>Obra A</th>
+                                        <th><i class="fa-solid fa-file-signature me-2"></i>Obra B</th>
+                                        <th class="text-center">Delta</th>
+                                        <th class="text-center">Afinidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="atribucion-delta-body">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Radar -->
+                <div class="col-12 col-xl-5">
+                    <div class="sirio-card">
+                        <h5 class="mb-4 small fw-bold text-uppercase" style="letter-spacing: 1px; color: var(--ds-accent-primary);">
+                            <i class="fa-solid fa-chart-line me-2"></i>Dimensiones Estilísticas
+                        </h5>
+                        <div style="height: 300px; min-height: 300px; position: relative;">
+                            <canvas id="chart-atribucion-radar"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="sirio-card">
+                        <h5 class="mb-3 small fw-bold text-uppercase" style="letter-spacing: 1px; color: var(--ds-accent-primary);">
+                            <i class="fa-solid fa-list-check me-2"></i>Vocabulario Evaluado (MFW)
+                        </h5>
+                        <div id="atribucion-vocab-list" class="vocab-list-container font-monospace">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Scripts lógicos del Módulo Teatral -->
+<script src="{{ url_for('static', filename='js/teatral_atribucion.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

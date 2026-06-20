@@ -943,6 +943,55 @@ def editar_publicacion(id):
     )
 
 
+
+@hemerotecas_bp.route("/publicacion/duplicar/<int:id>", methods=["GET"])
+@login_required
+def duplicar_publicacion(id):
+    """Duplicar publicación académica y redirigir a edición del nuevo registro"""
+    original = db.session.get(Publicacion, id)
+    if not original:
+        flash('Publicación original no encontrada', 'danger')
+        return redirect(url_for('hemerotecas.lista_publicaciones'))
+
+    # Verificar permisos
+    if original.proyecto_id != get_proyecto_activo().id:
+        flash("❌ No tienes permiso para duplicar esta publicación", "danger")
+        return redirect(url_for("hemerotecas.lista_publicaciones"))
+
+    campos = [c.name for c in Publicacion.__table__.columns if c.name not in ('id_publicacion', 'creado_en', 'modificado_en')]
+    datos = {campo: getattr(original, campo) for campo in campos}
+    if 'nombre' in datos and datos['nombre']:
+        datos['nombre'] = f"{datos['nombre']} (copia)"
+        
+    # Verificar si ya existe una copia con ese nombre para evitar conflictos de unicidad
+    contador = 1
+    nuevo_nombre = datos['nombre']
+    while Publicacion.query.filter_by(nombre=nuevo_nombre, proyecto_id=original.proyecto_id).first():
+        nuevo_nombre = f"{datos['nombre']} ({contador})"
+        contador += 1
+    datos['nombre'] = nuevo_nombre
+
+    copia = Publicacion(**datos)
+    db.session.add(copia)
+    db.session.flush() # Obtener id de la copia
+
+    # Copiar autores
+    for a in original.autores:
+        nueva_aut = AutorPublicacion(
+            publicacion_id=copia.id_publicacion,
+            nombre=a.nombre,
+            apellido=a.apellido,
+            tipo=a.tipo,
+            es_anonimo=a.es_anonimo,
+            orden=a.orden
+        )
+        db.session.add(nueva_aut)
+
+    db.session.commit()
+    flash('Publicación duplicada. Ahora puedes editarla.', 'success')
+    return redirect(url_for('hemerotecas.editar_publicacion', id=copia.id_publicacion))
+
+
 @hemerotecas_bp.route("/publicacion/borrar/<int:id>", methods=["POST"])
 @login_required
 def borrar_publicacion(id):
@@ -1022,39 +1071,75 @@ def migrar_publicacion():
     proyecto_destino_id = request.args.get("destino") or request.form.get("destino")
     mensaje = None
 
-    try:
-        proyecto_origen_id_int = int(proyecto_origen_id) if proyecto_origen_id is not None else None
-        proyecto_destino_id_int = int(proyecto_destino_id) if proyecto_destino_id is not None else None
-    except Exception:
-        proyecto_origen_id_int = None
-        proyecto_destino_id_int = None
+    def normalize_name(s):
+        if not s: return ""
+        import unicodedata
+        s = str(s).strip().lower()
+        return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+
+    proyecto_origen_id_int = None
+    proyecto_destino_id_int = None
+
+    if proyecto_origen_id:
+        try: proyecto_origen_id_int = int(proyecto_origen_id)
+        except: pass
+    
+    if proyecto_destino_id:
+        try: proyecto_destino_id_int = int(proyecto_destino_id)
+        except: pass
 
     if proyecto_origen_id_int:
         publicaciones = Publicacion.query.filter_by(proyecto_id=proyecto_origen_id_int).all()
 
-    hemerotecas_destino_ids = set()
+    # Obtener hemerotecas del destino mapeadas por nombre para vinculación inteligente
+    hemerotecas_destino_por_nombre = {}
     if proyecto_destino_id_int:
-        hemerotecas_destino_ids = {h.id for h in Hemeroteca.query.filter_by(proyecto_id=proyecto_destino_id_int).all()}
+        hems_dest = Hemeroteca.query.filter_by(proyecto_id=proyecto_destino_id_int).all()
+        # Normalizamos nombres (acentos, minúsculas y sin espacios extra)
+        hemerotecas_destino_por_nombre = {normalize_name(h.nombre): h.id for h in hems_dest}
 
-    hemerotecas_faltantes = set()
+    hemerotecas_faltantes_nombres = set()
     publicaciones_no_migradas = []
 
     if request.method == "POST":
         if not proyecto_origen_id_int or not proyecto_destino_id_int:
             mensaje = "Debes seleccionar ambos proyectos antes de migrar."
         else:
-            seleccionadas = request.form.getlist("publicaciones")
+            # Obtener IDs de publicaciones seleccionadas por 'Migrar' o por 'Noticias'
+            p_migrar = [int(pid) for pid in request.form.getlist("publicaciones")]
+            p_noticias = [int(k.split("_")[1]) for k in request.form.keys() if k.startswith("noticias_") and request.form.get(k) == "1"]
+            
+            seleccionadas = set(p_migrar + p_noticias)
+            
             migradas = 0
+            noticias_migradas = 0
             for pub_id in seleccionadas:
-                pub = Publicacion.query.get(pub_id)
+                pub = db.session.get(Publicacion, pub_id)
                 if pub:
-                    # Verificar hemeroteca
-                    if pub.hemeroteca_id and pub.hemeroteca_id not in hemerotecas_destino_ids:
-                        hemerotecas_faltantes.add(pub.hemeroteca_id)
-                        publicaciones_no_migradas.append(pub.nombre)
-                        continue
+                    # Determinar ID de hemeroteca en el destino (vinculación por nombre)
+                    target_hemeroteca_id = None
+                    if pub.hemeroteca_id:
+                        orig_hem = pub.hemeroteca_rel
+                        hem_name_norm = normalize_name(orig_hem.nombre) if orig_hem else None
+                        if hem_name_norm and hem_name_norm in hemerotecas_destino_por_nombre:
+                            target_hemeroteca_id = hemerotecas_destino_por_nombre[hem_name_norm]
+                        else:
+                            hem_name = orig_hem.nombre if orig_hem else f"ID:{pub.hemeroteca_id}"
+                            hemerotecas_faltantes_nombres.add(hem_name)
+                            publicaciones_no_migradas.append(pub.nombre)
+                            continue
+                    
+                    # Verificar si ya existe por nombre en el destino
                     existe = Publicacion.query.filter_by(proyecto_id=proyecto_destino_id_int, nombre=pub.nombre).first()
-                    if not existe:
+                    target_pub = None
+                    if existe:
+                        # Si existe pero no tiene hemeroteca, y ahora sí la encontramos, ACTUALIZAR
+                        if not existe.hemeroteca_id and target_hemeroteca_id:
+                            existe.hemeroteca_id = target_hemeroteca_id
+                        target_pub = existe
+                        # Contamos como "procesada/actualizada" para el mensaje
+                        migradas += 1
+                    else:
                         nueva = Publicacion(
                             proyecto_id=proyecto_destino_id_int,
                             nombre=pub.nombre,
@@ -1072,15 +1157,58 @@ def migrar_publicacion():
                             editorial=pub.editorial,
                             url_publi=pub.url_publi,
                             frecuencia=pub.frecuencia,
-                            hemeroteca_id=pub.hemeroteca_id,
+                            hemeroteca_id=target_hemeroteca_id,
+                            # Campos adicionales
+                            tipo_publicacion=pub.tipo_publicacion,
+                            periodicidad=pub.periodicidad,
+                            lugar_publicacion=pub.lugar_publicacion,
+                            actos_totales=pub.actos_totales,
+                            escenas_totales=pub.escenas_totales,
+                            reparto_total=pub.reparto_total,
+                            coleccion=pub.coleccion,
+                            nombre_autor=pub.nombre_autor,
+                            apellido_autor=pub.apellido_autor,
+                            pseudonimo=pub.pseudonimo
                         )
                         db.session.add(nueva)
+                        db.session.flush() # Para obtener ID si necesitamos copiar hijos
+                        
+                        # Copiar autores
+                        for aut in pub.autores:
+                            nuevo_aut = AutorPublicacion(
+                                publicacion_id=nueva.id_publicacion,
+                                nombre=aut.nombre,
+                                apellido=aut.apellido,
+                                tipo=aut.tipo,
+                                es_anonimo=aut.es_anonimo,
+                                orden=aut.orden
+                            )
+                            db.session.add(nuevo_aut)
+                        target_pub = nueva
                         migradas += 1
+                    
+                    # ¿Migrar noticias asociadas?
+                    # Usamos str(pub.id_publicacion) para asegurar coincidencia con las claves de request.form
+                    check_key = f"noticias_{pub.id_publicacion}"
+                    if target_pub and request.form.get(check_key) == "1":
+                        # Evitar duplicados por título y fecha en el destino
+                        existentes = { (n.titulo, n.fecha_original) for n in Prensa.query.filter_by(id_publicacion=target_pub.id_publicacion).all() }
+                        for noticia in pub.articulos:
+                            if (noticia.titulo, noticia.fecha_original) in existentes:
+                                continue
+                            
+                            # Clonar dinámicamente todos los campos excepto IDs
+                            datos_noticia = {c.name: getattr(noticia, c.name) for c in noticia.__table__.columns if c.name not in ['id', 'proyecto_id', 'id_publicacion']}
+                            nueva_noticia = Prensa(**datos_noticia)
+                            nueva_noticia.proyecto_id = proyecto_destino_id_int
+                            nueva_noticia.id_publicacion = target_pub.id_publicacion
+                            db.session.add(nueva_noticia)
+                            noticias_migradas += 1
             db.session.commit()
-            if hemerotecas_faltantes:
-                mensaje = f"Migradas {migradas} publicaciones. Las siguientes publicaciones NO se migraron porque su hemeroteca no existe en el proyecto destino: {', '.join(publicaciones_no_migradas)}. Migra primero la hemeroteca correspondiente."
+            if hemerotecas_faltantes_nombres:
+                mensaje = f"Migradas {migradas} publicaciones y {noticias_migradas} noticias. Las siguientes publicaciones NO se migraron por falta de hemeroteca en destino: {', '.join(publicaciones_no_migradas)}."
             else:
-                mensaje = f"Migradas {migradas} publicaciones de proyecto {proyecto_origen_id_int} a {proyecto_destino_id_int}."
+                mensaje = f"Migración completada con éxito: {migradas} publicaciones y {noticias_migradas} noticias/textos migradas de proyecto {proyecto_origen_id_int} a {proyecto_destino_id_int}."
 
     return render_template(
         "migrar_publicacion.html",
@@ -1134,4 +1262,31 @@ def toggle_visibilidad_publicacion(id):
     estado = "ahora es visible" if publicacion.visible else "ahora está oculta"
     flash(f"👁️ La publicación '{publicacion.nombre}' {estado}", "info")
     return redirect(url_for("hemerotecas.lista_publicaciones"))
+
+
+@hemerotecas_bp.route("/publicacion/toggle_activa/<int:id>")
+@login_required
+def toggle_activa_publicacion(id):
+    """Alternar estado activa/desactivada de una publicación (exclusión de módulos analíticos)"""
+    publicacion = Publicacion.query.get_or_404(id)
+    proyecto = get_proyecto_activo()
+    
+    if not proyecto or publicacion.proyecto_id != proyecto.id:
+        flash("❌ No tienes permiso para modificar esta publicación", "danger")
+        return redirect(url_for("hemerotecas.lista_publicaciones"))
+        
+    publicacion.activa = not getattr(publicacion, 'activa', True)
+    db.session.commit()
+    
+    estado = "ahora está ACTIVADA" if publicacion.activa else "ahora está DESACTIVADA"
+    # Limpiar caché analítico para forzar regeneración sin esta publicación
+    try:
+        from analisis_cache import cache as analisis_cache_instance
+        analisis_cache_instance.limpiar_todo()
+    except Exception as e:
+        print(f"[CACHE ERROR] Error al limpiar caché analítico: {e}")
+        
+    flash(f"⚙️ La publicación '{publicacion.nombre}' {estado}", "info")
+    return redirect(url_for("hemerotecas.lista_publicaciones"))
+
 

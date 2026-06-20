@@ -61,6 +61,7 @@
 
         localStorage.setItem(THEME_KEY, newTheme);
         applyTheme(newTheme);
+        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
 
         // Add smooth transition class
         document.body.classList.add('theme-transitioning');

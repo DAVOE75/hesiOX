@@ -344,9 +344,10 @@ footer a:hover {
 .card {
   background: #1a1a1a;
   border: 3px solid var(--web-border);
-  border-radius: var(--web-radius);
+  border-radius: var(--web-radius) !important;
   box-shadow: var(--web-shadow);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  overflow: hidden; /* Asegurar que el contenido no desborde las esquinas redondeadas */
 }
 
 .card:hover {
@@ -362,6 +363,16 @@ footer a:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.card > :first-child {
+  border-top-left-radius: calc(var(--web-radius) - 3px) !important;
+  border-top-right-radius: calc(var(--web-radius) - 3px) !important;
+}
+
+.card > :last-child {
+  border-bottom-left-radius: calc(var(--web-radius) - 3px) !important;
+  border-bottom-right-radius: calc(var(--web-radius) - 3px) !important;
 }
 
 .card-body {

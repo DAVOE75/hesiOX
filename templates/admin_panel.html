@@ -128,7 +128,7 @@
         <!-- Layout de 2 columnas -->
         <div class="row g-4 mb-4">
             <!-- Columna Izquierda: Monitoreo y Mantenimiento -->
-            <div class="col-lg-5">
+            <div class="col-lg-5 d-flex flex-column">
                 <!-- Monitoreo del Sistema -->
                 <div class="card-panel mb-4">
                     <div class="card-header-panel">
@@ -281,7 +281,7 @@
                 </div>
 
                 <!-- Capas IDE -->
-                <div class="card-panel">
+                <div class="card-panel flex-grow-1">
                     <div class="card-header-panel d-flex justify-content-between align-items-center">
                         <span><i class="fa-solid fa-layer-group me-2"></i> Gestor IDE ({{ ide_servicios|length
                             }})</span>
@@ -290,8 +290,8 @@
                             <i class="fa-solid fa-plus me-1"></i> Añadir IDE
                         </button>
                     </div>
-                    <div class="p-0">
-                        <div class="max-h-400-scroll" style="width: 100%; overflow-x: auto;">
+                    <div class="p-0 flex-grow-1 d-flex flex-column">
+                        <div class="flex-grow-1" style="width: 100%; overflow-x: auto; overflow-y: auto; scrollbar-width: thin; min-height: 200px;">
                             {% if ide_servicios %}
                             <table class="table table-sirio table-hover mb-0 font-size-xs">
                                 <tbody>

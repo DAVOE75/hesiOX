@@ -1,3 +1,7 @@
+try:
+    import rasterio
+except ImportError:
+    rasterio = None
 import os
 import zipfile
 import tempfile
@@ -6,7 +10,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required
 from werkzeug.utils import secure_filename
 import geopandas as gpd
-from extensions import db
+from extensions import db, csrf
 from models import CapaGeografica
 from utils import get_proyecto_activo
 import requests
@@ -150,6 +154,86 @@ def upload_layer():
     
     return jsonify({"success": False, "error": "Tipo de archivo no permitido"}), 400
 
+@capas_bp.route('/api/layers/upload_dem', methods=['POST'])
+@csrf.exempt
+@login_required
+def upload_dem():
+    """Endpoint específico para subir un MDT (GeoTIFF) para el perfil de elevación"""
+    if 'file' not in request.files:
+        return jsonify({"success": False, "error": "No hay archivo"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"success": False, "error": "Nombre vacío"}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        if not (filename.lower().endswith('.tif') or filename.lower().endswith('.tiff')):
+            return jsonify({"success": False, "error": "Solo se permiten archivos .tif o .tiff para MDT"}), 400
+            
+        dem_dir = os.path.join(current_app.static_folder, "uploads", "dem")
+        os.makedirs(dem_dir, exist_ok=True)
+        
+        file_path = os.path.join(dem_dir, filename)
+        file.save(file_path)
+        
+        # Obtener bounds para visualización inmediata
+        import rasterio
+        from rasterio.warp import transform_bounds
+        bounds_data = None
+        try:
+            with rasterio.open(file_path) as src:
+                b = transform_bounds(src.crs, 'EPSG:4326', *src.bounds)
+                bounds_data = {"west": b[0], "south": b[1], "east": b[2], "north": b[3]}
+        except:
+            pass
+
+        return jsonify({
+            "success": True, 
+            "message": "MDT cargado correctamente. Ahora puede ser usado para el perfil de elevación.",
+            "filename": filename,
+            "bounds": bounds_data
+        })
+    
+    return jsonify({"success": False, "error": "Extensión no permitida"}), 400
+
+@capas_bp.route('/api/layers/check_dem', methods=['GET'])
+@login_required
+def check_dem():
+    """Verifica si ya existen archivos MDT en el servidor y devuelve sus extensiones geográficas"""
+    import rasterio
+    dem_dir = os.path.join(current_app.static_folder, "uploads", "dem")
+    if not os.path.exists(dem_dir):
+        return jsonify({"count": 0, "files": []})
+    
+    files = [f for f in os.listdir(dem_dir) if f.lower().endswith(('.tif', '.tiff'))]
+    results = []
+    
+    for f in files:
+        file_path = os.path.join(dem_dir, f)
+        try:
+            with rasterio.open(file_path) as src:
+                from rasterio.warp import transform_bounds
+                # Obtener los bounds en WGS84 (Lat/Lon)
+                bounds = transform_bounds(src.crs, 'EPSG:4326', *src.bounds)
+                results.append({
+                    "filename": f,
+                    "bounds": {
+                        "west": bounds[0],
+                        "south": bounds[1],
+                        "east": bounds[2],
+                        "north": bounds[3]
+                    }
+                })
+        except Exception as e:
+            print(f"Error procesando {f}: {e}")
+            results.append({"filename": f, "bounds": None})
+
+    return jsonify({
+        "count": len(files),
+        "files": results
+    })
+
 @capas_bp.route('/api/layers', methods=['GET'])
 @login_required
 def list_layers():
@@ -179,7 +263,6 @@ def delete_layer(id):
     return jsonify({"success": True})
 
 @capas_bp.route('/api/proxy/wms')
-@login_required
 def wms_proxy():
     url = request.args.get('url')
     if not url:
@@ -194,12 +277,18 @@ def wms_proxy():
         # Use verify=False to handle institutional servers with SSL certificate issues
         # Add a User-Agent to avoid 403 Forbidden on strict servers like Catastro
         custom_headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Referer': 'https://www.ign.es/web/ign/portal'
         }
-        resp = requests.get(url, params=params, stream=True, timeout=30, verify=False, headers=custom_headers)
+        
+        # Log the attempt
+        current_app.logger.info(f"[Proxy] Fetching (truncated): {url[:200]}")
+        
+        resp = requests.get(url, params=params, stream=True, timeout=15, verify=False, headers=custom_headers)
         
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in resp.raw.headers.items()
+        headers = [(name, value) for (name, value) in resp.headers.items()
                    if name.lower() not in excluded_headers]
 
         return Response(resp.iter_content(chunk_size=1024 * 64), 
@@ -207,5 +296,70 @@ def wms_proxy():
                         headers=headers,
                         content_type=resp.headers.get('Content-Type'))
     except Exception as e:
-        current_app.logger.error(f"WMS Proxy error: {e}")
-        return jsonify({"error": str(e)}), 500
+        safe_url = url[:100] + "..." if url else "unknown"
+        print(f"!!! [PROXY ERROR] {safe_url}: {e}")
+        return jsonify({"error": f"Error de conexion con el servicio externo: {str(e)}"}), 502
+
+@capas_bp.route('/api/altitud_raster', methods=['POST'])
+@csrf.exempt
+def get_altitud_raster():
+    """
+    Recibe un array de puntos [[lon, lat], ...] y busca la altitud en un archivo local (MDT/LiDAR).
+    El archivo debe estar configurado en la variable de entorno DEM_PATH o buscarse en uploads/dem/.
+    """
+    if not rasterio:
+        return jsonify({"error": "Libreria rasterio no instalada"}), 500
+        
+    data = request.json
+    points = data.get('points', []) # [[lon, lat], ...]
+    if not points:
+        return jsonify({"error": "No se enviaron puntos"}), 400
+        
+    # Directorio de modelos de elevación
+    dem_dir = os.path.join(current_app.static_folder, "uploads", "dem")
+    
+    # Buscamos todos los archivos .tif en la carpeta
+    dem_files = [os.path.join(dem_dir, f) for f in os.listdir(dem_dir) if f.lower().endswith('.tif')]
+    
+    if not dem_files:
+        return jsonify({"error": "No se encontraron archivos .tif en uploads/dem/"}), 404
+        
+    results = [None] * len(points)
+    pending_indices = list(range(len(points)))
+    sources_used = []
+
+    try:
+        for dem_path in dem_files:
+            if not pending_indices: break
+            
+            with rasterio.open(dem_path) as src:
+                # Filtrar puntos que caen dentro de este raster
+                bounds = src.bounds
+                indices_to_check = [i for i in pending_indices if (bounds.left <= points[i][0] <= bounds.right and bounds.bottom <= points[i][1] <= bounds.top)]
+                
+                if not indices_to_check: continue
+                
+                sources_used.append(os.path.basename(dem_path))
+                pts_to_sample = [points[i] for i in indices_to_check]
+                
+                for idx, val_tuple in zip(indices_to_check, src.sample(pts_to_sample)):
+                    val = val_tuple[0]
+                    results[idx] = {
+                        "altitud": float(val) if val is not None and val > -9999 else 0
+                    }
+                    # Si encontramos una altitud válida (>0), lo quitamos de pendientes
+                    if results[idx]["altitud"] > 0:
+                        pending_indices.remove(idx)
+        
+        # Rellenar con 0 los puntos que no cayeron en ningún raster
+        for i in range(len(results)):
+            if results[i] is None:
+                results[i] = {"altitud": 0}
+        
+        return jsonify({
+            "success": True, 
+            "items": results,
+            "sources": sources_used
+        })
+    except Exception as e:
+        return jsonify({"error": f"Error procesando raster: {str(e)}"}), 500

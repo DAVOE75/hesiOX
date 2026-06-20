@@ -1,0 +1,236 @@
+    # Copiar relación con temas
+    if original.temas_rel:
+        copia.temas_rel = list(original.temas_rel)
+
+    db.session.commit()
+    # Invalidate analysis cache
+    try: analisis_cache_instance.limpiar_todo()
+    except: pass
+    flash('Noticia duplicada. Ahora puedes editarla.', 'success')
+    return redirect(url_for('noticias.editar', id=copia.id))
+
+# --- Eliminar noticia de prensa ---
+@noticias_bp.route('/eliminar/<int:noticia_id>', methods=['POST'], endpoint='noticia_eliminar')
+@login_required
+def noticia_eliminar(noticia_id):
+    noticia = db.session.get(Prensa, noticia_id)
+    if not noticia:
+        flash('Noticia no encontrada', 'danger')
+        return redirect(url_for('noticias.listar'))
+    try:
+        db.session.delete(noticia)
+        db.session.commit()
+        # Invalidate analysis cache
+        try: analisis_cache_instance.limpiar_todo()
+        except: pass
+        flash('Noticia eliminada correctamente', 'success')
+        return redirect(url_for('noticias.listar'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar la noticia: {str(e)}', 'danger')
+        return redirect(url_for('noticias.listar'))
+
+# --- Eliminar imagen de prensa (material adjunto) ---
+@noticias_bp.route('/imagen/eliminar/<int:imagen_id>', methods=['POST'], endpoint='eliminar_imagen_prensa')
+@login_required
+def eliminar_imagen_prensa(imagen_id):
+    current_app.logger.info(f"[ELIMINAR IMAGEN] ID={imagen_id}, Method={request.method}, User={current_user.nombre if current_user.is_authenticated else 'Anon'}")
+    try:
+        imagen = db.session.get(ImagenPrensa, imagen_id)
+        if not imagen:
+            current_app.logger.warning(f"[ELIMINAR IMAGEN] Imagen {imagen_id} no encontrada")
+            flash('Imagen no encontrada', 'danger')
+            return redirect(request.referrer or url_for('noticias.listar'))
+        
+        prensa_id = imagen.prensa_id
+        filename = imagen.filename
+        current_app.logger.info(f"[ELIMINAR IMAGEN] Eliminando {filename} de prensa_id={prensa_id}")
+        
+        # Eliminar el archivo físico del servidor
+        filepath = os.path.join(current_app.root_path, 'static', 'uploads', filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            current_app.logger.info(f"[ELIMINAR IMAGEN] Archivo {filepath} eliminado")
+        
+        # Eliminar el registro de la base de datos
+        db.session.delete(imagen)
+        db.session.commit()
+        current_app.logger.info(f"[ELIMINAR IMAGEN] Registro BD eliminado correctamente")
+        
+        flash('🗑️ Imagen eliminada correctamente', 'success')
+        return redirect(url_for('noticias.editar', id=prensa_id))
+    except Exception as e:
+        current_app.logger.error(f"[ELIMINAR IMAGEN] ERROR: {str(e)}", exc_info=True)
+        db.session.rollback()
+        flash(f'Error al eliminar la imagen: {str(e)}', 'danger')
+        return redirect(request.referrer or url_for('noticias.listar'))
+
+
+@noticias_bp.route("/api/ediciones/<tipo_recurso>", methods=["GET"])
+@login_required
+def get_ediciones_tipo(tipo_recurso):
+    """Retorna las opciones de edición para un tipo de recurso específico desde la BD"""
+    try:
+        ediciones = EdicionTipoRecurso.query.filter_by(tipo_recurso=tipo_recurso).order_by(EdicionTipoRecurso.orden).all()
+        return jsonify([e.to_dict() for e in ediciones])
+    except Exception as e:
+        print(f"[ERROR] Al obtener ediciones para {tipo_recurso}: {e}")
+        return jsonify([]), 500
+
+# --- MODO LECTOR / REVISIÓN ---
+@noticias_bp.route('/noticias/lector', methods=['GET'])
+@login_required
+def lector():
+    """Vista del Modo Lector / Revisión"""
+    proyecto = get_proyecto_activo()
+    if not proyecto:
+        flash('Seleccione un proyecto primero', 'warning')
+        return redirect(url_for('home'))
+        
+    return render_template('noticias/lector.html')
+
+@noticias_bp.route('/api/noticias/simple_list', methods=['GET'])
+@login_required
+def api_noticias_simple_list():
+    """Devuelve lista ligera de noticias para selectores (id, titulo, fecha)"""
+    proyecto = get_proyecto_activo()
+    if not proyecto:
+        return jsonify([])
+        
+    publicacion = request.args.get('publicacion')
+    
+    query = Prensa.query.filter_by(proyecto_id=proyecto.id)
+    
+    if publicacion:
+        query = query.filter(Prensa.publicacion == publicacion)
+        
+    # Ordenar por ID de menor a mayor
+    query = query.order_by(Prensa.id.asc())
+    
+    # Proyección optimizada
+    resultados = query.with_entities(Prensa.id, Prensa.titulo, Prensa.fecha_original, Prensa.numero).all()
+    
+    data = []
+    for r in resultados:
+        # fecha_original es TEXT en DB, formato YYYY-MM-DD usualmente
+        fecha_str = "Sin fecha"
+        if r.fecha_original:
+            try:
+                # Intentar parsear si es YYYY-MM-DD
+                if len(r.fecha_original) >= 10 and r.fecha_original[4] == '-':
+                     anio, mes, dia = r.fecha_original[:10].split('-')
+                     fecha_str = f"{dia}/{mes}/{anio}"
+                else:
+                     fecha_str = r.fecha_original
+            except:
+                fecha_str = r.fecha_original
+
+        titulo_corto = (r.titulo[:60] + '...') if r.titulo and len(r.titulo) > 60 else (r.titulo or "Sin título")
+        label = f"{fecha_str} - {titulo_corto}"
+        if r.numero:
+            label += f" (Nº {r.numero})"
+            
+        data.append({
+            'id': r.id,
+            'label': label,
+            'fecha': str(r.fecha_original) if r.fecha_original else None
+        })
+        
+    return jsonify(data)
+
+import fitz  # PyMuPDF
+
+@noticias_bp.route('/api/noticia/render_pdf_page/<path:filename>')
+@login_required
+def api_noticia_render_pdf_page(filename):
+    """Renderiza una página de un PDF como imagen JPG al vuelo"""
+    try:
+        page_num = request.args.get('page', 0, type=int)
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
+        
+        # Seguridad: evitar path traversal
+        filename = os.path.basename(filename)
+        path = os.path.join(upload_folder, filename)
+        
+        if not os.path.exists(path):
+            # Fallback a ruta absoluta
+            path = os.path.abspath(path)
+            if not os.path.exists(path):
+                return "Archivo no encontrado", 404
+                
+        doc = fitz.open(path)
+        if page_num < 0 or page_num >= len(doc):
+            page_num = 0
+            
+        page = doc.load_page(page_num)
+        # Usar una matriz para aumentar la resolución (zoom 2x = 144 DPI aprox)
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        img_data = pix.tobytes("jpg")
+        
+        return Response(img_data, mimetype='image/jpeg')
+    except Exception as e:
+        return str(e), 500
+
+@noticias_bp.route('/api/noticia/contenido/<int:id>', methods=['GET'])
+@login_required
+def api_noticia_contenido(id):
+    """Devuelve contenido completo de una noticia para el lector"""
+    noticia = db.session.get(Prensa, id)
+    if not noticia:
+        return jsonify({'error': 'Not encontrada'}), 404
+        
+    # Determinar imágenes y sus mapas OCR
+    imagenes = []
+    ocr_maps_by_url = {}
+    
+    imgs_asociadas = noticia.imagenes.all()
+    for img in imgs_asociadas:
+        url = url_for('static', filename=f'uploads/{img.filename}')
+        if url not in imagenes:
+            imagenes.append(url)
+            if img.ocr_map:
+                ocr_maps_by_url[url] = img.ocr_map
+        
+    # [FIX] Priorizar imagen_scan como primera imagen si existe
+    if noticia.imagen_scan and noticia.imagen_scan.lower() not in ['none', 'null', '']:
+        scans = [s.strip() for s in noticia.imagen_scan.split(',') if s.strip()]
+        for scan in reversed(scans):
+            if scan.lower() not in ['none', 'null', '']:
+                url_scan = url_for('static', filename=f'uploads/{scan}')
+                if url_scan not in imagenes:
+                    imagenes.insert(0, url_scan)
+                    # La imagen_scan principal podría usar el ocr_map general de la noticia
+                    if noticia.ocr_map:
+                        ocr_maps_by_url[url_scan] = noticia.ocr_map
+
+    # Determinar PDFs
+    archivos_pdf = []
+    if noticia.archivo_pdf:
+        for pdf in [p.strip() for p in noticia.archivo_pdf.split(',') if p.strip()]:
+            if pdf.startswith('http'):
+                archivos_pdf.append(pdf)
+            else:
+                archivos_pdf.append(url_for('static', filename=f'uploads/{pdf}'))
+
+    # Determinar tipo de proyecto
+    tipo_proyecto = "generico"
+    if noticia.proyecto:
+        tipo_proyecto = noticia.proyecto.tipo
+
+    return jsonify({
+        'id': noticia.id,
+        'titulo': noticia.titulo,
+        'publicacion': noticia.publicacion,
+        'fecha': str(noticia.fecha_original) if noticia.fecha_original else "",
+        'contenido_html': noticia.contenido,
+        'texto_puro': limpieza_profunda_ocr(noticia.contenido) if noticia.contenido else "",
+        'url_imagen': imagenes[0] if imagenes else None,
+        'imagenes': imagenes,
+        'ocr_map': noticia.ocr_map,
+        'ocr_maps_by_url': ocr_maps_by_url,
+        'archivos_pdf': archivos_pdf,
+        'tipo_proyecto': tipo_proyecto,
+        'incluido': noticia.incluido,
+        'url_detalle': url_for('noticias.detalle_noticia', id=noticia.id),
+        'url_editar': url_for('noticias.editar', id=noticia.id)
+    })

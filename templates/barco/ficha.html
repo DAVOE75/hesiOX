@@ -10,6 +10,7 @@
 
 
 {% block top_actions %}
+{% set insight_title = proyecto_activo.nombre if proyecto_activo else "Análisis Global" %}
 <div class="d-flex align-items-center justify-content-end w-100 gap-2">
     <!-- Selector de IA (Potencia) al estilo Sirio-Gold -->
     <div class="dropdown dropdown-ia">
@@ -52,7 +53,7 @@
 
     <!-- Navegación y Otros -->
     <div class="d-flex gap-1 border-start border-white border-opacity-10 ps-2">
-        <button onclick="openInsight('all', '{{ proyecto_activo.nombre if proyecto_activo else \'Análisis Global\' }}', event)" class="btn btn-sirio btn-sirio-warning" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
+        <button onclick="openInsight('all', '{{ insight_title }}', event)" class="btn btn-sirio btn-sirio-warning" style="background: var(--br-accent-dim); border: 1px solid var(--br-accent); color: var(--br-accent);">
             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Global
         </button>
 

@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import re
+import sys
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required
 from extensions import csrf
@@ -83,25 +84,37 @@ def correct_ocr_text_advanced():
     
     try:
         app_logger.info(f"[OCR-IA] Procesando {len(texto_ocr)} carac. en {num_chunks} fragmentos con {potencia}.")
+        if image_data:
+            app_logger.info(f"[OCR-IA] Imagen adjunta detectada (Size: {len(image_data)} bytes).")
 
         for i, chunk in enumerate(chunks):
             # Pass image_data only to the first chunk (typical for news clippings)
             current_image = image_data if i == 0 else None
             
+            app_logger.info(f"[OCR-IA] Procesando fragmento {i+1}/{num_chunks}...")
+            
             # Usar el método centralizado de AIService para mantener consistencia
             res = ai_service.correct_ocr_text(chunk, part_num=i+1, total_parts=num_chunks, image_data=current_image)
             
             if res:
+                if 'error' in res:
+                    app_logger.warning(f"[OCR-IA] Fragmento {i+1} devolvió error: {res['error']}")
+                
                 # El método devuelve corrected_text y metadata (keys estandarizadas)
                 textos_corregidos.append(res.get('corrected_text', ''))
                 if i == 0:
                     # Mapear metadatos a la estructura que espera el frontend (metadatos -> metadata)
                     metadatos_finales = res.get('metadata', {})
             else:
+                app_logger.warning(f"[OCR-IA] Fragmento {i+1} falló (sin respuesta). Usando original.")
                 # Fallback: si falla la IA, usar el chunk original
                 textos_corregidos.append(chunk)
+            
+            # Limpiar referencia a imagen para liberar memoria en el loop
+            current_image = None
                     
         # Unir todos los fragmentos
+        app_logger.info(f"[OCR-IA] Finalizando unión de {len(textos_corregidos)} fragmentos.")
         texto_final = "\n".join(textos_corregidos)
 
         return jsonify({

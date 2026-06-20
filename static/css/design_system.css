@@ -313,7 +313,15 @@ html {
     /* --- SHADOWS --- */
     --ds-shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.4);
     --ds-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --ds-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    /* --- EDITOR VARIABLES MAPPED TO DESIGN SYSTEM --- */
+    --editor-quill-bg: var(--ds-bg-panel);
+    --editor-panel-bg: var(--ds-bg-panel);
+    --editor-toolbar-bg: var(--ds-bg-sidebar);
+    --editor-border: var(--ds-border-color);
+    --editor-text: var(--ds-text-main);
+    --editor-title-text: var(--ds-text-main);
+    --editor-nav-bg: var(--ds-bg-sidebar);
+    --editor-bg: var(--ds-bg-app);
 }
 
 /* === MODO CLARO (Light Theme) === */
@@ -840,8 +848,7 @@ body.theme-transitioning * {
     font-size: 13px;
     border-left: 3px solid transparent;
     transition: all 0.15s ease;
-    cursor: default;
-    /* Desktop feel */
+    cursor: pointer;
 }
 
 .nav-item:hover {
@@ -2647,4 +2654,58 @@ html:not([data-theme="light"]) .project-card-archive:hover {
     background: var(--ds-bg-app);
     border-color: var(--ds-border-color) !important;
 }
+
+/* === SIRIO THEME-AWARE COMPONENTS === */
+.bg-sirio-panel {
+    background: var(--ds-bg-panel);
+    border: 1px solid var(--ds-border-color);
+    box-shadow: var(--ds-shadow-panel);
+}
+
+/* === NLP & ADVANCED ANALYSIS CONSISTENCY === */
+.analisis-view .card.bg-sirio-panel.text-center {
+    min-height: 160px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* === DATE FILTER PILL (Listado de Noticias) === */
+.date-filter-pill {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+    height: 32px !important;
+    display: flex;
+    align-items: center;
+}
+
+.date-filter-pill .form-control-sirio-compact {
+    width: 105px;
+    border: none !important;
+    background: transparent !important;
+    font-size: 0.75rem;
+    color: var(--ds-text-main) !important;
+    padding: 0 4px;
+    height: 24px;
+}
+
+.date-filter-pill #btnFiltrarFechas {
+    padding: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: #ff9800 !important;
+    color: #000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+
+
 

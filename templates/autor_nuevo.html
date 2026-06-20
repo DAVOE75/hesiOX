@@ -88,10 +88,17 @@
                     const nombre = form.querySelector('[name="nombre"]').value;
                     const apellido = form.querySelector('[name="apellido"]').value;
                     
-                    if (!nombre) {
+                    if (!nombre && !apellido) {
                         Swal.fire('Error', 'Debe indicar al menos el nombre para usar la IA', 'warning');
                         return;
                     }
+
+                    // Recoger datos actuales para no perder lo que ya se haya escrito (opcional enviarlo)
+                    const bioData = {};
+                    const fields = form.querySelectorAll('input:not([type="hidden"]), textarea');
+                    fields.forEach(f => {
+                        if (f.name && f.value.trim()) bioData[f.name] = f.value.trim();
+                    });
 
                     Swal.fire({
                         title: 'Consultando a la IA...',
@@ -106,10 +113,20 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken,
                                 'X-CSRFToken': csrfToken
                             },
-                            body: JSON.stringify({ nombre: nombre, apellido: apellido, bio_data: {} })
+                            body: JSON.stringify({ 
+                                nombre: nombre, 
+                                apellido: apellido, 
+                                bio_data: bioData 
+                            })
                         });
+
+                        if (!response.ok) {
+                            throw new Error(`Error del servidor: ${response.status}`);
+                        }
+
                         const data = await response.json();
                         
                         if (data.status === 'success') {
@@ -153,9 +170,12 @@
                                 if (!field) field = document.querySelector(`[name="${formName}"]`);
 
                                 if (field) {
-                                    console.log(`[HesiOX IA] Rellenando campo: ${formName}`);
-                                    field.value = bio[bioKey];
-                                    fieldsFilled++;
+                                    // Solo rellenar si está vacío o si la IA trae algo nuevo
+                                    if (!field.value || field.value.length < bio[bioKey].length) {
+                                        console.log(`[HesiOX IA] Rellenando campo: ${formName}`);
+                                        field.value = bio[bioKey];
+                                        fieldsFilled++;
+                                    }
                                 } else {
                                     console.warn(`[HesiOX IA] No se encontró el campo para: ${formName}`);
                                 }
@@ -165,17 +185,17 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Completado!',
-                                text: 'Información enriquecida por la IA',
+                                text: `Se han enriquecido ${fieldsFilled} campos biográficos.`,
                                 background: '#1a1a1a',
                                 color: '#fff',
                                 confirmButtonColor: '#ff9800'
                             });
                         } else {
-                            Swal.fire('Atención', data.message || 'No se pudo obtener información adicional', 'info');
+                            Swal.fire('Atención', data.message || 'La IA no pudo generar datos para este autor.', 'info');
                         }
                     } catch (error) {
-                        console.error(error);
-                        Swal.fire('Error', 'No se pudo conectar con el servicio de IA', 'error');
+                        console.error("[HesiOX IA] Error:", error);
+                        Swal.fire('Error', 'Error al conectar con el servicio de IA: ' + error.message, 'error');
                     }
                 });
             }

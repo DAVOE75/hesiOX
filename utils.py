@@ -16,7 +16,7 @@ import os
 
 CONFIG_FILE = 'server_config.json'
 DEFAULT_CONFIG = {
-    "spacy_model": "es_core_news_lg",
+    "spacy_model": "es_core_news_md",
     "max_char_limit": 15000
 }
 

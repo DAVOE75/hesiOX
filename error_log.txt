@@ -1,0 +1,500 @@
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/search
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/publicaciones
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/publicacion_noticias/<int:pub_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/spacy/clean2
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>/editar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/ciudad_coords
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>/borrar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia_noticia_add_location/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia_noticia_edit_location/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia_noticia_delete_location/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/verificar_ciudad
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/verificar_batch
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/ubicacion/<int:ubicacion_id>/verificar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/ubicacion/<int:ubicacion_id>/vincular
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/batch_verificar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/gestion/verificar_geo
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/batch_unverify
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /mapa_corpus
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/vector_layers
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/vector_layers/<int:layer_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/vector_layers
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'PUT'} /api/vector_layers/<int:layer_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'DELETE'} /api/vector_layers/<int:layer_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/vector_layers/<int:layer_id>/export
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/vector_layers/import
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/vector_layers/reorder
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/vector_layers/migrate
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/noticias_por_publicacion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/batch_geocoding
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/eliminar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/borrar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/restaurar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/limpiar_referencias
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/rebuscar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/gestion/contexto_lugar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/rebuscar_batch
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/batch_delete
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/batch_unlink
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/reactivar_batch
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/editar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/cambiar-tipo-masivo
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/tipos-ubicacion/listar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/tipos-ubicacion/restaurar/<string:codigo>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/tipos-ubicacion/crear
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'PUT'} /api/tipos-ubicacion/editar/<int:tipo_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'DELETE'} /api/tipos-ubicacion/eliminar/<int:tipo_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/unificar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/gestion/crear
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/ciudad/<nombre>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_corpus/embeddings
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_corpus
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /cartografia/topografia-semantica
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/semantica
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/<int:id>/toggle_incluido
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/toggle_incluido/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/cartografia/semantica/interpretar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/semantica/detalles
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia/rareza
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_corpus/export
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /noticias/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /noticias/detalle/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/cartografia_noticia/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/valores_filtrados
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/map-data
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/map-distribution
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /filtrar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /actualizar_nota/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /cartografia/gestor
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /listar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /nueva
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /editar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /duplicar/<int:noticia_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /eliminar/<int:noticia_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /imagen/eliminar/<int:imagen_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/ediciones/<tipo_recurso>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /noticias/lector
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/noticias/simple_list
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/noticia/render_pdf_page/<path:filename>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/noticia/contenido/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/publicaciones_list
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/resumir/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/update_content/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /noticia/generar_pdf_final
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /temas/gestor
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/temas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/temas/renombrar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/temas/eliminar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/temas/crear
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticias/<int:id>/analizar-ner
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticias/<int:id>/entidades/ignorar-global
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticias/<int:id>/entidades/vincular
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticias/<int:id>/entidades/lote
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticias/<int:id>/entidades/eliminar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /noticias/<int:noticia_id>/exportar-tei
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/versiones/<int:version_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/<int:id>/eliminar_pdf/<path:filename>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/noticia/ai_vision_highlight
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /hemerotecas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/nueva
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/editar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /hemeroteca/borrar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/migrar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /hemerotecas/repositorio
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /hemeroteca/importar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /hemeroteca/verificar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/fusionar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /publicaciones
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /publicacion/nueva
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /publicacion/editar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /publicacion/duplicar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /publicacion/borrar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/hemeroteca/<int:id>/datos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/publicacion/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /migrar_publicacion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /publicacion/archivo/borrar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /publicacion/toggle_visible/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /publicacion/toggle_activa/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /hemeroteca/copiar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/recargar_cache
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/reuso-detalle
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/dramatico/autor
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis/analitica-hd
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/lista-documentos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/lista-publicaciones
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/sentimiento-temporal
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/topic-modeling
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/coocurrencia-entidades
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/estilometrico
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/atribucion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/atribucion/interpretar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/ngramas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/clustering
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/regex-search
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/similares/<int:id_documento>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/dramatico
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/dashboard
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis/distribucion-temporal
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/keyness
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/reuso-textual
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis/conceptos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/conceptos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'PUT'} /api/analisis/conceptos/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'DELETE'} /api/analisis/conceptos/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/geosemantica
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/ngramas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/semantic-shift
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/comunidades
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/retorica
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/periodistico
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/semantico
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/intertextualidad
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/interpretar_intertextualidad
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/emociones
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/interpretar_emociones
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/interpretar_semantica
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/sirio_chat
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/sesgos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/interpretar_sesgos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/dramatico/subtexto
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis/ping
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/dramatico/interpretar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/literario
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis/innovador/corpus_chat
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/admin/restart
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/admin/free-ram
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /admin/db-clean-html
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /admin/db-backup
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /admin/project-download
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/ocr/pdf-info
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/ocr/advanced
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/ocr/corregir
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/spacy/clean2
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/gemini/correct
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/gemini/extract_locations
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /timeline
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/timeline-data
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/noticia/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/quality/validar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/quality/validado
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /distribucion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis-espacial/ui
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis-espacial/estadisticas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis-espacial/redes
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/analisis-espacial/escala-nodos
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/analisis-espacial/weather-impact
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/layers/upload
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/layers
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'DELETE'} /api/layers/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/proxy/wms
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /cartografia/mapas
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /cartografia/recortador/<int:mapa_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /cartografia/georreferenciador/<int:mapa_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/mapas_historicos/upload
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/mapas_historicos/<int:id>/gcps
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'DELETE', 'GET', 'HEAD', 'POST', 'PUT', 'OPTIONS'} /api/mapas_historicos/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/mapas_historicos/proyecto
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/mapas_historicos/<int:id>/auto_georef
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/mapas_historicos/<int:id>/export
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/mapas_historicos/crop
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/simulacion/save
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/simulacion/list
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /api/simulacion/get/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'DELETE'} /api/simulacion/delete/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /log
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /export/geojson/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /export/kml/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/simulacion/diagnose_mc_ai
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /api/simulacion/analyze_mc
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/listado
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/filtrar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /pasajeros/nuevo
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /pasajeros/editar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/eliminar/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/search_autocomplete
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/ficha/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/buscar_en_prensa/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/menciones/<int:id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/mencion_texto/<int:pasajero_id>/<int:prensa_id>
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/vincular_mencion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/desvincular_mencion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/crear_mencion_manual
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/vincular_publicacion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/desvincular_publicacion
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/vincular_familiar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/desvincular_familiar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/actualizar_familiar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/reordenar-familiares
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/actualizar_residencia
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/editar_masivo
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/exportar
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/stats
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/map-data
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/update_journey
+May 12 20:21:23 ubuntu gunicorn[491813]:   {'POST', 'OPTIONS'} /pasajeros/api/update-coordinates
+May 12 20:23:48 ubuntu gunicorn[491813]:   {'OPTIONS', 'GET', 'HEAD'} /pasajeros/api/family-data
+May 12 20:23:48 ubuntu gunicorn[491742]: [2026-05-12 20:23:48,946] ERROR in app: Exception on /editar/1339 [GET]
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: psycopg2.errors.UndefinedColumn: column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: The above exception was the direct cause of the following exception:
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 1455, in wsgi_app
+May 12 20:23:48 ubuntu gunicorn[491742]:     response = self.full_dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 869, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.handle_user_exception(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 759, in handle_user_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(handler)(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/app.py", line 203, in handle_api_exceptions
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise error
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 867, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 852, in dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
+May 12 20:23:48 ubuntu gunicorn[491742]:     return current_app.ensure_sync(func)(*args, **kwargs)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/routes/noticias.py", line 5720, in editar
+May 12 20:23:48 ubuntu gunicorn[491742]:     noticia = db.session.get(Prensa, id)
+May 12 20:23:48 ubuntu gunicorn[491742]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 1064, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._proxied.get(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3653, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._get_impl(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3833, in _get_impl
+May 12 20:23:48 ubuntu gunicorn[491742]:     return db_load_fn(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/loading.py", line 690, in load_on_pk_identity
+May 12 20:23:48 ubuntu gunicorn[491742]:     session.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._execute_internal(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2190, in _execute_internal
+May 12 20:23:48 ubuntu gunicorn[491742]:     result: Result[Any] = compile_state_cls.orm_execute_statement(
+May 12 20:23:48 ubuntu gunicorn[491742]:                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/context.py", line 293, in orm_execute_statement
+May 12 20:23:48 ubuntu gunicorn[491742]:     result = conn.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:              ^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return meth(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+May 12 20:23:48 ubuntu gunicorn[491742]:     return connection._execute_clauseelement(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1639, in _execute_clauseelement
+May 12 20:23:48 ubuntu gunicorn[491742]:     ret = self._execute_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:           ^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._exec_single_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self._handle_dbapi_exception(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2343, in _handle_dbapi_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: [SQL: SELECT prensa.id AS prensa_id, prensa.proyecto_id AS prensa_proyecto_id, prensa.titulo AS prensa_titulo, prensa.publicacion AS prensa_publicacion, prensa.id_publicacion AS prensa_id_publicacion, prensa.ciudad AS prensa_ciudad, prensa.fecha_original AS prensa_fecha_original, prensa.anio AS prensa_anio, prensa.numero AS prensa_numero, prensa.pagina_inicio AS prensa_pagina_inicio, prensa.pagina_fin AS prensa_pagina_fin, prensa.paginas AS prensa_paginas, prensa.url AS prensa_url, prensa.fecha_consulta AS prensa_fecha_consulta, prensa.nombre_autor AS prensa_nombre_autor, prensa.apellido_autor AS prensa_apellido_autor, prensa.tipo_autor AS prensa_tipo_autor, prensa.pseudonimo AS prensa_pseudonimo, prensa.coleccion AS prensa_coleccion, prensa.idioma AS prensa_idioma, prensa.licencia AS prensa_licencia, prensa.fuente_condiciones AS prensa_fuente_condiciones, prensa.temas AS prensa_temas, prensa.notas AS prensa_notas, prensa.contenido AS prensa_contenido, prensa.incluido AS prensa_incluido, prensa.es_referencia AS prensa_es_referencia, prensa.numero_referencia AS prensa_numero_referencia, prensa.tipo_recurso AS prensa_tipo_recurso, prensa.editor AS prensa_editor, prensa.lugar_publicacion AS prensa_lugar_publicacion, prensa.issn AS prensa_issn, prensa.volumen AS prensa_volumen, prensa.seccion AS prensa_seccion, prensa.palabras_clave AS prensa_palabras_clave, prensa.resumen AS prensa_resumen, prensa.editorial AS prensa_editorial, prensa.isbn AS prensa_isbn, prensa.doi AS prensa_doi, prensa.pais_publicacion AS prensa_pais_publicacion, prensa.escenas AS prensa_escenas, prensa.reparto AS prensa_reparto, prensa.actos_totales AS prensa_actos_totales, prensa.escenas_totales AS prensa_escenas_totales, prensa.reparto_total AS prensa_reparto_total, prensa.formato_fuente AS prensa_formato_fuente, prensa.referencias_relacionadas AS prensa_referencias_relacionadas, prensa.archivo_pdf AS prensa_archivo_pdf, prensa.fuente AS prensa_fuente, prensa.imagen_scan AS prensa_imagen_scan, prensa.texto_original AS prensa_texto_original, prensa.descripcion_publicacion AS prensa_descripcion_publicacion, prensa.tipo_publicacion AS prensa_tipo_publicacion, prensa.periodicidad AS prensa_periodicidad, prensa.contenido_diplomatico AS prensa_contenido_diplomatico, prensa.contenido_critico AS prensa_contenido_critico, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr_map AS prensa_ocr_map, prensa.nombre_investigador AS prensa_nombre_investigador, prensa.universidad_investigador AS prensa_universidad_investigador, prensa.edicion AS prensa_edicion, prensa.creado_en AS prensa_creado_en, prensa.modificado_en AS prensa_modificado_en, prensa.embedding_vector AS prensa_embedding_vector, prensa.embedding_model AS prensa_embedding_model, prensa.embedding_generado_en AS prensa_embedding_generado_en
+May 12 20:23:48 ubuntu gunicorn[491742]: FROM prensa
+May 12 20:23:48 ubuntu gunicorn[491742]: WHERE prensa.id = %(pk_1)s]
+May 12 20:23:48 ubuntu gunicorn[491742]: [parameters: {'pk_1': 1339}]
+May 12 20:23:48 ubuntu gunicorn[491742]: (Background on this error at: https://sqlalche.me/e/20/f405)
+May 12 20:23:48 ubuntu gunicorn[491742]: 2026-05-12 20:23:48,946 ERROR app Exception on /editar/1339 [GET]
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: psycopg2.errors.UndefinedColumn: column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: The above exception was the direct cause of the following exception:
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 1455, in wsgi_app
+May 12 20:23:48 ubuntu gunicorn[491742]:     response = self.full_dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 869, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.handle_user_exception(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 759, in handle_user_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(handler)(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/app.py", line 203, in handle_api_exceptions
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise error
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 867, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 852, in dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
+May 12 20:23:48 ubuntu gunicorn[491742]:     return current_app.ensure_sync(func)(*args, **kwargs)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/routes/noticias.py", line 5720, in editar
+May 12 20:23:48 ubuntu gunicorn[491742]:     noticia = db.session.get(Prensa, id)
+May 12 20:23:48 ubuntu gunicorn[491742]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 1064, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._proxied.get(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3653, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._get_impl(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3833, in _get_impl
+May 12 20:23:48 ubuntu gunicorn[491742]:     return db_load_fn(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/loading.py", line 690, in load_on_pk_identity
+May 12 20:23:48 ubuntu gunicorn[491742]:     session.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._execute_internal(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2190, in _execute_internal
+May 12 20:23:48 ubuntu gunicorn[491742]:     result: Result[Any] = compile_state_cls.orm_execute_statement(
+May 12 20:23:48 ubuntu gunicorn[491742]:                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/context.py", line 293, in orm_execute_statement
+May 12 20:23:48 ubuntu gunicorn[491742]:     result = conn.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:              ^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return meth(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+May 12 20:23:48 ubuntu gunicorn[491742]:     return connection._execute_clauseelement(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1639, in _execute_clauseelement
+May 12 20:23:48 ubuntu gunicorn[491742]:     ret = self._execute_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:           ^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._exec_single_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self._handle_dbapi_exception(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2343, in _handle_dbapi_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: [SQL: SELECT prensa.id AS prensa_id, prensa.proyecto_id AS prensa_proyecto_id, prensa.titulo AS prensa_titulo, prensa.publicacion AS prensa_publicacion, prensa.id_publicacion AS prensa_id_publicacion, prensa.ciudad AS prensa_ciudad, prensa.fecha_original AS prensa_fecha_original, prensa.anio AS prensa_anio, prensa.numero AS prensa_numero, prensa.pagina_inicio AS prensa_pagina_inicio, prensa.pagina_fin AS prensa_pagina_fin, prensa.paginas AS prensa_paginas, prensa.url AS prensa_url, prensa.fecha_consulta AS prensa_fecha_consulta, prensa.nombre_autor AS prensa_nombre_autor, prensa.apellido_autor AS prensa_apellido_autor, prensa.tipo_autor AS prensa_tipo_autor, prensa.pseudonimo AS prensa_pseudonimo, prensa.coleccion AS prensa_coleccion, prensa.idioma AS prensa_idioma, prensa.licencia AS prensa_licencia, prensa.fuente_condiciones AS prensa_fuente_condiciones, prensa.temas AS prensa_temas, prensa.notas AS prensa_notas, prensa.contenido AS prensa_contenido, prensa.incluido AS prensa_incluido, prensa.es_referencia AS prensa_es_referencia, prensa.numero_referencia AS prensa_numero_referencia, prensa.tipo_recurso AS prensa_tipo_recurso, prensa.editor AS prensa_editor, prensa.lugar_publicacion AS prensa_lugar_publicacion, prensa.issn AS prensa_issn, prensa.volumen AS prensa_volumen, prensa.seccion AS prensa_seccion, prensa.palabras_clave AS prensa_palabras_clave, prensa.resumen AS prensa_resumen, prensa.editorial AS prensa_editorial, prensa.isbn AS prensa_isbn, prensa.doi AS prensa_doi, prensa.pais_publicacion AS prensa_pais_publicacion, prensa.escenas AS prensa_escenas, prensa.reparto AS prensa_reparto, prensa.actos_totales AS prensa_actos_totales, prensa.escenas_totales AS prensa_escenas_totales, prensa.reparto_total AS prensa_reparto_total, prensa.formato_fuente AS prensa_formato_fuente, prensa.referencias_relacionadas AS prensa_referencias_relacionadas, prensa.archivo_pdf AS prensa_archivo_pdf, prensa.fuente AS prensa_fuente, prensa.imagen_scan AS prensa_imagen_scan, prensa.texto_original AS prensa_texto_original, prensa.descripcion_publicacion AS prensa_descripcion_publicacion, prensa.tipo_publicacion AS prensa_tipo_publicacion, prensa.periodicidad AS prensa_periodicidad, prensa.contenido_diplomatico AS prensa_contenido_diplomatico, prensa.contenido_critico AS prensa_contenido_critico, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr_map AS prensa_ocr_map, prensa.nombre_investigador AS prensa_nombre_investigador, prensa.universidad_investigador AS prensa_universidad_investigador, prensa.edicion AS prensa_edicion, prensa.creado_en AS prensa_creado_en, prensa.modificado_en AS prensa_modificado_en, prensa.embedding_vector AS prensa_embedding_vector, prensa.embedding_model AS prensa_embedding_model, prensa.embedding_generado_en AS prensa_embedding_generado_en
+May 12 20:23:48 ubuntu gunicorn[491742]: FROM prensa
+May 12 20:23:48 ubuntu gunicorn[491742]: WHERE prensa.id = %(pk_1)s]
+May 12 20:23:48 ubuntu gunicorn[491742]: [parameters: {'pk_1': 1339}]
+May 12 20:23:48 ubuntu gunicorn[491742]: (Background on this error at: https://sqlalche.me/e/20/f405)
+May 12 20:23:48 ubuntu gunicorn[491742]: [2026-05-12 20:23:48 +0000] [491742] [ERROR] Error handling request /editar/1339
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: psycopg2.errors.UndefinedColumn: column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: The above exception was the direct cause of the following exception:
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 1455, in wsgi_app
+May 12 20:23:48 ubuntu gunicorn[491742]:     response = self.full_dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 869, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.handle_user_exception(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 759, in handle_user_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(handler)(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/app.py", line 203, in handle_api_exceptions
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise error
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 867, in full_dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     rv = self.dispatch_request()
+May 12 20:23:48 ubuntu gunicorn[491742]:          ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 852, in dispatch_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask_login/utils.py", line 290, in decorated_view
+May 12 20:23:48 ubuntu gunicorn[491742]:     return current_app.ensure_sync(func)(*args, **kwargs)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/routes/noticias.py", line 5720, in editar
+May 12 20:23:48 ubuntu gunicorn[491742]:     noticia = db.session.get(Prensa, id)
+May 12 20:23:48 ubuntu gunicorn[491742]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 1064, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._proxied.get(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3653, in get
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._get_impl(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 3833, in _get_impl
+May 12 20:23:48 ubuntu gunicorn[491742]:     return db_load_fn(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/loading.py", line 690, in load_on_pk_identity
+May 12 20:23:48 ubuntu gunicorn[491742]:     session.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._execute_internal(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2190, in _execute_internal
+May 12 20:23:48 ubuntu gunicorn[491742]:     result: Result[Any] = compile_state_cls.orm_execute_statement(
+May 12 20:23:48 ubuntu gunicorn[491742]:                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/orm/context.py", line 293, in orm_execute_statement
+May 12 20:23:48 ubuntu gunicorn[491742]:     result = conn.execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:              ^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     return meth(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 516, in _execute_on_connection
+May 12 20:23:48 ubuntu gunicorn[491742]:     return connection._execute_clauseelement(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1639, in _execute_clauseelement
+May 12 20:23:48 ubuntu gunicorn[491742]:     ret = self._execute_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:           ^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self._exec_single_context(
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self._handle_dbapi_exception(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2343, in _handle_dbapi_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.dialect.do_execute(
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 922, in do_execute
+May 12 20:23:48 ubuntu gunicorn[491742]:     cursor.execute(statement, parameters)
+May 12 20:23:48 ubuntu gunicorn[491742]: sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column prensa.ocr_map does not exist
+May 12 20:23:48 ubuntu gunicorn[491742]: LINE 1: ...co, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr...
+May 12 20:23:48 ubuntu gunicorn[491742]:                                                              ^
+May 12 20:23:48 ubuntu gunicorn[491742]: [SQL: SELECT prensa.id AS prensa_id, prensa.proyecto_id AS prensa_proyecto_id, prensa.titulo AS prensa_titulo, prensa.publicacion AS prensa_publicacion, prensa.id_publicacion AS prensa_id_publicacion, prensa.ciudad AS prensa_ciudad, prensa.fecha_original AS prensa_fecha_original, prensa.anio AS prensa_anio, prensa.numero AS prensa_numero, prensa.pagina_inicio AS prensa_pagina_inicio, prensa.pagina_fin AS prensa_pagina_fin, prensa.paginas AS prensa_paginas, prensa.url AS prensa_url, prensa.fecha_consulta AS prensa_fecha_consulta, prensa.nombre_autor AS prensa_nombre_autor, prensa.apellido_autor AS prensa_apellido_autor, prensa.tipo_autor AS prensa_tipo_autor, prensa.pseudonimo AS prensa_pseudonimo, prensa.coleccion AS prensa_coleccion, prensa.idioma AS prensa_idioma, prensa.licencia AS prensa_licencia, prensa.fuente_condiciones AS prensa_fuente_condiciones, prensa.temas AS prensa_temas, prensa.notas AS prensa_notas, prensa.contenido AS prensa_contenido, prensa.incluido AS prensa_incluido, prensa.es_referencia AS prensa_es_referencia, prensa.numero_referencia AS prensa_numero_referencia, prensa.tipo_recurso AS prensa_tipo_recurso, prensa.editor AS prensa_editor, prensa.lugar_publicacion AS prensa_lugar_publicacion, prensa.issn AS prensa_issn, prensa.volumen AS prensa_volumen, prensa.seccion AS prensa_seccion, prensa.palabras_clave AS prensa_palabras_clave, prensa.resumen AS prensa_resumen, prensa.editorial AS prensa_editorial, prensa.isbn AS prensa_isbn, prensa.doi AS prensa_doi, prensa.pais_publicacion AS prensa_pais_publicacion, prensa.escenas AS prensa_escenas, prensa.reparto AS prensa_reparto, prensa.actos_totales AS prensa_actos_totales, prensa.escenas_totales AS prensa_escenas_totales, prensa.reparto_total AS prensa_reparto_total, prensa.formato_fuente AS prensa_formato_fuente, prensa.referencias_relacionadas AS prensa_referencias_relacionadas, prensa.archivo_pdf AS prensa_archivo_pdf, prensa.fuente AS prensa_fuente, prensa.imagen_scan AS prensa_imagen_scan, prensa.texto_original AS prensa_texto_original, prensa.descripcion_publicacion AS prensa_descripcion_publicacion, prensa.tipo_publicacion AS prensa_tipo_publicacion, prensa.periodicidad AS prensa_periodicidad, prensa.contenido_diplomatico AS prensa_contenido_diplomatico, prensa.contenido_critico AS prensa_contenido_critico, prensa.entidades_ner AS prensa_entidades_ner, prensa.ocr_map AS prensa_ocr_map, prensa.nombre_investigador AS prensa_nombre_investigador, prensa.universidad_investigador AS prensa_universidad_investigador, prensa.edicion AS prensa_edicion, prensa.creado_en AS prensa_creado_en, prensa.modificado_en AS prensa_modificado_en, prensa.embedding_vector AS prensa_embedding_vector, prensa.embedding_model AS prensa_embedding_model, prensa.embedding_generado_en AS prensa_embedding_generado_en
+May 12 20:23:48 ubuntu gunicorn[491742]: FROM prensa
+May 12 20:23:48 ubuntu gunicorn[491742]: WHERE prensa.id = %(pk_1)s]
+May 12 20:23:48 ubuntu gunicorn[491742]: [parameters: {'pk_1': 1339}]
+May 12 20:23:48 ubuntu gunicorn[491742]: (Background on this error at: https://sqlalche.me/e/20/f405)
+May 12 20:23:48 ubuntu gunicorn[491742]: During handling of the above exception, another exception occurred:
+May 12 20:23:48 ubuntu gunicorn[491742]: Traceback (most recent call last):
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/gunicorn/workers/sync.py", line 134, in handle
+May 12 20:23:48 ubuntu gunicorn[491742]:     self.handle_request(listener, req, client, addr)
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+May 12 20:23:48 ubuntu gunicorn[491742]:     respiter = self.wsgi(environ, resp.start_response)
+May 12 20:23:48 ubuntu gunicorn[491742]:                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 1478, in __call__
+May 12 20:23:48 ubuntu gunicorn[491742]:     return self.wsgi_app(environ, start_response)
+May 12 20:23:48 ubuntu gunicorn[491742]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 1458, in wsgi_app
+May 12 20:23:48 ubuntu gunicorn[491742]:     response = self.handle_exception(e)
+May 12 20:23:48 ubuntu gunicorn[491742]:                ^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/venv/lib/python3.12/site-packages/flask/app.py", line 810, in handle_exception
+May 12 20:23:48 ubuntu gunicorn[491742]:     server_error = self.ensure_sync(handler)(server_error)
+May 12 20:23:48 ubuntu gunicorn[491742]:                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+May 12 20:23:48 ubuntu gunicorn[491742]:   File "/opt/hesiox/app.py", line 203, in handle_api_exceptions
+May 12 20:23:48 ubuntu gunicorn[491742]:     raise error
+May 12 20:23:48 ubuntu gunicorn[491742]: werkzeug.exceptions.InternalServerError: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.

@@ -54,7 +54,7 @@
             </div>
             <div style="min-width: 220px;">
                 <label for="destino" class="form-label">Proyecto Destino</label>
-                <select name="destino" id="destino" class="form-select" required>
+                <select name="destino" id="destino" class="form-select" required onchange="this.form.submit()">
                     <option value="">Selecciona proyecto destino</option>
                     {% for p in proyectos %}
                     <option value="{{ p.id }}" {% if proyecto_destino_id and p.id|string==proyecto_destino_id|string
@@ -85,7 +85,14 @@
                             <th style="width: 20%">Ciudad</th>
                             <th style="width: 20%">País</th>
                             <th style="width: 20%">Hemeroteca</th>
-                            <th style="width: 10%">Migrar</th>
+                            <th style="width: 10%" class="text-center">
+                                Noticias/Txts<br>
+                                <input type="checkbox" id="select-all-noticias" title="Seleccionar todas las noticias">
+                            </th>
+                            <th style="width: 10%" class="text-center">
+                                Migrar<br>
+                                <input type="checkbox" id="select-all-migrar" title="Seleccionar todas las publicaciones">
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,7 +104,10 @@
                             <td class="text-light small">{{ pub.hemeroteca_rel.nombre if pub.hemeroteca_rel else '-' }}
                             </td>
                             <td class="text-center">
-                                <input type="checkbox" name="publicaciones" value="{{ pub.id_publicacion }}">
+                                <input type="checkbox" name="noticias_{{ pub.id_publicacion }}" value="1" class="check-noticia">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="publicaciones" value="{{ pub.id_publicacion }}" class="check-migrar">
                             </td>
                         </tr>
                         {% endfor %}
@@ -106,8 +116,21 @@
             </div>
             <button type="submit" class="btn btn-success mt-3">Migrar seleccionadas</button>
         </form>
-        {% elif proyecto_origen_id %}
+
+        <script>
+            document.getElementById('select-all-noticias').addEventListener('change', function() {
+                const checks = document.querySelectorAll('.check-noticia');
+                checks.forEach(c => c.checked = this.checked);
+            });
+            document.getElementById('select-all-migrar').addEventListener('change', function() {
+                const checks = document.querySelectorAll('.check-migrar');
+                checks.forEach(c => c.checked = this.checked);
+            });
+        </script>
+        {% elif proyecto_origen_id and proyecto_destino_id %}
         <div class="alert alert-warning m-3">No hay publicaciones en el proyecto origen seleccionado.</div>
+        {% elif proyecto_origen_id %}
+        <div class="alert alert-info m-3">Selecciona un proyecto destino para ver las publicaciones que se pueden migrar.</div>
         {% endif %}
     </div>
 </div>

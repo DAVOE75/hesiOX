@@ -78,6 +78,20 @@ def copiar_hemeroteca(id):
                         frecuencia=pub.frecuencia
                     )
                     db.session.add(nueva_pub)
+                    db.session.flush() # Obtener ID para los autores
+                    
+                    # Copiar autores
+                    for aut in pub.autores:
+                        nuevo_aut = AutorPublicacion(
+                            publicacion_id=nueva_pub.id_publicacion,
+                            nombre=aut.nombre,
+                            apellido=aut.apellido,
+                            tipo=aut.tipo,
+                            es_anonimo=aut.es_anonimo,
+                            orden=aut.orden
+                        )
+                        db.session.add(nuevo_aut)
+                        
                     nombres_existentes.add(pub.nombre)
         db.session.commit()
         mensaje = f"✅ Hemeroteca '{nueva.nombre}' copiada a '{proyecto_destino.nombre}'"

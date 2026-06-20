@@ -760,7 +760,13 @@
             </ul>
         </div>
 
-        <!-- 2. EDICIÓN MANUAL -->
+        <!-- 2. EXPORTAR -->
+        <button class="btn-sirio" onclick="showExportModal()" title="Exportar pasajeros filtrados">
+            <i class="fa-solid fa-file-export me-1"></i>
+            <span class="btn-text">EXPORTAR</span>
+        </button>
+
+        <!-- 3. EDICIÓN MANUAL -->
         <button type="button" class="btn-sirio" id="btn-toggle-manual-edit"
             title="Modo Edición Manual: Activa este modo para arrastrar los marcadores y corregir ubicaciones.">
             <i class="fa-solid fa-arrows-up-down-left-right text-warning"></i>
@@ -2097,6 +2103,73 @@
                 </div>`;
             }
         }
+
+        // --- LÓGICA DE EXPORTACIÓN ---
+        window.showExportModal = () => {
+            Swal.fire({
+                title: '<h5 class="text-accent mb-0" style="font-weight: 800; letter-spacing: 2px;">EXPORTAR DATOS</h5>',
+                html: `
+                    <div class="py-3">
+                        <p class="text-white opacity-75 mb-4">Se exportarán los pasajeros aplicando los filtros actuales del mapa:</p>
+                        <div class="d-grid gap-2">
+                            <button id="export-excel" class="btn btn-sirio-swal mb-2" style="background-color: #4caf50 !important; color: white !important;">
+                                <i class="fa-solid fa-file-excel me-2"></i> FORMATO EXCEL (.XLSX)
+                            </button>
+                            <button id="export-csv" class="btn btn-sirio-swal mb-2" style="background-color: #e0e0e0 !important; color: #333 !important;">
+                                <i class="fa-solid fa-file-csv me-2"></i> FORMATO CSV (.CSV)
+                            </button>
+                            <button id="export-pdf" class="btn btn-pdf-sirio">
+                                <i class="fa-solid fa-file-pdf me-2"></i> GENERAR DOCUMENTO PDF
+                            </button>
+                        </div>
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'CANCELAR',
+                background: '#121212',
+                color: '#fff',
+                customClass: {
+                    popup: 'border border-secondary',
+                    cancelButton: 'btn-cancel-swal'
+                },
+                buttonsStyling: false,
+                didOpen: () => {
+                    const getExportParams = (format) => {
+                        const params = new URLSearchParams();
+                        params.set('format', format);
+                        
+                        // Mapear filtros del mapa a parámetros de exportar
+                        const clase = document.getElementById('classFilter').value;
+                        if (clase !== 'all') params.set('pasaje', clase);
+                        
+                        const survivors = document.getElementById('survivorsOnly').checked;
+                        if (survivors) params.set('estado', 'SOBREVIVIENTE');
+                        
+                        const nationality = document.getElementById('nationalityFilter')?.value || 'all';
+                        if (nationality !== 'all') params.set('nacionalidad', nationality);
+                        
+                        const passengerId = document.getElementById('passengerFilter')?.value || 'all';
+                        if (passengerId !== 'all') params.set('search', passengerId); // El buscador suele aceptar IDs or nombres
+                        
+                        return params.toString();
+                    };
+
+                    document.getElementById('export-excel').onclick = () => {
+                        window.location.href = "{{ url_for('pasajeros.exportar') }}?" + getExportParams('excel');
+                        Swal.close();
+                    };
+                    document.getElementById('export-csv').onclick = () => {
+                        window.location.href = "{{ url_for('pasajeros.exportar') }}?" + getExportParams('csv');
+                        Swal.close();
+                    };
+                    document.getElementById('export-pdf').onclick = () => {
+                        window.location.href = "{{ url_for('pasajeros.exportar') }}?" + getExportParams('pdf');
+                        Swal.close();
+                    };
+                }
+            });
+        };
 
         init();
     });

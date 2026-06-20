@@ -1063,8 +1063,8 @@
 
     .semantic-panel {
         background: #ffffff !important;
-        color: #fff;
-        border-color: #333;
+        color: var(--ds-text-main, #212121) !important;
+        border-color: var(--ds-border-color, #d0d0d0) !important;
     }
 
     .leaflet-container a {
@@ -4442,5 +4442,38 @@
     /* Barra de progreso en modo claro */
     #modalAutorVisor .progress {
         background-color: rgba(0,0,0,0.1) !important;
+    }
+
+    /* === DATE FILTER PILL (Listado de Noticias) === */
+    .date-filter-pill {
+        background: #e8f0f5 !important;
+        border: 1px solid #294a60 !important;
+    }
+
+    .date-filter-pill .form-control-sirio-compact {
+        color: #294a60 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .date-filter-pill .text-muted {
+        color: #294a60 !important;
+        opacity: 0.7;
+    }
+
+    .date-filter-pill #btnFiltrarFechas {
+        background: #294a60 !important;
+        color: #ffffff !important;
+        padding: 0 !important;
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
     }
 }

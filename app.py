@@ -59,6 +59,7 @@ from flask_login import (
 )
 from extensions import db, login_manager
 from functools import wraps
+from werkzeug.exceptions import HTTPException
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -168,6 +169,38 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_timeout": 30,
     "pool_pre_ping": True,
 }
+
+
+@app.errorhandler(Exception)
+def handle_api_exceptions(error):
+    """Devuelve JSON en errores de API para evitar páginas HTML genéricas de 500."""
+    if request.path.startswith('/api/'):
+        import traceback
+        error_trace = traceback.format_exc()
+        if isinstance(error, HTTPException):
+            try:
+                with open('logs/api_errors.log', 'a', encoding='utf-8') as f:
+                    f.write(f"\n[HTTPException] {request.path}\n{error.description}\n{error_trace}\n")
+            except Exception:
+                pass
+            return jsonify({
+                'success': False,
+                'error': error.description,
+                'code': error.code,
+            }), error.code
+
+        try:
+            with open('logs/api_errors.log', 'a', encoding='utf-8') as f:
+                f.write(f"\n[Unhandled API error] {request.path}\n{error}\n{error_trace}\n")
+        except Exception:
+            pass
+        app.logger.exception("Unhandled API error on %s", request.path)
+        return jsonify({
+            'success': False,
+            'error': str(error),
+        }), 500
+
+    raise error
 
 # CONFIGURACIÓN DE CARPETA DE SUBIDAS (IMÁGENES)
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", os.path.join("static", "uploads"))
@@ -2119,18 +2152,36 @@ def ia_expand_bio():
     from services.ai_service import AIService
     
     nombre = request.json.get("nombre")
-    apellido = request.json.get("apellido")
+    apellido = request.json.get("apellido", "")
     current_bio = request.json.get("bio_data", {})
     
-    prompt = f"""
-    Eres un experto en investigación biográfica y prosopografía. Tu tarea es completar TODOS los campos de una ficha técnica para el autor: {nombre} {apellido}.
+    # Robustez: Si el nombre contiene una coma y el apellido está vacío
+    if nombre and "," in nombre and not apellido:
+        partes = nombre.split(",", 1)
+        apellido = partes[0].strip()
+        nombre = partes[1].strip()
+
+    full_name = f"{nombre} {apellido}".strip()
     
+    # Incluir datos actuales en el prompt si existen para que la IA los respete o complete
+    datos_actuales_str = ""
+    if current_bio:
+        datos_actuales_str = "DATOS ACTUALES CONOCIDOS (mantenlos o mejóralos):\n"
+        for k, v in current_bio.items():
+            if v: datos_actuales_str += f"- {k}: {v}\n"
+
+    prompt = f"""
+    Eres un experto en investigación biográfica y prosopografía. Tu tarea es completar TODOS los campos de una ficha técnica para el autor: {full_name}.
+    
+    {datos_actuales_str}
+
     INSTRUCCIONES:
     1. Busca y genera información verídica y detallada para cada punto.
     2. Si el autor es una figura histórica conocida, rellena todos los campos con precisión.
     3. Para fechas, usa estrictamente el formato DD/MM/AAAA.
     4. Para campos de texto largo (trayectoria, estilo, impacto), sé descriptivo y analítico (mínimo 3-4 líneas).
     5. NO dejes campos vacíos. Si el dato es totalmente desconocido, usa el contexto histórico para inferir el dato más probable o deja una nota breve.
+    6. Responde ÚNICAMENTE con el objeto JSON solicitado, sin explicaciones previas ni posteriores.
     
     ESTRUCTURA DE RESPUESTA (Responde EXCLUSIVAMENTE con este objeto JSON):
     {{
@@ -2156,16 +2207,45 @@ def ia_expand_bio():
     }}
     """
     
-    ai = AIService(provider='gemini', model='1.5-pro', user=current_user)
+    # Usar flash para mayor rapidez en biografía si está disponible
+    ai = AIService(provider='gemini', model='gemini-2.5-flash', user=current_user)
     try:
-        raw_response = ai.generate_content(prompt, temperature=0.1)
+        # Debug: Imprimir el prompt
+        print(f"[HesiOX IA] Enviando prompt para {full_name}")
+
+        raw_response = ai.generate_content(prompt, temperature=0.1, auto_fallback=True)
+        
         # Log para depuración en el servidor
-        print(f"[HesiOX IA] Respuesta de {nombre} {apellido}: {raw_response[:200]}...")
-        data = ai._extract_json_from_text(raw_response)
-        if data:
-            return jsonify({"status": "success", "expanded": data})
-        return jsonify({"status": "error", "message": "No se pudo estructurar la respuesta de la IA"})
+        if raw_response:
+            # Limpiar posibles prefijos/sufijos de Markdown (```json ... ```)
+            clean_response = raw_response.strip()
+            if clean_response.startswith('```'):
+                import re
+                match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', clean_response, re.DOTALL)
+                if match:
+                    clean_response = match.group(1)
+            
+            print(f"[HesiOX IA] Respuesta detectada (primeros 50): {clean_response[:50]}")
+            
+            try:
+                data = json.loads(clean_response)
+                return jsonify({"status": "success", "expanded": data})
+            except Exception as e_json:
+                print(f"[HesiOX IA] Error json.loads: {e_json}")
+                # Fallback al extractor de la clase
+                data = ai._extract_json_from_text(raw_response)
+                if data:
+                    return jsonify({"status": "success", "expanded": data})
+        else:
+            print(f"[HesiOX IA] Fallo: raw_response es None")
+
+        msg_error = ai.last_error or "Error de protocolo: La IA no devolvió un JSON válido."
+        if raw_response and "<h4" in raw_response:
+             msg_error = "El sistema ha entrado en modo de seguridad offline (Backup). Verifique su conexión o API Key."
+             
+        return jsonify({ "status": "error", "message": msg_error })
     except Exception as e:
+        app.logger.error(f"Error IA Expand Bio: {e}")
         return jsonify({"status": "error", "message": str(e)})
 
 @app.route("/autor/bio/save", methods=["POST"])

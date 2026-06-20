@@ -25,22 +25,21 @@
 <div class="vr mx-1 opacity-25"></div>
 
 <!-- Filtro Fecha Rápido (Desde/Hasta) -->
-<div class="d-flex align-items-center gap-1 date-filter-pill px-2"
-    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; height: 32px !important; align-items: center !important;">
+
+<div class="d-flex align-items-center gap-1 date-filter-pill px-2">
+
     <i class="fa-solid fa-calendar-days text-muted small ms-1"></i>
     <input type="date" id="inputFechaDesde" class="form-control-sirio-compact" 
-        style="width: 105px; border: none; background: transparent; font-size: 0.7rem; color: #fff; padding: 0 4px;"
         value="{{ request.args.get('fecha_desde', '') }}" title="Fecha Desde">
     <span class="text-muted small">-</span>
     <input type="date" id="inputFechaHasta" class="form-control-sirio-compact" 
-        style="width: 105px; border: none; background: transparent; font-size: 0.7rem; color: #fff; padding: 0 4px;"
         value="{{ request.args.get('fecha_hasta', '') }}" title="Fecha Hasta">
     <button id="btnFiltrarFechas" type="button" class="btn-sirio" 
-        style="padding: 0 !important; width: 24px; height: 24px !important; min-width: 24px; border-radius: 50%; border: none; background: #ff9800 !important; color: #000 !important;"
         onclick="if(typeof filtrarAjax === 'function') filtrarAjax(1, true);" title="Filtrar por fechas">
         <i class="fa-solid fa-play" style="font-size: 0.6rem;"></i>
     </button>
 </div>
+
 
 <div class="vr mx-1 opacity-25"></div>
 
@@ -172,9 +171,63 @@
         border: 2px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
-</style>
-<style>
+    /* Estilos dinámicos para el filtro de fechas (listado de noticias) */
+    .date-filter-pill {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px;
+        height: 32px !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .date-filter-pill .form-control-sirio-compact {
+        width: 105px;
+        border: none !important;
+        background: transparent !important;
+        font-size: 0.75rem;
+        color: var(--ds-text-main) !important;
+        padding: 0 4px;
+        height: 24px;
+    }
+
+    .date-filter-pill #btnFiltrarFechas {
+        padding: 0 !important;
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: #ff9800 !important;
+        color: #000000 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* OVERRIDES PARA MODO CLARO */
+    [data-theme="light"] .date-filter-pill {
+        background: #e8f0f5 !important;
+        border: 1px solid #294a60 !important;
+    }
+
+    [data-theme="light"] .date-filter-pill .form-control-sirio-compact {
+        color: #294a60 !important;
+    }
+
+    [data-theme="light"] .date-filter-pill .text-muted {
+        color: #294a60 !important;
+        opacity: 0.7;
+    }
+
+    [data-theme="light"] .date-filter-pill #btnFiltrarFechas {
+        background: #294a60 !important;
+        color: #ffffff !important;
+    }
+
     /* Fuerza el tema oscuro Sirio y z-index en los dropdowns de Choices.js solo en esta vista */
+
     .choices__list--dropdown,
     .choices__list[aria-expanded] {
         z-index: 1000 !important;

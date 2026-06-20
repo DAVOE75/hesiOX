@@ -35,6 +35,9 @@ from .noticias import noticias_bp
 from .noticias_api import noticias_api_bp
 from .visualizaciones import visualizaciones_bp
 from .quality import quality_bp
+from .distravel import distravel_bp
+
+from .teatral import teatral_bp
 
 # Lista de blueprints para registro fácil
 all_blueprints = [
@@ -60,6 +63,8 @@ all_blueprints = [
     barco_bp,
     blog_bp,
     contacto_bp,
-    metadata_api
+    metadata_api,
+    teatral_bp,
+    distravel_bp
 ]
 

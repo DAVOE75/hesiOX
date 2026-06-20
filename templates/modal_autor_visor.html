@@ -6,8 +6,8 @@
             <!-- Cabecera Premium -->
             <div class="modal-header card-header-panel d-flex justify-content-between align-items-center py-3 px-4" style="background: linear-gradient(90deg, #1a2a3a 0%, #0d1520 100%); border-bottom: 2px solid var(--ds-accent-primary, #ff9800);">
                 <div class="d-flex align-items-center">
-                    <div class="header-icon-box me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,152,0,0.1); border-radius: 8px; border: 1px solid rgba(255,152,0,0.2);">
-                        <i class="fa-solid fa-file-invoice text-sirio" style="font-size: 1.2rem;"></i>
+                    <div class="header-icon-box me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="fa-solid fa-file-invoice" style="font-size: 1.2rem; color: #fff !important;"></i>
                     </div>
                     <div>
                         <h5 class="mb-0 fw-bold text-uppercase tracking-wider" style="font-size: 0.9rem; letter-spacing: 1px; color: #fff;">Dossier Biográfico de Autor</h5>
@@ -25,14 +25,14 @@
             </div>
 
             <!-- Cuerpo del Visor (Dossier Layout) -->
-            <div class="modal-body p-0 custom-scrollbar" style="max-height: 85vh; overflow-y: auto; background: #0b0f14;">
+            <div class="modal-body p-0 custom-scrollbar" style="max-height: 85vh; overflow-y: auto; background: var(--dossier-bg);">
                 
                 <!-- Hero Section: Identificación Principal -->
-                <div class="hero-dossier px-4 pt-4 pb-3" style="background: radial-gradient(circle at top right, rgba(255,152,0,0.05) 0%, transparent 70%);">
+                <div class="hero-dossier px-4 pt-4 pb-3" style="background: radial-gradient(circle at top right, var(--dossier-accent-softer) 0%, transparent 70%);">
                     <div class="row align-items-center">
                         <div class="col-auto">
-                            <div class="visor-avatar-wrapper p-1" style="border: 2px solid rgba(255,152,0,0.3); border-radius: 50%; background: rgba(0,0,0,0.3);">
-                                <div class="visor-avatar-dossier-inner shadow-lg d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; background: #1a1a1a;">
+                            <div class="visor-avatar-wrapper p-1" style="border: 2px solid var(--dossier-accent-soft); border-radius: 50%; background: var(--dossier-accent-softer);">
+                                <div class="visor-avatar-dossier-inner shadow-lg d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; background: var(--dossier-dark);">
                                     <i class="fa-solid fa-user-tie" style="font-size: 3.5rem; color: #333;"></i>
                                 </div>
                             </div>
@@ -63,13 +63,13 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-card-bg); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">NACIMIENTO</div>
                                     <div class="h6 mb-0 text-light" id="visor_nacimiento"></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-card-bg); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">DEFUNCIÓN</div>
                                     <div class="h6 mb-0 text-light" id="visor_defuncion"></div>
                                 </div>
@@ -91,13 +91,13 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-card-bg); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">MOVIMIENTO LITERARIO</div>
                                     <div class="h6 mb-0 text-warning" id="visor_movimiento"></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-card-bg); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">INFLUENCIAS CLAVE</div>
                                     <div class="h6 mb-0 text-light" id="visor_influencias"></div>
                                 </div>
@@ -119,13 +119,13 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,152,0,0.03); border: 1px solid rgba(255,152,0,0.1);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-accent-softer); border: 1px solid var(--dossier-accent-soft);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">GÉNEROS LITERARIOS</div>
                                     <div class="h6 mb-0 text-sirio fw-bold" id="visor_generos"></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="data-card p-3 rounded h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded h-100" style="background: var(--dossier-card-bg); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">TEMÁTICAS RECURRENTES</div>
                                     <div class="h6 mb-0 text-light" id="visor_tematicas"></div>
                                 </div>
@@ -137,7 +137,7 @@
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="data-card p-3 rounded" style="background: #000; border: 1px solid rgba(255,255,255,0.05);">
+                                <div class="data-card p-3 rounded" style="background: var(--dossier-black); border: 1px solid var(--dossier-card-border);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-3 d-flex align-items-center" style="font-size: 0.65rem;">
                                         <i class="fa-solid fa-list-ul me-2"></i>OBRAS PRINCIPALES Y BIBLIOGRAFÍA
                                     </div>
@@ -155,7 +155,7 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-12">
-                                <div class="data-card p-3 rounded h-100" style="background: linear-gradient(135deg, rgba(255,152,0,0.05) 0%, transparent 100%); border: 1px solid rgba(255,152,0,0.1);">
+                                <div class="data-card p-3 rounded h-100" style="background: linear-gradient(135deg, var(--dossier-accent-softer) 0%, transparent 100%); border: 1px solid var(--dossier-accent-soft);">
                                     <div class="small text-sirio text-uppercase fw-bold mb-2" style="font-size: 0.65rem;">PREMIOS Y GALARDONES</div>
                                     <div class="h6 mb-0 text-light" id="visor_premios"></div>
                                 </div>
@@ -177,7 +177,7 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-12">
-                                <div class="data-card p-4 rounded text-center fst-italic" style="background: #111; border: 1px dashed rgba(255,255,255,0.1); position: relative;">
+                                <div class="data-card p-4 rounded text-center fst-italic" style="background: var(--dossier-dark); border: 1px dashed var(--dossier-card-border); position: relative;">
                                     <i class="fa-solid fa-quote-left text-sirio opacity-25" style="position: absolute; top: 15px; left: 15px; font-size: 1.5rem;"></i>
                                     <div class="text-light h6 mb-0 px-4" id="visor_citas" style="font-family: 'Georgia', serif; line-height: 1.6;"></div>
                                     <i class="fa-solid fa-quote-right text-sirio opacity-25" style="position: absolute; bottom: 15px; right: 15px; font-size: 1.5rem;"></i>
@@ -208,7 +208,7 @@
             </div>
             
             <!-- Footer con Acciones Centralizadas -->
-            <div class="modal-footer px-4 py-3 d-flex justify-content-between" style="background: #0d1520; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="modal-footer px-4 py-3 d-flex justify-content-between" style="background: var(--dossier-footer-bg); border-top: 1px solid var(--dossier-card-border);">
                 <button type="button" class="btn btn-sirio-outline btn-sm px-4" data-bs-dismiss="modal">CERRAR DOSSIER</button>
                 <div class="d-flex gap-2">
                     <button type="button" id="btnEditarDesdeVisor" class="btn btn-sirio active btn-sm px-4">
@@ -221,24 +221,84 @@
 </div>
 
 <style>
-    /* Estilos Premium para el Visor */
+    :root {
+        --dossier-bg: #0b0f14;
+        --dossier-header-bg: linear-gradient(90deg, #1a2a3a 0%, #0d1520 100%);
+        --dossier-card-bg: rgba(255, 255, 255, 0.02);
+        --dossier-card-border: rgba(255, 255, 255, 0.05);
+        --dossier-text: #ffffff;
+        --dossier-text-secondary: rgba(255, 255, 255, 0.7);
+        --dossier-text-muted: rgba(255, 255, 255, 0.5);
+        --dossier-accent: #ff9800;
+        --dossier-accent-soft: rgba(255, 152, 0, 0.1);
+        --dossier-accent-softer: rgba(255, 152, 0, 0.05);
+        --dossier-black: #000000;
+        --dossier-dark: #111111;
+        --dossier-footer-bg: #0d1520;
+        --dossier-btn-border: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="light"] {
+        --dossier-bg: #ffffff;
+        --dossier-header-bg: #294a60;
+        --dossier-card-bg: #f8f9fa;
+        --dossier-card-border: rgba(0, 0, 0, 0.08);
+        --dossier-text: #294a60;
+        --dossier-text-secondary: #4a5568;
+        --dossier-text-muted: #718096;
+        --dossier-accent: #294a60;
+        --dossier-accent-soft: rgba(41, 74, 96, 0.1);
+        --dossier-accent-softer: rgba(41, 74, 96, 0.05);
+        --dossier-black: #edf2f7;
+        --dossier-dark: #e2e8f0;
+        --dossier-footer-bg: #f8f9fa;
+        --dossier-btn-border: rgba(41, 74, 96, 0.2);
+    }
+
+    #modalAutorVisor .modal-content {
+        background-color: var(--dossier-bg) !important;
+        color: var(--dossier-text) !important;
+        border-color: var(--dossier-card-border) !important;
+    }
+
     #modalAutorVisor .card-header-panel {
         border-top-left-radius: 12px;
         border-top-right-radius: 12px;
+        background: var(--dossier-header-bg) !important;
+        border-bottom: 2px solid var(--dossier-accent) !important;
     }
     
     #modalAutorVisor .text-sirio {
-        color: var(--ds-accent-primary, #ff9800) !important;
+        color: var(--dossier-accent) !important;
     }
     
     #modalAutorVisor .bg-sirio {
-        background-color: var(--ds-accent-primary, #ff9800) !important;
+        background-color: var(--dossier-accent) !important;
+    }
+
+    #modalAutorVisor .text-light {
+        color: var(--dossier-text) !important;
+    }
+
+    #modalAutorVisor .opacity-90 {
+        color: var(--dossier-text-secondary) !important;
+        opacity: 1 !important;
+    }
+
+    #modalAutorVisor .opacity-50 {
+        color: var(--dossier-text-muted) !important;
+        opacity: 1 !important;
+    }
+
+    #modalAutorVisor .opacity-75 {
+        color: var(--dossier-text-secondary) !important;
+        opacity: 0.8 !important;
     }
     
     #modalAutorVisor .btn-sirio-outline {
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--dossier-btn-border);
         background: transparent;
-        color: #fff;
+        color: var(--dossier-text);
         font-weight: bold;
         text-transform: uppercase;
         font-size: 0.7rem;
@@ -246,8 +306,8 @@
     }
     
     #modalAutorVisor .btn-sirio-outline:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.2);
+        background: var(--dossier-accent-softer);
+        border-color: var(--dossier-accent);
     }
 
     #modalAutorVisor .visor-avatar-dossier-inner img {
@@ -264,6 +324,7 @@
         align-items: center;
         justify-content: center;
         padding: 0;
+        color: #fff !important;
     }
 
     #modalAutorVisor .tracking-widest {
@@ -276,7 +337,7 @@
     }
 
     #modalAutorVisor #visor_enlaces a {
-        color: #00bcd4;
+        color: var(--dossier-accent);
         text-decoration: underline;
         word-break: break-all;
     }
@@ -286,10 +347,10 @@
         width: 5px;
     }
     #modalAutorVisor .custom-scrollbar::-webkit-scrollbar-track {
-        background: #0b0f14;
+        background: var(--dossier-bg);
     }
     #modalAutorVisor .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255,152,0,0.2);
+        background: var(--dossier-accent-soft);
         border-radius: 10px;
     }
 </style>

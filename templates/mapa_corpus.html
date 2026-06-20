@@ -1567,7 +1567,7 @@
   }
 
   .text-muted-sirio {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     font-size: 0.65rem !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -2249,7 +2249,7 @@
     /* border-radius: 6px; */
     box-shadow: var(--ds-shadow-float);
     padding: 15px 15px 15px 20px;
-    color: #fff;
+    color: var(--ds-text-main, #fff);
     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
@@ -2344,6 +2344,14 @@
 
   [data-theme="light"] .toggle-description {
     color: #666;
+  }
+
+  [data-theme="light"] .compact-toggle-row label {
+    color: var(--ds-text-main, #212121) !important;
+  }
+
+  [data-theme="light"] .text-muted-sirio {
+    color: #666 !important;
   }
 
   /* noUiSlider Sirio Theme */
@@ -3090,11 +3098,11 @@
 
     <div class="collapse show" id="collapseFiltrosMapa">
       <form id="filtros-mapa-corpus">
-        <h6 class="fw-bold text-uppercase mb-2 text-warning" style="letter-spacing:1px; font-size:0.95rem;">
+        <h6 class="fw-bold text-uppercase mb-2" style="letter-spacing:1px; font-size:0.95rem; color: var(--ds-accent-primary, #ff9800);">
           <i class="fa-solid fa-filter me-2"></i>Filtros & Mapas
         </h6>
         <p class="xsmall text-muted mb-3"
-          style="line-height: 1.3; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+          style="line-height: 1.3; border-bottom: 1px solid var(--ds-border-color, rgba(255,255,255,0.1)); padding-bottom: 8px;">
           Explore el corpus mediante filtros temporales y capas de análisis espacial.
         </p>
 
@@ -3140,13 +3148,13 @@
         </div>
 
         <div class="border-top border-secondary opacity-50 my-3"></div>
-        <h6 class="fw-bold text-uppercase mb-3 text-warning" style="font-size:0.8rem;">Capas de Visualización</h6>
+        <h6 class="fw-bold text-uppercase mb-3" style="font-size:0.8rem; color: var(--ds-accent-primary, #ff9800);">Capas de Visualización</h6>
 
         <div class="mb-3">
           <!-- Nodos de Ubicación -->
           <div class="compact-toggle-row">
             <input class="form-check-input" type="checkbox" id="toggle-markers">
-            <label for="toggle-markers" class="text-light">Nodos de Ubicaciones del Corpus</label>
+            <label for="toggle-markers">Nodos de Ubicaciones del Corpus</label>
           </div>
           <p class="xsmall text-muted mb-2 ms-4">Mostrar/ocultar marcadores de ubicaciones del corpus en el mapa.</p>
 
@@ -3154,7 +3162,7 @@
           <div class="compact-toggle-row align-items-center">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-heatmap">
-              <label for="toggle-heatmap" class="text-light mb-0 cursor-pointer">Mapa de Calor</label>
+              <label for="toggle-heatmap" class="mb-0 cursor-pointer">Mapa de Calor</label>
             </div>
             <input type="range" class="form-range opacity-control w-25 ms-2" id="opacity-heatmap" min="0" max="1"
               step="0.1" value="1" disabled title="Opacidad">
@@ -3165,7 +3173,7 @@
           <div class="compact-toggle-row align-items-center">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-voronoi">
-              <label for="toggle-voronoi" class="text-light mb-0 cursor-pointer">Áreas (Voronoi)</label>
+              <label for="toggle-voronoi" class="mb-0 cursor-pointer">Áreas (Voronoi)</label>
             </div>
             <input type="range" class="form-range opacity-control w-25 ms-2" id="opacity-voronoi" min="0" max="1"
               step="0.1" value="0.6" disabled title="Opacidad">
@@ -3176,7 +3184,7 @@
           <div class="compact-toggle-row align-items-center" id="row-convexhull">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-convexhull">
-              <label for="toggle-convexhull" class="text-light mb-0 cursor-pointer">Envolvente Convexa</label>
+              <label for="toggle-convexhull" class="mb-0 cursor-pointer">Envolvente Convexa</label>
             </div>
             <input type="range" class="form-range opacity-control w-25 ms-2" id="opacity-convexhull" min="0" max="1"
               step="0.1" value="0.4" disabled title="Opacidad">
@@ -3187,7 +3195,7 @@
           <div class="compact-toggle-row align-items-center" id="row-buffers">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-buffers">
-              <label for="toggle-buffers" class="text-light mb-0 cursor-pointer">Zonas de Buffer</label>
+              <label for="toggle-buffers" class="mb-0 cursor-pointer">Zonas de Buffer</label>
             </div>
             <input type="range" class="form-range opacity-control w-25 ms-2" id="opacity-buffers" min="0" max="1"
               step="0.1" value="0.3" disabled title="Opacidad">
@@ -3198,7 +3206,7 @@
           <!-- Cluster (No Opacity Slider for Markers) -->
           <div class="compact-toggle-row">
             <input class="form-check-input" type="checkbox" id="toggle-cluster">
-            <label for="toggle-cluster" class="text-light">Agrupación (Clúster)</label>
+            <label for="toggle-cluster">Agrupación (Clúster)</label>
           </div>
           <p class="xsmall text-muted mb-2 ms-4">Agrupación dinámica de marcadores por cercanía.</p>
 
@@ -3206,7 +3214,7 @@
           <div class="compact-toggle-row align-items-center">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-pie">
-              <label for="toggle-pie" class="text-light mb-0 cursor-pointer">Temático (Gráficos)</label>
+              <label for="toggle-pie" class="mb-0 cursor-pointer">Temático (Gráficos)</label>
             </div>
             <!-- Opacity for markers is complex, skip slider for Pie -->
           </div>
@@ -3216,7 +3224,7 @@
           <div class="compact-toggle-row align-items-center">
             <div class="d-flex align-items-center flex-grow-1">
               <input class="form-check-input me-2" type="checkbox" id="toggle-flows">
-              <label for="toggle-flows" class="text-light mb-0 cursor-pointer">Conexiones (Flujos)</label>
+              <label for="toggle-flows" class="mb-0 cursor-pointer">Conexiones (Flujos)</label>
             </div>
             <input type="range" class="form-range opacity-control w-25 ms-2" id="opacity-flows" min="0" max="1"
               step="0.1" value="0.6" disabled title="Opacidad">
@@ -3228,7 +3236,7 @@
           <!-- CAPAS VECTORIALES (GIS) -->
           <div id="gis-layers-main-wrapper" class="mt-3 border-top border-secondary border-opacity-25 pt-2">
             <p class="xsmall-sirio mb-2 text-uppercase fw-bold d-flex justify-content-between align-items-center"
-              style="letter-spacing:1px; color: var(--ds-accent-orange);">
+              style="letter-spacing:1px; color: var(--ds-accent-primary, #ff9800);">
               <span><i class="fa-solid fa-draw-polygon me-1"></i> Capas Vectoriales (GIS)</span>
               <span class="text-muted-sirio fw-normal xsmall text-lowercase"
                 style="font-size: 0.55rem; letter-spacing: 0;">arrastrar para organizar</span>
@@ -3247,7 +3255,7 @@
           <!-- PILA DE CAPAS UNIFICADA (NUEVO v4.5) -->
           <div id="layer-stack-container" class="mt-4 border-top border-accent border-opacity-50 pt-3" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <p class="xsmall-sirio mb-0 text-uppercase fw-bold text-accent" style="letter-spacing:1px;">
+              <p class="xsmall-sirio mb-0 text-uppercase fw-bold" style="letter-spacing:1px; color: var(--ds-accent-primary, #ff9800);">
                 <i class="fa-solid fa-layer-group me-1"></i> Orden de Superposición
               </p>
               <span class="text-muted-sirio fw-normal ms-2" style="font-size: 0.5rem; text-transform: lowercase;">arrastrar para organizar</span>
@@ -3261,7 +3269,7 @@
 
         <div class="card bg-secondary bg-opacity-10 border-warning border-opacity-25 mb-3">
           <div class="card-body p-2">
-            <h6 class="text-accent small fw-bold mb-2"><i class="fa-solid fa-layer-group me-1"></i> Análisis
+            <h6 class="small fw-bold mb-2" style="color: var(--ds-accent-primary, #ff9800);"><i class="fa-solid fa-layer-group me-1"></i> Análisis
               Avanzado (GIS)</h6>
             <!-- SDE -->
             <div class="compact-toggle-row align-items-center">
@@ -3300,7 +3308,7 @@
 
         <div class="card bg-secondary bg-opacity-10 border-warning border-opacity-25 mb-3">
           <div class="card-body p-2">
-            <h6 class="text-accent small fw-bold mb-2"><i class="fa-solid fa-cube me-1"></i> Análisis
+            <h6 class="small fw-bold mb-2" style="color: var(--ds-accent-primary, #ff9800);"><i class="fa-solid fa-cube me-1"></i> Análisis
               Estereoscópico</h6>
             <!-- Stereo (Anaglyph) -->
             <div class="compact-toggle-row align-items-center">
@@ -4763,7 +4771,7 @@
             <div class="col-12 mt-1">
               <label class="xsmall text-muted d-block mb-1">Capa de Impacto (Polígono):</label>
               <select id="sim-mc-impact-layer" class="sim-select-sirio py-0 px-2 w-100"
-                style="height: 24px; font-size: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,188,212,0.3); color: #fff;">
+                style="height: 24px; font-size: 0.65rem; background: var(--ds-bg-element, rgba(0,0,0,0.3)); border: 1px solid var(--ds-info, rgba(0,188,212,0.3)); color: var(--ds-text-main, #fff);">
                 <option value="">-- Usar Punto Lat/Lon (Circular) --</option>
               </select>
             </div>
@@ -7137,7 +7145,7 @@
 
         // Visual feedback (limit to avoid lag)
         if (i % Math.ceil(iterations / 20) === 0 || i < 5) {
-          const isDark = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+          const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
           const ghostColor = isDark ? (scientificMode ? '#00fbff' : '#f1c40f') : (scientificMode ? '#1a237e' : '#c62828');
           const ghostOpacity = isDark ? 0.35 : 0.4;
 
@@ -7349,7 +7357,7 @@
 
             // Nube de búsqueda (Gris/Claro según tema)
             if (i % 5 === 0) {
-              const isDark = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+              const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
               L.circleMarker([p0[1], p0[0]], {
                 radius: 1,
                 color: isDark ? '#fff' : '#777',
@@ -7382,7 +7390,7 @@
               }
 
               if (resultData.validStartPoints.length < 100) {
-                const isDark = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+                const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
                 L.geoJSON(rLine, {
                   style: { color: isDark ? '#00fbff' : '#2196f3', weight: 1.5, opacity: isDark ? 0.55 : 0.6, interactive: false }
                 }).addTo(this.mcLayers);
@@ -12565,7 +12573,7 @@
         item.className = 'form-check mb-1';
         item.innerHTML = `
           <input class="form-check-input wms-layer-cb" type="checkbox" value="${l.name}" id="cb-${l.name}">
-            <label class="form-check-label text-light text-truncate d-block" for="cb-${l.name}" title="${l.title}">
+            <label class="form-check-label text-truncate d-block" for="cb-${l.name}" title="${l.title}">
               ${l.title} <span class="text-muted small">(${l.name})</span>
             </label>
         `;
@@ -12806,7 +12814,7 @@
         <div class="flex-grow-1 min-w-0">
           <div class="d-flex align-items-center">
              <span class="badge ${badgeClass} xsmall me-2" style="font-size: 0.5rem; padding: 2px 4px;">${badgeText}</span>
-             <span class="text-light small text-truncate" style="font-size: 0.7rem;" title="${layer.name}">${layer.name}</span>
+             <span class="small text-truncate" style="font-size: 0.7rem;" title="${layer.name}">${layer.name}</span>
           </div>
         </div>
         <div class="d-flex align-items-center gap-1 ms-2">
@@ -13921,7 +13929,7 @@
             
             <div class="flex-shrink-0 me-2" style="width: 12px; height: 12px; border-radius: 3px; background: ${layer.color}; border: 1px solid rgba(255,255,255,0.3);"></div>
             <span class="flex-shrink-0 me-1 d-flex align-items-center">${typeIcon}</span>
-            <span class="text-light text-truncate small fw-bold" title="${layer.nombre}">${layer.nombre}</span>
+            <span class="text-truncate small fw-bold" title="${layer.nombre}">${layer.nombre}</span>
             <span class="badge bg-secondary xsmall ms-1" style="font-size: 0.55rem; opacity: 0.8; padding: 2px 4px; letter-spacing: 0.5px;">GIS</span>
           </div>
 
@@ -17566,6 +17574,9 @@
     let elevationTempLine = null;
     let elevationMarkers = [];
     let elevationProfileChart = null;
+    let elevationHoverMarker = null;
+    let elevationPOIs = [];
+    let isAddingPOI = false;
     let hasLocalDEM = false;
     let demCoverageLayers = L.layerGroup(); // Para mostrar el área de los TIFs
     let elevationHighlightLayer = L.layerGroup(); // Para resaltar tramos en el mapa
@@ -17646,7 +17657,7 @@
     // Resaltar en el gráfico
     if (elevationProfileChart) {
       const data = window.currentElevationData;
-      const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+      const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
       
       elevationProfileChart.options.plugins.highlightPlugin = {
           startDist: data[startIdx].dist,
@@ -17739,29 +17750,69 @@
     }).addTo(window._mapaCorpus);
 
     // Re-crear marcadores si hay puntos iniciales
-    initialLatLngs.forEach(latlng => {
-        const marker = L.circleMarker(latlng, {
-            radius: 5,
-            color: '#ff9800',
-            fillColor: '#fff',
-            fillOpacity: 1,
-            weight: 2
+    initialLatLngs.forEach((latlng, idx) => {
+        const isLast = idx === initialLatLngs.length - 1;
+        const marker = L.marker(latlng, {
+            draggable: isLast,
+            icon: L.divIcon({
+                className: 'elevation-marker',
+                html: `<div style="width: 10px; height: 10px; background: white; border: 2px solid #ff9800; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [10, 10],
+                iconAnchor: [5, 5]
+            })
         }).addTo(window._mapaCorpus);
+
+        if (isLast) {
+            setupMarkerDragging(marker);
+        }
         elevationMarkers.push(marker);
     });
 
+    function setupMarkerDragging(marker) {
+        marker.on('drag', function (e) {
+            const newPos = e.target.getLatLng();
+            const latlngs = window.elevationLine.getLatLngs();
+            if (latlngs.length > 0) {
+                latlngs[latlngs.length - 1] = newPos;
+                window.elevationLine.setLatLngs(latlngs);
+            }
+        });
+        marker.on('dragstart', () => {
+            window._mapaCorpus.off('click', elevationDrawHandler);
+        });
+        marker.on('dragend', () => {
+            setTimeout(() => {
+                window._mapaCorpus.on('click', elevationDrawHandler);
+            }, 200);
+        });
+    }
+
     elevationDrawHandler = function (e) {
       const latlng = e.latlng;
+
+      // Desactivar arrastre del marcador anterior
+      if (elevationMarkers.length > 0) {
+          const prevMarker = elevationMarkers[elevationMarkers.length - 1];
+          if (prevMarker.dragging) prevMarker.dragging.disable();
+          prevMarker.off('drag');
+          prevMarker.off('dragstart');
+          prevMarker.off('dragend');
+      }
+
       window.elevationLine.addLatLng(latlng);
       
-      // Marcador visual para feedback inmediato
-      const marker = L.circleMarker(latlng, {
-        radius: 5,
-        color: '#ff9800',
-        fillColor: '#fff',
-        fillOpacity: 1,
-        weight: 2
+      // Nuevo marcador arrastrable
+      const marker = L.marker(latlng, {
+        draggable: true,
+        icon: L.divIcon({
+            className: 'elevation-marker',
+            html: `<div style="width: 10px; height: 10px; background: white; border: 2px solid #ff9800; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [10, 10],
+            iconAnchor: [5, 5]
+        })
       }).addTo(window._mapaCorpus);
+
+      setupMarkerDragging(marker);
       elevationMarkers.push(marker);
 
       if (window.elevationLine.getLatLngs().length === 1) {
@@ -17811,6 +17862,11 @@
       elevationMarkers.forEach(m => window._mapaCorpus.removeLayer(m));
       elevationMarkers = [];
     }
+    if (elevationHoverMarker) {
+      window._mapaCorpus.removeLayer(elevationHoverMarker);
+      elevationHoverMarker = null;
+    }
+    elevationPOIs = [];
     // Quitar también los rectángulos de cobertura al desactivar
     if (window._mapaCorpus.hasLayer(demCoverageLayers)) {
        window._mapaCorpus.removeLayer(demCoverageLayers);
@@ -17855,21 +17911,23 @@
     updateElevationAnalysis();
   }
     function createElevationProfilePanel() {
-      const isDarkMode = document.body.classList.contains("dark-mode") || document.documentElement.getAttribute("data-theme") === "dark";
+      // Detección de tema consistente con base_desktop.html (donde dark es el default y no tiene atributo)
+      const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
 
-      // SIRIO PALETTES - Mejora Modo Oscuro
+      // SIRIO PALETTES - Alineado con Compás Profesional y Diseño de Sistema v3.0
       const bg = isDarkMode ? "#121212" : "#ffffff";
       const border = isDarkMode ? "#444" : "rgba(41,74,96,0.3)";
-      const textColor = isDarkMode ? "#ff9800" : "#294a60";
-      const headerBg = isDarkMode ? "#1a1a1a" : "#294a60";
-      const headerText = isDarkMode ? "#ff9800" : "#ffffff";
-      const accentColor = isDarkMode ? "#ff9800" : "#294a60";
+      const headerBg = isDarkMode ? "#ff9800" : "#294a60"; // Naranja en oscuro, Azul en claro
+      const headerText = isDarkMode ? "#000000" : "#ffffff"; // Negro en naranja, Blanco en azul
+      const textColor = isDarkMode ? "#ff9800" : "#294a60"; // Color de acento para títulos internos
+      const bodyTextColor = isDarkMode ? "#e0e0e0" : "#333333";
+      const sidePanelBg = isDarkMode ? "#0a0a0a" : "#fcfcfc";
 
       const html = `
           <div id="elevation-profile-panel" class="gis-float-panel shadow-lg" 
-               style="width: 1100px; height: 550px; z-index: 30000 !important; display: flex !important; flex-direction: column; position: fixed; background: ${bg}; border: 1px solid ${isDarkMode ? "#444" : border}; border-radius: 8px; overflow: visible; font-family: 'Inter', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+               style="width: 1300px; height: 650px; z-index: 30000 !important; display: flex !important; flex-direction: column; position: fixed; background: ${bg}; border: 1px solid ${isDarkMode ? "#444" : border}; border-radius: 8px; overflow: visible; font-family: 'Inter', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div class="digitize-header digitize-draggable-handle py-1 px-3 d-flex justify-content-between align-items-center" 
-                 style="background: ${headerBg}; cursor: move; min-height: 28px; border-bottom: 1px solid ${isDarkMode ? "rgba(255,152,0,0.2)" : "transparent"}; border-top-left-radius: 7px; border-top-right-radius: 7px;">
+                 style="background: ${headerBg}; cursor: move; min-height: 28px; border-bottom: 1px solid ${isDarkMode ? "rgba(0,0,0,0.2)" : "transparent"}; border-top-left-radius: 7px; border-top-right-radius: 7px;">
               <span id="elevation-panel-title" style="font-size: 0.7rem; font-weight: 800; color: ${headerText}; letter-spacing: 1px; text-transform: uppercase;">
                 <i class="fa-solid fa-chart-line me-2"></i>PERFIL DE ELEVACIÓN
               </span>
@@ -17887,6 +17945,14 @@
                     </ul>
                   </div>
 
+                  <button id="btn-add-poi" onclick="startAddingElevationPOI()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" 
+                          style="font-size: 10px; color: ${headerText};" title="Añadir punto de interés (Cruce, Pueblo, Iglesia...)">
+                      <i class="fa-solid fa-location-dot me-1"></i> AÑADIR HITO
+                  </button>
+                  <button onclick="reverseElevationProfile()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" 
+                          style="font-size: 10px; color: ${headerText};" title="Invertir el sentido de la marcha">
+                      <i class="fa-solid fa-arrows-left-right me-1"></i> INVERTIR
+                  </button>
                   <button onclick="downloadElevationProfileImage()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};">
                       <i class="fa-solid fa-camera me-1"></i> EXPORTAR
                   </button>
@@ -17897,10 +17963,10 @@
               </div>
             </div>
 
-<div class="d-flex flex-row flex-grow-1" style="overflow: hidden; min-height: 0;">
+            <div class="d-flex flex-row flex-grow-1" style="overflow: hidden; min-height: 0;">
               <!-- Main Content: Chart -->
-              <div class="p-3 d-flex flex-column" style="flex: 2; border-right: 1px solid ${isDarkMode ? '#222' : '#eee'};">
-               <div id="elevation-stats-display" class="d-flex justify-content-around mb-2 p-2 rounded" style="background: ${isDarkMode ? 'rgba(255,152,0,0.05)' : 'rgba(41,74,96,0.05)'}; font-size: 0.7rem; color: ${textColor}; font-weight: 600;">
+              <div class="p-3 d-flex flex-column" style="flex: 3; border-right: 1px solid ${isDarkMode ? '#222' : '#eee'};">
+               <div id="elevation-stats-display" class="d-flex justify-content-around mb-2 p-2 rounded" style="background: ${isDarkMode ? 'rgba(255,152,0,0.08)' : 'rgba(41,74,96,0.05)'}; font-size: 0.7rem; color: ${isDarkMode ? '#ff9800' : '#294a60'}; font-weight: 600;">
                   <!-- Stats will be injected here -->
                </div>
                <div class="flex-grow-1" style="position: relative; min-height: 0;">
@@ -17909,12 +17975,13 @@
             </div>
 
             <!-- Side Panel: Table -->
-            <div class="p-0 d-flex flex-column" style="flex: 1; min-height: 0; background: ${isDarkMode ? '#0a0a0a' : '#fcfcfc'}; color: ${isDarkMode ? '#eee' : '#333'};">
+            <div class="p-0 d-flex flex-column" style="flex: 1; min-height: 0; background: ${sidePanelBg}; color: ${bodyTextColor};">
                <div class="p-2 border-bottom d-flex align-items-center justify-content-between" style="background: ${isDarkMode ? '#1a1a1a' : '#f5f5f5'}; border-bottom: 1px solid ${isDarkMode ? '#333' : '#ddd'} !important;">
                   <span style="font-size: 0.65rem; font-weight: bold; color: ${textColor};">ANÁLISIS POR TRAMOS</span>
                   <select id="elevation-interval-select" onchange="updateElevationAnalysis()" 
                           class="form-select form-select-sm py-0" 
                           style="width: 90px; font-size: 0.65rem; height: 24px; background-color: ${isDarkMode ? '#333' : '#fff'}; color: ${isDarkMode ? '#fff' : '#333'}; border-color: ${isDarkMode ? '#444' : '#ccc'};">
+                     <option value="10">10m</option>
                      <option value="50">50m</option>
                      <option value="100" selected>100m</option>
                      <option value="250">250m</option>
@@ -17938,12 +18005,56 @@
                             style="font-size: 0.65rem; border-radius: 4px; height: 20px;">
                         <i class="fa-solid fa-upload me-1"></i> ACTUALIZAR MDT (.tif)
                     </button>
-                    <button id="btn-refresh-elevation" onclick="refreshElevationData()" 
+                    <button onclick="refreshElevationData()" 
                             class="btn btn-sm btn-outline-warning py-0 px-2 ms-1" 
-                            title="Recalcular altitudes del perfil actual (útil tras cargar nuevos TIFF)"
+                            title="Reprocesar altitudes con el MDT actual"
                             style="font-size: 0.65rem; border-radius: 4px; height: 20px;">
-                        <i class="fa-solid fa-arrows-rotate me-1"></i> REPROCESAR
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> REPROCESAR MDT
                     </button>
+                    <!-- Leyenda de colores de pendiente detallada -->
+                    <div class="d-inline-flex align-items-center ms-3" style="gap: 6px; padding: 2px 8px; background: ${isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}; border-radius: 4px; border: 1px solid ${isDarkMode ? '#333' : '#ddd'};">
+                        <span style="font-size: 0.6rem; color: ${isDarkMode ? '#aaa' : '#666'}; font-weight: bold; margin-right: 2px;">PENDIENTES:</span>
+                        
+                        <div class="d-flex align-items-center" title="Baja (0-2%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #4caf50;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">2%</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center" title="Media (2-4%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #ffc107;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">4%</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center" title="Notable (4-7%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #ff9800;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">7%</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center" title="Alta (7-10%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #f44336;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">10%</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center" title="Muy Alta (10-15%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #d32f2f;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">15%</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center" title="Extrema (>15%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #b71c1c;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">>15%</span>
+                        </div>
+
+                        <div class="d-flex align-items-center border-start ps-2" style="border-color: ${isDarkMode ? '#444' : '#ccc'} !important;" title="Descenso Pronunciado (< -10%)">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #4527a0;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}"><-10%</span>
+                        </div>
+
+                        <div class="d-flex align-items-center ps-2" title="Descenso">
+                            <div style="width: 8px; height: 8px; border-radius: 1px; background: #2196f3;"></div>
+                            <span style="font-size: 0.55rem; margin-left: 2px; color: ${isDarkMode ? '#888' : '#666'}">Bajada</span>
+                        </div>
+                    </div>
                     <input type="file" id="elevation-dem-upload" style="display:none" accept=".tif,.tiff" onchange="handleElevationDemUpload(this)">
                 </div>
                 <div class="text-end flex-grow-1 ps-3 precision-text-indicator" style="font-size: 0.6rem; opacity: 0.8;">
@@ -17959,8 +18070,8 @@
 
     const w = window.innerWidth;
     const h = window.innerHeight;
-      panel.style.left = Math.round((w - 1100) / 2) + 'px';
-      panel.style.top = Math.round((h - 550) / 2) + 'px';
+      panel.style.left = Math.round((w - 1300) / 2) + 'px';
+      panel.style.top = Math.round((h - 650) / 2) + 'px';
       
       if (typeof makeDraggable === 'function') makeDraggable(panel);
       return panel;
@@ -18022,7 +18133,7 @@
 
   function toggleElevationSlope() {
     showSlopeInChart = !showSlopeInChart;
-    const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
     const accentColor = isDarkMode ? '#ff9800' : '#294a60';
     const btn = document.getElementById('btn-toggle-slope');
     if (btn) {
@@ -18168,7 +18279,7 @@
 
   function renderElevationChart(data) {
     window.currentElevationData = data;
-    const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
      const gridColor = isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
       const labelColor = isDarkMode ? "#888" : "#555";
     const canvas = document.getElementById('elevationChartCanvas');
@@ -18183,8 +18294,8 @@
     const distLabel = (d) => maxDist > 2000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m';
 
     // SIRIO COLORS & STYLE
-      const sirioOrange = isDarkMode ? '#00d2ff' : '#294a60';
-      const sirioSlope = isDarkMode ? '#ff4444' : '#d93025';
+    const sirioOrange = isDarkMode ? '#ff9800' : '#294a60';
+    const sirioSlope = isDarkMode ? '#ff4444' : '#d93025';
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, isDarkMode ? 'rgba(0, 210, 255, 0.3)' : 'rgba(41, 74, 96, 0.4)');
@@ -18192,7 +18303,55 @@
 
     elevationProfileChart = new Chart(ctx, {
       type: 'line',
-      plugins: [{
+      plugins: [
+        {
+          id: 'poiPlugin',
+          afterDraw: (chart) => {
+            const {ctx, chartArea: {top, bottom}, scales: {x, y}} = chart;
+            if (!elevationPOIs || elevationPOIs.length === 0) return;
+            const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
+            
+            elevationPOIs.forEach(poi => {
+              const xPos = x.getPixelForValue(poi.dist);
+              const yPos = y.getPixelForValue(poi.alt);
+              if (xPos < chart.chartArea.left || xPos > chart.chartArea.right) return;
+
+              ctx.save();
+              ctx.strokeStyle = isDarkMode ? 'rgba(255,152,0,0.6)' : 'rgba(41,74,96,0.6)';
+              ctx.lineWidth = 1.5;
+              ctx.setLineDash([4, 2]);
+              ctx.beginPath();
+              ctx.moveTo(xPos, top - 20); // Un poco más arriba para el texto
+              ctx.lineTo(xPos, bottom);
+              ctx.stroke();
+
+              // Circulito en el punto exacto de la altitud
+              ctx.fillStyle = isDarkMode ? '#ff9800' : '#294a60';
+              ctx.shadowBlur = 5;
+              ctx.shadowColor = 'rgba(0,0,0,0.5)';
+              ctx.beginPath();
+              ctx.arc(xPos, yPos, 5, 0, Math.PI * 2);
+              ctx.fill();
+              
+              // Etiqueta superior
+              ctx.shadowBlur = 0;
+              ctx.fillStyle = isDarkMode ? '#ff9800' : '#294a60';
+              const text = poi.name.toUpperCase();
+              const textWidth = ctx.measureText(text).width;
+              
+              // Fondo para el texto
+              ctx.fillStyle = isDarkMode ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)';
+              ctx.fillRect(xPos - (textWidth/2) - 4, top - 32, textWidth + 8, 14);
+              
+              ctx.fillStyle = isDarkMode ? '#fff' : '#294a60';
+              ctx.font = 'bold 10px Inter';
+              ctx.textAlign = 'center';
+              ctx.fillText(text, xPos, top - 22);
+              ctx.restore();
+            });
+          }
+        },
+        {
           id: 'highlightPlugin',
           beforeDraw: (chart) => {
               const pluginOptions = chart.config.options.plugins.highlightPlugin;
@@ -18236,6 +18395,12 @@
             pointRadius: 0,
             borderWidth: 2,
             borderDash: [5, 5],
+            segment: {
+                borderColor: ctx => {
+                    if (ctx.p1.parsed.y === undefined) return sirioSlope;
+                    return getSlopeColor(ctx.p1.parsed.y, isDarkMode);
+                }
+            },
             yAxisID: 'y1'
           }
         ]
@@ -18244,6 +18409,85 @@
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
+        onClick: (event, activeElements) => {
+          // Detectar clic en hito para borrarlo
+          if (elevationPOIs.length > 0) {
+              const {x} = elevationProfileChart.scales;
+              const clickX = event.x;
+              const chartLeft = elevationProfileChart.chartArea.left;
+              
+              // El evento X es relativo al canvas, necesitamos ajustarlo a la escala
+              const xValue = x.getValueForPixel(clickX);
+              
+              // Umbral de cercanía (1% del rango total)
+              const range = x.max - x.min;
+              const threshold = range * 0.015;
+
+              const poiIdx = elevationPOIs.findIndex(p => Math.abs(p.dist - xValue) < threshold);
+              if (poiIdx !== -1) {
+                  if (confirm(`¿Deseas eliminar el hito "${elevationPOIs[poiIdx].name}"?`)) {
+                      elevationPOIs.splice(poiIdx, 1);
+                      renderElevationChart(window.currentElevationData);
+                      showMapToast("Hito eliminado", "#f44336");
+                      return;
+                  }
+              }
+          }
+
+          if (isAddingPOI && activeElements && activeElements.length > 0) {
+              const index = activeElements[0].index;
+              const pt = window.currentElevationData[index];
+              const poiName = prompt("Nombre del hito (desde la gráfica):", "");
+              if (poiName) {
+                  elevationPOIs.push({
+                      name: poiName,
+                      dist: pt.dist,
+                      alt: pt.alt,
+                      lat: pt.lat,
+                      lng: pt.lon || pt.lng
+                  });
+                  renderElevationChart(window.currentElevationData);
+                  showMapToast(`Hito '${poiName}' añadido con éxito`, "#4caf50");
+              }
+              // Desactivar modo hito tras añadirlo
+              isAddingPOI = false;
+              const mapContainer = document.getElementById('mapa-corpus');
+              if (mapContainer) mapContainer.style.cursor = '';
+              // Quitar el listener del mapa si estaba pendiente
+              const map = window._mapaCorpus;
+              if (map) map.off('click'); 
+          }
+        },
+        onHover: (event, activeElements) => {
+          const map = window._mapaCorpus;
+          if (!map || !window.currentElevationData) return;
+
+          if (activeElements && activeElements.length > 0) {
+            const index = activeElements[0].index;
+            const pt = window.currentElevationData[index];
+            if (pt) {
+              const latlng = L.latLng(pt.lat, pt.lon || pt.lng);
+              if (!elevationHoverMarker) {
+                elevationHoverMarker = L.circleMarker(latlng, {
+                  radius: 7,
+                  color: isDarkMode ? '#ff9800' : '#294a60',
+                  fillColor: '#fff',
+                  fillOpacity: 1,
+                  weight: 3,
+                  zIndexOffset: 20000
+                }).addTo(map);
+              } else {
+                elevationHoverMarker.setLatLng(latlng);
+                if (!map.hasLayer(elevationHoverMarker)) elevationHoverMarker.addTo(map);
+              }
+            }
+          } else {
+            if (elevationHoverMarker) {
+              map.removeLayer(elevationHoverMarker);
+              elevationHoverMarker = null;
+            }
+          }
+        },
         plugins: {
           legend: {
             display: true,
@@ -18327,6 +18571,7 @@
     }, 0);
 
     const avgSlope = totalDist > 0 ? (gain / totalDist) * 100 : 0; 
+    const maxSlope = Math.max.apply(null, data.map(d => d.slope || 0));
 
     const distStr = totalDist >= 1000 ? (totalDist/1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m';
     
@@ -18348,6 +18593,10 @@
             <div>${avgSlope.toFixed(1)} %</div>
         </div>
         <div class="text-center">
+            <div style="opacity: 0.7; font-size: 0.55rem;">PEND. MÁX</div>
+            <div>${maxSlope.toFixed(1)} %</div>
+        </div>
+        <div class="text-center">
             <div style="opacity: 0.7; font-size: 0.55rem;">ALT. MÁX</div>
             <div>${Math.round(maxAlt)} m</div>
         </div>
@@ -18357,12 +18606,29 @@
     if (container) container.innerHTML = statsHtml;
   }
 
+  /**
+   * Helper para obtener el color de una pendiente según su intensidad
+   */
+  function getSlopeColor(slope, isDarkMode = false) {
+    if (slope > 15) return '#b71c1c';
+    if (slope > 10) return '#d32f2f';
+    if (slope > 7)  return '#f44336';
+    if (slope > 4)  return '#ff9800';
+    if (slope > 2)  return '#ffc107';
+    if (slope > 0)  return '#4caf50';
+    if (slope < -10) return '#4527a0';
+    if (slope < -5)  return '#1565c0';
+    if (slope < 0)   return '#2196f3';
+    return isDarkMode ? '#aaa' : '#666';
+  }
+
   function renderIntervalTable(data, interval) {
     const container = document.getElementById('elevation-table-container');
     if (!container || !data || data.length === 0) return;
 
-    const isDarkMode = document.body.classList.contains('dark-mode') || document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDarkMode ? '#eee' : '#333';
+    // Detección de tema consistente
+    const isDarkMode = document.documentElement.getAttribute("data-theme") !== "light";
+    const textColor = isDarkMode ? '#e0e0e0' : '#333';
 
     let html = `
         <table class="table table-sm table-borderless m-0" style="color: ${textColor}; font-size: 0.75rem; border-collapse: separate; border-spacing: 0 2px;">
@@ -18414,15 +18680,16 @@
         const diffAlt = endAlt - startAlt;
         const segmentDist = nextPos - currentPos;
         const segmentSlope = segmentDist > 0 ? (diffAlt / segmentDist) * 100 : 0;
-        
-        const slopeColor = segmentSlope > 12 ? '#d32f2f' : 
-                          (segmentSlope > 8 ? '#f44336' : 
-                          (segmentSlope > 4 ? '#ff9800' : 
-                          (segmentSlope < 0 ? '#2196f3' : (isDarkMode ? '#aaa' : '#666'))));
+        const slopeColor = getSlopeColor(segmentSlope, isDarkMode);
         
         // Mapear a puntos reales para el hover del mapa
         const startIdx = getClosestIdx(currentPos);
         const endIdx = getClosestIdx(nextPos);
+
+        // Crear una pequeña "pastilla" de color para la pendiente en lugar de solo el texto
+        const slopeBadge = `<span class="badge" style="background-color: ${slopeColor}; color: #fff; font-size: 0.7rem; min-width: 50px; display: inline-block;">
+            ${segmentSlope > 0 ? '+' : ''}${segmentSlope.toFixed(1)}%
+        </span>`;
 
         html += `
             <tr onmouseenter="highlightElevationSegment(${startIdx}, ${endIdx}, '${slopeColor}'); this.style.background='${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}'" 
@@ -18430,8 +18697,8 @@
                 style="cursor: pointer; transition: background 0.2s; border-bottom: 1px solid rgba(128,128,128,0.1); background: ${isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)'};">
                 <td class="ps-2 py-2" style="font-weight: 500;">${Math.round(currentPos)}m - ${Math.round(nextPos)}m</td>
                 <td class="text-end py-2 font-mono">${Math.round(endAlt)}m</td>
-                <td class="text-end py-2 font-mono" style="color: ${slopeColor}; font-weight: bold; font-size: 0.8rem;">
-                    ${segmentSlope > 0 ? '+' : ''}${segmentSlope.toFixed(1)}%
+                <td class="text-end py-2 font-mono" style="font-weight: bold; font-size: 0.8rem;">
+                    ${slopeBadge}
                 </td>
                 <td class="text-center py-2">
                     <button class="btn btn-xs btn-outline-warning border-0 p-0" title="Ramificar perfil desde este punto" onclick="branchElevationProfileAt(${endIdx}); event.stopPropagation();">
@@ -18540,7 +18807,7 @@
                 }).addTo(window._mapaCorpus);
                 
                 window.elevationLine.feature = geo.features[0];
-                window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
+                if (window.elevationLine.getLatLngs().length > 0) window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
                 
                 // 2. Cargar los datos de elevación guardados
                 window.currentElevationData = geo.features[0].properties.data;
@@ -18618,7 +18885,7 @@
           const latlngs = coords.map(c => [c[1], c[0]]);
           window.elevationLine = L.polyline(latlngs, { color: "#ff9800", weight: 4, dashArray: "5, 10" }).addTo(window._mapaCorpus);
           window.elevationLine.feature = geo.features[0];
-          window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
+          if (window.elevationLine.getLatLngs().length > 0) window._mapaCorpus.fitBounds(window.elevationLine.getBounds());
           window.currentElevationData = geo.features[0].properties.data;
           window.currentProfileLoadedID = layer.id || layer.db_id || layer.feature?.properties?.db_id;
           let panel = document.getElementById("elevation-profile-panel");
@@ -18657,7 +18924,7 @@
 
     try {
         const canvas = await html2canvas(panel, {
-            backgroundColor: document.body.classList.contains('dark-mode') ? '#0c0c0c' : '#ffffff',
+            backgroundColor: document.documentElement.getAttribute("data-theme") !== "light" ? '#0c0c0c' : '#ffffff',
             scale: 2,
             useCORS: true,
             logging: false,
@@ -18678,6 +18945,126 @@
         if (footerArea) footerArea.style.display = '';
         if (intervalSelect) intervalSelect.style.visibility = 'visible';
     }
+  }
+
+  /**
+   * Inicia el modo de añadir un hito (Punto de Interés) sobre el perfil
+   */
+  function startAddingElevationPOI() {
+    if (isAddingPOI) return;
+    isAddingPOI = true;
+    showMapToast("Haz clic sobre la RUTA en el mapa o sobre la GRÁFICA para añadir un hito", "#ff9800");
+    const mapContainer = document.getElementById('mapa-corpus');
+    if (mapContainer) mapContainer.style.cursor = 'crosshair';
+
+    const map = window._mapaCorpus;
+    
+    const clickHandler = (e) => {
+        if (!isAddingPOI) return; // Por si se canceló desde la gráfica
+        const latlng = e.latlng;
+        if (!window.currentElevationData || window.currentElevationData.length === 0) {
+            cancelPOIMode();
+            return;
+        }
+
+        let minDist = Infinity;
+        let nearestPt = null;
+        
+        window.currentElevationData.forEach(pt => {
+            const d = latlng.distanceTo(L.latLng(pt.lat, pt.lon || pt.lng));
+            if (d < minDist) {
+                minDist = d;
+                nearestPt = pt;
+            }
+        });
+
+        if (minDist > 100) {
+            showMapToast("Clic demasiado lejos de la ruta. Inténtalo de nuevo.", "#f44336");
+            return;
+        }
+
+        const poiName = prompt("Nombre del hito:", "");
+        if (poiName) {
+            elevationPOIs.push({
+                name: poiName,
+                dist: nearestPt.dist,
+                alt: nearestPt.alt,
+                lat: nearestPt.lat,
+                lng: nearestPt.lon || nearestPt.lng
+            });
+            renderElevationChart(window.currentElevationData);
+            showMapToast(`Hito '${poiName}' añadido con éxito`, "#4caf50");
+        }
+        cancelPOIMode();
+    };
+
+    const cancelPOIMode = () => {
+        map.off('click', clickHandler);
+        isAddingPOI = false;
+        if (mapContainer) mapContainer.style.cursor = '';
+    };
+
+    map.once('click', clickHandler);
+  }
+
+  /**
+   * Invierte el orden de los puntos del perfil, recalculando distancias y pendientes
+   */
+  function reverseElevationProfile() {
+    if (!window.currentElevationData || window.currentElevationData.length === 0) return;
+
+    // 1. Invertir array de puntos
+    const reversed = [...window.currentElevationData].reverse();
+
+    // 2. Recalcular distancias desde 0 utilizando las coordenadas reales
+    let totalDist = 0;
+    reversed[0].dist = 0;
+    for (let i = 1; i < reversed.length; i++) {
+        const p1 = L.latLng(reversed[i-1].lat, reversed[i-1].lon || reversed[i-1].lng);
+        const p2 = L.latLng(reversed[i].lat, reversed[i].lon || reversed[i].lng);
+        totalDist += p1.distanceTo(p2);
+        reversed[i].dist = totalDist;
+    }
+
+    // 3. Recalcular pendientes (Slope = ΔAlt / ΔDist)
+    for (let i = 0; i < reversed.length; i++) {
+        if (i === 0) {
+            reversed[i].slope = 0;
+        } else {
+            const dSeg = reversed[i].dist - reversed[i-1].dist;
+            const aSeg = reversed[i].alt - reversed[i-1].alt;
+            reversed[i].slope = dSeg > 0 ? (aSeg / dSeg) * 100 : 0;
+        }
+    }
+
+    // 4. Invertir posición de los Hitos (Respecto al nuevo final)
+    const maxDist = reversed[reversed.length - 1].dist;
+    elevationPOIs = elevationPOIs.map(poi => {
+        return {
+            ...poi,
+            dist: Math.max(0, maxDist - poi.dist)
+        };
+    });
+
+    window.currentElevationData = reversed;
+
+    // 5. Sincronizar la polilínea del mapa
+    if (window.elevationLine) {
+        // En Leaflet, si elevationLine no es un Polyline sino un LayerGroup de una ruta cargada
+        if (typeof window.elevationLine.setLatLngs === 'function') {
+            window.elevationLine.setLatLngs(reversed.map(p => [p.lat, p.lon || p.lng]));
+        } else if (typeof window.elevationLine.getLayers === 'function') {
+            // Si es un featureGroup/layerGroup, intentamos encontrar la polilínea dentro
+            window.elevationLine.getLayers().forEach(l => {
+                if (typeof l.setLatLngs === 'function') l.setLatLngs(reversed.map(p => [p.lat, p.lon || p.lng]));
+            });
+        }
+    }
+
+    // 6. Refrescar UI
+    renderElevationChart(window.currentElevationData);
+    updateElevationAnalysis();
+    showMapToast("Ruta invertida (Inicio ↔ Final)", "#ff9800");
   }
 
     async function saveElevationProfile() {
@@ -18765,8 +19152,19 @@
                 showMapToast(isOverwrite ? "Perfil actualizado correctamente" : "Perfil guardado correctamente", "#4caf50");
                 if (result.id) window.currentProfileLoadedID = result.id;
                 document.getElementById('elevation-panel-title').innerText = "VISTA: " + name;
-                if (window.GISManager && window.GISManager.loadVectorLayers) {
-                    window.GISManager.loadVectorLayers();
+
+                // Sincronización instantánea con el Gestor GIS
+                if (window.GISManager) {
+                    if (typeof window.GISManager.loadVectorLayersFromDB === 'function') {
+                        await window.GISManager.loadVectorLayersFromDB();
+                    }
+                    
+                    // Si es una creación nueva, activamos la capa para que sea visible y editable
+                    if (!isOverwrite && result.id) {
+                        if (typeof window.GISManager.setActiveVectorLayer === 'function') {
+                            window.GISManager.setActiveVectorLayer(result.id);
+                        }
+                    }
                 }
             } else {
                 showMapToast("Error al guardar: " + (result.error || "Desconocido"), "#f44336");
@@ -18783,6 +19181,8 @@
   window.updateElevationAnalysis = updateElevationAnalysis;
   window.branchElevationProfileAt = branchElevationProfileAt;
   window.refreshElevationData = refreshElevationData;
+  window.startAddingElevationPOI = startAddingElevationPOI;
+  window.reverseElevationProfile = reverseElevationProfile;
 </script>
 <!-- Ghost controls -->
 <div style="display: none !important;">

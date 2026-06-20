@@ -1,0 +1,2225 @@
+{
+  "timestamp": "2026-06-18T16:42:46.880654",
+  "tipo_analisis": "sentimiento",
+  "filtros": {
+    "proyecto_id": 1,
+    "tema": null,
+    "publicacion_id": null,
+    "publicaciones_ids": [],
+    "pais": null,
+    "fecha_desde": null,
+    "fecha_hasta": null,
+    "documentos_ids": [],
+    "eje_x": "fecha",
+    "limite": 300
+  },
+  "params": {
+    "limite": 300,
+    "eje_x": "fecha"
+  },
+  "resultado": {
+    "exito": true,
+    "datos_temporales": [
+      {
+        "fecha": "1883",
+        "sentimiento": 0.29204545454545455,
+        "subjetividad": 0.13227513227513227,
+        "count": 2
+      },
+      {
+        "fecha": "1906",
+        "sentimiento": 0.06848814690491857,
+        "subjetividad": 0.14283415798710314,
+        "count": 207
+      },
+      {
+        "fecha": "1907",
+        "sentimiento": 0.0720167949334616,
+        "subjetividad": 0.07998048892253234,
+        "count": 54
+      },
+      {
+        "fecha": "1908",
+        "sentimiento": -0.20095238095238097,
+        "subjetividad": 0.21944617305686975,
+        "count": 14
+      },
+      {
+        "fecha": "1909",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "count": 1
+      },
+      {
+        "fecha": "1910",
+        "sentimiento": -0.12472883597883598,
+        "subjetividad": 0.14252317476829218,
+        "count": 12
+      },
+      {
+        "fecha": "1919",
+        "sentimiento": -0.3625,
+        "subjetividad": 0.26383399209486164,
+        "count": 1
+      },
+      {
+        "fecha": "2013",
+        "sentimiento": 0.3715277777777778,
+        "subjetividad": 0.18089005235602093,
+        "count": 1
+      },
+      {
+        "fecha": "2014",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.05660377358490566,
+        "count": 1
+      },
+      {
+        "fecha": "2017",
+        "sentimiento": 0.4,
+        "subjetividad": 0.33031805833205197,
+        "count": 1
+      },
+      {
+        "fecha": "2018",
+        "sentimiento": 0.3375,
+        "subjetividad": 0.24227861771058315,
+        "count": 1
+      },
+      {
+        "fecha": "2019",
+        "sentimiento": 1.0,
+        "subjetividad": 0.02857142857142857,
+        "count": 1
+      },
+      {
+        "fecha": "2020",
+        "sentimiento": 0.0,
+        "subjetividad": 0.07692307692307693,
+        "count": 1
+      },
+      {
+        "fecha": "2021",
+        "sentimiento": 1.0,
+        "subjetividad": 0.013333333333333334,
+        "count": 1
+      },
+      {
+        "fecha": "2026",
+        "sentimiento": -0.7375,
+        "subjetividad": 0.134680928208847,
+        "count": 2
+      }
+    ],
+    "datos_individuales": [
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": 0.525,
+        "subjetividad": 0.2775862068965517,
+        "titulo": "Rasgo generoso",
+        "id": 1179
+      },
+      {
+        "fecha": "1906-09-30",
+        "sentimiento": 0.0,
+        "subjetividad": 0.030947775628626693,
+        "titulo": "La mañana de hoy",
+        "id": 517
+      },
+      {
+        "fecha": "1906-09-29",
+        "sentimiento": 1.0,
+        "subjetividad": 0.045584045584045586,
+        "titulo": "EL OBISPO DE S. PAULO",
+        "id": 516
+      },
+      {
+        "fecha": "1906-08-29",
+        "sentimiento": 0.6375,
+        "subjetividad": 0.26015228426395937,
+        "titulo": "GRAN TEATRO DEL BOSQUE",
+        "id": 438
+      },
+      {
+        "fecha": "1906-08-29",
+        "sentimiento": 0.625,
+        "subjetividad": 0.07637231503579953,
+        "titulo": "Después de la Catástrofe",
+        "id": 1180
+      },
+      {
+        "fecha": "1906-10-28",
+        "sentimiento": 1.0,
+        "subjetividad": 0.016260162601626018,
+        "titulo": "El Naufragio de la Fortuna",
+        "id": 548
+      },
+      {
+        "fecha": "1906-08-28",
+        "sentimiento": 0.02919481981981982,
+        "subjetividad": 0.24109445519019987,
+        "titulo": "Naufragio del Sirio. En honor de la verdad.",
+        "id": 703
+      },
+      {
+        "fecha": "1906-10-27",
+        "sentimiento": 0.0,
+        "subjetividad": 0.014652014652014652,
+        "titulo": "DE NUESTRO CORRESPONSAL, Desde Roma, Crónica Italiana. La caja fuerte del vapor Sirio",
+        "id": 547
+      },
+      {
+        "fecha": "1883-03-26",
+        "sentimiento": 0.5840909090909091,
+        "subjetividad": 0.26455026455026454,
+        "titulo": "Botadura del vapor de hierro Sirio",
+        "id": 9
+      },
+      {
+        "fecha": "1910-03-24",
+        "sentimiento": 0.025,
+        "subjetividad": 0.13566666666666666,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 638
+      },
+      {
+        "fecha": "1907-04-23",
+        "sentimiento": -1.0,
+        "subjetividad": 0.08333333333333333,
+        "titulo": "Muerte del Capitán del Sirio",
+        "id": 575
+      },
+      {
+        "fecha": "1910-03-23",
+        "sentimiento": -0.4,
+        "subjetividad": 0.5,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 637
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "A las cuatro de esta madrugada en un establecimiento",
+        "id": 500
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": -0.5,
+        "subjetividad": 0.03902439024390244,
+        "titulo": "Poco después de las tres de esta mañana se ha desarrollado una escena sangrienta en",
+        "id": 496
+      },
+      {
+        "fecha": "2026-01-13",
+        "sentimiento": -1.0,
+        "subjetividad": 0.014285714285714285,
+        "titulo": "25 cadáveres del Sirio encontrados en alta mar por el Condor Se informa desde Génova",
+        "id": 656
+      },
+      {
+        "fecha": "2026-01-13",
+        "sentimiento": -0.475,
+        "subjetividad": 0.2550761421319797,
+        "titulo": "Sociedad General de Transporte Marítimo",
+        "id": 654
+      },
+      {
+        "fecha": "2021-01-08",
+        "sentimiento": 1.0,
+        "subjetividad": 0.013333333333333334,
+        "titulo": "Naufragio del Poitou En 1907 frente a la playa de las Garzas cercana a La",
+        "id": 651
+      },
+      {
+        "fecha": "2020-12-07",
+        "sentimiento": 0.0,
+        "subjetividad": 0.07692307692307693,
+        "titulo": "Era además una mujer muy altruista realizó conciertos en beneficio del hospital de Torrevieja del",
+        "id": 650
+      },
+      {
+        "fecha": "2019-05-03",
+        "sentimiento": 1.0,
+        "subjetividad": 0.02857142857142857,
+        "titulo": "La parte dramática del mar la protagoniza el naufragio del Sirio y la llegada de",
+        "id": 649
+      },
+      {
+        "fecha": "2018-08-18",
+        "sentimiento": 0.3375,
+        "subjetividad": 0.24227861771058315,
+        "titulo": "José Maristany la voz perdida con el 'Sirio'",
+        "id": 648
+      },
+      {
+        "fecha": "2017-08-26",
+        "sentimiento": 0.4,
+        "subjetividad": 0.33031805833205197,
+        "titulo": "El Naufragio del Poiton",
+        "id": 647
+      },
+      {
+        "fecha": "2014-01-13",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.05660377358490566,
+        "titulo": "Por fuentes orales me ha venido la información de que fue una mujer cantante de",
+        "id": 645
+      },
+      {
+        "fecha": "2013-01-10",
+        "sentimiento": 0.3715277777777778,
+        "subjetividad": 0.18089005235602093,
+        "titulo": "LA TUMBA DEL VAPOR POITOU",
+        "id": 652
+      },
+      {
+        "fecha": "1883-06-20",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Solución a la huelga de los carpinteros navales",
+        "id": 14
+      },
+      {
+        "fecha": "1919-01-13",
+        "sentimiento": -0.3625,
+        "subjetividad": 0.26383399209486164,
+        "titulo": "Salvamento heroico en Cabo de Palos El pailebote Villa de Rabal en peligro",
+        "id": 643
+      },
+      {
+        "fecha": "1910-11-11",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Ha sido condecido el abono de pensión de una Cruz al patrón Agustín Antolino Alabán",
+        "id": 642
+      },
+      {
+        "fecha": "1910-04-01",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La sentencia en el proceso por el naufragio del Sirio",
+        "id": 641
+      },
+      {
+        "fecha": "1910-03-31",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 639
+      },
+      {
+        "fecha": "1910-03-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.018691588785046728,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 635
+      },
+      {
+        "fecha": "1910-03-16",
+        "sentimiento": -0.08642857142857142,
+        "subjetividad": 0.16862941486557723,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 633
+      },
+      {
+        "fecha": "1910-03-13",
+        "sentimiento": -0.625,
+        "subjetividad": 0.029684601113172542,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 632
+      },
+      {
+        "fecha": "1910-03-12",
+        "sentimiento": -0.0630952380952381,
+        "subjetividad": 0.2589397421166858,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 631
+      },
+      {
+        "fecha": "1910-03-11",
+        "sentimiento": -0.3638888888888889,
+        "subjetividad": 0.2612923462986198,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 630
+      },
+      {
+        "fecha": "1910-03-10",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El proceso por el naufragio del Sirio",
+        "id": 629
+      },
+      {
+        "fecha": "1910-03-09",
+        "sentimiento": 0.016666666666666673,
+        "subjetividad": 0.3373737373737374,
+        "titulo": "El epílogo del naufragio del Sirio",
+        "id": 628
+      },
+      {
+        "fecha": "1909-07-08",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "La última palabra sobre el naufragio del Sirio",
+        "id": 626
+      },
+      {
+        "fecha": "1908-09-26",
+        "sentimiento": -0.08333333333333334,
+        "subjetividad": 0.5264608599779493,
+        "titulo": "El Arzobispo de Pará y su llegada A bordo del Thames llegó ayer Su Excelencia",
+        "id": 625
+      },
+      {
+        "fecha": "1908-06-01",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Recompensas Estando probado por el oportuno expediente que Hermenegildo Buhigues no se encontraba a bordo",
+        "id": 624
+      },
+      {
+        "fecha": "1908-05-16",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "En el faro de las Hormigas sitio donde naufragó el vapor Sirio estando trabajando ayer",
+        "id": 623
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": -1.0,
+        "subjetividad": 0.029850746268656716,
+        "titulo": "El juicio por el naufragio del Sirio GENOVA",
+        "id": 618
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": 0.020000000000000007,
+        "subjetividad": 0.275,
+        "titulo": "EL TRABAJO DE LOS JUECES",
+        "id": 620
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": -0.475,
+        "subjetividad": 0.2581967213114754,
+        "titulo": "El proceso por el desastre del Sirio Dos oficiales llamados a presentarse Nos llaman desde",
+        "id": 619
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": -0.475,
+        "subjetividad": 0.2619047619047619,
+        "titulo": "Los responsables del naufragio del Sirio enviados a juicio Hemos recibido noticias de Génova esta",
+        "id": 622
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": -0.6875,
+        "subjetividad": 0.38333333333333336,
+        "titulo": "Los entresijos de un juicio",
+        "id": 621
+      },
+      {
+        "fecha": "1908-05-09",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "La sentencia de la Sección de Acusación por el naufragio del Sirio",
+        "id": 617
+      },
+      {
+        "fecha": "1908-03-04",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "Los oficiales del Sirio y la Navigazione Generale absueltos por inexistencia de delito",
+        "id": 615
+      },
+      {
+        "fecha": "1908-03-04",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "El juicio por la catástrofe del Sirio en apelación GÉNOVA 3 de marzo Por teléfono",
+        "id": 616
+      },
+      {
+        "fecha": "1908-02-29",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Congreso de los Diputados Sesión del 29 de Febrero comienza a las 15 30 se",
+        "id": 614
+      },
+      {
+        "fecha": "1908-01-02",
+        "sentimiento": -0.2,
+        "subjetividad": 0.275,
+        "titulo": "El naufragio del Sirio Los Tribunales de Genova han terminado ya la instrucción del proceso",
+        "id": 612
+      },
+      {
+        "fecha": "1908-01-01",
+        "sentimiento": 0.012500000000000004,
+        "subjetividad": 0.3125,
+        "titulo": "Los responsables del desastre del Sirio ante la Corte de Asís",
+        "id": 611
+      },
+      {
+        "fecha": "1907-12-03",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "Ya anunciamos que el general Ferrándiz presentaría a las Cortes un proyecto de ley para",
+        "id": 610
+      },
+      {
+        "fecha": "1907-11-27",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El ministro de Marina presentará á las Cortes un proyecto de ley",
+        "id": 609
+      },
+      {
+        "fecha": "1907-11-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0136986301369863,
+        "titulo": "Victoria de un emigrante contra la Navigazione Generale por el naufragio del Sirio Roma 17",
+        "id": 608
+      },
+      {
+        "fecha": "1907-08-21",
+        "sentimiento": -0.2,
+        "subjetividad": 0.3930843195266272,
+        "titulo": "LOS BAJOS DE LAS HORMIGAS Proyecto aprobado Los trístemente célebres Bajos de las Hormigas en",
+        "id": 607
+      },
+      {
+        "fecha": "1907-08-14",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Ayer apareció flotando en aguas de Cabo de Palos uno de los botes del vapor",
+        "id": 606
+      },
+      {
+        "fecha": "1907-08-10",
+        "sentimiento": 1.0,
+        "subjetividad": 0.11764705882352941,
+        "titulo": "Llegada de Náufragos",
+        "id": 605
+      },
+      {
+        "fecha": "1907-07-27",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Españoles deseparecidos",
+        "id": 604
+      },
+      {
+        "fecha": "1907-07-25",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Crónica",
+        "id": 603
+      },
+      {
+        "fecha": "1907-06-28",
+        "sentimiento": 0.5125,
+        "subjetividad": 0.21680672268907564,
+        "titulo": "Reparto de premios A las cuatro de la tarde de hoy ha tenido lugar en",
+        "id": 602
+      },
+      {
+        "fecha": "1907-06-24",
+        "sentimiento": 0.4607142857142857,
+        "subjetividad": 0.3518714011516315,
+        "titulo": "Heroísmo de un español SALVAMENTO DE 225 PERSONAS La prensa de Buenos Aires publica interesantes",
+        "id": 601
+      },
+      {
+        "fecha": "1907-06-20",
+        "sentimiento": 1.0,
+        "subjetividad": 0.022988505747126436,
+        "titulo": "En Denia el huracán ha echado a pique a un falucho tripulado por dos hombres",
+        "id": 600
+      },
+      {
+        "fecha": "1907-06-19",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Denia El viento huracanado que reinó ayer echó a pique un balandro frente al Cabo",
+        "id": 599
+      },
+      {
+        "fecha": "1907-06-13",
+        "sentimiento": -0.5,
+        "subjetividad": 0.5161943319838057,
+        "titulo": "Cerca de Montevideo y frente a la laguna existente entre los Cabos de Santa María",
+        "id": 597
+      },
+      {
+        "fecha": "1907-06-13",
+        "sentimiento": 0.0,
+        "subjetividad": 0.020100502512562814,
+        "titulo": "El peritaje sobre la catástrofe del Sirio GÉNOVA 12 de junio Por teléfono Esta mañana",
+        "id": 598
+      },
+      {
+        "fecha": "1907-06-12",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.023076923076923078,
+        "titulo": "Un naufragio En un diario Sudamericano leemos el siguiente relato del naufragio del vapor perteneciente",
+        "id": 596
+      },
+      {
+        "fecha": "1907-06-05",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Después de un Consejo",
+        "id": 595
+      },
+      {
+        "fecha": "1907-05-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Protesta de un Cónsul LONDRES 18",
+        "id": 594
+      },
+      {
+        "fecha": "1907-05-16",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "Sociedad de Salvamento de Naúfragos La junta general otorgó el premio anual de S",
+        "id": 593
+      },
+      {
+        "fecha": "1907-05-15",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La víctima italiana en el naufragio del Poitou Recibimos un telegrama de Roma el 14",
+        "id": 592
+      },
+      {
+        "fecha": "1907-05-14",
+        "sentimiento": -0.7,
+        "subjetividad": 0.278003003003003,
+        "titulo": "CARTAGENA",
+        "id": 692
+      },
+      {
+        "fecha": "1907-05-13",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Sólo una víctima italiana del Poitou Recibimos una llamada telefónica desde Roma",
+        "id": 589
+      },
+      {
+        "fecha": "1907-05-13",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "EL HUNDIMIENTO DEL POITOU El número de víctimas Marsella 11 de mayo",
+        "id": 591
+      },
+      {
+        "fecha": "1907-05-13",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "Sociedad de salvamento de náufragos",
+        "id": 590
+      },
+      {
+        "fecha": "1907-05-12",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "EL HUNDIMIENTO DEL POITOU MARSELLA 10 de mayo",
+        "id": 588
+      },
+      {
+        "fecha": "1907-05-11",
+        "sentimiento": 1.0,
+        "subjetividad": 0.022304832713754646,
+        "titulo": "El desastre de Poitou Veinte personas desaparecidas Cinco italianos desaparecidos Roma 10 de mayo noche",
+        "id": 585
+      },
+      {
+        "fecha": "1907-05-11",
+        "sentimiento": 0.07045454545454546,
+        "subjetividad": 0.2779898218829516,
+        "titulo": "El naufragio del Poitou",
+        "id": 586
+      },
+      {
+        "fecha": "1907-05-11",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.016172506738544475,
+        "titulo": "EL HUNDIMIENTO DEL POITOU El rescate de los pasajeros se ha completado",
+        "id": 587
+      },
+      {
+        "fecha": "1907-05-10",
+        "sentimiento": -1.0,
+        "subjetividad": 0.008547008547008548,
+        "titulo": "NAUFRAGIO DEL POITOU POR TELEGRAFO DE NUESTRO REDACTOR CORRESPONSAL Más detalles",
+        "id": 584
+      },
+      {
+        "fecha": "1907-05-10",
+        "sentimiento": -0.5,
+        "subjetividad": 0.05063291139240506,
+        "titulo": "Montevideo El vapor Poitou de la compañía de transportes marítimos",
+        "id": 583
+      },
+      {
+        "fecha": "1907-05-10",
+        "sentimiento": -1.0,
+        "subjetividad": 0.03389830508474576,
+        "titulo": "Los muertos del naufragio de Poitou París el 10 de mayo por la mañana Los",
+        "id": 582
+      },
+      {
+        "fecha": "1907-05-09",
+        "sentimiento": -0.5714285714285714,
+        "subjetividad": 0.5189959294436907,
+        "titulo": "La catástrofe del Poitou 60 ahogados y 210 rescatados El vapor se ha perdido Por",
+        "id": 579
+      },
+      {
+        "fecha": "1907-05-09",
+        "sentimiento": -1.0,
+        "subjetividad": 0.011976047904191617,
+        "titulo": "EL NAUFRAGIO DEL POITOU POR TELEGRAFO DE NUESTRO REDACTOR CORRESPONSAL PARÍS 9",
+        "id": 580
+      },
+      {
+        "fecha": "1907-05-09",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El POITOU El transatlántico francés Poitou naufragado en las costas de uruguay salió de Barcelona",
+        "id": 581
+      },
+      {
+        "fecha": "1907-05-07",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Foto:  Proa del Poitou luego del naufragio el 7 de mayo de 1907",
+        "id": 578
+      },
+      {
+        "fecha": "1907-05-04",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Un laudo arbitral napolitano a favor de los supervivientes del naufragio del Sirio Nápoles 3",
+        "id": 577
+      },
+      {
+        "fecha": "1907-05-03",
+        "sentimiento": 1.0,
+        "subjetividad": 0.05263157894736842,
+        "titulo": "La Junta Central de la Sociedad de Salvamento de Náufragos ha concedido un volo de",
+        "id": 576
+      },
+      {
+        "fecha": "1907-04-22",
+        "sentimiento": -1.0,
+        "subjetividad": 0.03333333333333333,
+        "titulo": "La muerte del comandante del Sirio GÉNOVA 21 de abril Por telégrafo Esta mañana falleció",
+        "id": 573
+      },
+      {
+        "fecha": "1907-04-22",
+        "sentimiento": 0.575,
+        "subjetividad": 0.19316134316134317,
+        "titulo": "N.225",
+        "id": 574
+      },
+      {
+        "fecha": "1907-04-21",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Año mil novecientos siete día veintidós de abril a las nueve horas y treinta minutos",
+        "id": 572
+      },
+      {
+        "fecha": "1907-04-08",
+        "sentimiento": -1.0,
+        "subjetividad": 0.045112781954887216,
+        "titulo": "Recepción terminada Ovación a los Reyes Embarcando en el Giralda",
+        "id": 571
+      },
+      {
+        "fecha": "1907-03-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.03773584905660377,
+        "titulo": "Premio a los valientes Roma 21 Se ha concedido a Vicente Bohigues patrón del laud",
+        "id": 570
+      },
+      {
+        "fecha": "1907-03-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.05442176870748299,
+        "titulo": "Premios por un salvamento",
+        "id": 567
+      },
+      {
+        "fecha": "1907-03-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Condecoraciones",
+        "id": 569
+      },
+      {
+        "fecha": "1907-03-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.03508771929824561,
+        "titulo": "Recompensas También dicen de Roma que el diario oficial Arma publica las recompensas al valor",
+        "id": 568
+      },
+      {
+        "fecha": "1907-03-02",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Noticias varias de Roma Recibimos una llamada telefónica de Roma",
+        "id": 565
+      },
+      {
+        "fecha": "1907-02-26",
+        "sentimiento": 1.0,
+        "subjetividad": 0.0898876404494382,
+        "titulo": "Cartagena Filantrópica Las Cuentas del Hospital Santo Hospital de Caridad Hay entre los donativos algunos",
+        "id": 564
+      },
+      {
+        "fecha": "1907-02-02",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El cuerpo del obispo brasileño que pereció en el naufragio del Sirio",
+        "id": 563
+      },
+      {
+        "fecha": "1907-01-26",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Recompensas Le ha sido concedida la Cruz de tercera clase de merito naval al Director",
+        "id": 562
+      },
+      {
+        "fecha": "1907-01-19",
+        "sentimiento": 1.0,
+        "subjetividad": 0.03418803418803419,
+        "titulo": "Ordenanzas Ordenanzas El lector de ayer Otras noticias",
+        "id": 561
+      },
+      {
+        "fecha": "1907-01-12",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "EL OBISPO DE S",
+        "id": 560
+      },
+      {
+        "fecha": "1907-01-12",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Otra indemnización a un superviviente del naufragio del Sirio'",
+        "id": 559
+      },
+      {
+        "fecha": "1907-01-08",
+        "sentimiento": 1.0,
+        "subjetividad": 0.01606425702811245,
+        "titulo": "La primera indemnización a un sobreviviente del Sirio Tenemos de Padua La Comisión Arbitral Provincial",
+        "id": 558
+      },
+      {
+        "fecha": "1907-01-01",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "DE PROVINCIAS",
+        "id": 557
+      },
+      {
+        "fecha": "1906-12-06",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La Catástrofe del Sirio",
+        "id": 556
+      },
+      {
+        "fecha": "1906-11-30",
+        "sentimiento": -0.11498015873015875,
+        "subjetividad": 0.445554618699644,
+        "titulo": "El Naufragio del Sirio",
+        "id": 555
+      },
+      {
+        "fecha": "1906-11-27",
+        "sentimiento": 1.0,
+        "subjetividad": 0.09523809523809523,
+        "titulo": "DIVERSAS Renunció a su Diócesis el Excmo",
+        "id": 554
+      },
+      {
+        "fecha": "1906-11-15",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "De conformidad con lo solicitado por el Fomento de la Marina Española de Barcelona la",
+        "id": 553
+      },
+      {
+        "fecha": "1906-11-14",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Recompensa Al secretario de la comisión departamental de la Cruz Roja D",
+        "id": 552
+      },
+      {
+        "fecha": "1906-11-06",
+        "sentimiento": 0.3892857142857143,
+        "subjetividad": 0.28820998278829607,
+        "titulo": "MINISTERIO DE MARINA - REAL DECRETO",
+        "id": 691
+      },
+      {
+        "fecha": "1906-11-05",
+        "sentimiento": 0.6,
+        "subjetividad": 0.1574626865671642,
+        "titulo": "La Gazeta Publica",
+        "id": 551
+      },
+      {
+        "fecha": "1906-10-30",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La Compañía armadora del Sirio Fiorio é Bubatino ha enviado una extensa carta al capitán",
+        "id": 550
+      },
+      {
+        "fecha": "1906-10-28",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El señor Colomer capitan del vapor Marta Luisa ha recibido de la casa armadora del",
+        "id": 549
+      },
+      {
+        "fecha": "1906-10-23",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Lo fué de igual modo aprobado un proyecto de ley de recompensas por el salvamento",
+        "id": 545
+      },
+      {
+        "fecha": "1906-10-23",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El Ministro de Marina ha dicho que lleva al consejo expedientes de utensilios y recompensas",
+        "id": 546
+      },
+      {
+        "fecha": "1906-10-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El señor Alvarado declaró que someterá a la aprobación de sus compañeros un expediente sobre",
+        "id": 544
+      },
+      {
+        "fecha": "1906-10-20",
+        "sentimiento": 1.0,
+        "subjetividad": 0.014492753623188406,
+        "titulo": "El Sr Alcalde de Villa Carlos",
+        "id": 543
+      },
+      {
+        "fecha": "1906-10-19",
+        "sentimiento": -0.6,
+        "subjetividad": 0.5344827586206896,
+        "titulo": "Ha fallecido en Barcelona á consecuencia de los sufrimientos contraídos en el naufragio del vapor",
+        "id": 542
+      },
+      {
+        "fecha": "1906-10-17",
+        "sentimiento": -0.6666666666666666,
+        "subjetividad": 0.625,
+        "titulo": "Otra Victima del Sirio",
+        "id": 541
+      },
+      {
+        "fecha": "1906-10-14",
+        "sentimiento": 0.14285714285714285,
+        "subjetividad": 0.029350104821802937,
+        "titulo": "Cómo se recuperó la caja fuerte vacía del Sirio Nos llaman por teléfono a Livorno",
+        "id": 540
+      },
+      {
+        "fecha": "1906-10-12",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Els bussos dedicats al salvament dels equipatjes del vapor Sirio á la fi varen trobar",
+        "id": 539
+      },
+      {
+        "fecha": "1906-10-11",
+        "sentimiento": 1.0,
+        "subjetividad": 0.047058823529411764,
+        "titulo": "Naufragio del Sirio",
+        "id": 538
+      },
+      {
+        "fecha": "1906-10-10",
+        "sentimiento": -1.0,
+        "subjetividad": 0.020202020202020204,
+        "titulo": "RESTOS DEL SIRIO",
+        "id": 535
+      },
+      {
+        "fecha": "1906-10-10",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "La caja del Syrio Comunican de Cartagena que las tripulaciones de los vapores Minerva y",
+        "id": 536
+      },
+      {
+        "fecha": "1906-10-10",
+        "sentimiento": -0.3333333333333333,
+        "subjetividad": 0.0392156862745098,
+        "titulo": "Aquí por desgracia ha de interesar todo cuanto se refiere al vapor Sirio",
+        "id": 534
+      },
+      {
+        "fecha": "1906-10-10",
+        "sentimiento": 1.0,
+        "subjetividad": 0.00966183574879227,
+        "titulo": "En el Vapor SIRIO",
+        "id": 537
+      },
+      {
+        "fecha": "1906-10-10",
+        "sentimiento": 0.017592592592592562,
+        "subjetividad": 0.356639684970466,
+        "titulo": "AÚN EL NAUFRAGIO DEL SIRIO NUEVAS INFORMACIONES DR",
+        "id": 533
+      },
+      {
+        "fecha": "1906-10-09",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.022813688212927757,
+        "titulo": "La caja del Sirio De Cartagena comunican que después de penosísimos trabajos ha sido extraída",
+        "id": 531
+      },
+      {
+        "fecha": "1906-10-08",
+        "sentimiento": -0.18333333333333332,
+        "subjetividad": 0.39766949152542375,
+        "titulo": "La caja de los valores del Sirio En la mañana del sábado se logró extraer",
+        "id": 528
+      },
+      {
+        "fecha": "1906-10-08",
+        "sentimiento": -0.8,
+        "subjetividad": 0.4523923444976077,
+        "titulo": "La Caja de Valores del Vapor SIRIO Cartagena 7 La noticia que sobre la caja",
+        "id": 529
+      },
+      {
+        "fecha": "1906-10-08",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Cartagena Del Sirio Los buzos que trabajan en el salvamento de los equipajes del Sirio",
+        "id": 530
+      },
+      {
+        "fecha": "1906-10-06",
+        "sentimiento": 0.5,
+        "subjetividad": 0.019801980198019802,
+        "titulo": "El Patrón del Joven Miguel El Rey ha recibido en la Granja á un interesante",
+        "id": 527
+      },
+      {
+        "fecha": "1906-10-05",
+        "sentimiento": 0.0,
+        "subjetividad": 0.5180180180180181,
+        "titulo": "Pobres Niños De cuántas víctimas produjo la catástrofe del Sirio las que causaban impresión más",
+        "id": 525
+      },
+      {
+        "fecha": "1906-10-05",
+        "sentimiento": 1.0,
+        "subjetividad": 0.03389830508474576,
+        "titulo": "EL ORONSA De Liverpool y escalas entró ayer por primera vez en nuestro puerto el",
+        "id": 526
+      },
+      {
+        "fecha": "1906-10-04",
+        "sentimiento": -0.33333333333333337,
+        "subjetividad": 0.5154639175257731,
+        "titulo": "POR EL MAR EL VAPOR ORONSA En las primeras horas de la mañana de ayer",
+        "id": 524
+      },
+      {
+        "fecha": "1906-10-04",
+        "sentimiento": -0.15625,
+        "subjetividad": 0.23509887005649716,
+        "titulo": "Sobre el desastroso naufragio del Sirio En el número de La Tribuna del 11 del",
+        "id": 522
+      },
+      {
+        "fecha": "1906-10-04",
+        "sentimiento": -0.6333333333333333,
+        "subjetividad": 0.3995058400718778,
+        "titulo": "AÚN EL NAUFRAGIO DEL SIRIO DR",
+        "id": 523
+      },
+      {
+        "fecha": "1906-10-01",
+        "sentimiento": 0.3975,
+        "subjetividad": 0.480378233284529,
+        "titulo": "(From L'Ange du Purgatoire.) “Shipwreck of the Sirio.”",
+        "id": 695
+      },
+      {
+        "fecha": "1906-10-01",
+        "sentimiento": 0.22499999999999998,
+        "subjetividad": 0.37487562189054724,
+        "titulo": "Un héroe",
+        "id": 521
+      },
+      {
+        "fecha": "1906-09-30",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Foto de Maria Suarez",
+        "id": 520
+      },
+      {
+        "fecha": "1906-09-30",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.015665796344647518,
+        "titulo": "En el Tejo el vapor inglés Thames En el Tejo el vapor inglés Thames que",
+        "id": 519
+      },
+      {
+        "fecha": "1906-09-30",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.034782608695652174,
+        "titulo": "La prensa de Madrid nos trae la noticia de la llegada del heróico patrón del",
+        "id": 518
+      },
+      {
+        "fecha": "1906-09-29",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.0375,
+        "titulo": "La Granja",
+        "id": 515
+      },
+      {
+        "fecha": "1906-09-29",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Se reanudan los trabajos de recuperación del Sirio Tel",
+        "id": 514
+      },
+      {
+        "fecha": "1906-09-28",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Número 1900 ALCALDIA CONSTITUCIONAL DE LA UNION Extracto de los acuerdos tomados por este ayuntamiento",
+        "id": 512
+      },
+      {
+        "fecha": "1906-09-28",
+        "sentimiento": 1.0,
+        "subjetividad": 0.037940379403794036,
+        "titulo": "EL OBISPO DE S",
+        "id": 513
+      },
+      {
+        "fecha": "1906-09-27",
+        "sentimiento": 1.0,
+        "subjetividad": 0.018867924528301886,
+        "titulo": "Número 1883 ALCALDIA CONSTITUCIONAL DE CARTAGENA Extracto de los acuerdos tomados por la corporacion municipal",
+        "id": 510
+      },
+      {
+        "fecha": "1906-09-27",
+        "sentimiento": 0.8,
+        "subjetividad": 0.47631578947368425,
+        "titulo": "NOTAS DE MARINA El ministro de Marina ha recibido hoy la visita del patrón del",
+        "id": 511
+      },
+      {
+        "fecha": "1906-09-26",
+        "sentimiento": 0.3333333333333333,
+        "subjetividad": 0.02,
+        "titulo": "Llegando ayer a bordo del Thames Su Excelencia Reverendísima el Sr",
+        "id": 509
+      },
+      {
+        "fecha": "1906-09-26",
+        "sentimiento": -0.5454545454545454,
+        "subjetividad": 0.5128956623681126,
+        "titulo": "El naufragio del Sirio",
+        "id": 508
+      },
+      {
+        "fecha": "1906-09-25",
+        "sentimiento": 1.0,
+        "subjetividad": 0.023255813953488372,
+        "titulo": "Hoy hemos hecho entrega al alguacil municipal",
+        "id": 507
+      },
+      {
+        "fecha": "1906-09-24",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El cadáver del obispo de São Paulo Recibimos una llamada telefónica de París",
+        "id": 505
+      },
+      {
+        "fecha": "1906-09-24",
+        "sentimiento": 0.15000000000000002,
+        "subjetividad": 0.2149402390438247,
+        "titulo": "DESDE BARCELONA Asesinato de una bailarina En la prensa de Barcelona encontramos la noticia de",
+        "id": 506
+      },
+      {
+        "fecha": "1906-09-23",
+        "sentimiento": 1.0,
+        "subjetividad": 0.01639344262295082,
+        "titulo": "ELCHE",
+        "id": 689
+      },
+      {
+        "fecha": "1906-09-23",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "SORBAS",
+        "id": 690
+      },
+      {
+        "fecha": "1906-09-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.01092896174863388,
+        "titulo": "El naufragio del Sirio",
+        "id": 503
+      },
+      {
+        "fecha": "1906-09-22",
+        "sentimiento": -1.0,
+        "subjetividad": 0.06666666666666667,
+        "titulo": "María Suarez la que fue herida ayer de madrugada en el Eden Concert continua en",
+        "id": 501
+      },
+      {
+        "fecha": "1906-09-22",
+        "sentimiento": -0.30000000000000004,
+        "subjetividad": 0.33676470588235297,
+        "titulo": "Después de la función habitual en el citado establecimiento una agraciada artista del mismo llamada",
+        "id": 504
+      },
+      {
+        "fecha": "1906-09-22",
+        "sentimiento": 0.6,
+        "subjetividad": 0.03289473684210526,
+        "titulo": "EL ABAD ELECTO DE BUCKFAST",
+        "id": 699
+      },
+      {
+        "fecha": "1906-09-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.05405405405405406,
+        "titulo": "Crónica negra El crimen del Edén Esta mañana se administraban a la desgrasciada victima del",
+        "id": 502
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El cadáver del obispo de São Paulo encontrado en la costa argelina",
+        "id": 495
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": -0.18235294117647058,
+        "subjetividad": 0.34017857142857144,
+        "titulo": "EL CRIMEN DE HOY",
+        "id": 497
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": -0.5,
+        "subjetividad": 0.5106382978723404,
+        "titulo": "Algo sobre el Sirio El Sr",
+        "id": 499
+      },
+      {
+        "fecha": "1906-09-21",
+        "sentimiento": -1.0,
+        "subjetividad": 0.023809523809523808,
+        "titulo": "DESDE BARCELONA Agresión y suicidio",
+        "id": 498
+      },
+      {
+        "fecha": "1906-09-19",
+        "sentimiento": -1.0,
+        "subjetividad": 0.028985507246376812,
+        "titulo": "Buzo muerto en los trabajos en el Sirio Telegrama de Livorno 18 de septiembre noche",
+        "id": 494
+      },
+      {
+        "fecha": "1906-09-19",
+        "sentimiento": 0.14999999999999997,
+        "subjetividad": 0.338768115942029,
+        "titulo": "VERA",
+        "id": 688
+      },
+      {
+        "fecha": "1906-09-17",
+        "sentimiento": -1.0,
+        "subjetividad": 0.0149812734082397,
+        "titulo": "Operaciones de salvamento y nuevas regulaciones marítimas La compañía de salvamento Anchora se encuentra llevando",
+        "id": 493
+      },
+      {
+        "fecha": "1906-09-17",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Cómo se rescata a los náufragos La catástrofe del Sirius confiere a este tema un",
+        "id": 492
+      },
+      {
+        "fecha": "1906-09-15",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "UNA GRAVE CONSTANCIA SOBRE EL NAUFRAGIO DEL SIRIO",
+        "id": 489
+      },
+      {
+        "fecha": "1906-09-15",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Naufragio del vapor Sirio",
+        "id": 488
+      },
+      {
+        "fecha": "1906-09-15",
+        "sentimiento": 0.0625,
+        "subjetividad": 0.175,
+        "titulo": "COMUNICADO Reclamaciones de los náufragos del Sirio Desde varias partes se ha solicitado al Comisariado",
+        "id": 490
+      },
+      {
+        "fecha": "1906-09-14",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La investigación sobre el naufragio del Sirio La Comisión de investigación sobre el naufragio del",
+        "id": 487
+      },
+      {
+        "fecha": "1906-09-14",
+        "sentimiento": 0.6666666666666666,
+        "subjetividad": 0.03380281690140845,
+        "titulo": "Relato de un submarinista sobre los restos del Sirio Tel",
+        "id": 486
+      },
+      {
+        "fecha": "1906-09-11",
+        "sentimiento": -1.0,
+        "subjetividad": 0.07142857142857142,
+        "titulo": "La familia del arquitecto Sr",
+        "id": 483
+      },
+      {
+        "fecha": "1906-09-11",
+        "sentimiento": 0.5,
+        "subjetividad": 0.03333333333333333,
+        "titulo": "La Pérdida del Sirio",
+        "id": 485
+      },
+      {
+        "fecha": "1906-09-11",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Hallazgo de un cadaver En la tarde de ayer se trasladó el juzgado de instrucción",
+        "id": 482
+      },
+      {
+        "fecha": "1906-09-11",
+        "sentimiento": 0.3125,
+        "subjetividad": 0.39166666666666666,
+        "titulo": "En Santa Pola se va a erigir un mausoleo en el sitio en que fueron",
+        "id": 484
+      },
+      {
+        "fecha": "1906-09-10",
+        "sentimiento": 1.0,
+        "subjetividad": 0.23529411764705882,
+        "titulo": "En acción de gracias En la solemne salve que a las siete se cantará en",
+        "id": 480
+      },
+      {
+        "fecha": "1906-09-10",
+        "sentimiento": 0.35,
+        "subjetividad": 0.45,
+        "titulo": "Las conclusiones de la Comisión de Investigación sobre el hundimiento del Sirio Hemos recibido una",
+        "id": 479
+      },
+      {
+        "fecha": "1906-09-10",
+        "sentimiento": -1.0,
+        "subjetividad": 0.012269938650306749,
+        "titulo": "LA INVESTIGACIÓN SOBRE EL NAUFRAGIO DEL SIRIO",
+        "id": 481
+      },
+      {
+        "fecha": "1906-09-09",
+        "sentimiento": 0.07826086956521738,
+        "subjetividad": 0.4278432893716059,
+        "titulo": "Narrativa del Sr",
+        "id": 477
+      },
+      {
+        "fecha": "1906-09-09",
+        "sentimiento": -1.0,
+        "subjetividad": 0.5114503816793893,
+        "titulo": "La esposa del Dr",
+        "id": 475
+      },
+      {
+        "fecha": "1906-09-09",
+        "sentimiento": -1.0,
+        "subjetividad": 0.006097560975609756,
+        "titulo": "Del naufragio El capitán del Maria Luisa Dijimos que el Fomento de la Marina Española",
+        "id": 478
+      },
+      {
+        "fecha": "1906-09-09",
+        "sentimiento": -1.0,
+        "subjetividad": 0.030534351145038167,
+        "titulo": "El Rev",
+        "id": 476
+      },
+      {
+        "fecha": "1906-09-08",
+        "sentimiento": -0.1345108695652174,
+        "subjetividad": 0.43983870967741934,
+        "titulo": "THE LOSS OF THE SIRIO. FATHER ANSCHAR'S STORY.",
+        "id": 700
+      },
+      {
+        "fecha": "1906-09-08",
+        "sentimiento": -0.16071428571428573,
+        "subjetividad": 0.3297192140587511,
+        "titulo": "EL NAUFRAGIO DEL SIRIO. ENTREVISTA AL PADRE ANCHARD",
+        "id": 698
+      },
+      {
+        "fecha": "1906-09-08",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La responsabilidad del desastre del Sirio El capitán Piccone remitido a la autoridad judicial Roma",
+        "id": 472
+      },
+      {
+        "fecha": "1906-09-07",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Del Extranjero",
+        "id": 471
+      },
+      {
+        "fecha": "1906-09-07",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Ayer abandonaron esta capital Barcelona el Arzobispo de Pará Doctor José Marcondes Flamande y Nello",
+        "id": 470
+      },
+      {
+        "fecha": "1906-09-07",
+        "sentimiento": 0.375,
+        "subjetividad": 0.3861731843575419,
+        "titulo": "En recuerdo de los náufragos del Sirio",
+        "id": 469
+      },
+      {
+        "fecha": "1906-09-07",
+        "sentimiento": -1.0,
+        "subjetividad": 0.015873015873015872,
+        "titulo": "DESDE GÉNOVA",
+        "id": 468
+      },
+      {
+        "fecha": "1906-09-07",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "¡Un buen remojo!",
+        "id": 670
+      },
+      {
+        "fecha": "1906-09-06",
+        "sentimiento": 1.0,
+        "subjetividad": 0.07692307692307693,
+        "titulo": "Casos Occidentales",
+        "id": 674
+      },
+      {
+        "fecha": "1906-09-06",
+        "sentimiento": 1.0,
+        "subjetividad": 0.02666666666666667,
+        "titulo": "El capitán del Sirio Il Lavoro de Génova publica con el título La penitencia del",
+        "id": 467
+      },
+      {
+        "fecha": "1906-09-05",
+        "sentimiento": 0.025,
+        "subjetividad": 0.2875,
+        "titulo": "Suscripción abierta en favor de la familia de José Fullana Campos",
+        "id": 466
+      },
+      {
+        "fecha": "1906-09-05",
+        "sentimiento": 1.0,
+        "subjetividad": 0.020202020202020204,
+        "titulo": "Finalizada la investigación sobre la catástrofe del Sirio Llamamos por teléfono desde Génova 5 de",
+        "id": 465
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": -0.3194444444444444,
+        "subjetividad": 0.5209302325581395,
+        "titulo": "El Obispo de S",
+        "id": 463
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": -0.5,
+        "subjetividad": 0.55,
+        "titulo": "EXEQUIAS S",
+        "id": 461
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La Casa Armadora del vapor Sirio ha remitido al alcalde de Cartagena 5 000 pesetas",
+        "id": 460
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": 0.26666666666666666,
+        "subjetividad": 0.12822234156820622,
+        "titulo": "La organización y la disciplina a flote",
+        "id": 459
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": 0.012500000000000004,
+        "subjetividad": 0.15296439368491768,
+        "titulo": "CULTO CATOLICO",
+        "id": 458
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": 0.7777777777777778,
+        "subjetividad": 0.01727447216890595,
+        "titulo": "El Naufragio del Sirio La verdad en su lugar En el periódico Las Noticias de",
+        "id": 462
+      },
+      {
+        "fecha": "1906-09-04",
+        "sentimiento": 1.0,
+        "subjetividad": 0.014285714285714285,
+        "titulo": "S",
+        "id": 464
+      },
+      {
+        "fecha": "1906-09-03",
+        "sentimiento": 0.125,
+        "subjetividad": 0.5071942446043165,
+        "titulo": "Los náufragos del Sirio En el teatro del Bosque de Barcelona se celebró una función",
+        "id": 457
+      },
+      {
+        "fecha": "1906-09-03",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El Patrón de la barca Vicente Lacomba que con tanto heroísmo se condujo en el",
+        "id": 456
+      },
+      {
+        "fecha": "1906-09-03",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Suscripción A bordo del Ravenna se abrió una suscripción en favor de los náufragos del",
+        "id": 455
+      },
+      {
+        "fecha": "1906-09-03",
+        "sentimiento": -0.33333333333333337,
+        "subjetividad": 0.5152284263959391,
+        "titulo": "El Obispo de S.Paulo",
+        "id": 453
+      },
+      {
+        "fecha": "1906-09-03",
+        "sentimiento": -0.4875,
+        "subjetividad": 0.1939516129032258,
+        "titulo": "La Generosidad Española",
+        "id": 454
+      },
+      {
+        "fecha": "1906-09-02",
+        "sentimiento": 0.42857142857142855,
+        "subjetividad": 0.041176470588235294,
+        "titulo": "OLVIDO INJUSTO EL TÍO POTRO En el reparto de recompensas con motivo del naufragio del",
+        "id": 452
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": -0.5909090909090909,
+        "subjetividad": 0.5197132616487455,
+        "titulo": "La Catástrofe del Sirio",
+        "id": 448
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": 1.0,
+        "subjetividad": 0.10526315789473684,
+        "titulo": "Taubaté",
+        "id": 447
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": 1.0,
+        "subjetividad": 0.08,
+        "titulo": "El Ravena",
+        "id": 446
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El señor Alcalde nos ruega consignemos que los náufragos del vapor Sirio que se consideren",
+        "id": 449
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": 1.0,
+        "subjetividad": 0.03007518796992481,
+        "titulo": "Alicante 31",
+        "id": 451
+      },
+      {
+        "fecha": "1906-09-01",
+        "sentimiento": -0.43385416666666665,
+        "subjetividad": 0.39089170100058857,
+        "titulo": "A bordo del Sirio",
+        "id": 450
+      },
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": 0.5777777777777777,
+        "subjetividad": 0.47903225806451616,
+        "titulo": "Explotación periodística",
+        "id": 675
+      },
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Els nàufrags del Sirio La funsiò donada al Teatre del Bosc va tenir un èxit",
+        "id": 443
+      },
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": -0.6842105263157895,
+        "subjetividad": 0.5097286226318485,
+        "titulo": "LOS NAUFRAGOS DEL SIRIO LLEGADA DEL VAPOR ITALIA ESCENAS CONMOVEDORAS DETALLES DE LA CATASTROFE El",
+        "id": 442
+      },
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Testimoniatge d'afecte de la Sociedad Coral Euterpe a Robert Goberna en motiu del naufragi del",
+        "id": 445
+      },
+      {
+        "fecha": "1906-08-31",
+        "sentimiento": 1.0,
+        "subjetividad": 0.012658227848101266,
+        "titulo": "Ecos del desastre del Sirio Roma 30 Francesco Ciccotti escribe al Avanti En los días",
+        "id": 444
+      },
+      {
+        "fecha": "1906-08-30",
+        "sentimiento": -0.03333333333333338,
+        "subjetividad": 0.24963768115942025,
+        "titulo": "Boletín del Manicomio de San Baudilio",
+        "id": 663
+      },
+      {
+        "fecha": "1906-08-30",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "El ayudante de marina capitán del puerto de Torrevieja publica en el Boletín Oficial de",
+        "id": 439
+      },
+      {
+        "fecha": "1906-08-30",
+        "sentimiento": -0.2,
+        "subjetividad": 0.02564102564102564,
+        "titulo": "Después de la catástrofe Trabajos de salvamento Invitado por el director técnico de la Compañía",
+        "id": 440
+      },
+      {
+        "fecha": "1906-08-30",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El naufrágio del Sirio",
+        "id": 441
+      },
+      {
+        "fecha": "1906-08-28",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Roma",
+        "id": 436
+      },
+      {
+        "fecha": "1906-08-28",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Los trabajos de la comisión de investigación sobre la catástrofe del Sirio Génova 27 La",
+        "id": 437
+      },
+      {
+        "fecha": "1906-08-27",
+        "sentimiento": 0.55,
+        "subjetividad": 0.07380952380952381,
+        "titulo": "El Excmo. Sr. Marcondes, Arzobispo de Pará (Brasil) y el Rdo. P. Viñeta",
+        "id": 434
+      },
+      {
+        "fecha": "1906-08-27",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Para los daños de los náufragos del Sirio Roma 30 El comisariado de emigración ha",
+        "id": 435
+      },
+      {
+        "fecha": "1906-08-27",
+        "sentimiento": 0.02500000000000001,
+        "subjetividad": 0.25,
+        "titulo": "Sección cuarta",
+        "id": 433
+      },
+      {
+        "fecha": "1906-08-25",
+        "sentimiento": -1.0,
+        "subjetividad": 0.02702702702702703,
+        "titulo": "El Adria regresa de Cartagena Nos telefonean desde Nápoles 24 de agosto Ha llegado a",
+        "id": 432
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "En la reunión celebrada por los naúfragos del vapor Sirio acordaron abrir una información sobre",
+        "id": 429
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": -0.4,
+        "subjetividad": 0.5,
+        "titulo": "La investigación sobre el desastre del Sirio Roma 23 El Giornale d'Italia publica que la",
+        "id": 430
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La investigación del Sirio La Comisión de Investigación para determinar las responsabilidades del naufragio del",
+        "id": 431
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": -1.0,
+        "subjetividad": 0.007462686567164179,
+        "titulo": "EL NAUFRAGIO DEL SIRIO Después de la catástrofe Entrevista con Piccone Un redactor de Il",
+        "id": 425
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Otro cadáver del Sirio",
+        "id": 426
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": -0.7272727272727273,
+        "subjetividad": 0.5337423312883436,
+        "titulo": "Restableciendo la verdad",
+        "id": 427
+      },
+      {
+        "fecha": "1906-08-24",
+        "sentimiento": -0.08333333333333334,
+        "subjetividad": 0.2885135135135135,
+        "titulo": "¿Serán ahogados?",
+        "id": 428
+      },
+      {
+        "fecha": "1906-08-23",
+        "sentimiento": -0.4,
+        "subjetividad": 0.528169014084507,
+        "titulo": "PALIQUE SEMANAL Inútil sería el querer sustraerse a lo que aún constituye la triste actualidad",
+        "id": 424
+      },
+      {
+        "fecha": "1906-08-23",
+        "sentimiento": -1.0,
+        "subjetividad": 0.009433962264150943,
+        "titulo": "La llegada del Orione a Nápoles Lo que dice el oficial Trapani Nápoles 22 de",
+        "id": 423
+      },
+      {
+        "fecha": "1906-08-23",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "DE LA COSTA",
+        "id": 422
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": -0.8571428571428572,
+        "subjetividad": 0.508505467800729,
+        "titulo": "Ecos de la catástrofe del Sìrio La historia de un mantuano Hace unos días pasaba",
+        "id": 417
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.01818181818181818,
+        "titulo": "Botes salvavidas que no funcionan Il Lavoro de Génova de la República El viernes por",
+        "id": 418
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Parece que la casa armadora del vapor Marie Louise ha tomado a su cargo poner",
+        "id": 414
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 0.08958333333333333,
+        "subjetividad": 0.1272727272727273,
+        "titulo": "Polémica por el Sirio Santa Cristina Toscana 20 de agosto",
+        "id": 419
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.020512820512820513,
+        "titulo": "Agasajos al bravo patrón del laúd «Vicente Lacomba»",
+        "id": 413
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El cadáver de la Millanes",
+        "id": 415
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Escriben de Torrevieja que ayer apareció en el Cequión el cadaver de una mujer",
+        "id": 420
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 1.0,
+        "subjetividad": 0.07407407407407407,
+        "titulo": "Otro cadáver",
+        "id": 416
+      },
+      {
+        "fecha": "1906-08-22",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Anteayer mañana aparece en la playa de Guardamar el cadaver de un hombre que se",
+        "id": 421
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": 0.15537405303030302,
+        "subjetividad": 0.2827509931383171,
+        "titulo": "Déficits deplorables y culpables Nos parecen débiles la defendesa de la tripulación porque frente a",
+        "id": 406
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Valencia",
+        "id": 409
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": 1.0,
+        "subjetividad": 0.04918032786885246,
+        "titulo": "EL NAUFRAGIO DEL 'SYRIO\"",
+        "id": 408
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": -0.1352355072463768,
+        "subjetividad": 0.22448501872659177,
+        "titulo": "Sobre el desastre del Sirio",
+        "id": 405
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": 1.0,
+        "subjetividad": 0.08333333333333333,
+        "titulo": "Para los naúfragos del Sirio",
+        "id": 412
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": 1.0,
+        "subjetividad": 0.012195121951219513,
+        "titulo": "En el café Sicilia establecido en la calle del mismo nombre se reunieron antes de",
+        "id": 411
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": -0.75,
+        "subjetividad": 0.5232558139534884,
+        "titulo": "El Naufragio del Sirio y el capitán del vapor Marie Louise",
+        "id": 410
+      },
+      {
+        "fecha": "1906-08-21",
+        "sentimiento": -1.0,
+        "subjetividad": 0.02197802197802198,
+        "titulo": "En torno al desastre de Sirio Por envío y teléfono al Corriere della Sera Cómo",
+        "id": 407
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 1.0,
+        "subjetividad": 0.044444444444444446,
+        "titulo": "EL NAUFRAGIO DEL SIRIO PREMIO A LOS HÉROES ",
+        "id": 400
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Para los náufragos del Sirio Génova 19 El Comité Central de la Confederación Nacional del",
+        "id": 401
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 1.0,
+        "subjetividad": 0.012578616352201259,
+        "titulo": "En el Café de Sicilia establecido en la calle del mismo nombre se reunieron ayer",
+        "id": 404
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "DESDE GÉNOVA La investigación por el naufragio del Sirio Nos llaman por teléfono desde Génova",
+        "id": 402
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Por los derechos de los náufragos Génova 19 de agosto noche",
+        "id": 399
+      },
+      {
+        "fecha": "1906-08-20",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "El naufragio del Sirio Las investigaciones e interrogatorios de la Comisión de Investigación GÉNOVA 18",
+        "id": 403
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": -0.75,
+        "subjetividad": 0.05555555555555555,
+        "titulo": "Un superviviente del Sirio visitó nuestra redacción El viernes pasado el señor Forcherio Clemente de",
+        "id": 398
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": -0.051785714285714275,
+        "subjetividad": 0.293739359232317,
+        "titulo": "En torno al desastre de Sirio' Sálvese quien pueda Cuál fue la conducta de la",
+        "id": 392
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": 1.0,
+        "subjetividad": 0.025,
+        "titulo": "Una comisión de naúfragos del vapor Sirio visitó ayer al señor Alcalde para rogarle que",
+        "id": 393
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": 1.0,
+        "subjetividad": 0.07407407407407407,
+        "titulo": "LA PÉRDIDA DEL SIRIO 133 personas perdieron la vida en la catástrofe del Sirio encallado",
+        "id": 397
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": -0.6388888888888888,
+        "subjetividad": 0.334656652360515,
+        "titulo": "Lo que dice el Comandante del SIRIO 190 viajes en la misma línea El momento",
+        "id": 395
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": -1.0,
+        "subjetividad": 0.05714285714285714,
+        "titulo": "El Sirio desaparece para siempre",
+        "id": 396
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Santos",
+        "id": 391
+      },
+      {
+        "fecha": "1906-08-19",
+        "sentimiento": -0.09090909090909091,
+        "subjetividad": 0.02763819095477387,
+        "titulo": "Los trabajos de la Comisión de Investigación Lo que dice otro náufrago Florencia 13 de",
+        "id": 394
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.675,
+        "subjetividad": 0.3633333333333333,
+        "titulo": "Torino El Reverendo Don Rua superior general de los Salesianos ha enviado una carta a",
+        "id": 377
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": -0.359375,
+        "subjetividad": 0.35416666666666663,
+        "titulo": "Impresiones de un pasajero El diario ABC publica lo siguiente Un particular y querido amigo",
+        "id": 390
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.2,
+        "subjetividad": 0.01834862385321101,
+        "titulo": "Después de la catástrofe del Sirio Declaraciones del comandante Piccone",
+        "id": 371
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La investigación sobre la catástrofe",
+        "id": 372
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": -0.8888888888888888,
+        "subjetividad": 0.5114942528735632,
+        "titulo": "El desastre del Sirio Entrevista con un náufrago napolitano Nápoles 17 de agosto",
+        "id": 376
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 1.0,
+        "subjetividad": 0.0375,
+        "titulo": "Dada la actitud pasiva que ha observado hasta ahora la Compañía Italiana de navegación que",
+        "id": 386
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La casa conignataria del vapor Sirio señores Canadell y Viilavecchia ha depositado en la Delegación",
+        "id": 385
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": -1.0,
+        "subjetividad": 0.01015228426395939,
+        "titulo": "Una entrevista con la esposa del comandante del Sirio MILÁN 16",
+        "id": 381
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Náufragos Falsificados En el teatro cómico de Barcelona se había anunciado una función benéfica cuyos",
+        "id": 384
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Estadística de los Supervivientes El gobernador de Murcia en un telegrama dirigido al Gobierno informa",
+        "id": 388
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.5140845070422535,
+        "titulo": "Después del naufragio del Sirio quedó el rastro de una grave polémica sobre la negligencia",
+        "id": 379
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": -0.8,
+        "subjetividad": 0.4535335689045937,
+        "titulo": "La entrevista con el Comandante Sus disculpas y sus desmentidos GÉNOVA 17 21 10 horas",
+        "id": 382
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.11201923076923077,
+        "subjetividad": 0.3969687367976341,
+        "titulo": "Los tres naúfragos de Florencia",
+        "id": 383
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "DE LA COSTA",
+        "id": 373
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": -1.0,
+        "subjetividad": 0.5051020408163265,
+        "titulo": "Una interesante entrevista con el comandante del Sirio",
+        "id": 374
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 1.0,
+        "subjetividad": 0.0273972602739726,
+        "titulo": "Los náufragos del Sirio pertenecientes al municipio de Rivalta Bormida",
+        "id": 380
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "La llegada a Génova del comandante del Sirio Génova 17 de agosto",
+        "id": 375
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.6375,
+        "subjetividad": 0.25584795321637427,
+        "titulo": "Saqueos en el Sirio tras la catástrofe Del vapor Etruria que llegó esta mañana de",
+        "id": 370
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 1.0,
+        "subjetividad": 0.024390243902439025,
+        "titulo": "Otras noticias Ha llegado a Las Palmas a bordo del vapor Washington un joven abogado",
+        "id": 389
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0332409972299169,
+        "titulo": "Sobre el naufragio del Sirio Recibimos y rogamos publicar",
+        "id": 378
+      },
+      {
+        "fecha": "1906-08-18",
+        "sentimiento": 1.0,
+        "subjetividad": 0.024691358024691357,
+        "titulo": "Supervivientes Mallorquines Entre los mallorquines que lograron salvarse figuran dos matrimonios que consiguieron sobrevivir asidos",
+        "id": 387
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": -0.5882352941176471,
+        "subjetividad": 0.5176531671858775,
+        "titulo": "Entrevista con un náufrago del Sirio",
+        "id": 365
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": -1.0,
+        "subjetividad": 0.04838709677419355,
+        "titulo": "El Sirio desaparece para siempre",
+        "id": 354
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0196078431372549,
+        "titulo": "El Capitán del Sirio París 16 Se informa desde Génova que ha llegado el capitán",
+        "id": 369
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": 0.6,
+        "subjetividad": 0.1597087378640777,
+        "titulo": "Barcos insumergibles",
+        "id": 367
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": -0.35,
+        "subjetividad": 0.33690476190476193,
+        "titulo": "Interrogatorios de la Comisión de Investigación",
+        "id": 355
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": 1.0,
+        "subjetividad": 0.02631578947368421,
+        "titulo": "El Capitán del 'Syrio'",
+        "id": 358
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": -1.0,
+        "subjetividad": 0.017167381974248927,
+        "titulo": "La comisión de investigación para el Sirio Relatos de actos de valentía El Ministro de",
+        "id": 362
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": -0.3333333333333333,
+        "subjetividad": 0.03508771929824561,
+        "titulo": "El desastre de Sirio El trabajo de la Comisión La verdad sale a la luz",
+        "id": 363
+      },
+      {
+        "fecha": "1906-08-17",
+        "sentimiento": 0.0,
+        "subjetividad": 0.0,
+        "titulo": "Cadaver no identificado El alcalde de Mazarrón ha telegrafiado al Sr",
+        "id": 359
+      }
+    ],
+    "estadisticas": {
+      "promedio_sentimiento": 0.053232753302825744,
+      "promedio_subjetividad": 0.13548268693012336,
+      "mediana_sentimiento": 0.0,
+      "mediana_subjetividad": 0.033067867036011084,
+      "total_documentos": 300
+    },
+    "tipo_eje": "fecha"
+  }
+}

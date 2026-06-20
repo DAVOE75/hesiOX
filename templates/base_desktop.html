@@ -31,9 +31,10 @@
     <!-- Legacy modules (loading first to be overridden) -->
     <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
     <!-- NEW DESIGN SYSTEM (The Authority) -->
-    <link href="{{ url_for('static', filename='css/design_system.css') }}?v=2.1" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/design_system.css') }}?v=3.0" rel="stylesheet">
     <!-- Light Theme Overrides -->
-    <link href="{{ url_for('static', filename='css/light-theme-overrides.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/light-theme-overrides.css') }}?v=3.0" rel="stylesheet">
+
     <!-- Sirio Components Overrides -->
     <link href="{{ url_for('static', filename='css/modules/12-tinymce-sirio.css') }}" rel="stylesheet">
     <!-- Centralized Sirio Styles -->
@@ -54,6 +55,9 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap"
         rel="stylesheet">
+    
+    <!-- mark.js for text highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
 
     <!-- Choices.js Local -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/choices.min.css') }}" />
@@ -323,8 +327,34 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="nav-separator"></div>
+
+                    {% if proyecto_activo and ('teatral' in proyecto_activo.modulos_activados or 'dramatico' in proyecto_activo.modulos_activados) %}
+                    <div class="nav-group-item">
+                        <a class="nav-item {% if request.blueprint == 'teatral' %}active{% else %}collapsed{% endif %}"
+                            data-bs-toggle="collapse" href="#menuTeatral" role="button"
+                            aria-expanded="{% if request.blueprint == 'teatral' %}true{% else %}false{% endif %}"
+                            aria-controls="menuTeatral">
+                            <i class="fa-solid fa-masks-theater"></i>
+                            <span class="nav-label fw-bold font-accent text-uppercase">Teatral</span>
+                            <i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.7em;"></i>
+                        </a>
+                        <div class="collapse {% if request.blueprint == 'teatral' %}show{% endif %}" id="menuTeatral">
+                            <div class="ms-3 ps-2 border-start border-secondary">
+                                <a href="{{ url_for('teatral.analisis') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'teatral.analisis' %}active-sub{% endif %}">
+                                    <span class="nav-label">Análisis Teatral</span>
+                                </a>
+                                <a href="{{ url_for('teatral.atribucion') }}"
+                                    class="nav-item py-1 {% if request.endpoint == 'teatral.atribucion' %}active-sub{% endif %}">
+                                    <span class="nav-label">Atribución</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-separator"></div>
+                    {% endif %}
+
 
                     <div class="nav-group-item">
                         <a class="nav-item {% if request.endpoint not in ['noticias.mapa_corpus', 'mapa'] %}collapsed{% endif %}"

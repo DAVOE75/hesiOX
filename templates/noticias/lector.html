@@ -107,6 +107,57 @@
         margin-bottom: 10px;
         transition: all 0.2s ease;
         cursor: default;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .location-bulk-select {
+        padding-top: 3px;
+    }
+
+    .location-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #ff9800;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        background: transparent;
+        position: relative;
+        transition: all 0.2s;
+    }
+
+    .location-checkbox:checked {
+        background: #ff9800;
+        border-color: #ff9800;
+    }
+
+    .location-checkbox:checked::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #000;
+        font-size: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    [data-theme="light"] .location-checkbox {
+        border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .location-frecuencia {
+        color: #ff9800;
+        font-weight: 700;
+    }
+
+    [data-theme="light"] .location-frecuencia {
+        color: #294a60;
     }
 
     .location-card:hover {
@@ -219,7 +270,6 @@
         letter-spacing: 1px;
         outline: none;
         width: 180px;
-        text-transform: uppercase;
     }
     .search-sirio-wrapper input::placeholder {
         color: rgba(255, 255, 255, 0.3);
@@ -292,18 +342,44 @@
 
     /* Typography */
     .prose {
-        font-family: 'Merriweather', serif;
-        font-size: 1.15rem;
-        line-height: 1.8;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
         color: var(--ds-text-main);
         max-width: 900px;
         margin: 0 auto;
-        white-space: pre-line;
+        white-space: normal;
+        text-align: justify;
     }
 
-    .prose p {
-        margin-bottom: 0.6rem;
+    .prose p, .prose div {
+        font-size: 14px !important;
+        margin-bottom: 1rem;
     }
+
+    .prose span {
+        font-size: inherit !important;
+    }
+
+    .prose h1, .prose h2, .prose h3 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #fff;
+    }
+
+    .prose h1 { font-size: 1.5rem; }
+    .prose h2 { font-size: 1.25rem; }
+
+    /* Estilos para preservar formato de Quill */
+    .prose .ql-size-small { font-size: 0.75em; }
+    .prose .ql-size-large { font-size: 1.5em; }
+    .prose .ql-size-huge { font-size: 2.5em; }
+    
+    .prose .ql-align-center { text-align: center; }
+    .prose .ql-align-right { text-align: right; }
+    .prose .ql-align-justify { text-align: justify; }
 
     /* Colapsar saltos de línea múltiples y bloques vacíos */
     .prose br + br {
@@ -819,6 +895,12 @@ body.focus-mode #btn-exit-focus {
                 <button type="button" class="search-sirio-btn text-accent" id="btn-vision-search" title="Resaltado por IA (Vision Search)">
                     <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 13px;"></i>
                 </button>
+
+                <div class="vr mx-1 opacity-25" style="height: 16px;"></div>
+
+                <button type="button" class="search-sirio-btn text-danger" id="btn-borrar-termino" title="Eliminar del texto">
+                    <i class="fa-solid fa-eraser" style="font-size: 13px;"></i>
+                </button>
             </div>
             <!-- Progress Bar IA -->
             <div id="vision-progress-bar" style="position: absolute; bottom: -1px; left: 0; width: 0%; height: 2px; background: #ff9800; transition: width 4s cubic-bezier(0.1, 0.5, 0.1, 1); display: none; z-index: 10; border-radius: 0 0 4px 4px; box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);"></div>
@@ -844,15 +926,17 @@ body.focus-mode #btn-exit-focus {
         <div class="vr mx-2 opacity-25" style="height: 24px; align-self: center;"></div>
 
 <div class="d-flex gap-1">
-    <button id="btn-editar-inline" class="btn-sirio btn-sirio-secondary" title="Editar Contenido">
+    <button id="btn-editar-inline" class="btn-sirio btn-sirio-secondary disabled" title="Editar Contenido">
         <i class="fa-solid fa-pen-to-square"></i> <span class="btn-text">Editar</span>
     </button>
-    <button id="btn-save-content" class="btn-sirio btn-sirio-primary" style="display: none;" title="Guardar Cambios">
-        <i class="fa-solid fa-floppy-disk"></i> <span class="btn-text">Guardar</span>
-    </button>
-    <button id="btn-cancel-edit" class="btn-sirio" style="display: none;" title="Cancelar Edición">
-        <i class="fa-solid fa-xmark"></i>
-    </button>
+    <div id="edit-actions" class="d-flex gap-1" style="display: none;">
+        <button id="btn-save-content" class="btn-sirio btn-sirio-primary" title="Guardar Cambios">
+            <i class="fa-solid fa-floppy-disk"></i> <span class="btn-text">Guardar</span>
+        </button>
+        <button id="btn-cancel-edit" class="btn-sirio" title="Cancelar Edición">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
 
     <button id="btn-resumir-ia" class="btn-sirio btn-sirio-secondary disabled" title="Resumir IA">
         <i class="fa-solid fa-wand-magic-sparkles text-accent"></i> <span class="btn-text">Resumir IA</span>
@@ -1036,7 +1120,10 @@ body.focus-mode #btn-exit-focus {
                                         id="stat-words">0</span></span>
                                 <span class="reader-stat-chip"><i class="fa-solid fa-eye me-1"></i> <span
                                         id="stat-views">1</span></span>
-                                <button id="btn-toggle-incluido-lector" class="reader-stat-chip reader-status-btn ms-2"
+                                <button class="reader-stat-chip ms-2" style="background: rgba(255, 152, 0, 0.15); border: 1px solid rgba(255, 152, 0, 0.3); color: #ff9800;" onclick="toggleSidebar()" title="Ver Ubicaciones Detectadas">
+                                    <i class="fa-solid fa-map-location-dot me-1"></i> UBICACIONES
+                                </button>
+                                <button id="btn-toggle-incluido-lector" class="reader-stat-chip reader-status-btn ms-1"
                                     onclick="toggleStatusLector()" style="display:none;"><i
                                         class="fa-solid fa-pause"></i> <span>STATUS</span></button>
                             </div>
@@ -1067,16 +1154,14 @@ body.focus-mode #btn-exit-focus {
         <div id="reader-image-panel" class="h-100 border-start position-relative"
             style="width: 0; display: none; overflow: hidden; background-color: var(--ds-bg-panel);">
             <div class="reader-image-toolbar">
-                <button id="btn-prev-image" class="btn-image-action" onclick="changeImage(-1)" title="Imagen Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                <button id="btn-prev-image" class="btn-image-action" onclick="changeMedia(-1)" title="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="image-current-counter" class="image-counter">1/1</div>
-                <button id="btn-next-image" class="btn-image-action" onclick="changeImage(1)" title="Siguiente Imagen"><i class="fa-solid fa-chevron-right"></i></button>
+                <button id="btn-next-image" class="btn-image-action" onclick="changeMedia(1)" title="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
                 <div class="toolbar-divider"></div>
                 <button class="btn-image-action" onclick="zoomImage(0.1)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
                 <button class="btn-image-action" onclick="zoomImage(-0.1)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
                 <button class="btn-image-action" onclick="rotateImage()" title="Girar 90°"><i class="fa-solid fa-arrow-rotate-right"></i></button>
                 <button class="btn-image-action" onclick="resetImage()" title="Restablecer"><i class="fa-solid fa-arrows-to-dot"></i></button>
-                <div class="toolbar-divider"></div>
-                <button class="btn-image-action" onclick="toggleSidebar()" title="Gestionar Ubicaciones"><i class="fa-solid fa-map-location-dot"></i></button>
                 <div class="toolbar-divider"></div>
                 <button class="btn-image-action action-danger" onclick="toggleImagePanel()"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -1115,7 +1200,12 @@ body.focus-mode #btn-exit-focus {
             <div class="sidebar-section">
                 <div class="sidebar-title">
                     <span>UBICACIONES DETECTADAS</span>
-                    <button class="btn btn-xs btn-outline-primary" onclick="showAddLocationModal()"><i class="fa-solid fa-plus"></i></button>
+                    <div class="d-flex gap-1" id="location-list-header-actions">
+                        <button class="btn btn-xs btn-outline-danger d-none" id="btn-delete-bulk" onclick="borrarLugaresMasivo()" title="Eliminar seleccionados">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button class="btn btn-xs btn-outline-primary" onclick="showAddLocationModal()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
                 </div>
                 <div id="sidebar-locations-list" class="overflow-auto" style="max-height: calc(100vh - 250px);">
                     <!-- Populated via JS -->
@@ -1201,13 +1291,17 @@ body.focus-mode #btn-exit-focus {
         const divider = document.getElementById('reader-divider');
         const container = document.getElementById('reader-container');
 
+        let currentPdfIdx = 0;
+        let mediaMode = 'none'; // 'pdf' or 'image'
         let currentNewsId = null;
         let lastLoadedId = null;
         let isLoadingNews = false;
         let isEditing = false;
         let originalContent = "";
-        let originalTitle = ""; // Fix: Declare variable
-        let currentPdfs = []; // Global for search sync
+        let originalTitle = ""; 
+        let currentPdfs = []; 
+        let currentOcrMap = null; 
+        let currentOcrMapsByUrl = {};
         let scale = 1, pannedX = 0, pannedY = 0, rotation = 0;
         let isDragging = false, startX = 0, startY = 0;
 
@@ -1263,6 +1357,8 @@ body.focus-mode #btn-exit-focus {
                     originalContent = data.contenido_html || "";
                     originalTitle = data.titulo || "Sin Título"; // Fix: Update on load
                     docTextoPuro.textContent = data.texto_puro || "";
+                    currentOcrMap = data.ocr_map;
+                    currentOcrMapsByUrl = data.ocr_maps_by_url || {};
 
                     // Stats
                     const words = (data.texto_puro || "").split(/\s+/).filter(w => w.length > 0).length;
@@ -1281,22 +1377,23 @@ body.focus-mode #btn-exit-focus {
                     const imgTransformWrapper = document.getElementById('image-transform-wrapper');
 
                     if (currentPdfs.length > 0) {
-                        console.log("[Reader] Displaying PDF panel. URL:", currentPdfs[0]);
+                        currentPdfIdx = 0; 
+                        mediaMode = 'pdf';
+                        console.log("[Reader] Displaying PDF panel. Total:", currentPdfs.length);
                         imagePanel.style.display = 'block';
                         divider.style.display = 'flex';
                         textPanel.style.width = '50%'; imagePanel.style.width = '50%';
                         
-                        imgToolbar.style.display = 'none';
+                        imgToolbar.style.display = 'flex';
                         imgViewer.style.display = 'none';
                         if (imgTransformWrapper) imgTransformWrapper.style.display = 'none';
                         pdfViewer.style.display = 'block';
-                        const searchTerm = searchInput ? searchInput.value.trim() : "";
-                        let pdfUrl = currentPdfs[0];
-                        if (searchTerm.length >= 2) {
-                            pdfUrl += `#search="${encodeURIComponent(searchTerm)}"`;
-                        }
-                        pdfViewer.src = pdfUrl;
+                        
+                        updatePdfView();
+                        updateImageToolbar();
                     } else if (currentImages.length > 0) {
+                        currentImageIdx = 0;
+                        mediaMode = 'image';
                         console.log("[Reader] Displaying Image panel. URL:", currentImages[0]);
                         imgViewer.src = currentImages[0];
                         imagePanel.style.display = 'block';
@@ -1312,6 +1409,7 @@ body.focus-mode #btn-exit-focus {
                         resetImage();
                         updateImageToolbar();
                     } else {
+                        mediaMode = 'none';
                         console.log("[Reader] No images/pdfs found. Hiding panel.");
                         imagePanel.style.display = 'none'; divider.style.display = 'none';
                         textPanel.style.width = '100%';
@@ -1492,7 +1590,7 @@ body.focus-mode #btn-exit-focus {
                 textPanel.style.width = '40%';
                 loadSidebarLocations();
             }
-            setTimeout(syncContainer, 310);
+            setTimeout(typeof syncContainer === 'function' ? syncContainer : () => {}, 310);
         };
 
         // Centering logic for Vision Search Highlights
@@ -1540,6 +1638,16 @@ body.focus-mode #btn-exit-focus {
             const list = document.getElementById('sidebar-locations-list');
             if (!currentNewsId) return;
             
+            // Si ya hay contenido cargado (por ejemplo, ya hay cards), no mostramos "Cargando" de nuevo
+            if (list.querySelectorAll('.location-card').length === 0) {
+                list.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border spinner-border-sm text-primary mb-3" role="status"></div>
+                    <div class="small text-muted">Buscando ubicaciones...</div>
+                    <div class="x-small text-muted mt-2 px-4 opacity-50">Este proceso analiza el texto completo y puede demorar unos segundos.</div>
+                </div>`;
+            }
+
             try {
                 const res = await fetch(`/api/cartografia_noticia/${currentNewsId}`);
                 const data = await res.json();
@@ -1547,29 +1655,36 @@ body.focus-mode #btn-exit-focus {
                 if (data.ciudades && data.ciudades.length > 0) {
                     list.innerHTML = data.ciudades.map(l => {
                         const isLinked = l.vinculada !== false;
+                        const safeName = l.nombre.replace(/'/g, "\\'");
                         return `
-                        <div class="location-card ${isLinked ? 'linked' : 'unlinked'}" onclick="highlightTextInReader('${l.nombre.replace(/'/g, "\\'")}')" style="cursor: pointer;">
-                            <span class="location-name">${l.nombre.toUpperCase()}</span>
-                            <div class="location-meta">
-                                <span><i class="fa-solid fa-hashtag me-1"></i>${l.frecuencia}</span>
-                                <span><i class="fa-solid fa-map-pin me-1"></i>${l.lat.toFixed(4)}, ${l.lon.toFixed(4)}</span>
+                        <div class="location-card ${isLinked ? 'linked' : 'unlinked'}" style="cursor: pointer; position: relative;">
+                            <div class="location-bulk-select">
+                                <input type="checkbox" class="location-checkbox" data-id="${l.id}" data-name="${safeName}" onclick="event.stopPropagation(); updateBulkDeleteButton();">
                             </div>
-                            <div class="location-actions">
-                                <button class="action-btn active-vision" onclick="visionSearchTerm('${l.nombre.replace(/'/g, "\\'")}')" title="Buscar en Imagen (IA)">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                </button>
-                                <button class="action-btn ${isLinked ? 'active-link' : 'active-unlink'}" onclick="vincularLugarLector(${l.id}, ${!isLinked})" title="${isLinked ? 'Desvincular' : 'Vincular'}">
-                                    <i class="fa-solid fa-${isLinked ? 'link' : 'link-slash'}"></i>
-                                </button>
-                                <button class="action-btn" onclick="editarLugarLector(${l.id}, '${l.nombre.replace(/'/g, "\\'")}', ${l.frecuencia})" title="Editar">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <button class="action-btn text-danger" onclick="borrarLugarLector(${l.id}, '${l.nombre.replace(/'/g, "\\'")}')" title="Eliminar">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                            <div class="w-100" onclick="highlightTextInReader('${safeName}')">
+                                <span class="location-name">${l.nombre.toUpperCase()}</span>
+                                <div class="location-meta">
+                                    <span><i class="fa-solid fa-hashtag me-1"></i><span class="location-frecuencia">${l.frecuencia}</span></span>
+                                    <span><i class="fa-solid fa-map-pin me-1"></i>${l.lat.toFixed(4)}, ${l.lon.toFixed(4)}</span>
+                                </div>
+                                <div class="location-actions">
+                                    <button class="action-btn active-vision" onclick="event.stopPropagation(); visionSearchTerm('${safeName}')" title="Buscar en Imagen (IA)">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </button>
+                                    <button class="action-btn ${isLinked ? 'active-link' : 'active-unlink'}" onclick="event.stopPropagation(); vincularLugarLector(${l.id}, ${!isLinked})" title="${isLinked ? 'Desvincular' : 'Vincular'}">
+                                        <i class="fa-solid fa-${isLinked ? 'link' : 'link-slash'}"></i>
+                                    </button>
+                                    <button class="action-btn" onclick="event.stopPropagation(); editarLugarLector(${l.id}, '${safeName}', ${l.frecuencia})" title="Editar">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="action-btn text-danger" onclick="event.stopPropagation(); borrarLugarLector(${l.id}, '${safeName}', this)" title="Eliminar">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                     }).join('');
+                    updateBulkDeleteButton();
                 } else {
                     list.innerHTML = '<div class="text-center py-5 text-muted small">No hay ubicaciones vinculadas</div>';
                 }
@@ -1606,6 +1721,54 @@ body.focus-mode #btn-exit-focus {
             }
         };
 
+        window.updateBulkDeleteButton = () => {
+            const selected = document.querySelectorAll('.location-checkbox:checked');
+            const btn = document.getElementById('btn-delete-bulk');
+            if (btn) {
+                if (selected.length > 0) {
+                    btn.classList.remove('d-none');
+                    btn.title = `Eliminar ${selected.length} seleccionados`;
+                } else {
+                    btn.classList.add('d-none');
+                }
+            }
+        };
+
+        window.borrarLugaresMasivo = async () => {
+            const selected = document.querySelectorAll('.location-checkbox:checked');
+            if (selected.length === 0) return;
+            
+            if (!confirm(`¿Estás seguro de que deseas eliminar ${selected.length} ubicaciones de esta noticia?`)) return;
+            
+            showToast(`Eliminando ${selected.length} ubicaciones...`, "info");
+            
+            const promises = Array.from(selected).map(async (cb) => {
+                const nombre = cb.getAttribute('data-name');
+                const card = cb.closest('.location-card');
+                if (card) {
+                    card.style.opacity = '0.4';
+                    card.style.pointerEvents = 'none';
+                }
+                
+                try {
+                    const res = await fetch(`/api/cartografia_noticia_add_location/${currentNewsId}/borrar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ nombre: nombre })
+                    });
+                    return await res.json();
+                } catch (e) {
+                    return { success: false };
+                }
+            });
+            
+            const results = await Promise.all(promises);
+            const successCount = results.filter(r => r.success).length;
+            
+            showToast(`${successCount} ubicaciones eliminadas`, "success");
+            loadSidebarLocations();
+        };
+
         window.vincularLugarLector = async (id, willVincular) => {
             try {
                 const res = await fetch(`/api/ubicacion/${id}/vincular`, {
@@ -1621,8 +1784,18 @@ body.focus-mode #btn-exit-focus {
             } catch (e) { showToast("Error al vincular", "danger"); }
         };
 
-        window.borrarLugarLector = async (id, nombre) => {
+        window.borrarLugarLector = async (id, nombre, element) => {
             if (!confirm(`¿Estás seguro de que deseas eliminar "${nombre}" de esta noticia?`)) return;
+            
+            // UI Feedback instantáneo
+            if (element) {
+                const card = element.closest('.location-card');
+                if (card) {
+                    card.style.opacity = '0.4';
+                    card.style.pointerEvents = 'none';
+                }
+            }
+
             try {
                 const res = await fetch(`/api/cartografia_noticia_add_location/${currentNewsId}/borrar`, {
                     method: 'POST',
@@ -1633,8 +1806,26 @@ body.focus-mode #btn-exit-focus {
                 if (data.success) {
                     showToast("Lugar eliminado", "info");
                     loadSidebarLocations();
+                } else {
+                    if (element) {
+                        const card = element.closest('.location-card');
+                        if (card) {
+                            card.style.opacity = '1';
+                            card.style.pointerEvents = 'all';
+                        }
+                    }
+                    showToast(data.error || "Error al eliminar", "danger");
                 }
-            } catch (e) { showToast("Error al eliminar", "danger"); }
+            } catch (e) { 
+                showToast("Error al eliminar", "danger"); 
+                if (element) {
+                    const card = element.closest('.location-card');
+                    if (card) {
+                        card.style.opacity = '1';
+                        card.style.pointerEvents = 'all';
+                    }
+                }
+            }
         };
 
         window.editarLugarLector = (id, nombre, frecuencia) => {
@@ -1676,14 +1867,60 @@ body.focus-mode #btn-exit-focus {
             }, { passive: false });
         }
 
+        // Media Navigation Wrapper
+        window.changeMedia = (delta) => {
+            if (mediaMode === 'pdf') {
+                window.changePdf(delta);
+            } else {
+                window.changeImage(delta);
+            }
+        };
+
+        // PDF Switching Logic
+        window.changePdf = (delta) => {
+            const newIdx = currentPdfIdx + delta;
+            if (newIdx >= 0 && newIdx < currentPdfs.length) {
+                currentPdfIdx = newIdx;
+                updatePdfView();
+                updateImageToolbar();
+            }
+        };
+
+        function updatePdfView() {
+            const pdfViewer = document.getElementById('doc-pdf-viewer');
+            if (!pdfViewer || currentPdfs.length === 0) return;
+            
+            let pdfUrl = currentPdfs[currentPdfIdx];
+            const searchTerm = searchInput ? searchInput.value.trim() : "";
+            if (searchTerm.length >= 2) {
+                pdfUrl += `#search="${encodeURIComponent(searchTerm)}"`;
+            }
+            pdfViewer.src = pdfUrl;
+            console.log("[Reader] PDF updated to index:", currentPdfIdx, pdfUrl);
+        }
+
         // Image Switching Logic
         window.changeImage = (delta) => {
             const newIdx = currentImageIdx + delta;
             if (newIdx >= 0 && newIdx < currentImages.length) {
                 currentImageIdx = newIdx;
-                imgElement.src = currentImages[currentImageIdx];
+                const newUrl = currentImages[currentImageIdx];
+                imgElement.src = newUrl;
+                
+                // Sincronizar Mapa OCR de la nueva página
+                if (currentOcrMapsByUrl && currentOcrMapsByUrl[newUrl]) {
+                    currentOcrMap = currentOcrMapsByUrl[newUrl];
+                    console.log("[Reader] OCR Map synced for page:", currentImageIdx + 1);
+                }
+
                 resetImage();
                 updateImageToolbar();
+
+                // RE-EJECUTAR BÚSQUEDA para que los resaltados aparezcan en la nueva página
+                const term = searchInput.value.trim();
+                if (term.length >= 2) {
+                    performSearch(term);
+                }
             }
         };
 
@@ -1691,8 +1928,21 @@ body.focus-mode #btn-exit-focus {
             const counter = document.getElementById('image-current-counter');
             const btnPrevImg = document.getElementById('btn-prev-image');
             const btnNextImg = document.getElementById('btn-next-image');
+            const toolbar = document.querySelector('.reader-image-toolbar');
+            
+            // Image tools that don't apply to PDF
+            const imgTools = toolbar.querySelectorAll('.btn-image-action:not(#btn-prev-image):not(#btn-next-image):not(.action-danger)');
+            const dividers = toolbar.querySelectorAll('.toolbar-divider');
 
-            if (currentImages.length <= 1) {
+            const isPdfMode = mediaMode === 'pdf';
+            const items = isPdfMode ? currentPdfs : currentImages;
+            const currentIdx = isPdfMode ? currentPdfIdx : currentImageIdx;
+
+            // Hide/Show image specific tools
+            imgTools.forEach(el => el.style.display = isPdfMode ? 'none' : 'flex');
+            dividers.forEach(el => el.style.display = isPdfMode ? 'none' : 'block');
+
+            if (items.length <= 1) {
                 counter.style.display = 'none';
                 btnPrevImg.style.display = 'none';
                 btnNextImg.style.display = 'none';
@@ -1700,11 +1950,11 @@ body.focus-mode #btn-exit-focus {
                 counter.style.display = 'block';
                 btnPrevImg.style.display = 'flex';
                 btnNextImg.style.display = 'flex';
-                counter.textContent = `${currentImageIdx + 1}/${currentImages.length}`;
-                btnPrevImg.style.opacity = currentImageIdx === 0 ? '0.3' : '1';
-                btnPrevImg.style.pointerEvents = currentImageIdx === 0 ? 'none' : 'auto';
-                btnNextImg.style.opacity = currentImageIdx === currentImages.length - 1 ? '0.3' : '1';
-                btnNextImg.style.pointerEvents = currentImageIdx === currentImages.length - 1 ? 'none' : 'auto';
+                counter.textContent = `${currentIdx + 1}/${items.length}`;
+                btnPrevImg.style.opacity = currentIdx === 0 ? '0.3' : '1';
+                btnPrevImg.style.pointerEvents = currentIdx === 0 ? 'none' : 'auto';
+                btnNextImg.style.opacity = currentIdx === items.length - 1 ? '0.3' : '1';
+                btnNextImg.style.pointerEvents = currentIdx === items.length - 1 ? 'none' : 'auto';
             }
         }
 
@@ -2060,7 +2310,10 @@ body.focus-mode #btn-exit-focus {
         const btnSave = document.getElementById('btn-save-content');
         const btnCancel = document.getElementById('btn-cancel-edit');
 
-        btnEditInline.addEventListener('click', () => isEditing ? exitEditMode(false) : enterEditMode());
+        btnEditInline.addEventListener('click', () => {
+            if (btnEditInline.classList.contains('disabled')) return;
+            isEditing ? exitEditMode(false) : enterEditMode();
+        });
         btnCancel.addEventListener('click', () => exitEditMode(false));
         btnSave.addEventListener('click', saveInlineChanges);
 
@@ -2149,20 +2402,26 @@ body.focus-mode #btn-exit-focus {
             isResizing = true;
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none'; // Prevent text selection
+            // Prevent pointer events on iframes during resize to keep movement fluid
+            document.querySelectorAll('iframe').forEach(ifr => ifr.style.pointerEvents = 'none');
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
-            const containerRect = container.getBoundingClientRect();
-            const pointerRelativeXpos = e.clientX - containerRect.left;
+            // Use requestAnimationFrame for smoother UI updates
+            requestAnimationFrame(() => {
+                if (!isResizing) return;
+                const containerRect = container.getBoundingClientRect();
+                const pointerRelativeXpos = e.clientX - containerRect.left;
 
-            // Calculate percentage
-            // Limit between 20% and 80%
-            let newWidthPercent = (pointerRelativeXpos / containerRect.width) * 100;
-            newWidthPercent = Math.max(20, Math.min(80, newWidthPercent));
+                // Calculate percentage
+                // Limit between 20% and 80%
+                let newWidthPercent = (pointerRelativeXpos / containerRect.width) * 100;
+                newWidthPercent = Math.max(20, Math.min(80, newWidthPercent));
 
-            textPanel.style.width = `${newWidthPercent}%`;
-            imagePanel.style.width = `${100 - newWidthPercent}%`;
+                textPanel.style.width = `${newWidthPercent}%`;
+                imagePanel.style.width = `${100 - newWidthPercent}%`;
+            });
         });
 
         document.addEventListener('mouseup', () => {
@@ -2170,6 +2429,8 @@ body.focus-mode #btn-exit-focus {
                 isResizing = false;
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
+                // Restore pointer events on iframes
+                document.querySelectorAll('iframe').forEach(ifr => ifr.style.pointerEvents = 'auto');
             }
         });
 
@@ -2265,11 +2526,16 @@ body.focus-mode #btn-exit-focus {
             totalMatches = 0;
             searchCount.textContent = "0/0";
 
-            if (!term || term.length < 2) {
+            // Limpiar resaltados espaciales previos
+            const visionContainer = document.getElementById('vision-highlights-container');
+            if (visionContainer) visionContainer.innerHTML = '';
+
+            if (!term) {
                 updatePdfSearch(null);
                 return;
             }
 
+            // 1. Resaltado en Texto (Mark.js)
             marker.mark(term, {
                 separateWordSearch: false,
                 acrossElements: true,
@@ -2285,7 +2551,61 @@ body.focus-mode #btn-exit-focus {
                 }
             });
 
+            // 2. Resaltado Espacial (OCR Map) - AUTOMÁTICO
+            if (currentOcrMap) {
+                const boxes = filterOcrMap(term);
+                if (boxes.length > 0) {
+                    console.log("[Search] Automatic Spatial Match:", boxes.length, "boxes");
+                    renderVisionHighlights(boxes, currentImages[currentImageIdx], false, term);
+                }
+            }
+
             updatePdfSearch(term);
+        }
+
+        function filterOcrMap(term) {
+            if (!currentOcrMap) return [];
+            // Si es un string (JSON), lo parseamos
+            let map = currentOcrMap;
+            if (typeof map === 'string') {
+                try { map = JSON.parse(map); } catch(e) { return []; }
+            }
+            if (!Array.isArray(map)) return [];
+
+            const searchTerm = term.toLowerCase().trim();
+            const cleanSearchTerm = searchTerm.replace(/[^\w\s]/g, '');
+            const wordsInTerm = cleanSearchTerm.split(/\s+/).filter(w => w.length > 0);
+            
+            if (wordsInTerm.length === 0) return [];
+            
+            const foundBoxes = [];
+            
+            if (wordsInTerm.length === 1) {
+                map.forEach(item => {
+                    const word = (item.word || "").toLowerCase().trim();
+                    const cleanWord = word.replace(/[^\w]/g, '');
+                    if (cleanWord === cleanSearchTerm || cleanWord.includes(cleanSearchTerm)) {
+                        if (item.bbox) foundBoxes.push(item.bbox);
+                    }
+                });
+            } else {
+                for (let i = 0; i <= map.length - wordsInTerm.length; i++) {
+                    let match = true;
+                    for (let j = 0; j < wordsInTerm.length; j++) {
+                        const wordInMap = (map[i+j].word || "").toLowerCase().replace(/[^\w]/g, '');
+                        if (wordInMap !== wordsInTerm[j] && !wordInMap.includes(wordsInTerm[j])) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        for (let j = 0; j < wordsInTerm.length; j++) {
+                            if (map[i+j].bbox) foundBoxes.push(map[i+j].bbox);
+                        }
+                    }
+                }
+            }
+            return foundBoxes;
         }
 
         function navigateSearch(direction) {
@@ -2298,10 +2618,98 @@ body.focus-mode #btn-exit-focus {
             scrollToMatch(currentMatchIndex - 1);
         }
 
+        // --- BORRADO DE TÉRMINOS ---
+        const btnBorrarTermino = document.getElementById('btn-borrar-termino');
+        if (btnBorrarTermino) {
+            btnBorrarTermino.onclick = async () => {
+                const term = searchInput.value.trim();
+                if (!term) {
+                    showToast("Escribe qué quieres eliminar en el buscador", "warning");
+                    return;
+                }
+
+                if (!currentNewsId) return;
+
+                const { value: mode } = await Swal.fire({
+                    title: 'Eliminar del texto',
+                    text: `¿Cómo quieres eliminar "${term}"?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Borrar TODO',
+                    cancelButtonText: 'Cancelar',
+                    showDenyButton: true,
+                    denyButtonText: 'Borrar UNO a UNO',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    customClass: {
+                        confirmButton: 'btn btn-danger m-1',
+                        denyButton: 'btn btn-warning m-1',
+                        cancelButton: 'btn btn-secondary m-1'
+                    },
+                    buttonsStyling: false
+                });
+
+                if (mode === undefined) return; // Cancelado
+
+                if (mode === true) {
+                    // Borrar todas las ocurrencias
+                    const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                    // Necesitamos el texto original sin marcas de Mark.js para limpiar
+                    if (marker) marker.unmark();
+                    const nuevoContenido = docContenido.innerHTML.replace(regex, '');
+                    
+                    if (confirm(`Se eliminarán todas las menciones de "${term}". ¿Continuar?`)) {
+                        await applyDeletion(nuevoContenido, term, "todas las ocurrencias");
+                    } else {
+                        // Restaurar marcas si cancela
+                        performSearch(term);
+                    }
+                } else if (mode === false) {
+                    // Borrar uno a uno (el seleccionado actualmente)
+                    const activeMatch = docContenido.querySelector('.mark-active');
+                    if (!activeMatch) {
+                        showToast("No hay ninguna palabra seleccionada. Usa las flechas.", "warning");
+                        return;
+                    }
+                    
+                    activeMatch.remove(); // Elimina el nodo mark y su contenido
+                    
+                    // Quitar el resto de marcas antes de guardar para no persistir el HTML de Mark.js
+                    if (marker) marker.unmark();
+                    const nuevoContenido = docContenido.innerHTML;
+                    
+                    await applyDeletion(nuevoContenido, term, "la ocurrencia seleccionada");
+                }
+            };
+        }
+
+        async function applyDeletion(content, term, desc) {
+            try {
+                const res = await fetch(`/api/noticia/update_content/${currentNewsId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ contenido: content, titulo: originalTitle })
+                });
+                
+                if (res.ok) {
+                    originalContent = content;
+                    docContenido.innerHTML = content;
+                    showToast(`Eliminado: ${desc}`, "success");
+                    // Limpiar búsqueda para refrescar
+                    searchInput.value = "";
+                    performSearch("");
+                } else {
+                    showToast("Error al guardar cambios", "danger");
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Error de conexión", "danger");
+            }
+        }
+
         function scrollToMatch(index) {
             const matches = docContenido.querySelectorAll('mark');
             if (matches[index]) {
-                // Remove active class from others
                 matches.forEach(m => m.classList.remove('mark-active'));
                 matches[index].classList.add('mark-active');
                 matches[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2394,7 +2802,7 @@ body.focus-mode #btn-exit-focus {
         if (btnVisionSearch) {
             btnVisionSearch.addEventListener('click', async () => {
                 const term = searchInput.value.trim();
-                if (!term || term.length < 2) {
+                if (!term) {
                     showToast("Por favor, introduce una palabra para buscar con IA.", "warning");
                     return;
                 }
@@ -2469,6 +2877,7 @@ body.focus-mode #btn-exit-focus {
 
             if (hasImage || isPdf) {
                 // Show image components
+                mediaMode = 'image';
                 viewerContainer.style.display = 'flex';
                 imagePanel.style.display = 'block';
                 if (wrapper) wrapper.style.display = 'flex';
@@ -2501,7 +2910,7 @@ body.focus-mode #btn-exit-focus {
                 }
             }
 
-            const syncContainer = () => {
+            function syncContainer() {
                 if (!img || img.offsetWidth === 0) return;
                 
                 // Forzar que el contenedor de alineación tenga el tamaño exacto de la imagen
@@ -2514,7 +2923,7 @@ body.focus-mode #btn-exit-focus {
                 visionContainer.style.width = '100%';
                 visionContainer.style.height = '100%';
                 visionContainer.style.display = 'block';
-            };
+            }
             
             img.onload = syncContainer;
             syncContainer();

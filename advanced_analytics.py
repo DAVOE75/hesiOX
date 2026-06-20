@@ -270,37 +270,124 @@ class AnalisisAvanzado:
                          datos_finales = []
 
                 
-        return {
-                    'exito': True,
-                    'datos_temporales': datos_finales,
-                    'datos_individuales': resultados,
-                    'estadisticas': {
-                        'promedio_sentimiento': float(df['sentimiento'].mean()),
-                        'promedio_subjetividad': float(df['subjetividad'].mean()),
-                        'mediana_sentimiento': float(df['sentimiento'].median()),
-                        'mediana_subjetividad': float(df['subjetividad'].median()),
-                        'total_documentos': len(df)
-                    },
-                    'tipo_eje': 'fecha'
-                }
-        
+            return {
+                'exito': True,
+                'datos_temporales': datos_finales,
+                'datos_individuales': resultados,
+                'estadisticas': {
+                    'promedio_sentimiento': float(df['sentimiento'].mean()),
+                    'promedio_subjetividad': float(df['subjetividad'].mean()),
+                    'mediana_sentimiento': float(df['sentimiento'].median()),
+                    'mediana_subjetividad': float(df['subjetividad'].median()),
+                    'total_documentos': len(df)
+                },
+                'tipo_eje': 'fecha'
+            }
         
         return {'exito': False, 'error': 'No hay datos suficientes'}
+
     
     def _calcular_sentimiento(self, texto: str) -> Dict:
-        """Calcula sentimiento usando TextBlob (soporte multilingüe)"""
-        if not TextBlob:
-            return {'polaridad': 0, 'subjetividad': 0.5}
+        """Calcula sentimiento usando un léxico en español y TextBlob como fallback"""
+        polaridad = 0.0
+        subjetividad = 0.5
         
-        try:
-            # TextBlob funciona mejor en inglés, pero detecta español también
-            blob = TextBlob(texto)
-            return {
-                'polaridad': blob.sentiment.polarity,  # -1 (negativo) a 1 (positivo)
-                'subjetividad': blob.sentiment.subjectivity  # 0 (objetivo) a 1 (subjetivo)
-            }
-        except:
-            return {'polaridad': 0, 'subjetividad': 0.5}
+        if not texto:
+            return {'polaridad': polaridad, 'subjetividad': subjetividad}
+            
+        # Léxico en español
+        pos_words = {
+            'bueno', 'buena', 'buenos', 'buenas', 'bien', 'excelente', 'maravilloso', 'maravillosa', 
+            'espectacular', 'genial', 'fantástico', 'fantástica', 'alegría', 'alegre', 'felices', 'feliz', 
+            'felicidad', 'amor', 'amar', 'amado', 'amada', 'cariño', 'cariñoso', 'cariñosa', 'paz', 
+            'tranquilo', 'tranquila', 'tranquilidad', 'esperanza', 'esperar', 'divertido', 'divertida', 
+            'disfrutar', 'gozar', 'placer', 'agradable', 'amable', 'gracias', 'agradecer', 'salud', 
+            'sano', 'sana', 'éxito', 'exitoso', 'exitosa', 'victoria', 'triunfo', 'triunfar', 'gloria', 
+            'glorioso', 'gloriosa', 'santo', 'santa', 'bendición', 'bendito', 'bendita', 'luz', 'brillar', 
+            'hermoso', 'hermosa', 'bello', 'bella', 'belleza', 'dulce', 'encanto', 'encantar', 'adorar', 
+            'adoro', 'ilusión', 'lealtad', 'leal', 'noble', 'nobleza', 'honor', 'honra', 'ilustre', 
+            'digno', 'dignidad', 'amparo', 'amparar', 'consuelo', 'consolar', 'alivio', 'aliviar', 
+            'gracia', 'fe', 'esperanza', 'caridad', 'virtud', 'virtuoso', 'virtuosa', 'generoso', 
+            'generosidad', 'valiente', 'valor', 'templanza', 'prudencia', 'justo', 'justicia', 'sabio', 
+            'sabiduría', 'prudente', 'firme', 'firmeza', 'amigo', 'amiga', 'amistad', 'descanso', 
+            'descansar', 'cantar', 'canto', 'música', 'poema', 'poesía', 'verso', 'rima', 'reír', 
+            'sonreír', 'sonrisa', 'abrazo', 'besar', 'beso', 'alma', 'cielo', 'dios', 'ángel', 'vida'
+        }
+        
+        neg_words = {
+            'malo', 'mala', 'malos', 'malas', 'mal', 'peor', 'pésimo', 'pésima', 'horrible', 'horror', 
+            'terrible', 'fatal', 'triste', 'tristeza', 'infeliz', 'dolor', 'doler', 'sufriendo', 'sufrir', 
+            'sufrimiento', 'pena', 'lástima', 'llorar', 'muerte', 'morir', 'muerto', 'muerta', 'odio', 
+            'odiar', 'rabia', 'ira', 'enfado', 'enfadado', 'enfadada', 'enojado', 'enojada', 'celos', 
+            'envidia', 'veneno', 'guerra', 'pelear', 'pelea', 'conflicto', 'mentira', 'mentir', 'engaño', 
+            'engañar', 'traición', 'traicionar', 'peligro', 'peligroso', 'peligrosa', 'miedo', 'temor', 
+            'asustado', 'asustada', 'pánico', 'terror', 'oscuro', 'oscuridad', 'sombra', 'frío', 'soledad', 
+            'solo', 'sola', 'abandonar', 'abandonado', 'abandonada', 'culpa', 'culpable', 'pecado', 
+            'pecador', 'pecadora', 'infierno', 'demonio', 'diablo', 'castigo', 'castigar', 'cárcel', 
+            'prisión', 'traidor', 'traidora', 'villano', 'villanía', 'cobarde', 'cobardía', 'deshonor', 
+            'deshonra', 'injusto', 'injusticia', 'tirano', 'tiranía', 'crueldad', 'cruel', 'soberbia', 
+            'avaricia', 'lujuria', 'gula', 'pereza', 'saña', 'furia', 'furioso', 'furiosa', 'tormento', 
+            'tormenta', 'herida', 'herir', 'sangre', 'sangriento', 'sangrienta', 'llanto', 'lamento', 
+            'lamentar', 'queja', 'quejarse', 'agonía', 'agonizar', 'venéreo', 'peste', 'enfermedad', 
+            'enfermo', 'enferma', 'dolencia', 'falso', 'falsa', 'venganza', 'vengar', 'espanto'
+        }
+        
+        negations = {'no', 'nunca', 'jamás', 'tampoco', 'ni'}
+        
+        import re
+        words = re.findall(r'\b\w+\b', texto.lower())
+        
+        pos_count = 0
+        neg_count = 0
+        negate_next = False
+        
+        for w in words:
+            if w in negations:
+                negate_next = True
+                continue
+                
+            if w in pos_words:
+                if negate_next:
+                    neg_count += 1
+                else:
+                    pos_count += 1
+                negate_next = False
+            elif w in neg_words:
+                if negate_next:
+                    pos_count += 1
+                else:
+                    neg_count += 1
+                negate_next = False
+            else:
+                negate_next = False
+                
+        total_tokens = len(words)
+        if total_tokens > 0:
+            # Calcular polaridad basada en el léxico
+            lexicon_score = (pos_count - neg_count) / max(1, pos_count + neg_count)
+            if pos_count == 0 and neg_count == 0:
+                polaridad = 0.0
+            else:
+                polaridad = lexicon_score
+                
+            # Calcular subjetividad (proporción de palabras con carga emocional)
+            subjetividad = min(1.0, (pos_count + neg_count) * 2 / total_tokens)
+        
+        # Mezclar con TextBlob como fallback
+        if 'TextBlob' in globals() or 'TextBlob' in locals():
+            try:
+                blob = TextBlob(texto)
+                tb_polaridad = blob.sentiment.polarity
+                if tb_polaridad != 0.0:
+                    polaridad = (polaridad + tb_polaridad) / 2
+                    subjetividad = (subjetividad + blob.sentiment.subjectivity) / 2
+            except:
+                pass
+                
+        return {
+            'polaridad': max(-1.0, min(1.0, polaridad)),
+            'subjetividad': max(0.0, min(1.0, subjetividad))
+        }
     
     # ============================================
     # 2. TOPIC MODELING (LDA)
@@ -488,56 +575,127 @@ class AnalisisAvanzado:
             }
             
             
-        return {
+            return {
                 'exito': True,
                 'documentos': resultados,
                 'estadisticas_globales': estadisticas_globales
             }
         
-        
-        return {
-            'exito': True,
-            'documentos': resultados,
-            'estadisticas_globales': estadisticas_globales
-        }
+        return {'exito': False, 'error': 'No hay documentos con texto válido para análisis estilométrico'}
 
-    def atribucion_autoria(self, publicaciones: List[Dict]) -> Dict:
+
+    def atribucion_autoria(self, publicaciones: List[Dict], top_n: int = 500) -> Dict:
         """
         Compara obras estilométricamente y aplica el algoritmo Delta de Burrows
         para medir la distancia de autoría entre textos.
+        
+        top_n: Número de palabras más frecuentes a considerar (MFW). 
+               Valores típicos: 150 (textos cortos), 500-1000 (obras completas).
         """
         if len(publicaciones) < 2:
             return {'exito': False, 'error': 'Se requieren al menos 2 obras para comparar'}
 
-        textos_procesados = []
+        # Usar spaCy para filtrar nombres propios (PROPN)
+        # Esto es vital para que la IA se centre en el estilo funcional, no en personajes.
+        documentos_sucios = []
         for pub in publicaciones:
             texto = self._limpiar_html(pub.get('contenido', '') or pub.get('titulo', ''))
-            if not texto:
-                continue
-            palabras = re.findall(r'\b\w+\b', texto.lower())
-            total_palabras = len(palabras)
-            if total_palabras < 50:
-                continue
+            if texto and len(texto) > 100:
+                documentos_sucios.append((pub, texto))
+        
+        if not documentos_sucios:
+            return {'exito': False, 'error': 'No hay suficientes documentos válidos con texto suficiente'}
+
+        # 1. Pre-identificar nombres de personajes y palabras de títulos para excluirlos
+        personajes_corpus = set()
+        palabras_titulos = set()
+        regex_scan_loc = r'(?m)^\s*([A-ZÁÉÍÓÚÑa-záéíóúñ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}'
+        
+        for pub in publicaciones:
+            # Palabras de los títulos (para evitar sesgos por menciones a la obra)
+            titulo = pub.get('titulo', '').lower()
+            for t_word in re.findall(r'\b\w{3,}\b', titulo):
+                palabras_titulos.add(t_word)
+
+            c_raw = pub.get('contenido', '')
+            if c_raw:
+                t_clean = re.sub(r'<[^>]*?>', '', c_raw)
+                ms = re.findall(regex_scan_loc, t_clean)
+                for m in ms:
+                    n_clean = re.sub(r'\(.*?\)', '', m).strip().lower()
+                    if len(n_clean) > 1:
+                        personajes_corpus.add(n_clean)
+                        # Partes del nombre (ej: "DON RUPERTO" -> "ruperto")
+                        for p in re.split(r'[\s\.]+', n_clean):
+                            if len(p) > 2: personajes_corpus.add(p)
+
+        # Partículas y títulos comunes
+        blacklist_manual = {'don', 'doña', 'señor', 'señora', 'usted', 'merced', 'vuestra', 'vuestro', 'fr', 'v', 'frai', 'fray'}
+        
+        # POS tags permitidas para un análisis estilométrico puro (Palabras Funcionales)
+        # ADP: preps, DET: dets, PRON: prons, CONJ/CCONJ/SCONJ: conjs, PART: parts
+        # ADV: adverbios (suelen ser muy estilísticos)
+        # AUX: verbos auxiliares (ser, haber, estar)
+        pos_permitidas = {'ADP', 'DET', 'PRON', 'CONJ', 'CCONJ', 'SCONJ', 'PART', 'ADV', 'AUX'}
+
+        textos_procesados = []
+        try:
+            docs_nlp = self.nlp.pipe([t for p, t in documentos_sucios], disable=['parser', 'lemmatizer'])
             
-            conteo = Counter(palabras)
-            
-            textos_procesados.append({
-                'id': pub.get('id'),
-                'titulo': pub.get('titulo', 'Sin título'),
-                'autor': pub.get('autor') or pub.get('publicacion') or 'Desconocido',
-                'conteo': conteo,
-                'total': total_palabras,
-                'metricas': self._calcular_metricas_estilo(texto)
-            })
+            for (pub, texto), doc_nlp in zip(documentos_sucios, docs_nlp):
+                palabras = []
+                for t in doc_nlp:
+                    t_low = t.text.lower()
+                    # CRITERIOS DE EXCLUSIÓN AGRESIVOS:
+                    if not t.is_alpha: continue
+                    if t.pos_ == 'PROPN' or t.ent_type_: continue
+                    if t.pos_ not in pos_permitidas: continue
+                    if t_low in personajes_corpus: continue
+                    if t_low in palabras_titulos: continue
+                    if t_low in blacklist_manual: continue
+                    if t.text.isupper() and len(t.text) > 2: continue
+                    
+                    palabras.append(t_low)
+                
+                total_palabras = len(palabras)
+                if total_palabras < 50:
+                    continue
+                
+                conteo = Counter(palabras)
+                
+                textos_procesados.append({
+                    'id': pub.get('id'),
+                    'titulo': pub.get('titulo', 'Sin título'),
+                    'autor': pub.get('autor') or pub.get('publicacion') or 'Desconocido',
+                    'conteo': conteo,
+                    'total': total_palabras,
+                    'metricas': self._calcular_metricas_estilo(texto)
+                })
+        except Exception as e:
+            # Fallback a regex si spaCy falla o no está disponible
+            print(f"Error en spaCy pipe: {e}. Usando fallback regex.")
+            for pub, texto in documentos_sucios:
+                palabras = re.findall(r'\b\w+\b', texto.lower())
+                total_palabras = len(palabras)
+                if total_palabras < 50: continue
+                textos_procesados.append({
+                    'id': pub.get('id'),
+                    'titulo': pub.get('titulo', 'Sin título'),
+                    'autor': pub.get('autor') or pub.get('publicacion') or 'Desconocido',
+                    'conteo': Counter(palabras),
+                    'total': total_palabras,
+                    'metricas': self._calcular_metricas_estilo(texto)
+                })
 
         if len(textos_procesados) < 2:
-            return {'exito': False, 'error': 'No hay suficientes documentos válidos con texto suficiente'}
+            return {'exito': False, 'error': 'No hay suficientes documentos tras el filtrado de nombres'}
 
         vocabulario_global = Counter()
         for doc in textos_procesados:
             vocabulario_global.update(doc['conteo'])
         
-        top_n = min(150, len(vocabulario_global))
+        # Ajustar top_n al tamaño real del vocabulario
+        top_n = min(top_n, len(vocabulario_global))
         palabras_frecuentes = [w for w, _ in vocabulario_global.most_common(top_n)]
 
         frecuencias = {}
@@ -566,6 +724,22 @@ class AnalisisAvanzado:
                 if i >= j:
                     continue
                 delta = float(np.mean([abs(doc_a['z_scores'][w] - doc_b['z_scores'][w]) for w in palabras_frecuentes]))
+                
+                # Conversión conservadora de Delta de Burrows a afinidad (%)
+                # < 0.7: Muy alta probabilidad (mismo autor) -> 100%
+                # 0.7 - 1.3: Zona de incertidumbre (posible mismo autor o gran influencia) -> 100% a 50%
+                # 1.3 - 2.5: Baja probabilidad (distintos autores, mismo género/época) -> 50% a 10%
+                # > 2.5: Muy baja o nula -> < 10%
+                
+                if delta < 0.7:
+                    similitud_prob = 100.0
+                elif delta < 1.3:
+                    similitud_prob = 100.0 - (delta - 0.7) * (50.0 / 0.6)  # Escala de 100 a 50
+                elif delta < 2.5:
+                    similitud_prob = 50.0 - (delta - 1.3) * (40.0 / 1.2)   # Escala de 50 a 10
+                else:
+                    similitud_prob = max(0, 10.0 - (delta - 2.5) * 5)
+                
                 matriz_distancias.append({
                     'id_a': doc_a['id'],
                     'id_b': doc_b['id'],
@@ -574,7 +748,7 @@ class AnalisisAvanzado:
                     'autor_a': doc_a['autor'],
                     'autor_b': doc_b['autor'],
                     'delta': delta,
-                    'similitud_prob': float(max(0, min(100, (2.5 - delta) * 40)))  # Delta < 2.5 como coincidencia posible
+                    'similitud_prob': float(max(0, min(100, similitud_prob)))  # Clamp entre 0-100
                 })
 
         return {
@@ -588,8 +762,50 @@ class AnalisisAvanzado:
                     'metricas': d['metricas']
                 } for d in textos_procesados
             ],
-            'vocabulario_frecuente': palabras_frecuentes[:20]
+            'vocabulario_frecuente': palabras_frecuentes[:50]
         }
+
+    def interpretar_atribucion(self, delta_results: Dict, model_config: str = 'gemini:pro', current_user = None) -> Dict:
+        """
+        Utiliza AIService para interpretar los resultados de Burrows' Delta.
+        """
+        matriz = delta_results.get('matriz_delta', [])
+        vocab = delta_results.get('vocabulario_frecuente', [])
+        
+        if not matriz:
+            return {'exito': False, 'error': 'No hay datos de matriz Delta para interpretar.'}
+
+        # Configuración de proveedor y modelo
+        parts = model_config.split(':')
+        provider = parts[0] if len(parts) > 0 else 'gemini'
+        model_name = parts[1] if len(parts) > 1 else 'pro'
+
+        # Construir prompt
+        prompt = f"""
+        Actúa como un experto en estilometría computacional. Analiza estos resultados de Burrows' Delta:
+        
+        MATRIZ DE AFINIDAD:
+        """
+        for row in matriz[:8]:
+            prompt += f"- {row['titulo_a']} vs {row['titulo_b']}: Delta={row['delta']:.3f}, Afinidad={row['similitud_prob']:.1f}%\n"
+
+        prompt += f"\nMFW (Vocabulario más frecuente) Evaluado: {', '.join(vocab[:30])}\n\n"
+        prompt += "INSTRUCCIONES:\n"
+        prompt += "1. Explica si las afinidades >80% sugieren una misma mano autoral o una influencia estilística extrema.\n"
+        prompt += "2. Evalúa la fiabilidad del análisis basado en el vocabulario evaluado.\n"
+        prompt += "3. Responde de forma técnica y estructurada. Máximo 3 párrafos.\n"
+
+        try:
+            from services.ai_service import AIService
+            ai = AIService(provider=provider, model=model_name, user=current_user)
+            respuesta = ai.generate_content(prompt, temperature=0.2)
+            
+            if respuesta:
+                return {'exito': True, 'interpretacion': respuesta, 'model_used': f"{provider}:{model_name}"}
+            else:
+                return {'exito': False, 'error': f"La IA ({provider}) no devolvió respuesta. Verifique la configuración de la API Key."}
+        except Exception as e:
+            return {'exito': False, 'error': str(e)}
     
     def _calcular_metricas_estilo(self, texto: str) -> Dict:
         """Calcula métricas estilométricas de un texto"""
@@ -609,6 +825,11 @@ class AnalisisAvanzado:
         # Pronombres comunes (aproximación simple para estilométrico)
         pronombres = re.findall(r'\b(yo|tú|él|ella|nosotros|nosotras|vosotros|vosotras|ellos|ellas|me|te|se|nos|os|le|les|mi|tu|su|mío|tuyo|suyo|nuestro|vuestro)\b', texto_limpio.lower())
         
+        # POS counts using simple regex (fallback-style but consistent)
+        preps = re.findall(r'\b(a|ante|bajo|cabe|con|contra|de|desde|durante|en|entre|hacia|hasta|mediante|para|por|según|sin|so|sobre|tras|vía)\b', texto_limpio.lower())
+        conjs = re.findall(r'\b(y|e|ni|o|u|pero|mas|sino|que|aunque|porque|pues|si)\b', texto_limpio.lower())
+        advs = re.findall(r'\b(\w+mente|ya|bien|mal|muy|tan|así|hoy|ayer|aquí|allí|ahora|luego|siempre|nunca|jamás|no|sí)\b', texto_limpio.lower())
+
         # Métricas
         total_palabras = len(palabras)
         total_oraciones = len(oraciones)
@@ -616,17 +837,17 @@ class AnalisisAvanzado:
         palabras_unicas = len(conteo_palabras)
         hapax_legomena = sum(1 for p in conteo_palabras if conteo_palabras[p] == 1)
         
-        
         return {
             'total_palabras': total_palabras,
             'total_oraciones': total_oraciones,
             'palabras_por_oracion': total_palabras / max(total_oraciones, 1),
             'longitud_promedio_palabra': sum(len(p) for p in palabras) / max(total_palabras, 1),
             'diversidad_lexica': palabras_unicas / max(total_palabras, 1),  # TTR
-            'palabras_unicas': palabras_unicas,
             'densidad_puntuacion': (len(puntuacion) / max(total_palabras, 1)) * 100,
-            'ratio_hapax': hapax_legomena / max(total_palabras, 1),
-            'ratio_pronombres': (len(pronombres) / max(total_palabras, 1)) * 100
+            'ratio_pronombres': (len(pronombres) / max(total_palabras, 1)) * 100,
+            'ratio_preposiciones': (len(preps) / max(total_palabras, 1)) * 100,
+            'ratio_conjunciones': (len(conjs) / max(total_palabras, 1)) * 100,
+            'ratio_adverbios': (len(advs) / max(total_palabras, 1)) * 100
         }
     
     # ============================================
@@ -687,6 +908,10 @@ class AnalisisAvanzado:
             return num / (den1 * den2)**0.5
         except:
             return 0.0
+
+    def analisis_ngramas(self, publicaciones, n=2, top_k=15):
+        """Compatibilidad pública para el dashboard y otros callers."""
+        return self._analisis_ngramas_simple(publicaciones, n, top_k)
 
     def analizar_drama(self, obras_analizadas: List[Dict], reparto_identities: Dict = None) -> Dict:
         """
@@ -1939,37 +2164,87 @@ class AnalisisAvanzado:
             parts = [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', str(val)) if c]
             return (1, parts) # (1, list) -> Segundo nivel
         
+        import unicodedata
+        def strip_accents(s):
+            if not s: return ""
+            return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn')
+            
+        from collections import defaultdict
         personajes_detectados = set()
+        personajes_validos_meta = set()
         obras_analizadas = []
         
+        personajes_detectados_obra = defaultdict(set)
+        personajes_validos_meta_obra = defaultdict(set)
+        reparto_meta_fragmento = {}
+
         for pub in publicaciones:
+            p_id = str(pub.get('publicacion_id', 'all'))
+            doc_id = str(pub.get('id', 'all'))
+            
             # 1. Metadatos Globales de la Obra (Reparto completo)
             reparto_global = pub.get('reparto_total', '') or ''
             if reparto_global:
-                reparto_global_list = [p.upper().strip() for p in re.split(r'[,;]', reparto_global) if p.strip()]
+                reparto_global_list = [p.upper().strip() for p in re.split(r'[,;]|\bY\b', reparto_global) if p.strip()]
                 personajes_detectados.update([p for p in reparto_global_list if len(p) > 1])
+                personajes_validos_meta.update([p for p in reparto_global_list if len(p) > 1])
+                personajes_detectados_obra[p_id].update([p for p in reparto_global_list if len(p) > 1])
+                personajes_validos_meta_obra[p_id].update([p for p in reparto_global_list if len(p) > 1])
 
             # 2. Metadatos del Fragmento (Personajes en este fragmento)
-            reparto_meta = pub.get('palabras_clave', '') or ''
+            reparto_meta = pub.get('reparto', '') or pub.get('palabras_clave', '') or ''
+
             if reparto_meta:
-                # Minimal normalization for detection to preserve variants in UI
-                reparto_list = [p.upper().strip() for p in re.split(r'[,;]', reparto_meta) if p.strip()]
+                reparto_list = [p.upper().strip() for p in re.split(r'[,;]|\bY\b', reparto_meta) if p.strip()]
+
                 personajes_detectados.update([p for p in reparto_list if len(p) > 1])
+                personajes_validos_meta.update([p for p in reparto_list if len(p) > 1])
+                personajes_detectados_obra[p_id].update([p for p in reparto_list if len(p) > 1])
+                personajes_validos_meta_obra[p_id].update([p for p in reparto_list if len(p) > 1])
+                reparto_meta_fragmento[doc_id] = set([p for p in reparto_list if len(p) > 1])
+            # 2.5. Entidades extraídas por Prosopograf-IA (entidades_ner)
+            entidades_ia = pub.get('entidades_ner')
+            if entidades_ia:
+                if isinstance(entidades_ia, str):
+                    try: entidades_ia = json.loads(entidades_ia)
+                    except: entidades_ia = []
+                if isinstance(entidades_ia, list):
+                    for ent in entidades_ia:
+                        if isinstance(ent, dict) and ent.get('label') == 'PER':
+                            p_ia = (ent.get('texto_normalizado') or ent.get('normalizado') or ent.get('texto', '')).upper().strip()
+                            if len(p_ia) > 1:
+                                personajes_detectados.update([p_ia])
+                                personajes_detectados_obra[p_id].update([p_ia])
+                                # Integrar en reparto_meta_fragmento
+                                if doc_id not in reparto_meta_fragmento:
+                                    reparto_meta_fragmento[doc_id] = set()
+                                reparto_meta_fragmento[doc_id].add(p_ia)
             
             contenido_raw = pub.get('contenido', '') or ''
             titulo = pub.get('titulo', 'Obra sin título')
+
             
-            # LIMPIEZA DE HTML (Crucial para detección por línea ^)
             contenido = re.sub(r'<(?:p|br|div|h\d)[^>]*?>', '\n', contenido_raw)
             contenido = re.sub(r'<[^>]*?>', '', contenido)
             contenido = contenido.replace('&nbsp;', ' ').replace('&quot;', '"').replace('&apos;', "'")
             
-            # Intentar detectar personajes por formato (NOMBRE: o NOMBRE.-) SOLO SI no hay metadatos manuales
-            if not reparto_global and not reparto_meta:
-                nombres_formato = re.findall(r'^\s*([A-ZÁÉÍÓÚÑ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
-                personajes_detectados.update([n.upper().strip() for n in nombres_formato if len(n.strip()) > 1])
+            # Buscar posibles nombres de personajes (mayúsculas y minúsculas)
+            nombres_formato = re.findall(r'^\s*([A-Za-zÁÉÍÓÚÑáéíóúñ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}', contenido, re.MULTILINE)
+            from collections import Counter
+            conteo_nombres = Counter([n.strip() for n in nombres_formato])
             
-            # Fallback extraction: If section/volume are empty, try finding Roman/Arabic nuggets in Title or Keywords
+            for n, count in conteo_nombres.items():
+                clean_n = n.upper().strip()
+                # Un nombre es válido si tiene longitud > 1 Y:
+                # 1. Está escrito en mayúsculas en el texto original, O
+                # 2. Es repetitivo (aparece 2 o más veces)
+                es_mayusculas = n.isupper()
+                es_repetitivo = count >= 2
+                
+                if len(clean_n) > 1 and (es_mayusculas or es_repetitivo):
+                    personajes_detectados.update([clean_n])
+                    personajes_detectados_obra[p_id].update([clean_n])
+            
             actos_val = pub.get('seccion')
             escenas_val = pub.get('volumen')
             
@@ -1990,11 +2265,52 @@ class AnalisisAvanzado:
                 'actos': pub.get('actos') or actos_val,
                 'escenas': pub.get('escenas') or escenas_val,
                 'personajes_meta': reparto_meta,
-                'reparto_global': reparto_global
+                'reparto_global': reparto_global,
+                'entidades_ner': pub.get('entidades_ner'),
+                'conteo_nombres': conteo_nombres
             })
+
             
         if not obras_analizadas:
             return {'error': 'No hay contenido para analizar'}
+
+        # Pre-procesar escenas "Última" antes de ordenar
+        from collections import defaultdict
+        actos_escenas = defaultdict(list)
+        for obra in obras_analizadas:
+            if obra.get('actos') and obra.get('escenas'):
+                val = roman_to_int(obra['escenas'])
+                if val > 0:
+                    actos_escenas[obra['actos']].append(val)
+                else:
+                    try:
+                        nums = re.findall(r'\d+', str(obra['escenas']))
+                        if nums:
+                            actos_escenas[obra['actos']].append(int(nums[0]))
+                    except: pass
+
+        def int_to_roman(num):
+            val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+            syb = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"]
+            roman_num = ''
+            i = 0
+            while  num > 0:
+                for _ in range(num // val[i]):
+                    roman_num += syb[i]
+                    num -= val[i]
+                i += 1
+            return roman_num
+
+        for obra in obras_analizadas:
+            if ('ÚLTIMA' in obra.get('titulo', '').upper() or 'ULTIMA' in obra.get('titulo', '').upper() or 'ÚLTIMA' in str(obra.get('escenas', '')).upper() or 'ULTIMA' in str(obra.get('escenas', '')).upper()):
+                if not obra.get('escenas') or str(obra['escenas']).upper() in ['ÚLTIMA', 'ULTIMA', '']:
+                    acto = obra.get('actos', 'I')
+                    if actos_escenas[acto]:
+                        sig_escena = max(actos_escenas[acto]) + 1
+                        obra['escenas'] = int_to_roman(sig_escena)
+                    else:
+                        # Si no hay escenas numeradas previas, dejamos "Última"
+                        obra['escenas'] = 'Última'
 
         # ORDENACIÓN CRÍTICA: Asegurar flujo narrativo (Actos y Escenas)
         obras_analizadas.sort(key=lambda x: (natural_key(x['publicacion']), natural_key(x['actos']), natural_key(x['escenas'])))
@@ -2004,14 +2320,73 @@ class AnalisisAvanzado:
         tension_dramatica = []
         protagonismo = Counter()
         
+        # EXTRAER LOCUTORES DIRECTAMENTE DE LOS TEXTOS PARA QUE EL ALIAS LOS IDENTIFIQUE
+        regex_scan_loc = r'^\s*([A-Za-zÁÉÍÓÚÑáéíóúñ\. ]+(?:\s*\(.*?\))?)\s*[:\.\-]{1,3}'
+        for obra in obras_analizadas:
+            p_id = str(obra.get('publicacion_id', 'all'))
+            contenido_raw = obra.get('contenido', '')
+            conteo_obra = obra.get('conteo_nombres', {})
+            texto = re.sub(r'<(?:p|br|div|h\d)[^>]*?>', '\n', contenido_raw)
+            texto = re.sub(r'<[^>]*?>', '', texto)
+            texto = texto.replace('&nbsp;', ' ').replace('&quot;', '"').replace('&apos;', "'")
+            matches_scan = list(re.finditer(regex_scan_loc, texto, re.MULTILINE))
+            for ms in matches_scan:
+                nombre_texto = ms.group(1).strip()
+                raw_p = re.sub(r'\(.*?\)', '', nombre_texto).upper().strip()
+                raw_p = re.sub(r'[^A-ZÁÉÍÓÚÑ ]', '', raw_p).strip()
+                
+                # Respetar la misma regla de detección (mayúsculas o repetitivo)
+                es_mayusculas = nombre_texto.isupper()
+                es_repetitivo = conteo_obra.get(nombre_texto, 0) >= 2
+                
+                if len(raw_p) >= 1 and (es_mayusculas or es_repetitivo) and not raw_p.endswith(' V') and raw_p != 'V':
+                    personajes_detectados.add(raw_p)
+                    personajes_detectados_obra[p_id].add(raw_p)
+
         # Filtro de ruido y UNIFICACIÓN DE ALIAS
+
         stop_personajes = {
             'ACTO', 'ESCENA', 'CUADRO', 'TELÓN', 'TELON', 'PERSONAJES', 'REPARTO', 'FIN', 'ESCENAS', 'ACTOS',
             'ENTRAN', 'SALEN', 'VÁSE', 'VASE', 'MUTACIÓN', 'MUTACION', 'ESCENARIO', 'TEATRO', 'DENTRO', 
             'TODOS', 'TODAS', 'VOCES', 'OTRO', 'OTRA', 'RUIDO', 'MÚSICA', 'MUSICA', 'PAUSA', 'SILENCIO',
-            'SALA', 'SALÓN', 'SALON', 'CALLE', 'PATIO', 'JARDÍN', 'JARDIN', 'CON EL MISMO', 'CON LA MISMA'
+            'SALA', 'SALÓN', 'SALON', 'CALLE', 'PATIO', 'JARDÍN', 'JARDIN', 'CON EL MISMO', 'CON LA MISMA',
+            'FIN DEL CUADRO', 'FIN DEL ACTO', 'DERECHA', 'IZQUIERDA', 'CENTRO'
         }
+
         personajes_limpios = sorted([p for p in personajes_detectados if p.upper() not in stop_personajes])
+        # Fallback: si la detección heurística anterior no encuentra suficientes personajes,
+        # intentar usar NER (si está disponible) para extraer entidades PERSON del contenido.
+        nlp_model = None
+        if len(personajes_limpios) < 3:
+            try:
+                try:
+                    nlp_model = self.nlp
+                except Exception as nlp_error:
+                    print(f"[NER FALLBACK] NLP no disponible: {nlp_error}")
+                    nlp_model = None
+
+                if not nlp_model:
+                    raise RuntimeError("Modelo NLP no disponible para fallback NER")
+
+                ner_found = set()
+                for obra in obras_analizadas:
+                    texto = obra.get('contenido', '')
+                    if not texto or len(texto) < 200:
+                        continue
+                    doc = nlp_model(texto)
+                    for ent in doc.ents:
+                        if ent.label_ in ('PER', 'PERSON'):
+                            name = ent.text.strip().upper()
+                            # limpiar nombres cortos o signos
+                            name = re.sub(r'[^A-ZÁÉÍÓÚÑ\s]', '', name)
+                            name = re.sub(r'\s+', ' ', name).strip()
+                            if len(name) > 2 and name not in stop_personajes:
+                                ner_found.add(name)
+                if ner_found:
+                    print(f"[DEBUG] NER fallback detected personajes: {sorted(list(ner_found))}")
+                    personajes_limpios = sorted(list(set(personajes_limpios) | ner_found))
+            except Exception as e:
+                print(f"[NER FALLBACK ERROR] {e}")
         
         # --- UNIFICACIÓN DE ALIAS ROBUSTA ---
         # 1. Función de resolución recursiva
@@ -2038,13 +2413,21 @@ class AnalisisAvanzado:
                 if not k or not v: continue
                 
                 k_norm = self._normalizar_personaje(k)
-                v_norm = self._normalizar_personaje(v)
+                v_target = v.upper().strip()
                 
                 # Mapeamos tanto la forma original como la normalizada al destino
-                aliases[k.upper().strip()] = v_norm
+                aliases[k.upper().strip()] = v_target
+
                 if k_norm != k.upper().strip():
-                    aliases[k_norm] = v_norm
+                    aliases[k_norm] = v_target
+
         
+        # C. Heurística inteligente desactivada por petición del usuario (los alias se gestionan manualmente)
+        pass
+
+
+
+
         # 3. Recalcular personajes finales unificados
         personajes_finales_temp = set()
         for p in personajes_limpios:
@@ -2150,8 +2533,10 @@ class AnalisisAvanzado:
                 presentes_en_bloque = set()
                 personajes_fragmento_fijos = []
                 
+                tiene_meta_fija = False
                 # Si el usuario definió personajes para este fragmento, esa es nuestra fuente de verdad
                 if obra.get('personajes_meta'):
+                    tiene_meta_fija = True
                     meta_list = [p.upper().strip() for p in re.split(r'[,;]', obra['personajes_meta']) if p.strip()]
                     for p_meta in meta_list:
                         p_canonical = resolver_alias(p_meta, aliases)
@@ -2159,14 +2544,48 @@ class AnalisisAvanzado:
                             presentes_en_bloque.add(p_canonical)
                             personajes_fragmento_fijos.append(p_canonical)
 
+                # Integrar entidades extraídas por Prosopograf-IA (entidades_ner)
+                entidades_ia = obra.get('entidades_ner')
+                if entidades_ia:
+                    if isinstance(entidades_ia, str):
+                        try: entidades_ia = json.loads(entidades_ia)
+                        except: entidades_ia = []
+                    if isinstance(entidades_ia, list):
+                        for ent in entidades_ia:
+                            if isinstance(ent, dict) and ent.get('label') == 'PER':
+                                p_ia = (ent.get('texto_normalizado') or ent.get('normalizado') or ent.get('texto', '')).upper().strip()
+                                p_canonical = resolver_alias(p_ia, aliases)
+                                if p_canonical in personajes_finales:
+                                    if not tiene_meta_fija and (len(bloques) == 1 or p_ia in bloque.upper()):
+                                        presentes_en_bloque.add(p_canonical)
+                                        if p_canonical not in personajes_fragmento_fijos:
+                                            personajes_fragmento_fijos.append(p_canonical)
+                                        if p_canonical in personajes_stats:
+                                            personajes_stats[p_canonical]['intervenciones'] += 1
+                                            personajes_stats[p_canonical]['texto'].append(f"[Mención NER/IA]")
+
+
                 sentimiento_locuciones_bloque = defaultdict(list)
+
                 locuciones_data = [] # Para el panel de contexto frontend
 
                 for m in matches_loc:
                     # Limpieza del nombre (quitar apartes entre paréntesis) y resolución de alias
                     raw_p = re.sub(r'\(.*?\)', '', m.group(1)).upper().strip()
                     raw_p = re.sub(r'[^A-ZÁÉÍÓÚÑ ]', '', raw_p).strip()
-                    nombre_p = resolver_alias(raw_p, aliases)
+                    
+                    # NUEVO: Mapeo inteligente basado en los metadatos del fragmento
+                    raw_p_clean = strip_accents(raw_p)
+                    mapeado_por_meta = False
+                    for p_fijo in personajes_fragmento_fijos:
+                        p_fijo_clean = strip_accents(p_fijo)
+                        if p_fijo_clean.startswith(raw_p_clean) or raw_p_clean.startswith(p_fijo_clean) or (len(raw_p_clean) >= 3 and raw_p_clean[:3] == p_fijo_clean[:3]):
+                            nombre_p = p_fijo
+                            mapeado_por_meta = True
+                            break
+                    
+                    if not mapeado_por_meta:
+                        nombre_p = resolver_alias(raw_p, aliases)
                     
                     if nombre_p not in personajes_finales:
                         norm_p = self._normalizar_personaje(raw_p)
@@ -2177,14 +2596,15 @@ class AnalisisAvanzado:
                     # UNIFICACIÓN DEFINITIVA
                     p_final = self.find_identity(nombre_p, reparto_identities) if 'reparto_identities' in locals() else nombre_p
                     
-                    # SI HAY PERSONAJES FIJOS EN METADATOS: Solo permitimos esos
-                    if personajes_fragmento_fijos:
-                        if p_final not in presentes_en_bloque:
-                            continue # Ignorar personajes que no están en los metadatos del fragmento
+                    # Permitir todos los personajes encontrados en el texto
+
+
+
                     
                     if p_final in personajes_finales:
                         texto_p = m.group(2).strip()
-                        presentes_en_bloque.add(p_final)
+                        if not tiene_meta_fija or p_final in personajes_fragmento_fijos:
+                            presentes_en_bloque.add(p_final)
                         personajes_stats[p_final]['texto'].append(texto_p)
                         personajes_stats[p_final]['intervenciones'] += 1
                         personajes_stats[p_final]['palabras'] += len(re.findall(r'\b\w+\b', texto_p))
@@ -2338,8 +2758,16 @@ class AnalisisAvanzado:
                             'score': round(corr, 2)
                         })
 
-        # Purgar personajes sin intervenciones reales (Filtrado estricto de ruido post-análisis)
-        detalles_reparto = [d for d in detalles_reparto if d['intervenciones'] > 0]
+        # Purgar personajes sin intervenciones reales y que tampoco estén en metadatos
+        personajes_en_meta_global = set()
+        for obra in obras_analizadas:
+            if obra.get('personajes_meta'):
+                meta_list = [p.upper().strip() for p in re.split(r'[,;]', obra['personajes_meta']) if p.strip()]
+                for p_meta in meta_list:
+                    p_canonical = resolver_alias(p_meta, aliases)
+                    personajes_en_meta_global.add(p_canonical)
+
+        detalles_reparto = [d for d in detalles_reparto if d['intervenciones'] > 0 or d['nombre'] in personajes_en_meta_global]
         nombres_activos = set([d['nombre'] for d in detalles_reparto])
         personajes_finales = [p for p in personajes_finales if p in nombres_activos]
 
@@ -2377,14 +2805,15 @@ class AnalisisAvanzado:
         
 
         # Cálculo del flujo táctico (Streamgraph)
+        todas_tacticas = ["Atacar", "Informar", "Manipular", "Persuadir", "Seducir"]
         flujo_tactico = []
         for idx, s in enumerate(tension_dramatica):
             counts = Counter([l.get('tac', 'Informar') for l in s['locuciones']])
-            for tac, count in counts.items():
+            for tac in todas_tacticas:
                 flujo_tactico.append({
                     'Bloque': s['label'],
                     'Táctica': tac,
-                    'Valor': count
+                    'Valor': counts[tac] # Counter returns 0 for missing keys automatically!
                 })
         return {
             'exito': True,

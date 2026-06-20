@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let ocrProcessor = null;
     let pdfPageCount = 0;
     let stopSequentialOCR = false;
+    let currentRangeEnd = null;
 
     // Inicializar procesador
     ocrProcessor = new window.OCRProcessor();
@@ -212,6 +213,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
                         <button id="swal-btn-all-once" class="swal2-confirm swal2-styled" style="background-color: #ff9800; margin: 0; width: 100%;">Procesar todo (Un solo bloque)</button>
                         <button id="swal-btn-all-seq" class="swal2-confirm swal2-styled" style="background-color: #294a60; margin: 0; width: 100%;">Procesar todo (Secuencial)</button>
+                        <button id="swal-btn-range" class="swal2-confirm swal2-styled" style="background-color: #8e44ad; margin: 0; width: 100%;">Procesar rango de páginas</button>
                         <button id="swal-btn-single" class="swal2-deny swal2-styled" style="background-color: #111; margin: 0; width: 100%; border: 1px solid #444;">Elegir página específica</button>
                     </div>
                 `,
@@ -222,6 +224,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     };
                     document.getElementById('swal-btn-all-seq').onclick = () => {
                         window.swalOcrAction = 'all-seq';
+                        Swal.clickConfirm();
+                    };
+                    document.getElementById('swal-btn-range').onclick = () => {
+                        window.swalOcrAction = 'range';
                         Swal.clickConfirm();
                     };
                     document.getElementById('swal-btn-single').onclick = () => {
@@ -245,6 +251,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Procesar todo secuencialmente
                 if (pdfPageCount === 0) pdfPageCount = 1; 
                 await processSequentialOCR();
+                return;
+            } else if (action === 'range') {
+                // Procesar rango de páginas
+                const { value: rangeValues } = await Swal.fire({
+                    title: 'Definir Rango de Páginas',
+                    html: `
+                        <div class="row g-3" style="margin-top:10px;">
+                            <div class="col-6 text-start">
+                                <label class="sirio-label mb-2">Página Inicio</label>
+                                <input id="swal-range-start" type="number" class="swal2-input m-0 w-100" value="1" min="1" max="${pdfPageCount || 999}">
+                            </div>
+                            <div class="col-6 text-start">
+                                <label class="sirio-label mb-2">Página Fin</label>
+                                <input id="swal-range-end" type="number" class="swal2-input m-0 w-100" value="${pdfPageCount || 1}" min="1" max="${pdfPageCount || 999}">
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Procesar Rango',
+                    confirmButtonColor: '#8e44ad',
+                    background: '#1a1d21',
+                    color: '#fff',
+                    preConfirm: () => {
+                        const start = parseInt(document.getElementById('swal-range-start').value);
+                        const end = parseInt(document.getElementById('swal-range-end').value);
+                        if (!start || !end || start > end) {
+                            Swal.showValidationMessage('El rango no es válido');
+                            return false;
+                        }
+                        return { start, end };
+                    }
+                });
+
+                if (rangeValues) {
+                    await processSequentialOCR(rangeValues.start, rangeValues.end);
+                }
                 return;
             } else if (action === 'single') {
                 // Elegir página específica
@@ -398,6 +441,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formData.append('ocr_model', ocrModelSelect.value);
             }
 
+            const ocrEngineSelect = document.getElementById('ocrEngineSelect');
+            if (ocrEngineSelect) {
+                formData.append('ocr_engine', ocrEngineSelect.value);
+                console.log(`[OCR] Usando motor: ${ocrEngineSelect.value}`);
+            }
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const headers = csrfToken ? { 'X-CSRFToken': csrfToken } : {};
 
@@ -445,22 +494,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                     extractedData.metadata = { ...extractedData.metadata, ...data.metadata };
                 }
                 extractedData.imageData = data.image_data;
+                // Acumular mapa de coordenadas (etiquetando por página)
+                if (data.words_data) {
+                    if (!extractedData.ocrMap) extractedData.ocrMap = [];
+                    // Añadir info de página a cada palabra
+                    const wordsWithPage = data.words_data.map(w => ({...w, p: pageNumber}));
+                    extractedData.ocrMap = extractedData.ocrMap.concat(wordsWithPage);
+                }
             } else {
                 // Primer proceso o página única
                 extractedData = {
                     text: (pageNumber ? pageHeader : '') + finalPageText,
                     confidence: data.confidence || 0,
                     metadata: data.metadata || (data.metadatos ? data.metadatos : {}),
-                    imageData: data.image_data
+                    imageData: data.image_data,
+                    ocrMap: data.words_data ? data.words_data.map(w => ({...w, p: w.p || pageNumber || 1})) : []
                 };
             }
 
-            // Marcar página actual como 100% (o el porcentaje correspondiente en el PDF)
-            if (pdfPageCount > 1 && pageNumber) {
-                const completedProgress = (pageNumber / pdfPageCount) * 100;
+            // Marcar página actual con el porcentaje correspondiente
+            const totalToProcess = currentRangeEnd || pdfPageCount || pageNumber || 1;
+            if (totalToProcess > 1 && pageNumber) {
+                const completedProgress = (pageNumber / totalToProcess) * 100;
                 if (ocrProgressBar) ocrProgressBar.style.width = `${completedProgress}%`;
             } else {
                 if (ocrProgressBar) ocrProgressBar.style.width = '100%';
+            }
+
+            // AUTO-VINCULACIÓN: Si es un proceso por rango o secuencial, vinculamos la imagen de la última página procesada
+            if (currentRangeEnd || (pdfPageCount > 1)) {
+                vincularImagenOCRAutomaticamente();
             }
 
             displayOCRResult(extractedData);
@@ -472,28 +535,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function processSequentialOCR() {
+    async function processSequentialOCR(startPage = 1, endPage = null) {
         extractedData = null; // Resetear para empezar de cero
         stopSequentialOCR = false;
+        currentRangeEnd = endPage;
+        
+        // Reiniciar barra de progreso visualmente al inicio del proceso por lotes/rango
+        if (ocrProgressBar) ocrProgressBar.style.width = '0%';
 
-        let p = 1;
+        // Bloquear UI para evitar interrupciones durante el proceso de rango
+
+        let p = startPage;
+        const targetEnd = endPage || pdfPageCount || 100;
+
         while (!stopSequentialOCR) {
             await runOCR(p);
 
-            // ¿Hay más páginas?
-            // Solo paramos automáticamente si estamos SEGUROS de que no hay más
-            if (pdfPageCount > 1 && p >= pdfPageCount) {
-                console.log(`[OCR] Fin del documento alcanzado (${p}/${pdfPageCount})`);
-                break;
-            }
-            
-            // Si el total es desconocido o solo se detectó 1 pero estamos en modo secuencial,
-            // permitimos seguir hasta que el usuario diga basta o lleguemos al límite.
-            if (p >= 100) {
+            // ¿Hay más páginas dentro del rango?
+            if (p >= targetEnd) {
+                console.log(`[OCR] Fin del rango alcanzado (${p}/${targetEnd})`);
                 break;
             }
 
-            // Si llegamos aquí, preguntamos si desea continuar con la siguiente
+            // Siguiente página
+            p++;
+
+            // Si es un proceso automático de rango (endPage definido), seguimos directamente
+            if (endPage) {
+                continue;
+            }
+            
+            // Si llegamos aquí (modo secuencial sin rango fijo), preguntamos si desea continuar
             const result = await Swal.fire({
                 title: `Página ${p} extraída`,
                 text: `¿Deseas continuar con la transcripción de la página ${p + 1}?`,
@@ -514,6 +586,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 stopSequentialOCR = true;
             }
         }
+        
+        // Finalizar proceso: cerramos flags y actualizamos UI final
+        stopSequentialOCR = true;
+        currentRangeEnd = null;
+        displayOCRResult(extractedData);
+        
+        // AUTO-APLICACIÓN: Al terminar el rango completo, volcamos todo el texto al formulario
+        autoAplicarTextoCompleto();
+
         if (extractedData && p > 1) {
             await performGlobalRefinement();
         }
@@ -558,6 +639,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         extractedData.metadata = { ...extractedData.metadata, ...data.metadatos };
                     }
                     displayOCRResult(extractedData);
+
+                    // RE-APLICAR: Tras el refinamiento por IA, actualizamos el formulario con el texto perfeccionado
+                    autoAplicarTextoCompleto();
                     
                     Swal.fire({
                         icon: 'success',
@@ -615,7 +699,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         background: '#1a1d21',
                         color: '#fff'
                     });
-                    btnVincularImagenOCR.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada correctamente';
+                    btnVincularImagenOCR.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada';
                     btnVincularImagenOCR.classList.remove('btn-outline-info');
                     btnVincularImagenOCR.classList.add('btn-info');
                     btnVincularImagenOCR.disabled = true;
@@ -632,6 +716,114 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // --- NUEVO: Preview Espacial (Indizado) ---
+    // Usamos delegación de eventos para asegurar que funcione incluso si el DOM se refresca
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('#btn-preview-spatial');
+        if (btn) {
+            console.log('[OCR Preview] Click detectado en botón de indexación');
+            const hasMap = extractedData && extractedData.ocrMap && extractedData.ocrMap.length > 0;
+            
+            if (extractedData && extractedData.imageData && hasMap) {
+                console.log('[OCR Preview] Lanzando modal de preview espacial con', extractedData.ocrMap.length, 'cajas');
+                showSpatialPreview(extractedData.imageData, extractedData.ocrMap);
+            } else {
+                console.warn('[OCR Preview] No hay datos suficientes para el preview:', {
+                    hasData: !!extractedData,
+                    hasImage: extractedData ? !!extractedData.imageData : false,
+                    hasMap: hasMap
+                });
+                
+                let warningText = 'El proceso de OCR no generó un mapa de coordenadas para este documento.';
+                if (extractedData && (!extractedData.ocrMap || extractedData.ocrMap.length === 0)) {
+                    warningText = 'Este motor de OCR (o el documento actual) no ha proporcionado coordenadas espaciales para el indizado.';
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin datos de indexación',
+                    text: warningText,
+                    footer: '<small class="text-muted">Prueba a procesar con "Tesseract (local)" o "Híbrido" para obtener coordenadas.</small>',
+                    background: '#1a1d21',
+                    color: '#fff'
+                });
+            }
+        }
+    });
+
+    /**
+     * Muestra un modal con el canvas renderizando los bounding boxes
+     */
+    function showSpatialPreview(base64Image, ocrMap) {
+        Swal.fire({
+            title: '<i class="fa-solid fa-eye me-2 text-warning"></i>Preview de Indizado Espacial',
+            html: `
+                <div id="spatial-preview-loader" class="p-5 text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-2x text-warning"></i>
+                    <p class="mt-2 text-muted">Renderizando coordenadas sobre la imagen...</p>
+                </div>
+                <div id="spatial-preview-container" class="d-none" style="max-height: 70vh; overflow: auto; background: #000; border: 1px solid #444; border-radius: 4px;">
+                    <canvas id="preview-canvas" style="max-width: 100%; height: auto; cursor: crosshair;"></canvas>
+                </div>
+                <div class="mt-3 text-start small text-muted p-2 bg-dark rounded border border-secondary" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-info-circle me-1 text-info"></i> 
+                    Los recuadros naranja translúcidos representan las <b>${ocrMap.length} zonas</b> detectadas e indizadas. 
+                    En el Modo Lector, el sistema podrá resaltar estas palabras individualmente.
+                </div>
+            `,
+            width: '90%',
+            showCloseButton: true,
+            showConfirmButton: false,
+            background: '#1a1d21',
+            color: '#fff',
+            didOpen: () => {
+                const img = new Image();
+                img.onload = () => {
+                    const previewCanvas = document.getElementById('preview-canvas');
+                    if (!previewCanvas) return;
+                    
+                    const previewCtx = previewCanvas.getContext('2d');
+                    
+                    // Dimensiones reales de la imagen
+                    previewCanvas.width = img.width;
+                    previewCanvas.height = img.height;
+                    
+                    // Dibujar imagen de fondo
+                    previewCtx.drawImage(img, 0, 0);
+                    
+                    // Configurar estilo de los recuadros de indexación
+                    previewCtx.strokeStyle = '#ff9800'; // Naranja puro
+                    previewCtx.fillStyle = 'rgba(255, 152, 0, 0.4)'; // Resaltado visible
+                    previewCtx.lineWidth = Math.max(2, img.width / 1000);
+                    
+                    // Dibujar cada caja del mapa (normalizadas 0-1000)
+                    ocrMap.forEach(item => {
+                        if (item.bbox && Array.isArray(item.bbox) && item.bbox.length === 4) {
+                            const [ymin, xmin, ymax, xmax] = item.bbox;
+                            
+                            // Convertir coordenadas normalizadas (0-1000) a píxeles del canvas
+                            const x = (xmin / 1000) * img.width;
+                            const y = (ymin / 1000) * img.height;
+                            const w = ((xmax - xmin) / 1000) * img.width;
+                            const h = ((ymax - ymin) / 1000) * img.height;
+                            
+                            // Dibujar si tiene dimensiones válidas
+                            if (w > 0 && h > 0) {
+                                previewCtx.fillRect(x, y, w, h);
+                                previewCtx.strokeRect(x, y, w, h);
+                            }
+                        }
+                    });
+                    
+                    // Mostrar contenedor y ocultar loader
+                    document.getElementById('spatial-preview-loader').classList.add('d-none');
+                    document.getElementById('spatial-preview-container').classList.remove('d-none');
+                };
+                img.src = base64Image.startsWith('data:') ? base64Image : `data:image/jpeg;base64,${base64Image}`;
+            }
+        });
+    }
+
     // ============================================================
     // MOSTRAR RESULTADO
     // ============================================================
@@ -644,8 +836,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.warn('[OCR] ⚠️ ADVERTENCIA: No se extrajo texto del documento');
         }
 
-        // Ocultar progreso
-        ocrProgressContainer.classList.add('d-none');
+        // NO ocultar progreso si estamos en un proceso secuencial/rango inacabado
+        if (!stopSequentialOCR && ocrProgressContainer && ocrResultContainer) {
+             // Si el proceso sigue, no ocultamos el progreso para que el usuario sepa que continúa
+             ocrProgressContainer.classList.remove('d-none');
+        } else {
+             ocrProgressContainer.classList.add('d-none');
+        }
 
         // Construir preview de metadatos (solo para mostrar)
         let metadataHTML = '';
@@ -658,6 +855,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             'fecha_original': 'Fecha',
             'anio': 'Año',
             'ciudad': 'Ciudad',
+            'numero': 'Número',
+            'volumen': 'Volumen',
+            'edicion': 'Edición',
             'pagina_inicio': 'Página Inicio',
             'pagina_fin': 'Página Fin'
         };
@@ -757,6 +957,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Scroll suave al resultado
         ocrResultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // NOTIFICACIÓN DE ÉXITO PREMIUM
+        const hasMap = (result.ocrMap && result.ocrMap.length > 0);
+        const mapIcon = hasMap ? 'fa-location-dot' : 'fa-font';
+        const mapText = hasMap ? 'con Indizado Espacial' : 'completado';
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: `<span style="color: #ff9800; font-family: 'Outfit', sans-serif;">OCR ${mapText}</span>`,
+                html: `
+                    <div class="text-start small">
+                        <p class="mb-2"><i class="fa-solid ${mapIcon} me-2 text-accent"></i>Se han extraído <b>${result.text.split(/\s+/).length}</b> palabras correctamente.</p>
+                        <div class="p-2 bg-dark rounded border border-warning" style="background: rgba(255,152,0,0.1) !important;">
+                            <i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i> 
+                            <b>Recordatorio:</b> Pulsa <u>Vincular imagen procesada</u> para activar el resaltado en el Lector.
+                        </div>
+                    </div>
+                `,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 6000,
+                timerProgressBar: true,
+                background: '#1a1d21',
+                color: '#fff',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+        }
     }
 
     // ============================================================
@@ -849,7 +1081,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })
             });
 
-            const data = await response.json();
+            // RE-VERIFICACIÓN TRAS AWAIT: El usuario pudo haber cancelado durante la subida
+            if (!extractedData) {
+                console.warn('[IA] Operación abortada: Los datos de OCR ya no existen.');
+                return;
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('[IA] Error al parsear JSON:', jsonError);
+                throw new Error('El servidor devolvió una respuesta inválida (posible error 500). Por favor, intenta de nuevo o con un fragmento más pequeño.');
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || data.mensaje || 'Error al procesar con IA');
@@ -861,18 +1105,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             console.log('[IA] ✓ Metadatos corregidos:', data.metadatos);
 
-            // Actualizar metadatos con los corregidos por IA
-            const textoOriginal = extractedData.text; // Guardar el texto antes de actualizar
+            // RE-VERIFICACIÓN TRAS LOGS/PROCESAMIENTO: Seguridad extra
+            if (!extractedData) return;
+
+            // Actualizar metadatos con los corregidos por IA (Fusión total)
+            const correctedMetadata = data.metadatos || {};
+            const textoOriginal = extractedData.text; 
 
             extractedData.metadata = {
-                titulo: data.metadatos.titulo || extractedData.metadata.titulo,
-                autor: data.metadatos.autor || extractedData.metadata.autor,
-                fecha_original: data.metadatos.fecha_original || extractedData.metadata.fecha_original,
-                anio: data.metadatos.anio || extractedData.metadata.anio,
-                publicacion: data.metadatos.publicacion || extractedData.metadata.publicacion,
-                ciudad: data.metadatos.ciudad || extractedData.metadata.ciudad,
-                pagina_inicio: data.metadatos.pagina_inicio || extractedData.metadata.pagina_inicio,
-                pagina_fin: data.metadatos.pagina_fin || extractedData.metadata.pagina_fin
+                ...extractedData.metadata,
+                ...correctedMetadata
             };
 
             // Actualizar confianza
@@ -953,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (btnMejorarIA) {
                 btnMejorarIA.disabled = false;
                 btnMejorarIA.innerHTML = `
-                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA Seleccionada
+                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
                 `;
             }
         }
@@ -983,9 +1225,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const metadata = extractedData.metadata;
 
-            // Mapeo de campos OCR → formulario (SOLO los solicitados por el usuario)
+            // --- NUEVO: Aplicar Spatial Index (ocr_map) ---
+            const inputOcrMap = document.getElementById('input_ocr_map');
+            if (inputOcrMap && extractedData.ocrMap) {
+                console.log('[OCR] Aplicando Spatial Index (ocr_map) al formulario...', extractedData.ocrMap.length, 'palabras');
+                inputOcrMap.value = JSON.stringify(extractedData.ocrMap);
+            }
+
+            // Mapeo de campos OCR → formulario (Extracción total de metadatos)
             const fieldMap = {
-                'titulo': 'titulo'
+                'titulo': 'titulo',
+                'publicacion': 'publicacion',
+                'fecha_original': 'fecha_original',
+                'anio': 'anio',
+                'ciudad': 'ciudad',
+                'numero': 'numero',
+                'volumen': 'volumen',
+                'edicion': 'edicion',
+                'pagina_inicio': 'pagina_inicio',
+                'pagina_fin': 'pagina_fin',
+                'lugar_publicacion': 'lugar_publicacion',
+                'editorial': 'editorial'
             };
 
             // Aplicar valores básicos del mapa
@@ -1003,37 +1263,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
 
-            // Lógica especial para AUTOR (separar en Nombre y Apellido si es posible)
+            // Lógica para AUTORES (HesiOX usa filas dinámicas)
             if (metadata.autor) {
                 const autorFull = metadata.autor.trim();
-                let nombre = "";
-                let apellido = "";
+                console.log('[OCR] Detectado autor para vincular:', autorFull);
 
-                // Intento de división simple por el último espacio para nombre/apellido
-                const parts = autorFull.split(' ');
-                if (parts.length > 1) {
-                    apellido = parts.pop();
-                    nombre = parts.join(' ');
+                if (typeof window.addAutorRow === 'function') {
+                    // Dividir nombre y apellido
+                    let nombre = "";
+                    let apellido = "";
+                    const parts = autorFull.split(' ');
+                    if (parts.length > 1) {
+                        apellido = parts.pop();
+                        nombre = parts.join(' ');
+                    } else {
+                        nombre = autorFull;
+                    }
+
+                    // Añadir fila dinámica en el formulario
+                    window.addAutorRow(nombre, apellido, 'firmado', false);
+                    appliedCount++;
+                    showNotification(`✓ Autor añadido: ${nombre} ${apellido}`, 'info');
                 } else {
-                    nombre = autorFull;
-                }
-
-                const inputNombre = document.querySelector('[name="nombre_autor"]');
-                const inputApellido = document.querySelector('[name="apellido_autor"]');
-
-                if (inputNombre && nombre) {
-                    inputNombre.value = nombre;
-                    inputNombre.dispatchEvent(new Event('change', { bubbles: true }));
-                    inputNombre.style.borderColor = '#4a7c2f';
-                    setTimeout(() => { inputNombre.style.borderColor = ''; }, 2000);
-                    appliedCount++;
-                }
-                if (inputApellido && apellido) {
-                    inputApellido.value = apellido;
-                    inputApellido.dispatchEvent(new Event('change', { bubbles: true }));
-                    inputApellido.style.borderColor = '#4a7c2f';
-                    setTimeout(() => { inputApellido.style.borderColor = ''; }, 2000);
-                    appliedCount++;
+                    console.warn('[OCR] No se encontró la función addAutorRow para añadir el autor dinámicamente.');
                 }
             }
 
@@ -1178,12 +1430,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ============================================================
+    // VINCULAR IMAGEN OCR AUTOMÁTICAMENTE
+    // ============================================================
+
+    function vincularImagenOCRAutomaticamente() {
+        if (extractedData && extractedData.imageData) {
+            const hiddenInput = document.getElementById('ocr_image_base64');
+            if (hiddenInput) {
+                hiddenInput.value = extractedData.imageData;
+                
+                // Mostrar preview inmediato en el formulario principal si el uploader está disponible
+                if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
+                    window.imageUploader.addOCRPreview(extractedData.imageData);
+                }
+
+                // Actualizar estado del botón de vinculación si existe
+                const btnVincular = document.getElementById('btn-vincular-imagen-ocr');
+                if (btnVincular) {
+                    btnVincular.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada (Auto)';
+                    btnVincular.classList.remove('btn-outline-info');
+                    btnVincular.classList.add('btn-info');
+                    btnVincular.disabled = true;
+                }
+                
+                console.log('[OCR] Imagen vinculada automáticamente');
+            }
+        }
+    }
+
+    // ============================================================
+    // AUTO-APLICAR TEXTO AL FORMULARIO (MODO RANGO)
+    // ============================================================
+
+    function autoAplicarTextoCompleto() {
+        if (!extractedData || !extractedData.text) return;
+
+        // Función interna para limpiar etiquetas de metadatos del OCR
+        const cleanText = (txt) => {
+            if (!txt) return "";
+            return txt.replace(/\[(PÁGINA|COLUMNA|GRABADO|CABECERA|PAGE|COLUMN|HEADER|FOLL|FOLLE|PIE|PIE DE PÁGINA)[^\]]*\]/gi, "").trim();
+        };
+
+        const textToApply = cleanText(extractedData.text);
+        const destOriginal = document.getElementById('ocr-dest-original');
+        const esIdiomaOriginal = destOriginal && destOriginal.checked;
+
+        let aplicado = false;
+
+        if (esIdiomaOriginal) {
+            if (window.quillEditors && window.quillEditors.texto_original) {
+                window.quillEditors.texto_original.setText(textToApply);
+                aplicado = true;
+            } else {
+                const textareaOriginal = document.querySelector('textarea[name="texto_original"]');
+                if (textareaOriginal) {
+                    textareaOriginal.value = textToApply;
+                    aplicado = true;
+                }
+            }
+        } else {
+            // Pegar en campo "Contenido"
+            if (window.quillEditors && window.quillEditors.contenido) {
+                window.quillEditors.contenido.setText(textToApply);
+                aplicado = true;
+            } else {
+                const textareaContenido = document.querySelector('textarea[name="contenido"]');
+                if (textareaContenido) {
+                    textareaContenido.value = textToApply;
+                    aplicado = true;
+                }
+            }
+        }
+
+        if (aplicado) {
+            console.log('[OCR] Bloque de texto completo auto-aplicado al formulario');
+        }
+    }
+
+    // ============================================================
     // RESETEAR UI
     // ============================================================
 
     function resetOCRUI() {
         currentFile = null;
         extractedData = null;
+        stopSequentialOCR = true;
 
         // Resetear drop zone
         dropZoneOCR.innerHTML = `

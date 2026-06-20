@@ -6,8 +6,8 @@
 {% block top_actions %}
 <div class="d-flex align-items-center gap-3">
     <div class="text-muted small">
-        <i class="fa-solid fa-book-bible me-1 text-accent"></i> <strong>La Biblia de HesiOX</strong> v4.2.0 (Edición
-        Crítica: Deep Learning Semantic Search & AI-Powered Analytics)
+        <i class="fa-solid fa-book-bible me-1 text-accent"></i> <strong>La Biblia de HesiOX</strong> v4.3.0 (Edición
+        Crítica: PDF Multimodal & Advanced OCR Sync Search)
     </div>
     <button class="btn btn-sirio btn-sirio-success px-3" onclick="window.open('/manual/pdf', '_blank')"
         title="Descargar Manual en PDF">
@@ -505,6 +505,8 @@
                     Documental</a>
                 <a href="#text-explorer" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.6
                     Explorador de Textos e Imagen (Lector Pro)</a>
+                <a href="#search-sirio-engine" class="list-group-item list-group-item-action ps-4 small text-muted"><i
+                        class="fa-solid fa-magnifying-glass me-2"></i>Buscador OCR + PDF Sync</a>
                 <a href="#transcription-layers" class="list-group-item list-group-item-action ps-3">4.7 Capas de Transcripción Multidimensional</a>
                 <a href="#prosograf-ia" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.8 Prosopografía Avanzada con IA (PROSOGRAF-IA)</a>
                 <a href="#version-history" class="list-group-item list-group-item-action ps-3">4.9 Control de Versiones e Historial</a>
@@ -641,17 +643,25 @@
             <p class="lead text-muted mb-4">Manual definitivo de operación, teoría y arquitectura técnica para la
                 hemerografía digital avanzada.</p>
             <div class="d-flex gap-3">
-                <span class="badge bg-accent text-white-adapt p-2">v4.2.0 BUILD
-                    2026.04.20</span>
+                <span class="badge bg-accent text-white-adapt p-2">v4.3.0 BUILD
+                    2026.05.11</span>
                 <span class="badge border text-muted p-2">Proyecto hesiOX</span>
             </div>
 
         {% if not pdf_mode %}
             <!-- Novedades Abril 2026 -->
             <div class="alert alert-info border-0 shadow mt-4">
-                <h5 class="fw-bold"><i class="fa-solid fa-sparkles me-2"></i>Actualizaciones Críticas (v4.2.0 - Abril
+                <h5 class="fw-bold"><i class="fa-solid fa-sparkles me-2"></i>Actualizaciones Críticas (v4.3.0 - Mayo
                     2026)</h5>
                 <div class="small">
+                    <p class="mb-2"><strong>Visor de PDF y Búsqueda Sincronizada (v4.3.0):</strong></p>
+                    <ul class="mb-2">
+                        <li><strong>Visor de PDF Nativo:</strong> Integración de un panel de visualización de alta fidelidad para documentos originales.</li>
+                        <li><strong>Buscador Sirio Inteligente:</strong> Nuevo motor de búsqueda integrado en el header que sincroniza el texto extraído (OCR) con la posición exacta en el PDF.</li>
+                        <li><strong>Carga Directa:</strong> Flujo simplificado para subir PDFs directamente desde la interfaz de edición con previsualización inmediata.</li>
+                    </ul>
+                    <hr class="my-3 opacity-25">
+
                     <p class="mb-2"><strong>Lo nuevo en el Laboratorio de IA (Análisis Dramático):</strong></p>
                     <ul class="mb-2">
                         <li><strong>Análisis Táctico Profundo:</strong> La IA ahora deconstruye las intervenciones de cada personaje para identificar sus tácticas psicológicas (Persuadir, Atacar, Seducir, Manipular, etc.), revelando el juego de poder subyacente.</li>
@@ -1549,6 +1559,29 @@
                 metadatos para mayor precisión terminológica.
             </div>
 
+            <h4 class="h6 fw-bold mt-4 text-accent">4.5.1 Ingesta de Documentos PDF y Gestión Directa</h4>
+            <p class="small">
+                HesiOX permite ahora la carga directa de archivos PDF como fuentes primarias. A diferencia de las imágenes tradicionales, los PDFs preservan la paginación y estructura original, permitiendo una navegación fluida a través de documentos extensos.
+            </p>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 bg-light p-3 border-start-accent">
+                        <h6 class="fw-bold"><i class="fa-solid fa-file-arrow-up me-2 text-primary"></i>Carga Inteligente</h6>
+                        <p class="xsmall mb-0">
+                            El sistema valida la integridad del archivo y permite su previsualización inmediata. Se ha implementado un flujo de confirmación para asegurar que el archivo se sube correctamente al servidor antes de finalizar la edición.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 bg-light p-3 border-start-success">
+                        <h6 class="fw-bold"><i class="fa-solid fa-link me-2 text-success"></i>Sincronización Automática</h6>
+                        <p class="xsmall mb-0">
+                            Al subir un PDF en el editor, este se vincula dinámicamente con la noticia, permitiendo que el Lector Pro lo identifique como la fuente de referencia principal de forma automática.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <h3 id="text-explorer" class="h4 mt-5 fw-bold text-accent">4.6 El Nuevo Explorador de Textos (Modo Lector)
             </h3>
             <p>
@@ -1630,6 +1663,25 @@
                         <p class="xsmall mb-0">Inspección de alta precisión sobre el documento original.</p>
                     </div>
                 </div>
+            </div>
+
+            <h3 id="search-sirio-engine" class="h4 mt-5 fw-bold text-accent">4.6.1 Motor de Búsqueda Sincronizada (OCR + PDF Sync)</h3>
+            <p>
+                El nuevo buscador inteligente ubicado en la cabecera del Lector revoluciona la forma de navegar el corpus, permitiendo una validación cruzada instantánea entre el texto digitalizado y la fuente original.
+            </p>
+
+            <div class="glass-panel p-4 border-start-accent mb-4">
+                <h5 class="h6 fw-bold text-uppercase ls-1 mb-3">Virtudes del Sistema de Búsqueda</h5>
+                <ul class="small mb-0">
+                    <li class="mb-2"><strong>Resaltado Multi-Capa:</strong> Al buscar un término, el sistema utiliza <code>mark.js</code> para resaltar todas las coincidencias en el texto extraído (OCR) con un color de contraste optimizado para lectura.</li>
+                    <li class="mb-2"><strong>Sincronización con el Original:</strong> Mediante fragmentos de URL dinámicos, HesiOX instruye al visor de PDF para saltar automáticamente a la página donde se encuentra el término y resaltarlo nativamente en el documento original.</li>
+                    <li class="mb-2"><strong>Navegación Táctica:</strong> El uso de <kbd class="bg-dark">Enter</kbd> y <kbd class="bg-dark">Shift + Enter</kbd> permite saltar secuencialmente entre resultados, manteniendo el foco visual tanto en el texto editado como en el facsímil original.</li>
+                    <li><strong>Contador de Coincidencias:</strong> Un indicador dinámico en tiempo real muestra el número total de resultados y la posición actual, facilitando la auditoría de términos recurrentes.</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warning border-0 shadow-sm small">
+                <i class="fa-solid fa-lightbulb me-2"></i><strong>Pro Tip:</strong> Si la palabra buscada no aparece resaltada en el PDF pero sí en el texto OCR, verifique que el PDF sea una versión con capa de texto o que el visor haya terminado de indexar el documento.
             </div>
 
             <div class="card mt-4 p-3 border-0 bg-light">
@@ -2022,6 +2074,34 @@
                             <li><strong>Carga en el Mapa:</strong> Los servicios activos se inyectan dinámicamente en el
                                 control de capas del mapa principal.</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-3 border-0 bg-light mb-4 shadow-sm border-start border-4" style="border-left-color: #ff5252 !important; page-break-inside: avoid;">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-danger bg-opacity-10 p-2 rounded me-3">
+                        <i class="fa-solid fa-glasses fa-2x text-danger"></i>
+                    </div>
+                    <div>
+                        <h5 class="h6 fw-bold mb-0 text-uppercase">Novedad v5.0: Análisis y Relieve 3D</h5>
+                        <p class="xsmall text-muted mb-0">Herramientas de visualización avanzada para ortofotos y vuelos.</p>
+                    </div>
+                </div>
+                <p class="small mb-2">
+                    HesiOX incorpora en su panel lateral dos bloques de análisis especializado para facilitar la interpretación de los datos espaciales y el relieve:
+                </p>
+                <div class="row g-3 small">
+                    <div class="col-md-7">
+                        <ul class="mb-0">
+                            <li><strong>Análisis Avanzado (GIS):</strong> Enfocado en la distribución estadística (SDE) y flujo del corpus bibliográfico (Trayectorias y Vínculos).</li>
+                            <li><strong>Análisis Estereoscópico:</strong> Motores de visualización tridimensional (Anaglifo, Wiggle e Inclinación) para el estudio de ortofotos y modelos de elevación.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="alert alert-info mb-0 p-2 border-0 shadow-none" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-circle-info me-1"></i> Estos paneles se activan dinámicamente según el tipo de capa (WMS o Vectorial) seleccionada en el mapa.
+                        </div>
                     </div>
                 </div>
             </div>

@@ -257,6 +257,8 @@ class Publicacion(db.Model):
     pseudonimo = db.Column(db.Text)
     # Visibilidad en el listado de noticias
     visible = db.Column(db.Boolean, default=True, nullable=False)
+    # Activada / Desactivada para analíticas
+    activa = db.Column(db.Boolean, default=True, nullable=False, server_default="true")
 
     # Relación para múltiples autores
     autores = db.relationship(
@@ -509,6 +511,7 @@ class Prensa(db.Model):
 
     # --- NER y Datos Enriquecidos (PRO) ---
     entidades_ner = db.Column(db.JSON)         # Almacena entidades (Persona, Lugar, Org) extraídas por SpaCy/IA
+    ocr_map = db.Column(db.JSON)               # Índice de coordenadas por palabra (Spatial Index)
 
     # Campos para investigador y universidad
     nombre_investigador = db.Column(db.Text)
@@ -639,6 +642,7 @@ class ImagenPrensa(db.Model):
         db.Integer, db.ForeignKey("prensa.id", ondelete="CASCADE"), nullable=False
     )
     filename = db.Column(db.Text, nullable=False)
+    ocr_map = db.Column(db.JSON) # Índice de coordenadas por palabra
     fecha_subida = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):

@@ -428,9 +428,6 @@ function isPointInPolygon(point, polygon) {
   return inside;
 }
 
-/**
- * Añade una capa al panel lateral (digitized-layers-container) con UI avanzada
- */
 function addVectorLayerToPanel(layer) {
   const container = document.getElementById('digitized-layers-container');
   if (!container) return;
@@ -452,6 +449,9 @@ function addVectorLayerToPanel(layer) {
   toggleRow.setAttribute('data-id', layer.id);
   toggleRow.setAttribute('data-vector-layer-id', layer.id);
 
+  // Evitar error de estructura circular al usar strings en tooltips o data attributes
+  // Si necesitamos guardar info del layer, no debemos usar JSON.stringify(layer) si tiene leafletLayer
+  
   const numFeatures = layer.num_features || (layer.geojson?.features?.length) || 0;
 
   toggleRow.innerHTML = `
@@ -508,6 +508,16 @@ function addVectorLayerToPanel(layer) {
       </button>
 
       <!-- Botón Zoom -->
+      ${(layer.geojson && (typeof layer.geojson === 'string' ? layer.geojson.includes('elevation_profile') : (layer.geojson.features && layer.geojson.features.length > 0 && layer.geojson.features.some(f => f.properties?.type === 'elevation_profile')))) ? `
+      <!-- Botón Perfil Shortcut -->
+      <button 
+        class="btn-gis-action text-warning" 
+        onclick="window.GISManager.viewElevationProfile('${layer.id}'); event.stopPropagation();" 
+        title="Ver Perfil de Elevación"
+      >
+        <i class="fa-solid fa-chart-area"></i>
+      </button>
+      ` : ''}
       <button 
         class="btn-gis-action text-muted" 
         onclick="window.GISManager.zoomToVectorLayer('${layer.id}')" 
@@ -1660,11 +1670,16 @@ function renderFeatureOnMap(layer, feature) {
       const bodyText = isDark ? '#eee' : '#333';
       
       // Construir lista de atributos excluyendo campos internos
-      const exclude = ['name', 'nombre', 'description', 'desc', 'length', 'area', 'distancia'];
+      const exclude = ['name', 'nombre', 'description', 'desc', 'length', 'area', 'distancia', 'data', 'stats', 'type', 'subtype'];
       const attributes = Object.entries(feature.properties)
         .filter(([key]) => !exclude.includes(key.toLowerCase()))
-        .map(([key, val]) => `<div><strong style="color:${headerColor}; opacity:0.8;">${key}:</strong> ${val}</div>`)
+        .map(([key, val]) => {
+           const displayVal = (typeof val === 'object') ? '[Data]' : val;
+           return `<div><strong style="color:${headerColor}; opacity:0.8;">${key}:</strong> ${displayVal}</div>`;
+        })
         .join('');
+
+      const isElevationProfile = feature.properties.type === 'elevation_profile';
 
       let popupHTML = `
         <div class="sirio-gis-popup" style="margin:-1px; border-radius:4px; overflow:hidden; font-family:var(--ds-font-mono,'Inter',sans-serif); border: 1px solid ${isDark ? 'rgba(255,152,0,0.5)' : headerColor}; box-shadow: ${isDark ? '0 0 20px rgba(0,0,0,0.5)' : 'none'};">
@@ -1675,6 +1690,15 @@ function renderFeatureOnMap(layer, feature) {
           <div style="padding:10px; background:${bodyBg}; color:${bodyText}; font-size:0.7rem; line-height:1.4;">
             ${feature.properties.description || feature.properties.desc ? `<div class="mb-2" style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">${feature.properties.description || feature.properties.desc}</div>` : ''}
             
+            ${isElevationProfile ? `
+              <div class="mb-2 text-center">
+                <button class="btn btn-sm btn-outline-warning w-100 py-1" style="font-size:0.65rem; font-weight:bold; border-color:rgba(255,152,0,0.5);" 
+                        onclick="if(window.GISManager) window.GISManager.viewElevationProfile('${layer.id}')">
+                    <i class="fa-solid fa-chart-line me-1"></i> VER ANÁLISIS VISUAL
+                </button>
+              </div>
+            ` : ''}
+
             ${attributes ? `<div class="mb-2">${attributes}</div>` : ''}
 
             ${geom.type === 'Point' ? `
@@ -1998,7 +2022,7 @@ function openAttributeTable(layerId) {
               <th style="width:180px;">Coordenadas (Lat / Lon)</th>
               <th style="width:120px;">Nombre</th>
               <th>Descripción</th>
-              ${Object.keys(features[0].properties || {}).filter(k => k !== 'name' && k !== 'description' && k !== 'length' && k !== 'area').map(k => `
+              ${Object.keys(features[0].properties || {}).filter(k => k !== 'name' && k !== 'description' && k !== 'length' && k !== 'area' && k !== 'data' && k !== 'stats' && k !== 'type' && k !== 'subtype').map(k => `
                 <th style="min-width:100px;">
                   <div class="d-flex align-items-center justify-content-between">
                     <span>${k}</span>
@@ -2023,7 +2047,7 @@ function openAttributeTable(layerId) {
     const typeLabel = f.geometry.type === 'LineString' ? `Polilínea (${f.geometry.coordinates.length} vérts.)` :
       f.geometry.type === 'Polygon' ? `Polígono (${f.geometry.coordinates[0].length} vérts.)` : 'Punto';
 
-    const customProps = Object.keys(f.properties || {}).filter(k => k !== 'name' && k !== 'description' && k !== 'length' && k !== 'area');
+    const customProps = Object.keys(f.properties || {}).filter(k => k !== 'name' && k !== 'description' && k !== 'length' && k !== 'area' && k !== 'data' && k !== 'stats' && k !== 'type' && k !== 'subtype');
     const isExpanded = _expandedFeatures.has(`${layerId}-${idx}`);
     const canExpand = !isPoint;
 
@@ -2186,6 +2210,13 @@ function openAttributeTable(layerId) {
                     </button>
 
                     <!-- Zoom -->
+                      ${(f.properties && f.properties.type === 'elevation_profile') ? `
+                      <button class="btn btn-link btn-sm p-0 m-0 text-warning me-2" 
+                              style="text-decoration:none; width:22px; height:22px; border:none; background:none; vertical-align:middle;" 
+                              onclick="window.GISManager.viewElevationProfile('${layerId}', ${idx}); event.stopPropagation();" title="Ver Perfil de Elevación">
+                        <i class="fa-solid fa-chart-area"></i>
+                      </button>
+                      ` : ''}
                     <button class="btn btn-link btn-sm p-0 m-0 text-info me-2" 
                             style="text-decoration:none; width:22px; height:22px; border:none; background:none; vertical-align:middle; color: #3498db !important;" 
                             onclick="window.GISManager.zoomToFeature('${layerId}', ${idx}); event.stopPropagation();" title="Zoom">
@@ -4892,3 +4923,62 @@ async function mergeSelectedFeatures() {
 }
 
 
+
+/**
+ * Abre el panel de análisis de elevación para una capa GIS
+ */
+window.GISManager.viewElevationProfile = function(layerId, featureIdx = 0) {
+    const layer = vectorLayers.find(l => l.id == layerId);
+    if (!layer || !layer.geojson) {
+        if (typeof showMapMessage === 'function') showMapMessage("Datos de capa no disponibles", "error");
+        return;
+    }
+    
+    const geo = typeof layer.geojson === 'string' ? JSON.parse(layer.geojson) : layer.geojson;
+    const feature = geo.features[featureIdx];
+    
+    if (!feature || feature.properties.type !== 'elevation_profile') {
+        if (typeof showMapMessage === 'function') showMapMessage("Esta capa no es un perfil de elevación", "info");
+        return;
+    }
+
+    if (window.renderElevationChart) {
+        // Establecer datos actuales
+        window.currentElevationData = feature.properties.data;
+        if (typeof window.currentProfileLoadedID !== 'undefined') {
+            window.currentProfileLoadedID = layerId; 
+        }
+        
+        // Asegurar que el panel existe y es visible
+        let panel = document.getElementById('elevation-profile-panel');
+        if (!panel && window.createElevationProfilePanel) {
+            panel = window.createElevationProfilePanel();
+        }
+        
+        if (panel) {
+            panel.classList.remove('d-none');
+            panel.style.display = 'flex';
+            
+            // Reposicionar si es necesario
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            panel.style.left = Math.round((w - 1100) / 2) + 'px';
+            panel.style.top = Math.round((h - 550) / 2) + 'px';
+        }
+        
+        const titleEl = document.getElementById('elevation-panel-title');
+        if (titleEl) titleEl.innerText = "ANÁLISIS: " + (feature.properties.name || layer.nombre);
+        
+        window.renderElevationChart(window.currentElevationData);
+        if (window.updateElevationAnalysis) window.updateElevationAnalysis();
+        
+        // Vincular a la capa activa en el mapa para el resaltado
+        if (layer && layer.leafletLayer) {
+            window.elevationLine = layer.leafletLayer;
+        }
+        
+        if (typeof showMapMessage === 'function') showMapMessage("Abriendo perfil de elevación...", "success");
+    } else {
+        if (typeof showMapMessage === 'function') showMapMessage("Módulo de elevación no cargado", "error");
+    }
+};

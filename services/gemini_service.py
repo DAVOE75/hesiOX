@@ -31,12 +31,12 @@ class GeminiService:
         
         # Mapeo de alias comunes a modelos reales de Google (Verificado via ListModels)
         model_map = {
-            'flash': 'gemini-2.0-flash', 
-            'pro': 'gemini-1.5-pro-002'
+            'flash': 'gemini-1.5-flash', 
+            'pro': 'gemini-1.5-pro'
         }
         
         # Si se pasa un alias, lo mapeamos. Si no, usamos el modelo tal cual o el default.
-        self.model = model_map.get(model, model) or "gemini-2.0-flash"
+        self.model = model_map.get(model, model) or "gemini-1.5-flash"
         self.url = f'https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent'
 
     def is_configured(self):
@@ -414,5 +414,19 @@ def summarize_text_gemini(text, context=None):
     """
     
     raw_text = service._call_gemini(prompt, temperature=0.3)
-    return extract_json_from_text(raw_text)
+    resultado = extract_json_from_text(raw_text)
+    
+    if not resultado:
+        return {
+            "titulo_conceptual": "Análisis del Documento",
+            "resumen": "El sistema no pudo procesar el resumen en este momento. Por favor, intente de nuevo.",
+            "puntos_clave": ["Información no disponible"]
+        }
+    
+    # Asegurar campos mínimos
+    if 'titulo_conceptual' not in resultado: resultado['titulo_conceptual'] = "Análisis del Documento"
+    if 'resumen' not in resultado: resultado['resumen'] = "Resumen no generado."
+    if 'puntos_clave' not in resultado: resultado['puntos_clave'] = []
+    
+    return resultado
     

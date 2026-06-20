@@ -699,3 +699,234 @@ def generar_pdf_noticia_simple(noticia_data):
     """Wrapper para generar PDF de noticia"""
     generador = NoticiaPDFGenerator(noticia_data)
     return generador.generar_pdf()
+
+class DossierDramaticoPDFGenerator:
+    """Generador de Dossier para Laboratorio de Dramaturgia"""
+    
+    def __init__(self, data, proyecto_nombre="PROYECTO SIRIO"):
+        self.data = data
+        self.proyecto_nombre = proyecto_nombre
+        self.story = []
+        self.styles = getSampleStyleSheet()
+        self._setup_styles()
+    
+    def _escape(self, text):
+        """Escapa caracteres problemáticos para el XML de ReportLab"""
+        if not text:
+            return ""
+        return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+    def _setup_styles(self):
+        # Título del Dossier
+        if 'DossierTitle' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='DossierTitle',
+                parent=self.styles['Heading1'],
+                fontSize=22,
+                textColor=colors.HexColor('#294a60'),
+                alignment=TA_CENTER,
+                spaceAfter=20,
+                fontName='Helvetica-Bold'
+            ))
+        
+        # Subtítulo de Sección
+        if 'SectionHeader' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='SectionHeader',
+                parent=self.styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#294a60'),
+                spaceBefore=15,
+                spaceAfter=10,
+                fontName='Helvetica-Bold'
+            ))
+        
+        # Texto Normal Académico
+        if 'DossierBody' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='DossierBody',
+                parent=self.styles['Normal'],
+                fontSize=10,
+                alignment=TA_JUSTIFY,
+                leading=14,
+                fontName='Times-Roman'
+            ))
+
+        # Estilo para autores (reutilizar si existe, si no crear)
+        if 'Autores' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='Autores',
+                parent=self.styles['Normal'],
+                fontSize=14,
+                textColor=colors.HexColor('#2a2a2a'),
+                spaceAfter=6,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            ))
+
+        # Estilo para afiliaciones
+        if 'Afiliacion' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='Afiliacion',
+                parent=self.styles['Normal'],
+                fontSize=11,
+                textColor=colors.HexColor('#666666'),
+                spaceAfter=4,
+                alignment=TA_CENTER,
+                fontName='Helvetica-Oblique'
+            ))
+
+        # Estilo para tabla de datos
+        self.table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#294a60')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dee2e6')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ])
+
+    def _add_header(self):
+        self.story.append(Spacer(1, 1*cm))
+        self.story.append(Paragraph("DOSSIER DE ANÁLISIS DRAMATÚRGICO", self.styles['DossierTitle']))
+        self.story.append(Paragraph(f"PROYECTO: {self._escape(self.proyecto_nombre.upper())}", self.styles['Autores']))
+        self.story.append(Paragraph(f"Generado por: hesiOX Laboratorio Dramático", self.styles['Afiliacion']))
+        self.story.append(Paragraph(f"Fecha de Informe: {datetime.now().strftime('%d/%m/%Y %H:%M')}", self.styles['Afiliacion']))
+        self.story.append(Spacer(1, 1.5*cm))
+        
+        if self.data.get('filtro_nombre'):
+             self.story.append(Paragraph(f"<b>OBJETIVO DEL ANÁLISIS:</b> {self._escape(self.data['filtro_nombre'])}", self.styles['SectionHeader']))
+
+    def _add_characters_stats(self):
+        self.story.append(Paragraph("1. REPARTO Y MÉTRICAS DISCURSIVAS", self.styles['SectionHeader']))
+        
+        reparto = self.data.get('reparto_detalle', [])
+        if not reparto:
+            self.story.append(Paragraph("No se detectaron personajes en el análisis actual.", self.styles['DossierBody']))
+            return
+
+        self.story.append(Paragraph("A continuación se detallan los personajes con mayor volumen de participación en el corpus analizado:", self.styles['DossierBody']))
+        self.story.append(Spacer(1, 0.5*cm))
+
+        table_data = [['Personaje', 'Intervenciones', 'Palabras', 'P/I']]
+        # Ordenar por palabras descendente con salvaguarda para None
+        reparto_sorted = sorted(reparto, key=lambda x: (x.get('palabras') or 0), reverse=True)
+        
+        for p in reparto_sorted[:20]: # Top 20 characters
+            palabras = p.get('palabras') or 0
+            intervenciones = p.get('intervenciones') or 0
+            pi = round(palabras / intervenciones, 1) if intervenciones > 0 else 0
+            table_data.append([
+                self._escape(p.get('nombre', 'Desconocido')),
+                str(intervenciones),
+                str(palabras),
+                str(pi)
+            ])
+            
+        t = Table(table_data, colWidths=[6.5*cm, 3.5*cm, 3.5*cm, 2.5*cm])
+        t.setStyle(self.table_style)
+        self.story.append(t)
+        self.story.append(Spacer(1, 1*cm))
+
+    def _add_tactical_profiles(self):
+        self.story.append(Paragraph("2. PERFILES TÁCTICOS DOMINANTES", self.styles['SectionHeader']))
+        self.story.append(Paragraph("Análisis de las intenciones comunicativas predominantes en el reparto principal (Atacar, Persuadir, Seducir, Manipular, Informar).", self.styles['DossierBody']))
+        self.story.append(Spacer(1, 0.5*cm))
+
+        reparto = self.data.get('reparto_detalle', [])
+        # Ordenar con salvaguarda para None
+        reparto_sorted = sorted(reparto, key=lambda x: (x.get('palabras') or 0), reverse=True)
+        
+        table_data = [['Personaje', 'Táctica Principal', 'Prevalencia (%)']]
+        
+        for p in reparto_sorted[:10]: # Top 10 for tactics
+            perfil = p.get('perfil_tactico') or {}
+            if not perfil:
+                continue
+                
+            # Encontrar la táctica máxima
+            max_tac = max(perfil.items(), key=lambda x: x[1])
+            total_tac = sum(perfil.values())
+            pct = round((max_tac[1] / total_tac) * 100, 1) if total_tac > 0 else 0
+            
+            table_data.append([
+                self._escape(p.get('nombre', 'Desconocido')),
+                self._escape(max_tac[0].upper()),
+                f"{pct}%"
+            ])
+        
+        if len(table_data) > 1:
+            t = Table(table_data, colWidths=[6*cm, 5*cm, 5*cm])
+            t.setStyle(self.table_style)
+            self.story.append(t)
+        else:
+            self.story.append(Paragraph("Datos tácticos insuficientes para el reparto seleccionado.", self.styles['DossierBody']))
+            
+        self.story.append(Spacer(1, 1*cm))
+
+    def _add_sentiment_summary(self):
+        self.story.append(Paragraph("3. SÍNTESIS DE TENSIÓN DRAMÁTICA", self.styles['SectionHeader']))
+        self.story.append(Paragraph("Evolución de la polaridad y magnitud emocional en los segmentos clave de la obra.", self.styles['DossierBody']))
+        self.story.append(Spacer(1, 0.5*cm))
+        
+        sentimientos = self.data.get('sentimiento_temporal', [])
+        if sentimientos:
+            table_data = [['Bloque / Escena', 'Sentimiento', 'Magnitud Tensión']]
+            # Tomar una muestra representativa o los primeros 15
+            for s in sentimientos[:15]:
+                sentiment = s.get('sentiment') or 0
+                magnitude = s.get('magnitude') or 0
+                
+                table_data.append([
+                    self._escape(s.get('label', 'Sin etiqueta')),
+                    str(round(sentiment, 3)),
+                    str(round(magnitude, 3))
+                ])
+            
+            t = Table(table_data, colWidths=[8*cm, 4*cm, 4*cm])
+            t.setStyle(self.table_style)
+            self.story.append(t)
+        else:
+            self.story.append(Paragraph("No se disponen de métricas de sentimiento temporal para este conjunto.", self.styles['DossierBody']))
+
+    def generar_pdf(self):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=A4,
+            leftMargin=2*cm,
+            rightMargin=2*cm,
+            topMargin=2.5*cm,
+            bottomMargin=2.5*cm,
+            title="Dossier Dramático - hesiOX"
+        )
+        
+        self._add_header()
+        self._add_characters_stats()
+        self._add_tactical_profiles()
+        self._add_sentiment_summary()
+        
+        # Conclusión IA si existe
+        if self.data.get('analisis_ia'):
+            self.story.append(PageBreak())
+            self.story.append(Paragraph("4. INTERPRETACIÓN ESTRATÉGICA (IA)", self.styles['SectionHeader']))
+            # Limpiar markdown básico y caracteres problemáticos para ReportLab
+            ia_text = self.data['analisis_ia'].replace('###', '').replace('##', '').replace('**', '')
+            ia_text = self._escape(ia_text)
+            self.story.append(Paragraph(ia_text, self.styles['DossierBody']))
+            
+        # Nota al pie
+        self.story.append(Spacer(1, 2*cm))
+        self.story.append(Paragraph("<i>Este informe ha sido generado automáticamente por el Laboratorio de Dramaturgia Computacional de hesiOX. Los datos reflejan un análisis léxico-semántico y táctico del corpus seleccionado.</i>", self.styles['Afiliacion']))
+        
+        doc.build(self.story)
+        buffer.seek(0)
+        return buffer
+
+def generar_dossier_teatral(data, proyecto_nombre):
+    """Wrapper para generar dossier teatral"""
+    generador = DossierDramaticoPDFGenerator(data, proyecto_nombre)
+    return generador.generar_pdf()

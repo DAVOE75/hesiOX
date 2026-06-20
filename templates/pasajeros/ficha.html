@@ -966,7 +966,7 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <div id="menciones-venculadas">
+                    <div id="menciones-vinculadas">
                         {% if pasajero.menciones_prensa %}
                         <div class="row g-3">
                             {% for art in pasajero.menciones_prensa %}
@@ -1731,6 +1731,7 @@
             const r = await fetch(`/pasajeros/api/menciones/${FICHA_PASAJERO_ID}`);
             const data = await r.json();
             if (data.success) {
+                // Actualizar lista en el modal
                 if (data.menciones.length > 0) {
                     let html = '';
                     data.menciones.forEach(m => {
@@ -1750,10 +1751,47 @@
                 } else {
                     list.innerHTML = '<p class="text-muted small italic">No hay noticias vinculadas.</p>';
                 }
+                
+                // ACTUALIZACIÓN DINÁMICA DE LA FICHA (SOLUCIÓN AL BUG)
+                renderMencionesEnFicha(data.menciones);
             }
         } catch (e) {
             list.innerHTML = '<p class="text-danger small">Error al cargar.</p>';
         }
+    }
+
+    function renderMencionesEnFicha(menciones) {
+        const container = document.getElementById('menciones-vinculadas');
+        if (!container) return;
+        
+        if (menciones.length === 0) {
+            container.innerHTML = '<p class="text-muted small italic mb-0" id="no-menciones-msg">No se han vinculado noticias manualmente.</p>';
+            return;
+        }
+        
+        let html = '<div class="row g-3">';
+        menciones.forEach(art => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 h-100 clickable-hover" 
+                         onclick="verMencionEnFicha(${art.id})" style="cursor: pointer;">
+                        <h6 class="text-accent fw-bold mb-1" style="font-size: 0.9rem;">
+                            ${art.titulo}
+                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                <i class="fa-solid fa-newspaper me-1 opacity-50"></i> ${art.publicacion}
+                            </small>
+                            <small class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">
+                                ${art.fecha || 's/f'}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
     }
 
     async function verTextoMencion(prensaId) {
@@ -1952,7 +1990,22 @@
             });
             const data = await r.json();
             if (data.success) {
-                location.reload();
+                if (modalGestionPrensa && modalGestionPrensa._isShown) {
+                    // Reset campos y actualizar listas
+                    document.getElementById('manual-titulo').value = '';
+                    document.getElementById('manual-medio').value = '';
+                    document.getElementById('manual-fecha').value = '';
+                    document.getElementById('manual-notas').value = '';
+                    
+                    // Volver a la pestaña de vinculadas para que el usuario vea el cambio
+                    const firstTabEl = document.querySelector('#pills-search-tab');
+                    const firstTab = new bootstrap.Tab(firstTabEl);
+                    firstTab.show();
+                    
+                    cargarMencionesVinculadas();
+                } else {
+                    location.reload();
+                }
             } else {
                 alert(data.message);
             }

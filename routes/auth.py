@@ -246,6 +246,21 @@ def get_wms_favoritos():
     return jsonify(favs)
 
 
+@auth_bp.route("/api/user/wms-favoritos/reorder", methods=["POST"])
+@login_required
+def reorder_wms_favoritos():
+    """Saves a new ordered list of WMS favorites."""
+    import json
+    from flask import jsonify, request as req
+    data = req.get_json(force=True) or {}
+    new_list = data.get('favorites')
+    if not isinstance(new_list, list):
+        return jsonify({'success': False, 'error': 'Lista inválida'}), 400
+    
+    current_user.wms_favoritos = json.dumps(new_list, ensure_ascii=False)
+    db.session.commit()
+    return jsonify({'success': True})
+
 @auth_bp.route("/api/user/wms-favoritos", methods=["POST"])
 @login_required
 def add_wms_favorito():
@@ -270,9 +285,9 @@ def add_wms_favorito():
     except Exception:
         favs = []
 
-    # Avoid duplicating same URL+type in favorites
-    if any(f.get('url') == url and f.get('type') == svc_type for f in favs):
-        return jsonify({'success': False, 'error': 'Servicio ya en favoritos'}), 409
+    # Avoid duplicating same combination of URL+type+layers in favorites
+    if any(f.get('url') == url and f.get('type') == svc_type and f.get('layers') == capas for f in favs):
+        return jsonify({'success': False, 'error': 'Esa combinación de capas ya está en favoritos'}), 409
 
     # ── Register in global catalog if new ────────────────────────────────────
     # We only check URL and Type to avoid duplicating the service if the user chooses different layers

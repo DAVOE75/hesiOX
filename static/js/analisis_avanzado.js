@@ -59,7 +59,14 @@ const UI_COLORS = {
   grid: (opacity = 0.2) => UI_COLORS.isLight() ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,0.1)`,
   text: () => UI_COLORS.isLight() ? '#294a60' : '#ccc',
   legend: () => UI_COLORS.isLight() ? '#294a60' : '#fff', // Blue for light mode
-  accent: () => UI_COLORS.isLight() ? '#294a60' : '#ff9800'
+  accent: () => UI_COLORS.isLight() ? '#294a60' : '#e6a23c',
+  tactics: {
+    "Atacar": "#c44545",
+    "Persuadir": "#d98d45",
+    "Seducir": "#45a37a",
+    "Manipular": "#457ba3",
+    "Informar": "#7b8c94"
+  }
 };
 
 /**
@@ -166,8 +173,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const btnRecargarCache = document.getElementById('btn-recargar-cache');
   if (btnRecargarCache) {
     btnRecargarCache.addEventListener('click', function () {
+      console.log('[CACHE CLEAR] Iniciando limpieza de caché...');
       btnRecargarCache.disabled = true;
       btnRecargarCache.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span class="btn-text">Recargando...</span>';
+      
       fetch('/api/analisis/recargar_cache', {
         method: 'POST',
         headers: {
@@ -176,14 +185,30 @@ document.addEventListener('DOMContentLoaded', function () {
       })
         .then(res => res.json())
         .then(data => {
+          console.log('[CACHE CLEAR] Respuesta del servidor:', data);
+          
+          // Limpiar caché local del frontend
+          console.log('[CACHE CLEAR] Limpiando caché local (datosActuales)');
+          datosActuales = {};
+          
+          // Mostrar confirmación al usuario
           btnRecargarCache.disabled = false;
-          btnRecargarCache.innerHTML = '<i class="fa-solid fa-rotate-right"></i> <span class="btn-text">Recargar Caché</span>';
-          cargarDashboard();
+          btnRecargarCache.innerHTML = '<i class="fa-solid fa-check"></i> <span class="btn-text">✓ Caché Limpiada</span>';
+          
+          // Volver al estado normal después de 2 segundos
+          setTimeout(() => {
+            btnRecargarCache.innerHTML = '<i class="fa-solid fa-rotate-right"></i> <span class="btn-text">Recargar Caché</span>';
+          }, 2000);
+          
+          // Avisar al usuario
+          alert('✓ Caché limpiada correctamente.\n\nTodos los análisis se recalcularán desde cero.');
+          console.log('[CACHE CLEAR] Limpieza completada');
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('[CACHE ERROR]', err);
           btnRecargarCache.disabled = false;
           btnRecargarCache.innerHTML = '<i class="fa-solid fa-rotate-right"></i> <span class="btn-text">Recargar Caché</span>';
-          alert('Error al recargar la caché');
+          alert('❌ Error al recargar la caché: ' + err.message);
         });
     });
   }
@@ -566,7 +591,7 @@ function cargarAnalisis(tipo) {
       'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
     },
     body: JSON.stringify({ 
-      ...(tipo === 'dramatico' ? { ...filtros, publicacion_id: null } : filtros),
+      ...filtros,
       n: 2, 
       top_k: 20, 
       n_topics: 5, 
@@ -3153,19 +3178,49 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     const ignoredChars = JSON.parse(localStorage.getItem(ignoreKey) || '[]');
     const deleteKey = `deleted_${filtros.proyecto_id || 'default'}`;
     const deletedChars = JSON.parse(localStorage.getItem(deleteKey) || '[]');
+    // Cargar aliases manuales (gestor de identidades)
+    const aliasKey = `aliases_${filtros.proyecto_id || 'default'}`;
+    const manual_aliases = JSON.parse(localStorage.getItem(aliasKey) || '{}');
+    const normalizeName = name => {
+      if (!name) return '';
+      return String(name).normalize('NFKC').trim().replace(/^[\s"«»'“”]+|[\s"«»'“”]+$/g, '').replace(/[.,;:()]+$/g, '').toLowerCase();
+    };
+    const aliasMap = {};
+    Object.entries(manual_aliases).forEach(([k, v]) => {
+      aliasMap[normalizeName(k)] = v;
+    });
     
+    // Identify valid characters for the selected obra to avoid leaking characters from other works
+    const isObraFilterActive = filterObra !== 'all' && filterObra !== '' && filterObra !== null && filterObra !== undefined;
+    const validCharsForObra = new Set();
+    (data.sentimiento_temporal || []).forEach(s => {
+        const matchesObra = !isObraFilterActive || String(s.publicacion_id) === String(filterObra);
+        if (matchesObra) {
+            (s.locuciones || []).forEach(l => {
+                const rawName = l.p || '';
+                const mapped = aliasMap[normalizeName(rawName)] || rawName;
+                validCharsForObra.add(normalizeName(mapped));
+            });
+        }
+    });
+
     // 1. Filtrar Índices de Bloques (Segmentación)
     let indicesFiltrados = [];
     const filteredTension = (data.sentimiento_temporal || []).filter((s, idx) => {
         const matchesActo = filterActo === 'all' || String(s.acto) === filterActo;
         const matchesEscena = filterEscena === 'all' || String(s.escena) === filterEscena;
-        const matchesObra = (filterObra === 'all' || filterObra === '') || String(s.publicacion_id) === String(filterObra);
+        const matchesObra = !isObraFilterActive || String(s.publicacion_id) === String(filterObra);
+        
+        console.log(`[DRAMA-FILTER] Segment: Act=${s.acto}, Esc=${s.escena}, PubID=${s.publicacion_id}, filterObra=${filterObra}, matches=${matchesActo && matchesEscena && matchesObra}`);
+        
         if (matchesActo && matchesEscena && matchesObra) {
             indicesFiltrados.push(idx);
             return true;
         }
         return false;
     });
+    
+    const labelsOrdenados = filteredTension.map(s => s.label);
 
     // 2. RE-AGREGACIÓN DINÁMICA (Protagonismo, Tácticas, Red, Heatmap)
     const segmentStats = {};
@@ -3176,21 +3231,24 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
         const presentes = new Set();
         
         (block.locuciones || []).forEach(l => {
-            const charName = l.p;
-            if (ignoredChars.includes(charName) || deletedChars.includes(charName)) return;
-            
-            if (!segmentStats[charName]) {
-                segmentStats[charName] = { palabras: 0, intervenciones: 0, tacticas: {} };
-            }
-            
-            segmentStats[charName].intervenciones++;
-            const words = l.t ? l.t.trim().split(/\s+/).length : 0;
-            segmentStats[charName].palabras += words;
-            
-            const tac = l.tac || 'Informar';
-            segmentStats[charName].tacticas[tac] = (segmentStats[charName].tacticas[tac] || 0) + 1;
-            
-            presentes.add(charName);
+          const rawName = l.p || '';
+          // Aplicar alias manual si existe, y normalizar la clave
+          const mapped = aliasMap[normalizeName(rawName)] || rawName;
+          if (ignoredChars.includes(mapped) || deletedChars.includes(mapped)) return;
+
+          const key = normalizeName(mapped);
+          if (!segmentStats[key]) {
+            segmentStats[key] = { palabras: 0, intervenciones: 0, tacticas: {}, displayName: mapped };
+          }
+
+          segmentStats[key].intervenciones++;
+          const words = l.t ? l.t.trim().split(/\s+/).length : 0;
+          segmentStats[key].palabras += words;
+
+          const tac = l.tac || 'Informar';
+          segmentStats[key].tacticas[tac] = (segmentStats[key].tacticas[tac] || 0) + 1;
+
+          presentes.add(key);
         });
         
         const presentesList = Array.from(presentes);
@@ -3203,19 +3261,49 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     });
 
     // Filtrar y actualizar Reparto: Solo los que intervienen en el segmento
+    // Mostrar personajes con 0 intervenciones según preferencia del usuario
+    const showZeroKey = `drama_show_zero_${filtros.proyecto_id || 'default'}`;
+    let showZero = localStorage.getItem(showZeroKey) === '1';
+
     const filteredReparto = (data.reparto_detalle || [])
-        .filter(p => !ignoredChars.includes(p.nombre) && !deletedChars.includes(p.nombre) && segmentStats[p.nombre])
-        .map(p => {
-            const s = segmentStats[p.nombre];
-            return {
-                ...p,
-                palabras: s.palabras,
-                intervenciones: s.intervenciones,
-                palabras_por_intervencion: s.intervenciones > 0 ? (s.palabras / s.intervenciones).toFixed(1) : 0,
-                perfil_tactico: s.tacticas
-            };
-        })
-        .sort((a, b) => b.palabras - a.palabras);
+      .filter(p => {
+        const norm = normalizeName(p.nombre);
+        return !ignoredChars.includes(p.nombre) && !deletedChars.includes(p.nombre) && (!isObraFilterActive || validCharsForObra.has(norm)) && (showZero || !!segmentStats[norm]);
+      })
+      .map(p => {
+        const norm = normalizeName(p.nombre);
+        const s = segmentStats[norm] || { palabras: 0, intervenciones: 0, tacticas: {}, displayName: null };
+        return {
+          ...p,
+          palabras: s.palabras,
+          intervenciones: s.intervenciones,
+          palabras_por_intervencion: s.intervenciones > 0 ? (s.palabras / s.intervenciones).toFixed(1) : 0,
+          perfil_tactico: s.tacticas,
+          canonical_name: s.displayName || null
+        };
+      })
+      .sort((a, b) => b.palabras - a.palabras);
+
+    // Añadir personajes detectados en locuciones que no estén en reparto_detalle
+    const existingNorms = new Set(filteredReparto.map(p => normalizeName(p.nombre)));
+    Object.keys(segmentStats).forEach(norm => {
+      if (!existingNorms.has(norm)) {
+        const s = segmentStats[norm];
+        const inferredName = s.displayName || (norm ? norm.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : norm);
+        filteredReparto.push({
+          nombre: inferredName,
+          palabras: s.palabras || 0,
+          intervenciones: s.intervenciones || 0,
+          palabras_por_intervencion: s.intervenciones > 0 ? (s.palabras / s.intervenciones).toFixed(1) : 0,
+          perfil_tactico: s.tacticas || {},
+          canonical_name: s.displayName || null,
+          inferred: true
+        });
+      }
+    });
+
+    // Re-ordenar tras añadidos
+    filteredReparto.sort((a, b) => (b.palabras || 0) - (a.palabras || 0));
 
     let totalPalabras = 0;
     filteredReparto.forEach(p => totalPalabras += (p.palabras || 0));
@@ -3230,30 +3318,70 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
     if (wordStatEl) wordStatEl.innerHTML = `${totalPalabras.toLocaleString('es-ES')} <span class="fs-6 opacity-50 fw-normal" style="font-size: 11px;">palabras</span>`;
 
     // Filtrar y actualizar Red
+    const normToOriginal = {};
+    (data.nodos || []).forEach(n => {
+        normToOriginal[normalizeName(n.id)] = n.id;
+    });
+    filteredReparto.forEach(p => {
+        normToOriginal[normalizeName(p.nombre)] = p.nombre;
+    });
+
     const activeCharNames = new Set(filteredReparto.map(p => p.nombre));
+    const activeNorms = new Set(filteredReparto.map(p => normalizeName(p.nombre)));
+
     const filteredNodes = (data.nodos || [])
-        .filter(n => activeCharNames.has(n.id))
-        .map(n => ({
-            ...n,
-            influencia: segmentStats[n.id] ? segmentStats[n.id].intervenciones : 0
-        }));
+        .filter(n => activeNorms.has(normalizeName(n.id)))
+        .map(n => {
+            const normId = normalizeName(n.id);
+            return {
+                ...n,
+                influencia: segmentStats[normId] ? segmentStats[normId].intervenciones : 0
+            };
+        });
 
     const filteredEdges = [];
     segmentCooc.forEach((value, key) => {
         const [p1, p2] = key.split('|');
-        if (activeCharNames.has(p1) && activeCharNames.has(p2)) {
-            filteredEdges.push({ source: p1, target: p2, value: value });
+        if (activeNorms.has(p1) && activeNorms.has(p2)) {
+            const origP1 = normToOriginal[p1] || p1;
+            const origP2 = normToOriginal[p2] || p2;
+            filteredEdges.push({ source: origP1, target: origP2, value: value });
         }
     });
+
 
     const labels = filteredTension.map(s => s.label);
     const dataTensionValues = filteredTension.map(s => s.sentimiento);
 
     const tableContainer = document.getElementById('drama-table-body');
     if (tableContainer) {
-        tableContainer.innerHTML = filteredReparto.map(p => `
+      // Añadir control toggle para mostrar personajes con 0 intervenciones
+      const controlsId = 'drama-controls-toggle';
+      if (!document.getElementById(controlsId)) {
+        const controlsDiv = document.createElement('div');
+        controlsDiv.id = controlsId;
+        controlsDiv.className = 'mb-2 d-flex align-items-center';
+        controlsDiv.innerHTML = `
+          <div class="form-check form-switch ms-1">
+            <input class="form-check-input" type="checkbox" id="drama-show-zero" ${showZero ? 'checked' : ''}>
+            <label class="form-check-label small text-muted ms-2" for="drama-show-zero">Mostrar personajes sin intervenciones</label>
+          </div>
+        `;
+        tableContainer.parentElement.insertBefore(controlsDiv, tableContainer);
+        const cb = document.getElementById('drama-show-zero');
+        cb.addEventListener('change', (e) => {
+          localStorage.setItem(showZeroKey, e.target.checked ? '1' : '0');
+          // Re-render con la misma filtros
+          window.renderDramaticoFull(data, filterActo, filterEscena, filterObra);
+        });
+      }
+
+      tableContainer.innerHTML = filteredReparto.map(p => `
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td class="fw-bold py-3" style="color: var(--ds-accent);">${p.nombre}</td>
+          <td class="fw-bold py-3" style="color: var(--ds-accent);">
+            ${p.nombre}
+            ${p.canonical_name && normalizeName(p.nombre) !== normalizeName(p.canonical_name) ? `<div class="small text-muted mt-1" style="font-size:10px;">Canonical: ${p.canonical_name}</div>` : ''}
+          </td>
                 <td class="text-center font-monospace" style="color: ${textWhite};">${p.intervenciones || 0}</td>
                 <td class="text-center font-monospace" style="color: ${textWhite};">${p.palabras_por_intervencion || 0}</td>
                 <td class="small">
@@ -3481,7 +3609,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 "width": "container", "height": "container",
                 "mark": { "type": "circle", "size": 100 },
                 "encoding": {
-                    "x": { "field": "Bloque", "type": "nominal", "sort": null, "axis": { "labelColor": textMuted, "labelFontSize": 9, "title": null, "grid": true, "gridColor": borderColor } },
+                    "x": { "field": "Bloque", "type": "nominal", "sort": labelsOrdenados, "axis": { "labelColor": textMuted, "labelFontSize": 9, "title": null, "grid": true, "gridColor": borderColor } },
                     "y": { "field": "Personaje", "type": "nominal", "axis": { "labelColor": textWhite, "labelFontSize": 10, "title": null, "grid": true, "gridColor": borderColor } },
                     "color": { "value": accentColor }
                 },
@@ -3529,14 +3657,14 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 labels: labels,
                 datasets: [
                     { label: 'Ritmo', data: filteredRitmo.map(r => r ? r.intervenciones : 0), borderColor: accentColor, backgroundColor: accentAlpha, fill: true, tension: 0.4, yAxisID: 'y' },
-                    { label: 'Acotaciones', data: filteredRitmo.map(r => r ? r.sent_acotaciones : 0), borderColor: '#2196f3', borderDash: [5, 5], fill: false, tension: 0.4, yAxisID: 'y1' }
+                    { label: 'Acotaciones', data: filteredRitmo.map(r => r ? r.sent_acotaciones : 0), borderColor: UI_COLORS.isLight() ? '#1976d2' : '#2196f3', borderDash: [5, 5], fill: false, tension: 0.4, yAxisID: 'y1' }
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 scales: {
                     y: { type: 'linear', position: 'left', grid: { color: borderColor, borderDash: [4, 4] }, ticks: { color: textMuted } },
-                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#2196f3' } },
+                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: UI_COLORS.isLight() ? '#1976d2' : '#2196f3' } },
                     x: { grid: { color: borderColor, borderDash: [4, 4] }, ticks: { color: textMuted, font: { size: 9 } } }
                 }
             }
@@ -3569,7 +3697,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             vegaEmbed('#heatmap-sincronia', syncSpec, { actions: false });
         }
         syncContainer.innerHTML = rawSyncs.slice(0, 10).map(s => `
-            <div class="d-flex justify-content-between align-items-center mb-1 p-2 rounded border border-warning border-opacity-10" style="background: rgba(255,152,0,0.05) !important; font-size: 11px;">
+            <div class="d-flex justify-content-between align-items-center mb-1 p-2 rounded border border-warning border-opacity-10" style="background: ${UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.05)' : 'rgba(255,152,0,0.05)'} !important; font-size: 11px;">
                 <div class="text-truncate" style="max-width: 180px;"><span class="fw-bold">${s.p1}</span> <i class="fa-solid fa-arrows-left-right mx-1 text-warning opacity-50"></i> <span class="fw-bold">${s.p2}</span></div>
                 <div class="badge bg-warning text-dark font-monospace">${Math.round(s.score * 100)}%</div>
             </div>
@@ -3578,13 +3706,51 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
 
     // 10. Evolución del Flujo Táctico (Streamgraph) - Filtrado por segmento
     const tacticalStreamTarget = document.getElementById('drama-tactical-stream');
-    const labelsFiltrados = new Set(filteredTension.map(s => s.label));
-    const tacticalData = ((data.metricas_avanzadas || {}).flujo_tactico || [])
-        .filter(t => labelsFiltrados.has(t.Bloque));
+    const labelToOrden = {};
+    labelsOrdenados.forEach((l, i) => { labelToOrden[l] = i; });
+    
+    const rawTactical = ((data.metricas_avanzadas || {}).flujo_tactico || [])
+        .filter(t => labelToOrden[t.Bloque] !== undefined);
+        
+    const aggregated = {};
+    rawTactical.forEach(t => {
+        const key = `${t.Bloque}|||${t.Táctica}`;
+        if (aggregated[key]) {
+            aggregated[key].Valor += (t.Valor || 0);
+        } else {
+            aggregated[key] = {
+                Bloque: t.Bloque,
+                Táctica: t.Táctica,
+                Valor: (t.Valor || 0),
+                Orden: labelToOrden[t.Bloque]
+            };
+        }
+    });
+    
+    const uniqueTactics = [...new Set(rawTactical.map(t => t.Táctica))];
+    const tacticalData = [];
+    
+    labelsOrdenados.forEach((bloque, idx) => {
+        uniqueTactics.forEach(tactica => {
+            const key = `${bloque}|||${tactica}`;
+            if (aggregated[key]) {
+                tacticalData.push(aggregated[key]);
+            } else {
+                tacticalData.push({
+                    Bloque: bloque,
+                    Táctica: tactica,
+                    Valor: 0,
+                    Orden: idx
+                });
+            }
+        });
+    });
     
     console.log("[DEBUG] Tactical Data for Streamgraph:", tacticalData);
 
     if (tacticalStreamTarget && tacticalData.length > 0 && typeof vegaEmbed !== 'undefined') {
+        const labelExprString = labelsOrdenados.map((lbl, idx) => `datum.value == ${idx} ? '${lbl}'`).join(' : ') + ' : \'\'';
+
         const streamSpec = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
             "data": { "values": tacticalData },
@@ -3593,9 +3759,8 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
             "mark": { "type": "area", "interpolate": "monotone", "fillOpacity": 0.85 },
             "encoding": {
                 "x": { 
-                    "field": "Bloque", 
-                    "type": "nominal", 
-                    "sort": null, 
+                    "field": "Orden", 
+                    "type": "quantitative", 
                     "axis": { 
                         "labelColor": textMuted, 
                         "labelFontSize": 10, 
@@ -3603,7 +3768,9 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                         "labelAngle": -45,
                         "grid": true,
                         "gridColor": light ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
-                        "gridDash": [2, 2]
+                        "gridDash": [2, 2],
+                        "values": Object.values(labelToOrden),
+                        "labelExpr": labelExprString
                     } 
                 },
                 "y": { 
@@ -3670,6 +3837,8 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                 const canvas = document.getElementById(charId);
                 if (canvas) {
                     const ctxR = canvas.getContext('2d');
+                    const existingChart = Chart.getChart(canvas);
+                    if (existingChart) existingChart.destroy();
                     const tacticas = p.perfil_tactico || {};
                     
                     // Mapear valores a las etiquetas fijas
@@ -3683,7 +3852,7 @@ window.renderDramaticoFull = function(data, filterActo = 'all', filterEscena = '
                                 labels: fixedLabels,
                                 datasets: [{
                                     data: values,
-                                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                                    backgroundColor: UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.2)' : 'rgba(255, 152, 0, 0.2)',
                                     borderColor: accentColor,
                                     borderWidth: 2,
                                     pointRadius: 2,
@@ -3747,7 +3916,7 @@ function loadDramatico(data) {
   ` : '';
 
   const iaInsightsHtml = (data.analisis_ia) ? `
-    <div class="mb-5 p-4 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" style="background: rgba(255,152,0,0.05) !important;">
+    <div class="mb-5 p-4 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" style="background: ${UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.05)' : 'rgba(255,152,0,0.05)'} !important;">
         <div class="d-flex align-items-center mb-3">
             <i class="fa-solid fa-sparkles text-warning me-2 fs-5"></i>
             <h5 class="mb-0 fw-bold text-warning" style="letter-spacing: 1px;">SÍNTESIS ESTRATÉGICA IA</h5>
@@ -4038,7 +4207,7 @@ function loadDramatico(data) {
         </div>
 
         <!-- Detail Panel (Fixed/Floating) -->
-        <div id="drama-block-detail" class="glass-panel p-4 shadow-lg border border-warning" style="display: none; position: fixed; top: 100px; right: 20px; width: 400px; max-height: 80vh; overflow-y: auto; z-index: 1050; background: rgba(15, 15, 15, 0.95) !important; backdrop-filter: blur(15px);">
+        <div id="drama-block-detail" class="glass-panel p-4 shadow-lg border border-warning" style="display: none; position: fixed; top: 100px; right: 20px; width: 400px; max-height: 80vh; overflow-y: auto; z-index: 1050; background: ${UI_COLORS.isLight() ? 'rgba(255, 255, 255, 0.98)' : 'rgba(15, 15, 15, 0.95)'} !important; backdrop-filter: blur(15px);">
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning border-opacity-20 pb-2">
                 <a id="drama-reader-btn" href="#" target="_blank" class="text-warning text-decoration-none fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
                     <i class="fa-solid fa-book-open me-2"></i>ABRIR EN LECTOR
@@ -4060,16 +4229,27 @@ function loadDramatico(data) {
     if (!el) return;
     
     if (window.choicesInstances && window.choicesInstances[id]) {
-      window.choicesInstances[id].destroy();
+      try {
+        const instance = window.choicesInstances[id];
+        if (instance && instance.element && instance.destroy && typeof instance.destroy === 'function') {
+          instance.destroy();
+        }
+      } catch (err) {
+        console.warn(`Error destroying Choices instance for ${id}:`, err);
+      }
       delete window.choicesInstances[id];
     }
     
     el.innerHTML = optionsHtml;
     if (value !== undefined) el.value = value;
     
+    // Remove old listeners to avoid accumulation
+    const newEl = el.cloneNode(true);
+    el.parentNode.replaceChild(newEl, el);
+    
     if (typeof Choices !== 'undefined') {
        window.choicesInstances = window.choicesInstances || {};
-       const c = new Choices(el, {
+       const c = new Choices(newEl, {
           searchEnabled: true,
           itemSelectText: '',
           shouldSort: false,
@@ -4078,16 +4258,14 @@ function loadDramatico(data) {
        });
        window.choicesInstances[id] = c;
        
-       el.addEventListener('change', () => {
-          if (id === 'filtro-obra') { updateActosEscenas(); window.filterDramaticoCharts(); }
-          else window.filterDramaticoCharts();
-       });
-       
-       el.addEventListener('choice', () => {
-          setTimeout(() => {
-              if (id === 'filtro-obra') { updateActosEscenas(); window.filterDramaticoCharts(); }
-              else window.filterDramaticoCharts();
-          }, 50);
+       // Use single change event handler
+       newEl.addEventListener('change', () => {
+          if (id === 'filtro-obra') { 
+             updateActosEscenas(); 
+             window.filterDramaticoCharts(); 
+          } else { 
+             window.filterDramaticoCharts();
+          }
        });
     }
   };
@@ -4145,8 +4323,8 @@ function loadDramatico(data) {
                         const fotoSrc = data.foto ? data.foto : '';
                         const bioHtml = `
 
-                            <div class="d-flex gap-3 align-items-center p-2 rounded bg-dark bg-opacity-25 border border-secondary border-opacity-10 animate__animated animate__fadeIn" style="width: 100%;">
-                                ${fotoSrc ? `<img src="${fotoSrc}" class="rounded-circle border border-warning" style="width: 55px; height: 55px; object-fit: cover;" alt="${data.nombre_autor}">` : `<div class="rounded-circle border border-secondary border-opacity-25 d-flex align-items-center justify-content-center bg-dark bg-opacity-50" style="width: 55px; height: 55px; color: ${accentColor}; font-size: 18px;"><i class="fa-solid fa-user-pen"></i></div>`}
+                            <div class="d-flex gap-3 align-items-center p-2 rounded animate__animated animate__fadeIn" style="width: 100%;">
+                                ${fotoSrc ? `<img src="${fotoSrc}" class="rounded-circle border border-warning" style="width: 55px; height: 55px; object-fit: cover; cursor: pointer;" alt="${data.nombre_autor}" onclick="if(window.openVisorModal) window.openVisorModal('${data.nombre ? data.nombre.replace(/'/g, "\\'") : ''}', '${data.apellido ? data.apellido.replace(/'/g, "\\'") : ''}')">` : `<div class="rounded-circle border border-secondary border-opacity-25 d-flex align-items-center justify-content-center bg-dark bg-opacity-50" style="width: 55px; height: 55px; color: ${accentColor}; font-size: 18px; cursor: pointer;" onclick="if(window.openVisorModal) window.openVisorModal('${data.nombre ? data.nombre.replace(/'/g, "\\'") : ''}', '${data.apellido ? data.apellido.replace(/'/g, "\\'") : ''}')"><i class="fa-solid fa-user-pen"></i></div>`}
                                 <div style="flex: 1;">
                                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
                                         <h6 class="mb-0 text-warning fw-bold" style="font-size: 0.85rem;"><i class="fa-solid fa-feather-pointed text-warning me-2" style="font-size: 0.75rem;"></i>${data.nombre_autor}</h6>
@@ -4193,7 +4371,7 @@ function loadDramatico(data) {
   });
 
 
-  const initialObra = '';
+  const initialObra = filtros && filtros.publicacion_id ? String(filtros.publicacion_id) : '';
   safeUpdateSelect('filtro-obra', obraHtml, initialObra);
   
   updateActosEscenas();
@@ -4207,7 +4385,7 @@ window.generarInformeDramaticoIA = function() {
     // UX: Asegurar visibilidad del contenedor y Loading
     container.style.display = 'block';
     container.innerHTML = `
-        <div class="glass-panel p-4 mb-4 border-warning border-opacity-25" style="background: rgba(255,152,0,0.05);">
+        <div class="glass-panel p-4 mb-4 border-warning border-opacity-25" style="background: ${UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.05)' : 'rgba(255,152,0,0.05)'};">
             <div class="d-flex align-items-center">
                 <div class="spinner-border spinner-border-sm me-3 text-warning" role="status"></div>
                 <div class="fw-bold small" style="letter-spacing: 1px; color: var(--ds-text-main);">GENERANDO INFORME NARRATOLÓGICO CON IA...</div>
@@ -4290,7 +4468,7 @@ window.refrescarAnalisisDramatico = function() {
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content
         },
         body: JSON.stringify({
-            ...filtros, publicacion_id: null,
+            ...filtros,
             manual_aliases: manual_aliases,
             refresh: true // Forzamos bypass de caché en backend
         })
@@ -4342,7 +4520,7 @@ window.interpretarSeccionDramatica = function(tipo, targetId) {
 
     resDiv.style.display = 'block';
     resDiv.innerHTML = `
-        <div class="d-flex align-items-center p-2 rounded" style="background: rgba(255,152,0,0.1); border: 1px dashed rgba(255,152,0,0.3);">
+        <div class="d-flex align-items-center p-2 rounded" style="background: ${UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.1)' : 'rgba(255,152,0,0.1)'}; border: 1px dashed ${UI_COLORS.isLight() ? 'rgba(41, 74, 96, 0.3)' : 'rgba(255,152,0,0.3)'};">
             <div class="spinner-border spinner-border-sm text-warning me-2"></div>
             <span class="xsmall text-warning fw-bold" style="font-size: 10px;">SOLICITANDO INTERPRETACIÓN IA...</span>
         </div>
@@ -4377,7 +4555,7 @@ window.interpretarSeccionDramatica = function(tipo, targetId) {
             const formatted = (typeof marked !== 'undefined') ? marked.parse(data.interpretacion) : data.interpretacion.replace(/\n/g, '<br>');
             resDiv.innerHTML = `
                 <div class="p-3 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" 
-                     style="background: ${isLight ? 'rgba(255,152,0,0.05)' : 'rgba(0,0,0,0.3)'};">
+                     style="background: ${isLight ? 'rgba(41, 74, 96, 0.05)' : 'rgba(0,0,0,0.3)'};">
                     <div class="markdown-content small" style="color: ${isLight ? '#333' : '#eee'}; line-height: 1.5; font-size: 0.8rem;">
                         ${formatted}
                     </div>
@@ -4420,8 +4598,34 @@ window.openAliasManager = function() {
   const deleteKey = `deleted_${filtros.proyecto_id || 'default'}`;
   const deletedChars = JSON.parse(localStorage.getItem(deleteKey) || '[]');
   
+  const obraEl = document.getElementById('filtro-obra');
+  const filterObra = obraEl ? obraEl.value : 'all';
+  const isObraFilterActive = filterObra !== 'all' && filterObra !== '' && filterObra !== null && filterObra !== undefined;
+  
+  const validCharsForObra = new Set();
+  const normalizeName = name => {
+    if (!name) return '';
+    return String(name).normalize('NFKC').trim().replace(/^[\s"«»'“”]+|[\s"«»'“”]+$/g, '').replace(/[.,;:()]+$/g, '').toLowerCase();
+  };
+  
+  (data.sentimiento_temporal || []).forEach(s => {
+      const matchesObra = !isObraFilterActive || String(s.publicacion_id) === String(filterObra);
+      if (matchesObra) {
+          (s.locuciones || []).forEach(l => {
+              const rawName = l.p || '';
+              validCharsForObra.add(normalizeName(rawName));
+          });
+      }
+  });
+
   // Extraer nombres de personajes (ID) de los nodos, excluyendo los eliminados
-  const personajes = (data.nodos || []).map(n => n.id).filter(p => !deletedChars.includes(p)).sort();
+  let personajes = (data.nodos || []).map(n => n.id).filter(p => !deletedChars.includes(p));
+  
+  if (isObraFilterActive) {
+      personajes = personajes.filter(p => validCharsForObra.has(normalizeName(p)));
+  }
+  
+  personajes.sort();
   
   tableBody.innerHTML = personajes.map(p => {
     const canonical = currentAliases[p] || '';
@@ -4634,6 +4838,8 @@ window.renderSubtexto = function(data) {
             setTimeout(() => {
                 const ctx = document.getElementById(charId);
                 if (ctx) {
+                    const existingChart = Chart.getChart(ctx);
+                    if (existingChart) existingChart.destroy();
                     const tacticasLabels = Object.keys(info.tacticas || {});
                     const tacticasValues = Object.values(info.tacticas || {});
                     
@@ -4657,7 +4863,13 @@ window.renderSubtexto = function(data) {
                                 r: {
                                     grid: { color: 'rgba(255,255,255,0.05)' },
                                     angleLines: { color: 'rgba(255,255,255,0.05)' },
-                                    pointLabels: { color: 'rgba(255,255,255,0.5)', font: { size: 8 } },
+                                    pointLabels: { 
+                                        color: (context) => {
+                                            const label = tacticasLabels[context.index];
+                                            return UI_COLORS.tactics[label] || 'rgba(255,255,255,0.5)';
+                                        },
+                                        font: { size: 8 } 
+                                    },
                                     ticks: { display: false, backdropColor: 'transparent' }
                                 }
                             }
@@ -4844,17 +5056,12 @@ function renderAtribucion(data) {
 
 function cargarObrasParaAtribucion() {
   const select = document.getElementById('atribucion-obras-select');
-  if (!select) return;
+  if (!select) {
+    console.error('[ERROR] SELECT NO ENCONTRADO: atribucion-obras-select');
+    return;
+  }
 
-  const payload = {
-    tema: document.getElementById('filtro-tema')?.value || null,
-    publicacion_id: document.getElementById('filtro-publicacion')?.value || null,
-    pais: document.getElementById('filtro-pais')?.value || null,
-    fecha_desde: document.getElementById('filtro-fecha-desde')?.value || null,
-    fecha_hasta: document.getElementById('filtro-fecha-hasta')?.value || null,
-    limit: 1000
-  };
-
+  console.log('[DEBUG] Iniciando carga de obras para atribución...');
   showLoader();
 
   // Asegurar que el botón ejecute la comparativa
@@ -4864,37 +5071,113 @@ function cargarObrasParaAtribucion() {
     btn.dataset.bound = 'true';
   }
 
-  fetch('/api/analisis/lista-documentos', {
+  fetch('/api/analisis/lista-publicaciones', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({})
   })
-    .then(res => res.json())
+    .then(res => {
+      console.log('[DEBUG] Response status:', res.status);
+      return res.json();
+    })
     .then(data => {
       hideLoader();
-      if (data.exito && data.documentos) {
-        select.innerHTML = '';
-        data.documentos.forEach(doc => {
-          const opt = document.createElement('option');
-          opt.value = doc.id;
-          opt.innerText = `${doc.autor || 'Anónimo'} - ${doc.titulo}`;
-          select.appendChild(opt);
+      console.log('[DEBUG] Respuesta lista-publicaciones completa:', data);
+      
+      if (!data) {
+        throw new Error('Respuesta nula del servidor');
+      }
+      
+      console.log('[DEBUG] exito:', data.exito, 'publicaciones:', data.publicaciones?.length);
+      
+      if (data.exito && data.publicaciones && data.publicaciones.length > 0) {
+        console.log(`[DEBUG] Cargando ${data.publicaciones.length} publicaciones`);
+        
+        let optionsHtml = '';
+        data.publicaciones.forEach((pub, idx) => {
+          console.log(`  [${idx}] ID=${pub.id}, Nombre=${pub.nombre}, Autor=${pub.autor}`);
+          optionsHtml += `<option value="${pub.id}" selected>${pub.nombre} (${pub.autor})</option>`;
         });
 
-        // Seleccionar todos por defecto la primera vez
-        for (let i = 0; i < select.options.length; i++) {
-          select.options[i].selected = true;
+        const id = 'atribucion-obras-select';
+        const el = document.getElementById(id);
+        if (!el) {
+          console.error('[ERROR] No se encontró elemento:', id);
+          return;
+        }
+        
+        console.log('[DEBUG] Destruyendo instancia anterior de Choices...');
+        if (window.choicesInstances && window.choicesInstances[id]) {
+          try {
+            const instance = window.choicesInstances[id];
+            if (instance && instance.destroy && typeof instance.destroy === 'function') {
+              instance.destroy();
+              console.log('[DEBUG] Instancia destruida correctamente');
+            }
+          } catch (err) {
+            console.warn(`[WARN] Error destroying Choices instance for ${id}:`, err);
+          }
+          delete window.choicesInstances[id];
+        }
+        
+        console.log('[DEBUG] Inyectando HTML con opciones...');
+        el.innerHTML = optionsHtml;
+        
+        if (typeof Choices !== 'undefined') {
+           console.log('[DEBUG] Creando nueva instancia de Choices...');
+           window.choicesInstances = window.choicesInstances || {};
+           const c = new Choices(el, {
+              searchEnabled: true,
+              itemSelectText: '',
+              shouldSort: false,
+              removeItemButton: true,
+              allowHTML: true,
+              placeholder: true,
+              placeholderValue: 'Selecciona las obras a comparar...'
+           });
+           window.choicesInstances[id] = c;
+           console.log('[DEBUG] Choices instancia creada');
+        } else {
+           console.warn('[WARN] Choices library not available');
         }
 
         // Ejecutar primer análisis
+        console.log('[DEBUG] Ejecutando análisis inicial...');
         ejecutarAtribucion();
+      } else {
+        // No hay publicaciones o error
+        const id = 'atribucion-obras-select';
+        const el = document.getElementById(id);
+        if (el) {
+          if (window.choicesInstances && window.choicesInstances[id]) {
+            try {
+              const instance = window.choicesInstances[id];
+              if (instance && instance.destroy && typeof instance.destroy === 'function') {
+                instance.destroy();
+              }
+            } catch (err) {
+              console.warn(`Error destroying Choices instance for ${id}:`, err);
+            }
+            delete window.choicesInstances[id];
+          }
+          
+          const errorMsg = data.error || 'No hay publicaciones disponibles en el sistema.';
+          console.error('[ERROR] Sin publicaciones:', errorMsg, 'Total:', data.total);
+          el.innerHTML = `<option disabled selected>⚠️ ${errorMsg}</option>`;
+        }
       }
     })
     .catch(err => {
       hideLoader();
+      const id = 'atribucion-obras-select';
+      const el = document.getElementById(id);
+      if (el) {
+        console.error('[ERROR] Exception en cargarObrasParaAtribucion:', err);
+        el.innerHTML = `<option disabled selected>❌ Error: ${err.message}</option>`;
+      }
       console.error('[ERROR] Error cargando documentos para atribución:', err);
     });
 }
@@ -4903,7 +5186,14 @@ function ejecutarAtribucion() {
   const select = document.getElementById('atribucion-obras-select');
   if (!select) return;
 
-  const selectedIds = Array.from(select.selectedOptions).map(opt => parseInt(opt.value));
+  // Obtener IDs seleccionados de Choices.js o del select nativo
+  let selectedIds = [];
+  const id = 'atribucion-obras-select';
+  if (window.choicesInstances && window.choicesInstances[id]) {
+    selectedIds = window.choicesInstances[id].getValue(true).map(val => parseInt(val));
+  } else {
+    selectedIds = Array.from(select.selectedOptions).map(opt => parseInt(opt.value));
+  }
   
   if (selectedIds.length < 2) {
     alert('Por favor, selecciona al menos 2 obras para poder calcular el Burrows\' Delta.');
@@ -4911,14 +5201,12 @@ function ejecutarAtribucion() {
   }
 
   const payload = {
-    documentos_ids: selectedIds,
-    tema: document.getElementById('filtro-tema')?.value || null,
-    publicacion_id: document.getElementById('filtro-publicacion')?.value || null,
-    pais: document.getElementById('filtro-pais')?.value || null,
-    fecha_desde: document.getElementById('filtro-fecha-desde')?.value || null,
-    fecha_hasta: document.getElementById('filtro-fecha-hasta')?.value || null
+    publicaciones_ids: selectedIds,
+    limit: 1000,
+    refresh: true  // Forzar recálculo sin caché para aplicar cambios en la fórmula
   };
 
+  console.log('[DEBUG] Ejecutando atribución con refresh=true, IDs:', selectedIds);
   showLoader();
 
   fetch('/api/analisis/atribucion', {
@@ -4932,6 +5220,13 @@ function ejecutarAtribucion() {
     .then(res => res.json())
     .then(data => {
       hideLoader();
+      console.log('[DEBUG] Respuesta atribución:', data);
+      if (data.exito) {
+        console.log('[DEBUG] Matriz Delta:', data.matriz_delta);
+        data.matriz_delta?.forEach(d => {
+          console.log(`  ${d.titulo_a} vs ${d.titulo_b}: Delta=${d.delta.toFixed(2)}, Similitud=${d.similitud_prob.toFixed(1)}%`);
+        });
+      }
       datosActuales['atribucion'] = data;
       renderAtribucion(data);
     })
@@ -4940,3 +5235,48 @@ function ejecutarAtribucion() {
       console.error('[ERROR] Error ejecutando comparativa Delta:', err);
     });
 }
+
+window.addEventListener('themeChanged', function() {
+    const vista = typeof getVistaActiva === 'function' ? getVistaActiva() : 'dashboard';
+    if (vista === 'dramatico') {
+        const data = typeof datosActuales !== 'undefined' ? datosActuales['dramatico'] : null;
+        if (data) {
+            // Guardar selecciones actuales
+            const obraEl = document.getElementById('filtro-obra');
+            const actoEl = document.getElementById('filtro-acto');
+            const escenaEl = document.getElementById('filtro-escena');
+            
+            const obraSel = obraEl ? obraEl.value : 'all';
+            const actoSel = actoEl ? actoEl.value : 'all';
+            const escenaSel = escenaEl ? escenaEl.value : 'all';
+            
+            // Re-generar el DOM
+            if (typeof loadDramatico === 'function') {
+                loadDramatico(data);
+            }
+            
+            // Restaurar selecciones
+            const newObraEl = document.getElementById('filtro-obra');
+            const newActoEl = document.getElementById('filtro-acto');
+            const newEscenaEl = document.getElementById('filtro-escena');
+            
+            if (newObraEl) newObraEl.value = obraSel;
+            if (newActoEl) newActoEl.value = actoSel;
+            if (newEscenaEl) newEscenaEl.value = escenaSel;
+        }
+        
+        if (typeof window.filterDramaticoCharts === 'function') {
+            window.filterDramaticoCharts();
+        }
+    } else {
+        if (typeof datosActuales !== 'undefined' && datosActuales[vista]) {
+            if (typeof cambiarVista === 'function') {
+                cambiarVista(vista);
+            }
+        } else if (vista === 'dashboard' && typeof datosActuales !== 'undefined' && datosActuales['dashboard']) {
+             if (typeof renderDashboard === 'function') {
+                 renderDashboard(datosActuales['dashboard']);
+             }
+        }
+    }
+});

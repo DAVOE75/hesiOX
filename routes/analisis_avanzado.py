@@ -17,10 +17,18 @@ from sqlalchemy import or_, text
 import re
 import sys
 import json
+import traceback
 from analisis_innovador import AnalisisInnovador
 
 # Blueprint
 analisis_bp = Blueprint('analisis_avanzado', __name__, url_prefix='/api/analisis')
+
+
+@analisis_bp.errorhandler(Exception)
+def handle_analisis_error(error):
+    """Devuelve JSON en lugar de la página HTML genérica de error para este blueprint."""
+    traceback.print_exc()
+    return jsonify({'exito': False, 'error': str(error)}), 500
 
 # Endpoint para recargar caché
 @analisis_bp.route('/recargar_cache', methods=['POST'])
@@ -29,9 +37,20 @@ analisis_bp = Blueprint('analisis_avanzado', __name__, url_prefix='/api/analisis
 def recargar_cache():
     """Limpia toda la caché de análisis avanzado"""
     try:
-        cache.limpiar_todo()
-        return jsonify({'exito': True, 'mensaje': 'Caché de análisis avanzado recargada correctamente.'})
+        print("\n[CACHE-CLEAR] === INICIANDO LIMPIEZA TOTAL DE CACHÉ ===")
+        count = cache.limpiar_todo()
+        print(f"[CACHE-CLEAR] {count} archivos de caché eliminados")
+        print("[CACHE-CLEAR] === CACHÉ LIMPIADA EXITOSAMENTE ===\n")
+        
+        return jsonify({
+            'exito': True, 
+            'mensaje': f'Caché de análisis avanzado recargada correctamente ({count} archivos eliminados).',
+            'archivos_eliminados': count
+        })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"[CACHE-CLEAR ERROR] {e}")
         return jsonify({'exito': False, 'error': str(e)}), 500
 
 @analisis_bp.route('/reuso-detalle', methods=['POST'])
@@ -104,7 +123,7 @@ def dramatico_autor():
         proyecto = get_proyecto_activo()
         proyecto_id = proyecto.id if proyecto else None
         
-        pub_query = Publicacion.query.filter_by(nombre=obra_nombre)
+        pub_query = Publicacion.query.filter_by(nombre=obra_nombre, activa=True)
         if proyecto_id:
             pub_query = pub_query.filter_by(proyecto_id=proyecto_id)
         pub = pub_query.first()
@@ -150,6 +169,8 @@ def dramatico_autor():
         return jsonify({
             'exito': True,
             'nombre_autor': f"{nombre_autor} {apellido_autor}".strip() or "Autor Desconocido",
+            'nombre': nombre_autor,
+            'apellido': apellido_autor,
             'fecha_estreno': fecha_estreno,
             'teatro_estreno': teatro_estreno,
             'biografia': biografia_texto,
@@ -174,7 +195,7 @@ def analisis_hd():
     hemerotecas = Hemeroteca.query.filter_by(proyecto_id=proyecto.id).all()
     
     # Obtener publicaciones del proyecto
-    publicaciones = Publicacion.query.filter_by(proyecto_id=proyecto.id).all()
+    publicaciones = Publicacion.query.filter_by(proyecto_id=proyecto.id, activa=True).all()
     
     # Obtener temas únicos
     temas = db.session.query(Prensa.temas)\
@@ -223,6 +244,7 @@ def extraer_filtros(data):
         'proyecto_id': proyecto.id if proyecto else None,
         'tema': data.get('tema'),
         'publicacion_id': pub_id,
+        'publicaciones_ids': data.get('publicaciones_ids', []), # Lista de IDs de publicaciones
         'pais': data.get('pais'),
         'fecha_desde': data.get('fecha_desde'),
         'fecha_hasta': data.get('fecha_hasta'),
@@ -233,24 +255,40 @@ def extraer_filtros(data):
 
 
 def obtener_publicaciones_filtradas(proyecto_id=None, tema=None, 
-                                    publicacion_id=None, pais=None,
-                                    fecha_desde=None, fecha_hasta=None, 
+                                    publicacion_id=None, publicaciones_ids=None,
+                                    pais=None, fecha_desde=None, fecha_hasta=None, 
                                     documentos_ids=None, limit=None, **kwargs):
     """Obtiene publicaciones con filtros opcionales"""
-    print(f"[DEBUG] Filtrando documentos - Proyecto: {proyecto_id}, Pub: {publicacion_id}, Docs: {len(documentos_ids or [])}")
-    query = Prensa.query.filter(Prensa.incluido == True)
+    print(f"[DEBUG] Filtrando documentos - Proyecto: {proyecto_id}, Pub: {publicacion_id}, Pubs: {len(publicaciones_ids or [])}, Docs: {len(documentos_ids or [])}")
+    query = Prensa.query
     
     if not proyecto_id:
         return []
 
-    if proyecto_id:
-        query = query.filter_by(proyecto_id=proyecto_id)
+    query = query.filter_by(proyecto_id=proyecto_id)
     
-    # Filtro por IDs específicos (prioritario si se proporciona)
+    # Filtro por inclusión: Solo aplicar si NO se proporcionan IDs específicos
+    # Esto permite analizar documentos seleccionados manualmente aunque no estén marcados como 'incluidos'
+    if not (documentos_ids or publicaciones_ids or publicacion_id):
+        query = query.filter(Prensa.incluido == True)
+        
+    # Excluir publicaciones desactivadas (esto sí es global)
+    query = query.filter(~Prensa.id_publicacion.in_(
+        db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+    ))
+    
+    # Filtro por IDs de documentos específicos (prioritario si se proporciona)
     if documentos_ids:
         query = query.filter(Prensa.id.in_(documentos_ids))
         # Si se filtran por IDs específicos, el orden debe ser el de los IDs o por ID asc
         return query.order_by(Prensa.id.asc()).all()
+    
+    # Filtro por IDs de publicaciones (para análisis teatral/comparativo)
+    if publicaciones_ids:
+        query = query.filter(Prensa.id_publicacion.in_(publicaciones_ids))
+        if not tema and not publicacion_id and not pais and not fecha_desde:
+            # Si solo filtramos por publicaciones_ids, devolvemos todos sus documentos
+            return query.all()
 
     # Filtro por tema (directamente en Prensa)
     if tema:
@@ -343,12 +381,16 @@ def publicacion_to_dict(pub):
         'seccion': pub.seccion or '',
         'volumen': pub.volumen or '',
         'palabras_clave': pub.palabras_clave or '',
-        'reparto_total': getattr(pub, 'reparto_total', '') or '',
-        'actos_totales': getattr(pub, 'actos_totales', '') or '',
-        'escenas_totales': getattr(pub, 'escenas_totales', '') or '',
+        'reparto': pub.reparto or '',
+        'reparto_total': getattr(pub.publicacion_rel, 'reparto_total', '') if (hasattr(pub, 'publicacion_rel') and pub.publicacion_rel) else '',
+
+        'actos_totales': getattr(pub.publicacion_rel, 'actos_totales', '') if (hasattr(pub, 'publicacion_rel') and pub.publicacion_rel) else '',
+        'escenas_totales': getattr(pub.publicacion_rel, 'escenas_totales', '') if (hasattr(pub, 'publicacion_rel') and pub.publicacion_rel) else '',
         'actos': pub.seccion or '',
-        'escenas': pub.volumen or ''
+        'escenas': pub.volumen or '',
+        'entidades_ner': pub.entidades_ner
     }
+
 
 
 
@@ -365,10 +407,18 @@ def lista_documentos():
         # pero limitado a un número razonable para el select (e.g. 1000)
         publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=1000)
         
-        resultados = [{
-            'id': p.id,
-            'titulo': f"{p.titulo[:50]}..." if p.titulo else f"Documento {p.id}"
-        } for p in publicaciones_db]
+        resultados = []
+        for p in publicaciones_db:
+            pub_nombre = p.publicacion or ''
+            if hasattr(p, 'publicacion_rel') and p.publicacion_rel:
+                pub_nombre = p.publicacion_rel.nombre
+                
+            resultados.append({
+                'id': p.id,
+                'titulo': f"{p.titulo[:50]}..." if p.titulo else f"Documento {p.id}",
+                'autor': p.nombre_autor or 'Anónimo',
+                'publicacion': pub_nombre or 'Sin obra'
+            })
         
         # Ordenar por ID para que en el select aparezcan en orden secuencial
         resultados.sort(key=lambda x: x['id'])
@@ -379,6 +429,63 @@ def lista_documentos():
         })
     except Exception as e:
         return jsonify({'exito': False, 'error': str(e)}), 500
+
+
+
+@analisis_bp.route('/lista-publicaciones', methods=['POST'])
+@csrf.exempt
+@login_required
+def lista_publicaciones():
+    """Retorna una lista de publicaciones (obras) del proyecto activo o sin asignar"""
+    try:
+        from app import get_proyecto_activo
+        from models import Publicacion
+        
+        proyecto = get_proyecto_activo()
+        
+        print(f"[DEBUG LISTA-PUB] Proyecto activo: {proyecto.nombre if proyecto else 'NINGUNO'}")
+        
+        # Estrategia: mostrar publicaciones del proyecto activo O sin proyecto asignado
+        if proyecto:
+            # Mostrar: (1) publicaciones de este proyecto, (2) publicaciones sin proyecto asignado
+            publicaciones_db = Publicacion.query.filter(
+                or_(
+                    Publicacion.proyecto_id == proyecto.id,
+                    Publicacion.proyecto_id == None
+                ),
+                Publicacion.activa == True
+            ).all()
+            print(f"[DEBUG LISTA-PUB] Proyecto {proyecto.id}: {len(publicaciones_db)} publicaciones encontradas")
+        else:
+            # Sin proyecto activo: mostrar todas las publicaciones
+            publicaciones_db = Publicacion.query.filter(Publicacion.activa == True).all()
+            print(f"[DEBUG LISTA-PUB] Sin proyecto: {len(publicaciones_db)} publicaciones totales")
+        
+        resultados = []
+        for p in publicaciones_db:
+            print(f"[DEBUG LISTA-PUB] - {p.id_publicacion}: {p.nombre} | proyecto_id={p.proyecto_id}")
+            resultados.append({
+                'id': p.id_publicacion,
+                'nombre': p.nombre or f"Obra {p.id_publicacion}",
+                'autor': p.nombre_autor or 'Anónimo'
+            })
+        
+        # Ordenar por nombre
+        resultados.sort(key=lambda x: x['nombre'])
+        
+        print(f"[DEBUG LISTA-PUB] Retornando {len(resultados)} publicaciones al frontend")
+        
+        return jsonify({
+            'exito': True,
+            'publicaciones': resultados,
+            'proyecto_activo': proyecto.nombre if proyecto else None,
+            'total': len(resultados)
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"[ERROR LISTA-PUB] {e}")
+        return jsonify({'exito': False, 'error': str(e), 'publicaciones': []}), 500
 
 
 # ============================================
@@ -524,17 +631,114 @@ def analisis_atribucion_route():
         data = request.get_json() or {}
         filtros = extraer_filtros(data)
         
-        # Intentar obtener de caché
-        resultado_cache = cache.obtener('atribucion', filtros)
-        if resultado_cache:
-            return jsonify(resultado_cache)
+        # Permitir forzar recálculo (ignorar caché)
+        refresh = data.get('refresh', False)
+        
+        # Intentar obtener de caché (solo si no hay refresh)
+        resultado_cache = None
+        if not refresh:
+            resultado_cache = cache.obtener('atribucion', filtros)
+            if resultado_cache:
+                return jsonify(resultado_cache)
         
         # Si no hay caché, calcular
         limite = filtros.pop('limite', 300)
-        publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=limite if (limite and limite > 0) else None)
-        publicaciones = [publicacion_to_dict(p) for p in publicaciones_db]
         
-        resultado = analisis.atribucion_autoria(publicaciones)
+        # NUEVO: Si se pasan publicaciones_ids, agrupar documentos por publicación
+        publicaciones_ids = data.get('publicaciones_ids', [])
+        ids_referencia = []
+        
+        if publicaciones_ids:
+            filtros['publicaciones_ids'] = publicaciones_ids
+            
+            from models import Publicacion
+            publicaciones = []
+            obras_sin_texto = []
+            for pub_id in publicaciones_ids:
+                pub_obj = Publicacion.query.filter_by(id_publicacion=pub_id, activa=True).first()
+                if not pub_obj:
+                    continue
+                
+                # Obtener todos los documentos de esta publicación
+                docs = Prensa.query.filter_by(id_publicacion=pub_id, incluido=True).all()
+                if not docs:
+                    obras_sin_texto.append(pub_obj.nombre)
+                    continue
+                    
+                # Concatenar contenido de todos los documentos
+                contenido_total = "\n\n".join([d.contenido for d in docs if d.contenido])
+                if not contenido_total.strip():
+                    # Fallback al título si no hay contenido
+                    contenido_total = "\n\n".join([d.titulo for d in docs if d.titulo])
+                    
+                if not contenido_total.strip():
+                    obras_sin_texto.append(pub_obj.nombre)
+                    continue
+
+                publicaciones.append({
+                    'id': pub_obj.id_publicacion,
+                    'publicacion_id': pub_obj.id_publicacion,
+                    'titulo': pub_obj.nombre or f"Obra {pub_obj.id_publicacion}",
+                    'contenido': contenido_total,
+                    'autor': pub_obj.nombre_autor or 'Anónimo',
+                    'publicacion': pub_obj.nombre or 'Sin obra'
+                })
+            
+            if obras_sin_texto:
+                return jsonify({'exito': False, 'error': f'Obras sin texto incluido: {", ".join(obras_sin_texto)}'})
+        else:
+            publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=limite if (limite and limite > 0) else None)
+            publicaciones = [publicacion_to_dict(p) for p in publicaciones_db]
+            # Asegurar que tenemos los IDs para el filtrado final
+            publicaciones_ids = [p.get('publicacion_id') or p.get('id') for p in publicaciones]
+        
+        # Estabilizar Burrows' Delta con obras de referencia si son pocas (< 6)
+        if 0 < len(publicaciones) < 6:
+            # Obtener p_id de forma segura
+            p_id = None
+            if publicaciones_ids:
+                from models import Publicacion
+                # Intentar obtener el proyecto de la primera obra
+                p_obj = Publicacion.query.filter_by(id_publicacion=publicaciones_ids[0], activa=True).first()
+                if p_obj:
+                    p_id = p_obj.proyecto_id
+            
+            if p_id:
+                ref_objs = Publicacion.query.filter(
+                    Publicacion.proyecto_id == p_id,
+                    Publicacion.id_publicacion.notin_(publicaciones_ids),
+                    Publicacion.activa == True
+                ).limit(15).all()
+                
+                for r_obj in ref_objs:
+                    docs_ref = Prensa.query.filter_by(id_publicacion=r_obj.id_publicacion, incluido=True).all()
+                    cont_ref = "\n\n".join([d.contenido for d in docs_ref if d.contenido])
+                    if cont_ref.strip():
+                        publicaciones.append({
+                            'id': r_obj.id_publicacion,
+                            'publicacion_id': r_obj.id_publicacion,
+                            'titulo': r_obj.nombre,
+                            'contenido': cont_ref,
+                            'autor': r_obj.nombre_autor or 'Referencia',
+                            'is_reference': True
+                        })
+                        ids_referencia.append(r_obj.id_publicacion)
+
+        top_n = data.get('top_n', 500)
+        resultado = analisis.atribucion_autoria(publicaciones, top_n=top_n)
+        
+        # Filtrar referencias de los resultados finales para no confundir al usuario
+        if ids_referencia and resultado.get('exito'):
+            if 'matriz_delta' in resultado:
+                resultado['matriz_delta'] = [
+                    m for m in resultado['matriz_delta'] 
+                    if m['id_a'] in publicaciones_ids and m['id_b'] in publicaciones_ids
+                ]
+            if 'metricas_comparativas' in resultado:
+                resultado['metricas_comparativas'] = [
+                    m for m in resultado['metricas_comparativas']
+                    if m['id'] in publicaciones_ids
+                ]
         
         # Guardar en caché
         cache.guardar('atribucion', filtros, resultado, limite=limite)
@@ -542,7 +746,24 @@ def analisis_atribucion_route():
         return jsonify(resultado)
     
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'exito': False, 'error': str(e)}), 500
+
+
+@analisis_bp.route('/atribucion/interpretar', methods=['POST'])
+@login_required
+def interpretar_atribucion_route():
+    data = request.json
+    delta_results = data.get('delta_results')
+    model = data.get('model', 'gemini-pro')
+    
+    if not delta_results:
+        return jsonify({'exito': False, 'error': 'Faltan resultados Delta.'}), 400
+        
+    analisis = AnalisisAvanzado(db)
+    resultado = analisis.interpretar_atribucion(delta_results, model_config=model)
+    return jsonify(resultado)
 
 
 @analisis_bp.route('/ngramas', methods=['POST'])
@@ -637,6 +858,10 @@ def regex_search():
         # Obtener publicaciones filtradas por criterios base
         limite = int(data.get('limite', 500))
         query = db.session.query(Prensa).filter(Prensa.incluido == True)
+        # Excluir publicaciones desactivadas
+        query = query.filter(~Prensa.id_publicacion.in_(
+            db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+        ))
         
         if filtros_base.get('proyecto_id'):
             query = query.filter_by(proyecto_id=filtros_base['proyecto_id'])
@@ -776,11 +1001,16 @@ def documentos_similares(id_documento):
 
 @analisis_bp.route('/dramatico', methods=['POST'])
 @csrf.exempt
-@login_required
+#@login_required
 def analisis_dramatico_route():
     """Análisis específico para obras teatrales (Red de personajes, tensión)"""
     try:
+        from flask_login import current_user
+        if not current_user.is_authenticated:
+            return jsonify({'exito': False, 'error': 'Autenticación requerida', 'authenticated': False}), 401
+            
         data = request.get_json() or {}
+        print("[DEBUG] Dramático - entrando en route")
         print(f"\n[DEBUG] === ANALISIS DRAMATICO REQUEST ===")
         print(f"[DEBUG] data keys: {list(data.keys())}")
         print(f"[DEBUG] generar_ia in request: {data.get('generar_ia')}")
@@ -795,7 +1025,7 @@ def analisis_dramatico_route():
         filtro_nombre = None
         if filtros.get('publicacion_id'):
             from models import Publicacion
-            pub_obj = Publicacion.query.get(filtros['publicacion_id'])
+            pub_obj = Publicacion.query.filter_by(id_publicacion=filtros['publicacion_id'], activa=True).first()
             if pub_obj:
                 filtro_nombre = pub_obj.nombre
         elif len(filtros.get('documentos_ids', [])) > 0:
@@ -804,11 +1034,14 @@ def analisis_dramatico_route():
         # Consultar caché incluyendo los alias y el LÍMITE en la clave (si no se pide refrescar)
         refresh = data.get('refresh', False)
         limite = filtros.get('limite', 300) # Mantener para la caché
+        print(f"[DEBUG] Dramático - filtros normalizados: {filtros}")
+        print(f"[DEBUG] Dramático - refresh={refresh}, limite={limite}")
         
         resultado_cache = None
         if not refresh:
             # IMPORTANTE: Pasar 'limite' para que la clave coincida con el guardado
             resultado_cache = cache.obtener('dramatico', filtros, manual_aliases=manual_aliases, limite=limite)
+            print(f"[DEBUG] Dramático - cache.obtener => {resultado_cache is not None}")
         
         if resultado_cache:
             # Si se solicita generar IA pero el caché no la tiene, ignoramos el caché para forzar la generación
@@ -845,11 +1078,14 @@ def analisis_dramatico_route():
         limite = filtros.pop('limite', 300)
         publicaciones_db = obtener_publicaciones_filtradas(**filtros, limit=limite if (limite and limite > 0) else None)
         publicaciones = [publicacion_to_dict(p) for p in publicaciones_db]
+        print(f"[DEBUG] Dramático - publicaciones obtenidas: {len(publicaciones)}")
 
         # Determinar si hay filtrado activo para purgar personajes vacíos
         filtrado_activo = (filtros.get('publicacion_id') is not None) or (len(filtros.get('documentos_ids', [])) > 0)
+        print(f"[DEBUG] Dramático - filtrado_activo={filtrado_activo}")
         
         resultado = analisis.analisis_dramatico(publicaciones, manual_aliases=manual_aliases, filtrado_activo=filtrado_activo)
+        print(f"[DEBUG] Dramático - analisis.analisis_dramatico OK, claves={list(resultado.keys())}")
         
         # IA INSIGHTS: Análisis hermenéutico de la obra (SOLO SI SE SOLICITA)
         generar_ia = data.get('generar_ia', False) or data.get('generar_informe', False)
@@ -899,15 +1135,23 @@ Responde en formato Markdown estructurado, profesional y académico, usando icon
 
         # Guardar en caché con la clave que incluye los alias
         resultado['filtro_nombre'] = filtro_nombre
+        print("[DEBUG] Dramático - guardando en caché")
         cache.guardar('dramatico', filtros, resultado, manual_aliases=manual_aliases, limite=limite)
         
         print(f"[DEBUG] Final Response AI field present: {resultado.get('analisis_ia') is not None}")
+        print("[DEBUG] Dramático - jsonify(resultado)")
         resp = jsonify(resultado)
         resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return resp
     
     except Exception as e:
         import traceback
+        try:
+            with open('/opt/hesiox/api_errors.log', 'a', encoding='utf-8') as f:
+                f.write(f"\n[dramatico route exception]\n{traceback.format_exc()}\n")
+
+        except Exception:
+            pass
         traceback.print_exc()
         return jsonify({'exito': False, 'error': str(e)}), 500
 
@@ -1040,6 +1284,10 @@ def distribucion_temporal():
             limite = 300
 
         query = Prensa.query.filter(Prensa.incluido == True)
+        # Excluir publicaciones desactivadas
+        query = query.filter(~Prensa.id_publicacion.in_(
+            db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+        ))
         if proyecto:
             query = query.filter_by(proyecto_id=proyecto.id)
         else:
@@ -1916,6 +2164,8 @@ def interpretar_dramatico_seccion():
         import traceback
         traceback.print_exc()
         return jsonify({'exito': False, 'error': str(e)})
+@analisis_bp.route('/innovador/literario', methods=['POST'])
+@csrf.exempt
 def analisis_literario():
     """Endpoint para análisis literario profundo (Altair)"""
     try:
@@ -1952,31 +2202,18 @@ def analisis_literario():
         return jsonify({'exito': False, 'error': str(e)}), 500
 
 def _obtener_publicaciones_filtradas(filtros):
-    """Copia simplificada de la lógica de filtrado (debería centralizarse)"""
+    """Centraliza el filtrado usando la función principal"""
     from app import get_proyecto_activo
     proyecto = get_proyecto_activo()
-    if not proyecto: return []
+    if not proyecto:
+        return []
     
-    query = Prensa.query.filter_by(proyecto_id=proyecto.id)
+    # Extraer filtros y asegurar que el proyecto_id esté presente
+    filtros_completos = extraer_filtros(filtros)
+    filtros_completos['proyecto_id'] = proyecto.id
     
-    # Aplicar filtros
-    if filtros.get('tema'):
-        query = query.filter(Prensa.tema == filtros['tema'])
-    if filtros.get('publicacion_id'):
-        query = query.filter(Prensa.id_publicacion == filtros['publicacion_id'])
-    if filtros.get('pais'):
-        query = query.filter(Prensa.pais_hemeroteca == filtros['pais'])
-    if filtros.get('fecha_desde'):
-        query = query.filter(Prensa.fecha_original >= filtros['fecha_desde'])
-    if filtros.get('fecha_hasta'):
-        query = query.filter(Prensa.fecha_original <= filtros['fecha_hasta'])
-    
-    # Límite
-    limite = int(filtros.get('limite', 300))
-    if limite > 0:
-        query = query.limit(limite)
-    
-    pubs = query.all()
+    # Obtener documentos usando la función centralizada
+    pubs = obtener_publicaciones_filtradas(**filtros_completos)
     
     return [{
         'id': p.id,
@@ -2065,7 +2302,10 @@ def corpus_chat():
         query = db.session.query(Prensa).filter(
             Prensa.proyecto_id == proyecto.id,
             Prensa.embedding_vector.isnot(None),
-            Prensa.incluido == True
+            Prensa.incluido == True,
+            ~Prensa.id_publicacion.in_(
+                db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+            )
         )
         
         # Aplicar filtros adicionales si existen
@@ -2170,7 +2410,10 @@ def corpus_chat():
                 # Re-ejecutar el query filtrado pero sin obligar a tener embedding
                 query_fallback = db.session.query(Prensa).filter(
                     Prensa.proyecto_id == proyecto.id,
-                    Prensa.incluido == True
+                    Prensa.incluido == True,
+                    ~Prensa.id_publicacion.in_(
+                        db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+                    )
                 )
                 
                 # Aplicar los mismos filtros de metadatos

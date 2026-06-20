@@ -58,10 +58,50 @@
         color: #0056b3 !important;
     }
 
+    .quill-editor {
+        flex: 1 !important;
+        min-height: 650px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .ql-container.ql-snow {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: #0d0d0d;
+        min-height: 0;
+        overflow: hidden !important;
+    }
+
     .ql-editor {
-        min-height: 400px !important;
+        flex: 1 !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         text-align: justify;
         line-height: 1.6;
+        padding: 15px !important;
+    }
+
+    /* Forrar el scrollbar para que sea visible */
+    .ql-editor::-webkit-scrollbar {
+        width: 10px !important;
+        display: block !important;
+    }
+
+    .ql-editor::-webkit-scrollbar-track {
+        background: #1a1a1a !important;
+    }
+
+    .ql-editor::-webkit-scrollbar-thumb {
+        background: #444 !important;
+        border-radius: 5px !important;
+        border: 2px solid #1a1a1a !important;
+    }
+
+    .ql-editor::-webkit-scrollbar-thumb:hover {
+        background: #555 !important;
     }
 
     .ql-snow .ql-stroke {
@@ -338,25 +378,18 @@
                                 title="Elija el motor OCR según la calidad y rapidez que necesite">
                                 <span class="input-group-text"><i class="fa-solid fa-robot"></i></span>
                                 <select name="ocr_engine" id="ocrEngineSelect" class="form-select form-select-sirio">
+                                    <option value="hybrid" selected style="background-color:#e6f7ff;font-weight:bold;">
+                                        Motor Híbrido (Doble Paso + Reconciliación IA ✨)</option>
+                                    <option value="vision">Gemini Vision IA (Nativo, Mejor Indexado)</option>
                                     <option value="tesseract">Tesseract (local, rápido)</option>
                                     <option value="ocrspace">OCR.space (web, máxima calidad)</option>
                                     <option value="paddle">PaddleOCR (IA, multilingüe)</option>
                                     <option value="yolo">YOLO Layout (IA, estructurado)</option>
-                                    <option value="hybrid" selected style="background-color:#e6f7ff;font-weight:bold;">
-                                        Híbrido (Doble Paso + Reconciliación IA)</option>
                                 </select>
                             </div>
                             <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
                                 <i class="fa-solid fa-circle-info me-1"></i>
-                                <strong>Recomendado:</strong> Para documentos complejos o antiguos, usa <span
-                                    style="color:#ffffff;font-weight:bold;">PaddleOCR</span> o <span
-                                    style="color:#ffffff;font-weight:bold;">OCR.space</span>. Para prensa estructurada y
-                                tablas, <span style="color:#ffffff;font-weight:bold;">YOLO Layout</span> ofrece el mejor
-                                segmentado. Refina siempre con <span style="color:#cf93e9;font-weight:bold;">IA
-                                    Gemini/GPT-4</span> e el <strong>Arquetipo de Transcriptor
-                                    Paleográfico</strong>.<br>
-                                <span class="text-muted">Tesseract es la opción local rápida para textos sencillos y
-                                    modernos.</span>
+                                <strong>Recomendado:</strong> El motor <span style="color:#ffffff;font-weight:bold;">Híbrido</span> es el más equilibrado para prensa histórica. Combina dos pasadas de OCR local con un refinado final por <span style="color:#cf93e9;font-weight:bold;">IA Gemini/GPT-4</span> usando el <strong>Arquetipo de Transcriptor Paleográfico</strong>.
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3 mb-3">
@@ -465,18 +498,21 @@
 
                                     <div class="d-flex gap-2 mb-2">
                                         <button id="btn-correct-gemini" class="btn btn-sirio flex-grow-1">
-                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
                                             Seleccionada
                                         </button>
                                         <button id="btn-apply-ocr-text" class="btn btn-sirio flex-grow-1">
                                             <i class="fa-solid fa-check me-2"></i> Aplicar Texto al Campo Seleccionado
                                         </button>
                                     </div>
-                                    <div class="mb-2">
+                                    <div class="d-flex gap-2 mb-2">
                                         <button id="btn-vincular-imagen-ocr" type="button"
-                                            class="btn btn-sm btn-outline-info w-100" style="font-size: 0.75rem;">
-                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada como
-                                            Material Adjunto
+                                            class="btn btn-sm btn-outline-info w-75 fw-bold" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-paperclip me-1"></i> Vincular imagen procesada
+                                        </button>
+                                        <button id="btn-preview-spatial" type="button"
+                                            class="btn btn-sm btn-outline-warning w-25 fw-bold" style="font-size: 0.75rem;" title="Ver indexación de coordenadas">
+                                            <i class="fa-solid fa-eye me-1"></i> Indexación
                                         </button>
                                     </div>
                                 </div>
@@ -880,7 +916,7 @@
                         <div class="card-header-panel">
                             <span><i class="fa-solid fa-heading me-2"></i> Título y Contenido Principal</span>
                         </div>
-                        <div class="p-3">
+                        <div class="p-3 d-flex flex-column flex-grow-1">
                             <div class="mb-4">
                                 <label class="form-label-sirio">Título de la Noticia / Texto <span
                                         class="text-danger">*</span></label>
@@ -944,23 +980,23 @@
                                 </div>
                             </div>
 
-                            <div class="tab-content pt-3 flex-grow-1 d-flex flex-column">
+                            <div class="tab-content pt-1 flex-grow-1 d-flex flex-column">
                                 <div class="tab-pane fade show active flex-grow-1 d-flex flex-column" id="traduccion">
                                     <div id="toolbar-contenido"></div>
-                                    <div id="contenido-editor" class="quill-editor flex-grow-1"></div>
+                                    <div id="contenido-editor" class="quill-editor"></div>
                                     <textarea name="contenido" id="contenido"
                                         class="d-none">{{ precargados.contenido or '' }}</textarea>
                                 </div>
                                 <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="original">
                                     <div id="toolbar-texto_original"></div>
-                                    <div id="texto_original_editor" class="quill-editor flex-grow-1"></div>
+                                    <div id="texto_original_editor" class="quill-editor"></div>
                                     <textarea name="texto_original" id="texto_original"
                                         class="d-none">{{ precargados.texto_original or '' }}</textarea>
                                 </div>
                             </div>
 
                             <!-- Barra de Herramientas de Contenido -->
-                            <div class="small text-muted mb-1 mt-3">
+                            <div class="small text-muted mb-1 mt-1">
                                 <i class="fa-solid fa-circle-info me-1"></i> Recomendación: Para un mejor refinamiento
                                 del texto, aplica primero la 'Limpieza' y luego la 'Revisión por IA'.
                             </div>
@@ -972,12 +1008,12 @@
                                         <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual"
                                             style="width: auto !important;"
                                             title="Aplicar limpieza profunda al texto actual">
-                                            <i class="fa-solid fa-broom me-1"></i> Limpiar ahora
+                                            <i class="fa-solid fa-broom me-1"></i> Limpieza
                                         </button>
                                         <button type="button" class="btn btn-sm btn-sirio" id="btn-correct-txt-gemini"
                                             style="width: auto !important;"
                                             title="Corregir texto actual con inteligencia artificial">
-                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
                                         </button>
                                     </div>
                                 </div>
@@ -987,12 +1023,12 @@
                                         <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual-orig"
                                             style="width: auto !important;"
                                             title="Aplicar limpieza profunda al texto original">
-                                            <i class="fa-solid fa-broom me-1"></i> Limpiar ahora
+                                            <i class="fa-solid fa-broom me-1"></i> Limpieza
                                         </button>
                                         <button type="button" class="btn btn-sm btn-sirio"
                                             id="btn-correct-txt-gemini-orig" style="width: auto !important;"
                                             title="Corregir texto original con inteligencia artificial">
-                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisar con IA
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
                                         </button>
                                     </div>
                                 </div>
@@ -1037,10 +1073,106 @@
                                 </div>
                             </div>
                             <div id="imagePreviewContainer" style="margin-top: 20px;"></div>
+                            
+                            <hr class="my-4 border-secondary opacity-25">
+                            
+                            <div class="mt-3">
+                                <label class="form-label-sirio"><i class="fa-solid fa-file-pdf text-danger me-1"></i> Documento PDF</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <button type="button" class="btn btn-outline-warning text-start" onclick="document.getElementById('pdfInput').click()" style="border-style: dashed; border-width: 2px;">
+                                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Seleccionar PDF para adjuntar
+                                    </button>
+                                    <input type="file" name="archivo_pdf_upload" id="pdfInput" accept="application/pdf" class="d-none" multiple onchange="updatePdfPreview(this)">
+                                    <div id="pdfPreviewContainer" class="d-flex flex-column gap-2 mt-2"></div>
+                                </div>
+                                <div class="form-text text-muted small mt-1">Sube uno o varios archivos PDF para visualizarlos en el lector interactivo en lugar de las imágenes.</div>
+                                
+                                <script>
+                                    let selectedPdfFiles = [];
+
+                                    function updatePdfPreview(input) {
+                                        const container = document.getElementById('pdfPreviewContainer');
+                                        const files = Array.from(input.files);
+                                        
+                                        // Combinar con los ya seleccionados si se desea acumular, 
+                                        // o reemplazar (según comportamiento deseado). 
+                                        // Aquí reemplazamos para simplificar la gestión del input file.
+                                        selectedPdfFiles = files;
+                                        renderPdfPreview();
+                                    }
+
+                                    function renderPdfPreview() {
+                                         const container = document.getElementById('pdfPreviewContainer');
+                                         container.innerHTML = '';
+                                         
+                                         selectedPdfFiles.forEach((file, index) => {
+                                             const div = document.createElement('div');
+                                             div.className = 'p-2 rounded d-flex align-items-center justify-content-between animate__animated animate__fadeIn shadow-sm pdf-preview-item';
+                                             div.style.marginBottom = '6px';
+                                             
+                                             div.innerHTML = `
+                                                 <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                                     <i class="fa-solid fa-file-pdf text-danger fs-5 flex-shrink-0"></i>
+                                                     <div class="d-flex flex-column overflow-hidden">
+                                                         <span class="small text-light fw-bold text-truncate" style="max-width: 250px;">${file.name}</span>
+                                                         <span style="font-size: 9px; letter-spacing: 0.5px; color: #ff9800; font-weight: 700;">PENDIENTE DE SUBIDA</span>
+                                                     </div>
+                                                 </div>
+                                                 <button type="button" class="btn btn-sm btn-danger d-flex align-items-center gap-2 px-3 pdf-remove-btn" 
+                                                         style="font-size: 11px; transition: all 0.2s;" 
+                                                         onclick="removePdfFromSelection(${index})">
+                                                     <i class="fa-solid fa-circle-xmark"></i> <span>Quitar</span>
+                                                 </button>
+                                             `;
+                                             container.appendChild(div);
+                                         });
+
+                                         // Agregar estilo para el hover invertido si no existe
+                                         if (!document.getElementById('pdf-new-styles')) {
+                                             const style = document.createElement('style');
+                                             style.id = 'pdf-new-styles';
+                                             style.textContent = `
+                                                 .pdf-preview-item {
+                                                     border: 1px solid rgba(255, 152, 0, 0.2) !important;
+                                                     background: rgba(255, 152, 0, 0.03) !important;
+                                                 }
+                                                 .pdf-remove-btn { 
+                                                     border: 1px solid transparent; 
+                                                     font-weight: 600;
+                                                 }
+                                                 .pdf-remove-btn:hover {
+                                                     background: transparent !important;
+                                                     border-color: #dc3545 !important;
+                                                     color: #dc3545 !important;
+                                                 }
+                                             `;
+                                             document.head.appendChild(style);
+                                         }
+                                     }
+
+                                    function removePdfFromSelection(index) {
+                                        selectedPdfFiles.splice(index, 1);
+                                        
+                                        // Sincronizar con el input file (es difícil borrar un solo archivo del input, 
+                                        // pero podemos resetearlo si se borran todos o informar que la lista cambió)
+                                        // Nota: El backend recibirá lo que esté en el input al hacer submit.
+                                        // Para que sea real, necesitaríamos un DataTransfer object.
+                                        
+                                        const dt = new DataTransfer();
+                                        selectedPdfFiles.forEach(file => dt.items.add(file));
+                                        document.getElementById('pdfInput').files = dt.files;
+                                        
+                                        renderPdfPreview();
+                                    }
+                                </script>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- Campos ocultos para OCR e Imagen vinculada -->
+            <input type="hidden" name="ocr_map" id="input_ocr_map">
+            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64">
         </form>
     </div>
 </div>

@@ -629,7 +629,8 @@
 
         const getTileUrl = (type, isDarkMode) => {
             switch (type) {
-                case 'osm': return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+                case 'osm':
+                    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
                 case 'osm_hot': return 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
                 case 'satellite':
                 case 'satellite_hybrid':

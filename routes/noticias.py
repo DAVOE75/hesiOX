@@ -1,6 +1,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, current_app, abort, send_file, Response
 import json
+import sys
 from flask_login import login_required, current_user
 from models import Prensa, ImagenPrensa, Publicacion, Proyecto, LugarNoticia, Ciudad, EdicionTipoRecurso, SQL_PRENSA_DATE, Tema, AutorPrensa, MetadataOption, VersionPrensa
 from extensions import db, csrf
@@ -373,12 +374,12 @@ def cartografia_noticia_borrar_location(id):
         nombre = data.get('nombre')
         if not nombre:
             return jsonify({'success': False, 'error': 'Nombre vacÃ­o'}), 400
-        # Marcar como borrado=True en todas las noticias donde aparezca ese nombre
-        lugares = LugarNoticia.query.filter_by(nombre=nombre, borrado=False).all()
-        if not lugares:
-            return jsonify({'success': False, 'error': 'Lugar no encontrado'}), 404
-        for lugar in lugares:
-            lugar.borrado = True
+        # Marcar como borrado=True ÚNICAMENTE para esta noticia
+        lugar = LugarNoticia.query.filter_by(noticia_id=id, nombre=nombre, borrado=False).first()
+        if not lugar:
+            return jsonify({'success': False, 'error': 'Lugar no encontrado en esta noticia'}), 404
+        
+        lugar.borrado = True
         db.session.commit()
         return jsonify({'success': True})
     except Exception as e:
@@ -5594,10 +5595,12 @@ def crear_noticia_view(get_proyecto_activo_func):
         )
         db.session.add(nuevo)
         db.session.flush()  # Para obtener el ID de la noticia antes de commit
+        print(f"[DEBUG-SAVE] Noticia creada con ID: {nuevo.id}", file=sys.stderr)
 
         # 2.5 GUARDAR AUTORES RELACIONADOS
         for aut in autores_objs:
             nuevo.autores.append(aut)
+        print(f"[DEBUG-SAVE] Autores vinculados", file=sys.stderr)
         # Guardar imÃ¡genes adjuntas (mÃºltiples)
         imagenes_files = request.files.getlist("imagen_scan")
         from models import ImagenPrensa
@@ -5609,6 +5612,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 file.save(ruta)
                 nueva_img = ImagenPrensa(prensa_id=nuevo.id, filename=filename)
                 db.session.add(nueva_img)
+        print(f"[DEBUG-SAVE] Imágenes físicas procesadas", file=sys.stderr)
 
         # Guardar PDFs adjuntos (mÃºltiples)
         pdf_files = request.files.getlist("archivo_pdf_upload")
@@ -5623,6 +5627,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                 
         if saved_pdfs:
             nuevo.archivo_pdf = ",".join(saved_pdfs)
+        print(f"[DEBUG-SAVE] PDFs procesados", file=sys.stderr)
 
         # ââ Sincronizar Temas (Modelo Tema) ââ
         if temas_final:
@@ -5637,6 +5642,7 @@ def crear_noticia_view(get_proyecto_activo_func):
                     db.session.flush()
                 temas_objs.append(t_obj)
             nuevo.temas_rel = temas_objs
+        print(f"[DEBUG-SAVE] Temas sincronizados", file=sys.stderr)
 
         # --- NUEVO: Procesar Spatial Index (ocr_map) ---
         ocr_map_str = request.form.get("ocr_map")
@@ -5653,7 +5659,6 @@ def crear_noticia_view(get_proyecto_activo_func):
         # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
         ocr_b64 = request.form.get("ocr_image_base64")
         if ocr_b64:
-            from utils import save_base64_image
             filename_ocr = save_base64_image(ocr_b64, nuevo.id)
             if filename_ocr:
                 # Si tenemos el ocr_map, lo guardamos también en la imagen para acceso directo
@@ -5923,7 +5928,6 @@ def editar(id):
         # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
         ocr_b64 = request.form.get("ocr_image_base64")
         if ocr_b64:
-            from utils import save_base64_image
             filename_ocr = save_base64_image(ocr_b64, noticia.id)
             if filename_ocr:
                 nueva_img_ocr = ImagenPrensa(
@@ -7043,19 +7047,24 @@ def api_noticia_ai_vision_highlight():
 
         if ocr_map and isinstance(ocr_map, list):
             search_term = term.lower().strip()
-            words_in_term = search_term.split()
+            # Limpiar el término de búsqueda de puntuación
+            clean_search_term = re.sub(r'[^\w\s]', '', search_term)
+            words_in_term = clean_search_term.split()
             
             if len(words_in_term) == 1:
-                # Búsqueda de palabra única
+                # Búsqueda de palabra única (con flexibilidad de puntuación)
                 for item in ocr_map:
-                    if item.get('word', '').lower() == search_term:
+                    word = item.get('word', '').lower().strip()
+                    clean_word = re.sub(r'[^\w]', '', word)
+                    if clean_word == clean_search_term or clean_search_term in clean_word:
                         found_boxes.append(item.get('bbox'))
             else:
                 # Búsqueda de frase consecutiva
                 for i in range(len(ocr_map) - len(words_in_term) + 1):
                     match = True
                     for j in range(len(words_in_term)):
-                        if ocr_map[i+j].get('word', '').lower() != words_in_term[j]:
+                        word_in_map = re.sub(r'[^\w]', '', ocr_map[i+j].get('word', '').lower())
+                        if word_in_map != words_in_term[j] and words_in_term[j] not in word_in_map:
                             match = False
                             break
                     if match:
@@ -7116,7 +7125,7 @@ def api_noticia_ai_vision_highlight():
         """
         
         from services.ai_service import AIService
-        ai_service = AIService(provider='gemini', model='gemini-1.5-pro-latest', user=current_user)
+        ai_service = AIService(provider='gemini', model='gemini-2.5-flash', user=current_user)
         response_text = ai_service.generate_content(prompt, temperature=0.0, image_data=image_data)
         
         if not response_text:

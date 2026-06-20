@@ -8,31 +8,418 @@
 
 window.quillEditors = {};
 
+class QuillFindReplace {
+    constructor(quill) {
+        this.quill = quill;
+        this.matches = [];
+        this.currentIndex = -1;
+        this.findText = '';
+        this.replaceText = '';
+        this.caseSensitive = false;
+        this.wholeWord = false;
+        this.useRegex = false;
+        
+        this.createWidget();
+    }
+    
+    createWidget() {
+        const container = this.quill.container;
+        const widget = document.createElement('div');
+        widget.className = 'qfr-widget d-none';
+        widget.innerHTML = `
+            <div class="qfr-row-1">
+                <div class="qfr-input-group">
+                    <input type="text" class="qfr-find-input" placeholder="Buscar..." />
+                    <div class="qfr-options">
+                        <button type="button" class="qfr-opt-btn qfr-case-btn" title="Coincidir mayúsculas/minúsculas (Aa)">Aa</button>
+                        <button type="button" class="qfr-opt-btn qfr-word-btn" title="Palabra completa (ab)">ab</button>
+                        <button type="button" class="qfr-opt-btn qfr-regex-btn" title="Usar expresión regular (.*)">.*</button>
+                    </div>
+                </div>
+                <span class="qfr-status">Sin resultados</span>
+                <button type="button" class="qfr-nav-btn qfr-prev-btn" title="Anterior"><i class="fa-solid fa-arrow-up"></i></button>
+                <button type="button" class="qfr-nav-btn qfr-next-btn" title="Siguiente"><i class="fa-solid fa-arrow-down"></i></button>
+                <button type="button" class="qfr-close-btn" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="qfr-row-2">
+                <input type="text" class="qfr-replace-input" placeholder="Reemplazar con..." />
+                <button type="button" class="qfr-action-btn qfr-replace-btn">Reemplazar</button>
+                <button type="button" class="qfr-action-btn qfr-replace-all-btn">Todo</button>
+            </div>
+        `;
+        
+        container.style.position = 'relative';
+        container.appendChild(widget);
+        this.widget = widget;
+        this.bindEvents();
+    }
+    
+    bindEvents() {
+        const findInput = this.widget.querySelector('.qfr-find-input');
+        const replaceInput = this.widget.querySelector('.qfr-replace-input');
+        
+        findInput.addEventListener('input', () => {
+            this.findText = findInput.value;
+            this.search();
+        });
+
+        findInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.next();
+            }
+        });
+        
+        replaceInput.addEventListener('input', () => {
+            this.replaceText = replaceInput.value;
+        });
+        
+        this.widget.querySelector('.qfr-case-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.caseSensitive = !this.caseSensitive;
+            e.target.classList.toggle('active', this.caseSensitive);
+            this.search();
+        });
+        
+        this.widget.querySelector('.qfr-word-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.wholeWord = !this.wholeWord;
+            e.target.classList.toggle('active', this.wholeWord);
+            this.search();
+        });
+        
+        this.widget.querySelector('.qfr-regex-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.useRegex = !this.useRegex;
+            e.target.classList.toggle('active', this.useRegex);
+            this.search();
+        });
+        
+        this.widget.querySelector('.qfr-next-btn').addEventListener('click', (e) => { e.preventDefault(); this.next(); });
+        this.widget.querySelector('.qfr-prev-btn').addEventListener('click', (e) => { e.preventDefault(); this.prev(); });
+        this.widget.querySelector('.qfr-replace-btn').addEventListener('click', (e) => { e.preventDefault(); this.replace(); });
+        this.widget.querySelector('.qfr-replace-all-btn').addEventListener('click', (e) => { e.preventDefault(); this.replaceAll(); });
+        
+        this.widget.querySelector('.qfr-close-btn').addEventListener('click', (e) => { e.preventDefault(); this.hide(); });
+        
+        this.widget.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+    }
+    
+    show() {
+        this.widget.classList.remove('d-none');
+        const findInput = this.widget.querySelector('.qfr-find-input');
+        findInput.focus();
+        this.search();
+    }
+    
+    hide() {
+        this.widget.classList.add('d-none');
+    }
+    
+    toggle() {
+        if (this.widget.classList.contains('d-none')) {
+            this.show();
+        } else {
+            this.hide();
+        }
+    }
+    
+    search() {
+        this.matches = [];
+        this.currentIndex = -1;
+        
+        if (!this.findText) {
+            this.updateStatus();
+            return;
+        }
+        
+        const text = this.quill.getText();
+        let regex;
+        let flags = 'g';
+        if (!this.caseSensitive) flags += 'i';
+        
+        try {
+            if (this.useRegex) {
+                regex = new RegExp(this.findText, flags);
+            } else {
+                let escaped = this.findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                if (this.wholeWord) {
+                    escaped = '\\b' + escaped + '\\b';
+                }
+                regex = new RegExp(escaped, flags);
+            }
+            
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+                if (match[0].length === 0) {
+                    regex.lastIndex++;
+                    continue;
+                }
+                this.matches.push({
+                    index: match.index,
+                    length: match[0].length
+                });
+            }
+        } catch (e) {
+            // Error en regex
+        }
+        
+        if (this.matches.length > 0) {
+            this.currentIndex = 0;
+        }
+        
+        this.updateStatus();
+    }
+    
+    scrollToCurrent() {
+        if (this.currentIndex >= 0 && this.currentIndex < this.matches.length) {
+            const match = this.matches[this.currentIndex];
+            this.quill.setSelection(match.index, match.length);
+        }
+    }
+    
+    next() {
+        if (this.matches.length === 0) return;
+        this.currentIndex = (this.currentIndex + 1) % this.matches.length;
+        this.scrollToCurrent();
+        this.updateStatus();
+    }
+    
+    prev() {
+        if (this.matches.length === 0) return;
+        this.currentIndex = (this.currentIndex - 1 + this.matches.length) % this.matches.length;
+        this.scrollToCurrent();
+        this.updateStatus();
+    }
+    
+    replace() {
+        if (this.currentIndex < 0 || this.currentIndex >= this.matches.length) return;
+        const match = this.matches[this.currentIndex];
+        
+        this.quill.deleteText(match.index, match.length);
+        this.quill.insertText(match.index, this.replaceText);
+        
+        this.search();
+    }
+    
+    replaceAll() {
+        if (this.matches.length === 0) return;
+        
+        for (let i = this.matches.length - 1; i >= 0; i--) {
+            const match = this.matches[i];
+            this.quill.deleteText(match.index, match.length);
+            this.quill.insertText(match.index, this.replaceText);
+        }
+        
+        this.search();
+    }
+    
+    updateStatus() {
+        const statusEl = this.widget.querySelector('.qfr-status');
+        if (this.matches.length === 0) {
+            statusEl.textContent = 'Sin resultados';
+            statusEl.className = 'qfr-status empty';
+        } else {
+            statusEl.textContent = `${this.currentIndex + 1} de ${this.matches.length}`;
+            statusEl.className = 'qfr-status found';
+        }
+    }
+}
+
+// Inyección de estilos CSS para el widget
+const style = document.createElement('style');
+style.innerHTML = `
+    .qfr-widget {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: rgba(18, 18, 18, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        color: #e0e0e0;
+        width: 360px;
+    }
+    .qfr-row-1, .qfr-row-2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .qfr-row-2 {
+        margin-top: 8px;
+    }
+    .qfr-input-group {
+        display: flex;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        padding-right: 4px;
+        flex-grow: 1;
+    }
+    .qfr-find-input, .qfr-replace-input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        flex-grow: 1;
+        outline: none;
+    }
+    .qfr-options {
+        display: flex;
+        gap: 2px;
+    }
+    .qfr-opt-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.4);
+        font-size: 0.75rem;
+        padding: 2px 4px;
+        border-radius: 2px;
+        cursor: pointer;
+        font-family: monospace;
+    }
+    .qfr-opt-btn:hover {
+        color: rgba(255,255,255,0.8);
+        background: rgba(255,255,255,0.05);
+    }
+    .qfr-opt-btn.active {
+        color: var(--bs-primary, #ff9800);
+        background: rgba(255, 152, 0, 0.15);
+    }
+    .qfr-status {
+        font-size: 0.5rem;
+        white-space: nowrap;
+        min-width: 40px;
+        text-align: center;
+    }
+    .qfr-status.empty {
+        color: var(--bs-primary, #ff6b6b);
+    }
+    .qfr-status.found {
+        color: var(--bs-primary, #ff9800);
+    }
+    .qfr-nav-btn, .qfr-close-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .qfr-nav-btn:hover, .qfr-close-btn:hover {
+        color: #fff;
+        background: rgba(255,255,255,0.1);
+    }
+    .qfr-action-btn {
+        background: rgba(255, 152, 0, 0.15);
+        border: 1px solid var(--bs-primary, rgba(255, 152, 0, 0.3));
+        color: var(--bs-primary, #ff9800);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .qfr-action-btn:hover {
+        background: rgba(255, 152, 0, 0.3);
+        color: #fff;
+    }
+    .ql-search-btn i {
+        color: var(--bs-primary, #ff9800);
+    }
+    .ql-editor ::selection {
+        background-color: rgba(255, 152, 0, 0.4) !important;
+    }
+    .ql-editor span, .ql-editor p {
+        background-color: transparent !important;
+    }
+
+    /* Estilos para Modo Claro (Blanco y Azul) */
+    [data-theme="light"] .ql-editor ::selection {
+        background-color: rgba(41, 74, 96, 0.2) !important;
+    }
+    [data-theme="light"] .qfr-widget {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(41, 74, 96, 0.2);
+        box-shadow: 0 10px 30px rgba(41, 74, 96, 0.15);
+        color: #294A60;
+    }
+    [data-theme="light"] .qfr-input-group {
+        background: rgba(41, 74, 96, 0.05);
+        border: 1px solid rgba(41, 74, 96, 0.2);
+    }
+    [data-theme="light"] .qfr-find-input, 
+    [data-theme="light"] .qfr-replace-input {
+        color: #294A60;
+    }
+    [data-theme="light"] .qfr-opt-btn {
+        color: rgba(41, 74, 96, 0.5);
+    }
+    [data-theme="light"] .qfr-opt-btn:hover {
+        color: #294A60;
+        background: rgba(41, 74, 96, 0.08);
+    }
+    [data-theme="light"] .qfr-opt-btn.active {
+        color: #294A60;
+        background: rgba(41, 74, 96, 0.15);
+    }
+    [data-theme="light"] .qfr-status.empty {
+        color: #d9534f;
+    }
+    [data-theme="light"] .qfr-status.found {
+        color: #294A60;
+    }
+    [data-theme="light"] .qfr-nav-btn, 
+    [data-theme="light"] .qfr-close-btn {
+        color: rgba(41, 74, 96, 0.6);
+    }
+    [data-theme="light"] .qfr-nav-btn:hover, 
+    [data-theme="light"] .qfr-close-btn:hover {
+        color: #294A60;
+        background: rgba(41, 74, 96, 0.1);
+    }
+    [data-theme="light"] .qfr-action-btn {
+        background: rgba(41, 74, 96, 0.1);
+        border: 1px solid rgba(41, 74, 96, 0.3);
+        color: #294A60;
+    }
+    [data-theme="light"] .qfr-action-btn:hover {
+        background: rgba(41, 74, 96, 0.2);
+        color: #294A60;
+    }
+    [data-theme="light"] .ql-search-btn i {
+        color: #294A60;
+    }
+`;
+document.head.appendChild(style);
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[Quill News] Inicializando editores...');
 
-    // Opciones de la barra de herramientas (ql-toolbar)
     const toolbarOptions = [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        ['bold', 'italic', 'underline', 'strike'],        // negrita, cursiva, subrayado, tachado
+        ['bold', 'italic', 'underline', 'strike'],
         ['blockquote', 'code-block'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'script': 'sub'}, { 'script': 'super' }],      // subíndice/superíndice
-        [{ 'indent': '-1'}, { 'indent': '+1' }],          // sangría
-        [{ 'direction': 'rtl' }],                         // dirección del texto
-        [{ 'color': [] }, { 'background': [] }],          // color y fondo
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        [{ 'color': [] }, { 'background': [] }],
         [{ 'align': [] }],
-        ['link', 'image'],                                // enlaces e imágenes
-        ['clean']                                         // eliminar formato
+        ['link', 'image'],
+        ['clean']
     ];
 
-    /**
-     * Inicializa una instancia de Quill
-     * @param {string} editorId - ID del contenedor div del editor
-     * @param {string} textareaId - ID del textarea oculto para sync
-     * @param {string} toolbarId - ID del contenedor de la toolbar (si aplica)
-     * @param {string} placeholder - Texto de ayuda
-     */
     function setupEditor(editorId, textareaId, toolbarId, placeholder) {
         const editorContainer = document.getElementById(editorId);
         const textarea = document.getElementById(textareaId);
@@ -50,25 +437,45 @@ document.addEventListener('DOMContentLoaded', function() {
             theme: 'snow'
         });
 
-        // Carga inicial de contenido respetando saltos de línea (Compatibilidad con datos viejos)
         if (textarea.value) {
             const val = textarea.value.trim();
             if (val.startsWith('<p') || val.startsWith('<div') || val.includes('<br')) {
-                // Es HTML, cargar directamente
                 quill.root.innerHTML = val;
             } else {
-                // Es texto plano (viejo), convertir saltos a párrafos para Quill
                 const html = val.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<p><br></p>').join('');
                 quill.root.innerHTML = html;
             }
         }
 
-        // Sincronización Quill -> Textarea (cada vez que cambia el texto)
         quill.on('text-change', function() {
             textarea.value = quill.root.innerHTML;
-            // Disparar evento input para que otros scripts (como CharacterCounter) se enteren
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
         });
+
+        const qfr = new QuillFindReplace(quill);
+        
+        setTimeout(() => {
+            const toolbar = quill.getModule('toolbar');
+            if (toolbar && toolbar.container) {
+                const searchBtn = document.createElement('button');
+                searchBtn.type = 'button';
+                searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
+                searchBtn.title = "Buscar y Reemplazar";
+                searchBtn.classList.add('ql-search-btn');
+                searchBtn.style.float = 'right';
+                searchBtn.style.padding = '3px 8px';
+                searchBtn.style.marginTop = '2px';
+                searchBtn.style.background = 'transparent';
+                searchBtn.style.border = 'none';
+                
+                searchBtn.onclick = function(e) {
+                    e.preventDefault();
+                    qfr.toggle();
+                };
+                
+                toolbar.container.appendChild(searchBtn);
+            }
+        }, 100);
 
         console.log(`[Quill News] ✓ Editor '${editorId}' inicializado.`);
         return quill;
@@ -196,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-brain fa-spin me-1"></i> Corrigiendo...';
+        btn.innerHTML = '<i class="fa-solid fa-brain fa-spin me-1"></i> Revisando...';
 
         // --- LÓGICA DE BARRA DE PROGRESO SIMULADA ---
         const progContainer = document.getElementById('ai-progress-container');
@@ -240,7 +647,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                console.error('[IA] Error parsing JSON:', jsonErr);
+                throw new Error('El servidor devolvió un error inesperado (posible error 500). Por favor, intenta de nuevo.');
+            }
             if (data.clean_text || data.corrected_text) {
                 const corrected = data.clean_text || data.corrected_text;
                 // Convertir saltos de línea en párrafos

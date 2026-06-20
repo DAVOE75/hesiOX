@@ -1094,9 +1094,36 @@ def exportar():
     query = get_filtered_pasajeros_query(request.args)
     pasajeros = query.all()
     
+    # Pre-cargar nombres de parientes para evitar N+1
+    # Recolectamos todos los IDs de parientes mencionados en las relaciones de los pasajeros a exportar
+    parientes_ids = set()
+    for p in pasajeros:
+        for r in p.relaciones_como_sujeto:
+            parientes_ids.add(r.relacionado_id)
+        for r in p.relaciones_como_objeto:
+            parientes_ids.add(r.pasajero_id)
+            
+    # Consultar nombres de esos parientes
+    nombres_parientes = {}
+    if parientes_ids:
+        for pr in PasajeroSirio.query.filter(PasajeroSirio.id.in_(list(parientes_ids))).all():
+            nombres_parientes[pr.id] = f"{pr.nombre} {pr.apellidos}"
+
     data = []
     for p in pasajeros:
+        # Procesar fuentes (publicaciones)
+        fuentes_nombres = [pub.nombre for pub in p.publicaciones]
+        
+        # Procesar relaciones familiares
+        relaciones_str = []
+        rel_dict = p.get_relaciones_flat()
+        for pid_str, rol in rel_dict.items():
+            pid = int(pid_str)
+            nombre_p = nombres_parientes.get(pid, f"ID:{pid}")
+            relaciones_str.append(f"{rol}: {nombre_p}")
+
         data.append({
+            'VERIFICACION': 'SISTEMA_ACTUALUADO_V2',
             'ID': p.id,
             'Nombre': p.nombre,
             'Apellidos': p.apellidos,
@@ -1106,15 +1133,40 @@ def exportar():
             'Estado': p.estado,
             'Municipio': p.municipio,
             'Provincia': p.provincia,
+            'Región': p.region,
             'País': p.pais,
-            'Destino': p.ciudad_destino_final,
-            'Embarque': p.puerto_embarque
+            'Punto Residencia': p.punto_residencia,
+            'Hospedaje Cartagena': p.hospedaje_cartagena,
+            'Embarque': p.puerto_embarque,
+            'Emb. Nápoles': p.fecha_emb_napoles,
+            'Emb. Génova': p.fecha_emb_genova,
+            'Emb. Barcelona': p.fecha_emb_barcelona,
+            'Fecha Hundimiento': p.fecha_hundimiento,
+            'Fecha Destino/Retorno': p.fecha_retorno,
+            'Puerto Retorno': p.puerto_retorno,
+            'Situación Post-Sirio': p.situacion_post_naufragio,
+            'Llegada Cartagena': p.fecha_llegada_cartagena,
+            'Salida Cartagena': p.fecha_salida_cartagena,
+            'Destino': p.ciudad_destino,
+            'Destino Final': p.ciudad_destino_final,
+            'V. Italia MVD': 'Sí' if p.en_lista_italia_mvd else 'No',
+            'V. Italia BA': 'Sí' if p.en_lista_italia_ba else 'No',
+            'V. Ravenna SP': 'Sí' if p.en_lista_ravena_sp else 'No',
+            'V. Diana BCN': 'Sí' if p.en_lista_diana_bcn else 'No',
+            'V. Orione GE': 'Sí' if p.en_lista_orione_ge else 'No',
+            'Fuentes': ", ".join(fuentes_nombres),
+            'Relaciones Familiares': "; ".join(relaciones_str),
+            'Comentarios': p.comentarios,
+            'Latitud': p.lat,
+            'Longitud': p.lon,
+            'Fecha Registro': p.creado_en.strftime('%Y-%m-%d %H:%M:%S') if p.creado_en else '',
+            'Foto': p.foto if p.foto else ''
         })
     
     df = pd.DataFrame(data)
     
     output = io.BytesIO()
-    filename = f"pasajeros_sirio_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    filename = f"pasajeros_sirio_completo_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     if format == 'excel':
         df.to_excel(output, index=False, engine='openpyxl')
@@ -1122,23 +1174,26 @@ def exportar():
         return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=f"{filename}.xlsx")
     
     elif format == 'pdf':
-        html = df.to_html(classes='table table-striped', index=False)
-        # Custom styling for the PDF
+        # Para el PDF seleccionamos las columnas más importantes para que quepa
+        cols_pdf = ['ID', 'Nombre', 'Apellidos', 'Edad', 'Sexo', 'Clase', 'Estado', 'Fuentes']
+        html = df[cols_pdf].to_html(classes='table table-striped', index=False)
         styled_html = f"""
         <html>
         <head>
             <meta charset="UTF-8">
             <style>
-                body {{ font-family: sans-serif; font-size: 10px; }}
+                body {{ font-family: sans-serif; font-size: 9px; }}
                 table {{ width: 100%; border-collapse: collapse; }}
                 th, td {{ border: 1px solid #ddd; padding: 4px; text-align: left; }}
-                th {{ background-color: #f2f2f2; }}
+                th {{ background-color: #333; color: white; }}
                 h1 {{ color: #a52a2a; text-align: center; }}
             </style>
         </head>
         <body>
             <h1>Listado de Pasajeros - S.S. Sirio</h1>
+            <p style="text-align: right;">Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
             {html}
+            <p style="font-size: 8px; color: #666; margin-top: 20px;">* Nota: El PDF sólo incluye columnas principales. Para todos los campos use formato Excel o CSV.</p>
         </body>
         </html>
         """
@@ -1148,7 +1203,8 @@ def exportar():
         return send_file(output, mimetype='application/pdf', as_attachment=True, download_name=f"{filename}.pdf")
     
     else: # Default CSV
-        csv_data = df.to_csv(index=False, encoding='utf-8-sig')
+        # Usamos utf-8 con BOM para que Excel en Windows lo abra correctamente con acentos
+        csv_data = df.to_csv(index=False, sep=',', encoding='utf-8-sig')
         output.write(csv_data.encode('utf-8-sig'))
         output.seek(0)
         return send_file(output, mimetype='text/csv', as_attachment=True, download_name=f"{filename}.csv")

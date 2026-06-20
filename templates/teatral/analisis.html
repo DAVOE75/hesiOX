@@ -1,0 +1,128 @@
+{% extends "base_desktop.html" %}
+
+{% block page_title %}Análisis Teatral - Laboratorio de Dramaturgia{% endblock %}
+ 
+{% block top_actions %}
+<div class="d-flex align-items-center gap-2">
+    <!-- Botón Manual -->
+    <a href="{{ url_for('manual') }}" class="btn btn-sirio-sm btn-outline-secondary d-none d-md-flex align-items-center gap-2 px-3" title="Consultar Manual">
+        <i class="fa-solid fa-book-open"></i>
+        <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">MANUAL</span>
+    </a>
+
+    <!-- Botón Captura -->
+    <button class="btn btn-sirio-sm btn-outline-secondary d-flex align-items-center gap-2 px-3" onclick="window.print()" title="Imprimir / Guardar PDF">
+        <i class="fa-solid fa-camera"></i>
+        <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">CAPTURA</span>
+    </button>
+
+    <div class="vr mx-1 opacity-25" style="height: 20px;"></div>
+
+    <!-- Selector de IA -->
+    <div class="btn btn-sirio-sm btn-outline-secondary d-flex align-items-center gap-2 px-2" style="height: 28px; background: rgba(0,0,0,0.2);">
+        <i class="fa-solid fa-microchip text-warning small"></i>
+        <select id="ai-model-selector" class="form-select form-select-sm border-0 bg-transparent text-light fw-bold py-0" style="font-size: 0.65rem; min-width: 120px; box-shadow: none; cursor: pointer;">
+            <option value="gemini:pro" selected>GEMINI 1.5 PRO</option>
+            <option value="openai:gpt-4o">GPT-4o (OPENAI)</option>
+            <option value="anthropic:claude-3-5-sonnet">CLAUDE 3.5 SONNET</option>
+            <option value="local:deepseek-v3">DEEPSEEK V3</option>
+        </select>
+    </div>
+
+    <div class="vr mx-1 opacity-25" style="height: 20px;"></div>
+
+    <!-- Botón Exportar Principal -->
+    <button class="btn btn-sirio-sm btn-sirio-primary d-flex align-items-center gap-2 px-3 shadow-sm" id="btn-export-dossier" onclick="window.exportarDossier()" title="Exportar Dossier de Análisis">
+        <i class="fa-solid fa-file-export"></i>
+        <span style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">EXPORTAR DOSSIER</span>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Vis Network -->
+<link href="https://unpkg.com/vis-network@9.1.2/dist/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
+<style>
+    .glass-panel {
+        background: rgba(20, 20, 20, 0.4);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+    .chart-container {
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- El contenedor del análisis dramático -->
+    <div id="view-dramatico" class="analisis-view">
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 400px; color: var(--ds-text-main);">
+            <div class="spinner-border text-warning mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+            <h5 class="fw-bold animate__animated animate__pulse animate__infinite" style="color: var(--ds-accent-primary);">CARGANDO ANÁLISIS TEATRAL...</h5>
+            <p class="small opacity-75">Extrayendo diálogos y procesando personajes.</p>
+        </div>
+    </div>
+
+    <!-- Modal: Gestor de Identidades (Alias) -->
+    <div class="modal fade" id="modalAlias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel border-warning" style="background: rgba(15, 15, 15, 0.95) !important; backdrop-filter: blur(20px);">
+          <div class="modal-header border-secondary border-opacity-25 py-3">
+            <h5 class="modal-title text-warning fw-bold" id="modalAliasLabel">
+              <i class="fa-solid fa-users-gear me-2"></i>GESTOR DE IDENTIDADES
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <p class="text-muted small mb-4">
+              Selecciona un personaje de la izquierda y asígnale un <strong>Nombre Canónico</strong> a la derecha para unificar sus intervenciones. 
+              Útil para corregir duplicados como "D. CARLOS" y "DON CARLOS".
+            </p>
+            
+            <div id="alias-list-container" class="custom-scrollbar" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-dark table-hover align-middle">
+                <thead>
+                  <tr class="small text-muted text-uppercase text-center">
+                    <th class="text-start">Nombre Detectado</th>
+                    <th></th>
+                    <th>Nombre Canónico (Unificado)</th>
+                    <th>Ocultar</th>
+                    <th>Eliminar</th>
+                  </tr>
+                </thead>
+                <tbody id="alias-table-body">
+                  <!-- Se inyecta por JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer border-secondary border-opacity-25">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetAliases()">Restablecer Todo</button>
+            <div class="ms-auto">
+              <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cerrar</button>
+              <button type="button" class="btn btn-warning btn-sm fw-bold px-4" onclick="saveAndApplyAliases()">Aplicar y Recalcular</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Librerías de Visualización Requeridas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Scripts lógicos del Módulo Teatral -->
+<script src="{{ url_for('static', filename='js/teatral_analisis.js') }}?v={{ range(1000, 9999) | random }}"></script>
+{% endblock %}

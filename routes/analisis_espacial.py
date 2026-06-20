@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from extensions import db
-from models import Prensa, Proyecto, LugarNoticia
+from models import Prensa, Proyecto, LugarNoticia, Publicacion
 import pandas as pd
 # import geopandas as gpd
 # from shapely.geometry import Point
@@ -36,7 +36,10 @@ def api_estadisticas():
             Prensa.proyecto_id == proyecto.id,
             LugarNoticia.borrado == False,
             LugarNoticia.lat.isnot(None),
-            LugarNoticia.lon.isnot(None)
+            LugarNoticia.lon.isnot(None),
+            ~Prensa.id_publicacion.in_(
+                db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+            )
         ).all()
 
         if not query:
@@ -117,7 +120,10 @@ def api_redes_espaciales():
             LugarNoticia.borrado == False,
             LugarNoticia.lat.isnot(None),
             LugarNoticia.lon.isnot(None),
-            Prensa.incluido == True
+            Prensa.incluido == True,
+            ~Prensa.id_publicacion.in_(
+                db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+            )
         ).all()
 
         if not lugares:
@@ -247,7 +253,10 @@ def api_escala_nodos():
             Prensa.proyecto_id == proyecto.id,
             LugarNoticia.borrado == False,
             LugarNoticia.lat.isnot(None),
-            LugarNoticia.lon.isnot(None)
+            LugarNoticia.lon.isnot(None),
+            ~Prensa.id_publicacion.in_(
+                db.session.query(Publicacion.id_publicacion).filter(Publicacion.activa == False)
+            )
         )
 
         # Aplicar filtro de publicación si existe

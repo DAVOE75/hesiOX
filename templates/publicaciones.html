@@ -221,9 +221,18 @@
                                     title="{{ 'Ocultar noticias en el listado' if p.visible else 'Mostrar noticias en el listado' }}" style="width: 28px;">
                                     <i class="fa-solid fa-eye{{ '' if p.visible else '-slash' }}"></i>
                                 </a>
+                                <a href="{{ url_for('hemerotecas.toggle_activa_publicacion', id=p.id_publicacion) }}"
+                                    class="btn-admin-action {{ 'text-success' if p.activa else 'text-muted' }}" 
+                                    title="{{ 'Desactivar para analíticas' if p.activa else 'Activar para analíticas' }}" style="width: 28px;">
+                                    <i class="fa-solid fa-toggle-{{ 'on' if p.activa else 'off' }}"></i>
+                                </a>
                                 <a href="{{ url_for('hemerotecas.editar_publicacion', id=p.id_publicacion) }}"
                                     class="btn-admin-action btn-admin-action-success" title="Editar" style="width: 28px;">
                                     <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a href="{{ url_for('hemerotecas.duplicar_publicacion', id=p.id_publicacion) }}"
+                                    class="btn-admin-action btn-admin-action-warning" title="Duplicar" style="width: 28px;">
+                                    <i class="fa-solid fa-copy"></i>
                                 </a>
                                 <form action="{{ url_for('hemerotecas.borrar_publicacion', id=p.id_publicacion) }}" method="POST" style="display:inline;" 
                                       id="form-borrar-{{ p.id_publicacion }}">
