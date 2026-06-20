@@ -2106,7 +2106,49 @@
                 </div>
             </div>
 
-            <h3 id="gis-pro-tools" class="h4 mt-5 fw-bold text-accent">5.6 Herramientas avanzadas de medición</h3>
+            <!-- BLOQUE ALTIMETRIA v5.1 -->
+            <h3 id="elevation-workbench" class="h4 mt-5 fw-bold" style="color: #ff9800;">5.6 Workbench de Altimetría (v5.1 "Alti-X")</h3>
+            <p>
+                Diseñado para arqueología de paisaje y recorridos históricos, el <strong>Workbench de Altimetría</strong> transforma un simple trazo en el mapa en un laboratorio de datos geográficos de alta resolución.
+            </p>
+
+            <div class="card border-warning bg-light mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold text-uppercase small mb-3 border-bottom pb-1"><i class="fa-solid fa-microscope me-2"></i>Capacidades de Análisis GIS</h6>
+                            <ul class="small">
+                                <li><strong>Resolución Centimétrica (MDT):</strong> El sistema permite subir archivos <strong>.tif (LiDAR/MDT)</strong> propios para calcular altitudes con precisión real, ignorando las limitaciones de las APIs públicas.</li>
+                                <li><strong>Contexto Territorial Dinámico:</strong> Mientras se visualiza el perfil, el sistema detecta qué <strong>Yacimientos, Reservas o Tipos de Suelo</strong> cruza el trazado, mostrando franjas de color en la base del gráfico.</li>
+                                <li><strong>Intervisibilidad (Line of Sight):</strong> Seleccionando dos hitos en la gráfica, el sistema calcula si hay visión directa entre ellos o si el relieve (un pico intermedio) bloquea la visual satisfactoria.</li>
+                                <li><strong>Estadísticas Científicas:</strong>
+                                    <ul class="xsmall mt-1 text-muted">
+                                        <li><strong>Índice de Sinuosidad:</strong> Relación entre distancia real y línea recta (detección de senderos históricos).</li>
+                                        <li><strong>Regla de Naismith:</strong> Estimación de tiempo de marcha a pie considerando el esfuerzo por desnivel.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-white rounded border border-warning">
+                                <h6 class="fw-bold xsmall text-uppercase mb-2"><i class="fa-solid fa-file-export me-2"></i>Exportación y Flujo</h6>
+                                <p class="xsmall mb-2">Permite la exportación de <strong>Datos Brutos (CSV)</strong> para investigadores que necesiten realizar estadísticas complejas fuera del sistema (Excel/R/Pandas).</p>
+                                <div class="d-grid gap-2">
+                                    <span class="badge bg-warning text-dark py-1">CSV (Puntos Altitud)</span>
+                                    <span class="badge bg-warning text-dark py-1">PNG (Gráfica Alta Res)</span>
+                                    <span class="badge bg-warning text-dark py-1">JSON (GeoJSON Perfil)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info small border-start-info">
+                <strong><i class="fa-solid fa-lightbulb me-2 text-info"></i>Modo Edición Interactiva:</strong> En el workbench, puede arrastrar el último punto del trazado directamente en el mapa para ajustar la ruta, ver cómo se actualiza la gráfica en tiempo real y añadir <strong>Hitos (POIs)</strong> que se sincronizan geográficamente entre el gráfico y el mapa.
+            </div>
+
+            <h3 id="gis-pro-tools" class="h4 mt-5 fw-bold text-accent">5.7 Herramientas avanzadas de medición</h3>
             <p>
                 Para los análisis más precisos, tienes a tu disposición herramientas que te permiten inspeccionar el
                 terreno a fondo:
