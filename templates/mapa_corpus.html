@@ -17577,11 +17577,113 @@
     let elevationHoverMarker = null;
     let elevationPOIs = [];
     let isAddingPOI = false;
+    let isIntervisibilityMode = false;
+    let intervisibilityPoints = []; // [poi1, poi2]
+    window.territorialIntersections = [];
+
+    function updateTerritorialContext() {
+        if (!window.currentElevationData || !window.GISManager || !window.turf) return;
+        
+        const data = window.currentElevationData;
+        const result = [];
+        let currentZone = null;
+
+        // Limitar a capas de polígonos visibles
+        const polyLayers = window.GISManager.vectorLayers.filter(l => l.visible && (l.tipo_geometria === 'Polygon' || l.tipo_geometria === 'MultiPolygon'));
+        
+        data.forEach((pt, idx) => {
+            const point = turf.point([pt.lon || pt.lng, pt.lat]);
+            let foundZone = null;
+
+            for (const layer of polyLayers) {
+                for (const feature of layer.geojson.features) {
+                    if (turf.booleanPointInPolygon(point, feature)) {
+                        foundZone = {
+                            name: feature.properties.name || feature.properties.nombre || layer.nombre,
+                            color: feature.properties.color || layer.color,
+                            layerId: layer.id
+                        };
+                        break;
+                    }
+                }
+                if (foundZone) break;
+            }
+
+            if (foundZone) {
+                if (!currentZone || currentZone.name !== foundZone.name) {
+                    if (currentZone) currentZone.endDist = pt.dist;
+                    currentZone = { ...foundZone, startDist: pt.dist };
+                    result.push(currentZone);
+                }
+            } else {
+                if (currentZone) {
+                    currentZone.endDist = pt.dist;
+                    currentZone = null;
+                }
+            }
+        });
+
+        if (currentZone) currentZone.endDist = data[data.length - 1].dist;
+        window.territorialIntersections = result;
+    }
+
+    function toggleIntervisibilityMode() {
+        isIntervisibilityMode = !isIntervisibilityMode;
+        const btn = document.getElementById('btn-intervisibility');
+        if (isIntervisibilityMode) {
+            btn.style.background = 'rgba(255,152,0,0.2)';
+            btn.style.fontWeight = 'bold';
+            showMapToast("Intervisibilidad: Selecciona 2 hitos en el gráfico", "#ff9800");
+        } else {
+            btn.style.background = 'none';
+            btn.style.fontWeight = 'normal';
+            intervisibilityPoints = [];
+            renderElevationChart(window.currentElevationData);
+        }
+    }
+
     let hasLocalDEM = false;
     let demCoverageLayers = L.layerGroup(); // Para mostrar el área de los TIFs
     let elevationHighlightLayer = L.layerGroup(); // Para resaltar tramos en el mapa
     let allLayersIndex = {}; // Para búsqueda rápida por Leaflet ID
     window.currentProfileLoadedID = null; // ID de base de datos del perfil cargado
+    let comparisonElevationData = null;
+    let comparisonProfileTitle = "";
+
+    async function compareElevationProfileDialog() {
+        try {
+            const resp = await fetch('/api/vector_layers');
+            const data = await resp.json();
+            const profiles = data.filter(l => {
+                try {
+                    const geo = typeof l.geojson === 'string' ? JSON.parse(l.geojson) : l.geojson;
+                    return geo.features[0]?.properties?.type === 'elevation_profile';
+                } catch(e) { return false; }
+            });
+
+            if (profiles.length === 0) {
+                showMapToast("No hay otros perfiles guardados para comparar", "#ff9800");
+                return;
+            }
+
+            let msg = "Selecciona un perfil para superponer:\n\n";
+            profiles.forEach((p, idx) => msg += `${idx + 1}. ${p.nombre}\n`);
+            
+            const choice = prompt(msg);
+            if (!choice) return;
+            const idx = parseInt(choice) - 1;
+            if (profiles[idx]) {
+                const geo = typeof profiles[idx].geojson === 'string' ? JSON.parse(profiles[idx].geojson) : profiles[idx].geojson;
+                comparisonElevationData = geo.features[0].properties.data;
+                comparisonProfileTitle = profiles[idx].nombre;
+                renderElevationChart(window.currentElevationData);
+                showMapToast(`Comparando con: ${comparisonProfileTitle}`, "#4caf50");
+            }
+        } catch (err) {
+            console.error("Error al cargar comparativa:", err);
+            showMapToast("Error al cargar el perfil comparativo", "#f44336");
+        }
+    }
   /**
    * Carga el análisis detallado desde una capa ya visible en el mapa (vía Popup)
    */
@@ -17867,6 +17969,12 @@
       elevationHoverMarker = null;
     }
     elevationPOIs = [];
+    isIntervisibilityMode = false;
+    intervisibilityPoints = [];
+    comparisonElevationData = null;
+    window.territorialIntersections = [];
+    window.currentProfileLoadedID = null;
+
     // Quitar también los rectángulos de cobertura al desactivar
     if (window._mapaCorpus.hasLayer(demCoverageLayers)) {
        window._mapaCorpus.removeLayer(demCoverageLayers);
@@ -17928,7 +18036,7 @@
                style="width: 1300px; height: 650px; z-index: 30000 !important; display: flex !important; flex-direction: column; position: fixed; background: ${bg}; border: 1px solid ${isDarkMode ? "#444" : border}; border-radius: 8px; overflow: visible; font-family: 'Inter', sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div class="digitize-header digitize-draggable-handle py-1 px-3 d-flex justify-content-between align-items-center" 
                  style="background: ${headerBg}; cursor: move; min-height: 28px; border-bottom: 1px solid ${isDarkMode ? "rgba(0,0,0,0.2)" : "transparent"}; border-top-left-radius: 7px; border-top-right-radius: 7px;">
-              <span id="elevation-panel-title" style="font-size: 0.7rem; font-weight: 800; color: ${headerText}; letter-spacing: 1px; text-transform: uppercase;">
+              <span id="elevation-panel-title" onclick="editElevationProfileName()" style="font-size: 0.7rem; font-weight: 800; color: ${headerText}; letter-spacing: 1px; text-transform: uppercase; cursor: pointer;" title="Clic para editar nombre">
                 <i class="fa-solid fa-chart-line me-2"></i>PERFIL DE ELEVACIÓN
               </span>
               <div class="d-flex align-items-center gap-1">
@@ -17953,11 +18061,20 @@
                           style="font-size: 10px; color: ${headerText};" title="Invertir el sentido de la marcha">
                       <i class="fa-solid fa-arrows-left-right me-1"></i> INVERTIR
                   </button>
-                  <button onclick="downloadElevationProfileImage()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};">
-                      <i class="fa-solid fa-camera me-1"></i> EXPORTAR
+                  <button onclick="downloadElevationProfileImage()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};" title="Exportar como imagen PNG">
+                      <i class="fa-solid fa-camera me-1"></i> IMAGEN
+                  </button>
+                  <button onclick="toggleIntervisibilityMode()" id="btn-intervisibility" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};" title="Calcular línea de visión entre dos puntos">
+                      <i class="fa-solid fa-eye me-1"></i> VISIÓN
+                  </button>
+                  <button onclick="exportElevationDataCSV()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};" title="Exportar datos brutos a CSV/Excel">
+                      <i class="fa-solid fa-file-csv me-1"></i> DATOS
                   </button>
                   <button onclick="saveElevationProfile()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};">
                       <i class="fa-solid fa-save me-1"></i> GUARDAR
+                  </button>
+                  <button onclick="compareElevationProfileDialog()" class="btn btn-xs btn-link text-decoration-none py-0 px-2" style="font-size: 10px; color: ${headerText};" title="Comparar con otro perfil guardado">
+                      <i class="fa-solid fa-layer-group me-1"></i> COMPARAR
                   </button>
                   <button onclick="deactivateElevationProfile()" class="ms-2" style="background:none; border:none; color:${headerText}; padding:0; line-height:1; font-size:16px; cursor:pointer; opacity:0.8;">&times;</button>
               </div>
@@ -18183,15 +18300,22 @@
         });
         if (localResp.ok) {
           const localJson = await localResp.json();
+          // Solo usar si hay éxito Y si al menos algunos puntos tienen altitud > 0
+          // (Si todos son 0, probablemente es que no hay cobertura de MDT en esa zona)
           if (localJson.success && localJson.items.length > 0) {
-            console.log("[Profile] Usando datos de elevación LOCAL (Raster)");
-            return localJson.items.map((item, i) => ({
-              dist: samples[i].dist,
-              lat: samples[i].lat,
-              lon: samples[i].lon || samples[i].lng,
-              alt: item.altitud,
-              slope: i === 0 ? 0 : ((item.altitud - localJson.items[i-1].altitud) / (samples[i].dist - samples[i-1].dist)) * 100
-            }));
+            const hasValidAlt = localJson.items.some(it => it.altitud > 0);
+            if (hasValidAlt) {
+              console.log("[Profile] Usando datos de elevación LOCAL (Raster)");
+              return localJson.items.map((item, i) => ({
+                dist: samples[i].dist,
+                lat: samples[i].lat,
+                lon: samples[i].lon || samples[i].lng,
+                alt: item.altitud,
+                slope: i === 0 ? 0 : ((item.altitud - (localJson.items[i-1] ? localJson.items[i-1].altitud : item.altitud)) / (samples[i].dist - samples[i-1].dist)) * 100
+              }));
+            } else {
+              console.log("[Profile] MDT local devolvió todo 0, probando IGN como fallback...");
+            }
           }
         }
       } catch (e) {
@@ -18305,6 +18429,87 @@
       type: 'line',
       plugins: [
         {
+          id: 'territorialPlugin',
+          beforeDraw: (chart) => {
+            if (!window.territorialIntersections || window.territorialIntersections.length === 0) return;
+            const {ctx, chartArea: {bottom}, scales: {x}} = chart;
+            const barHeight = 6;
+            const yPos = bottom - barHeight;
+
+            ctx.save();
+            window.territorialIntersections.forEach(zone => {
+                const xStart = x.getPixelForValue(zone.startDist);
+                const xEnd = x.getPixelForValue(zone.endDist);
+                
+                if (xStart < chart.chartArea.left && xEnd < chart.chartArea.left) return;
+                
+                ctx.fillStyle = zone.color;
+                ctx.globalAlpha = 0.6;
+                ctx.fillRect(Math.max(xStart, chart.chartArea.left), yPos, Math.min(xEnd, chart.chartArea.right) - Math.max(xStart, chart.chartArea.left), barHeight);
+                
+                // Etiqueta discreta si hay espacio
+                if (xEnd - xStart > 40) {
+                    ctx.globalAlpha = 1.0;
+                    ctx.fillStyle = zone.color;
+                    ctx.font = 'bold 8px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(zone.name.substring(0, 15), (xStart + xEnd) / 2, yPos - 2);
+                }
+            });
+            ctx.restore();
+          }
+        },
+        {
+          id: 'lineOfSightPlugin',
+          afterDraw: (chart) => {
+            if (!isIntervisibilityMode || intervisibilityPoints.length < 2) return;
+            const {ctx, scales: {x, y}} = chart;
+            const p1 = intervisibilityPoints[0];
+            const p2 = intervisibilityPoints[1];
+
+            const x1 = x.getPixelForValue(p1.dist);
+            const y1 = y.getPixelForValue(p1.alt);
+            const x2 = x.getPixelForValue(p2.dist);
+            const y2 = y.getPixelForValue(p2.alt);
+
+            ctx.save();
+            // Comprobación de colisión con el terreno
+            let blocked = false;
+            const dStart = Math.min(p1.dist, p2.dist);
+            const dEnd = Math.max(p1.dist, p2.dist);
+            
+            // Muestrear puntos del terreno entre p1 y p2
+            const midPoints = window.currentElevationData.filter(d => d.dist > dStart && d.dist < dEnd);
+            for (let pt of midPoints) {
+                // Ecuación de la recta: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
+                const lineAlt = p1.alt + (pt.dist - p1.dist) * (p2.alt - p1.alt) / (p2.dist - p1.dist);
+                if (pt.alt > lineAlt + 0.5) { // +0.5m de margen
+                    blocked = true;
+                    // Dibujar punto de bloqueo
+                    ctx.fillStyle = '#f44336';
+                    ctx.beginPath();
+                    ctx.arc(x.getPixelForValue(pt.dist), y.getPixelForValue(pt.alt), 3, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.strokeStyle = blocked ? '#f44336' : '#4caf50';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Etiqueta de resultado
+            ctx.fillStyle = blocked ? '#f44336' : '#4caf50';
+            ctx.font = 'bold 12px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(blocked ? 'VISIÓN BLOQUEADA' : 'VISIÓN DIRECTA', (x1 + x2) / 2, (y1 + y2) / 2 - 15);
+            ctx.restore();
+          }
+        },
+        {
           id: 'poiPlugin',
           afterDraw: (chart) => {
             const {ctx, chartArea: {top, bottom}, scales: {x, y}} = chart;
@@ -18385,6 +18590,18 @@
             borderWidth: 3,
             yAxisID: 'y'
           },
+          ...(comparisonElevationData ? [{
+            label: `Comparativa: ${comparisonProfileTitle}`,
+            data: comparisonElevationData.map(d => ({ x: d.dist, y: d.alt })),
+            borderColor: 'rgba(150, 150, 150, 0.6)',
+            backgroundColor: 'rgba(150, 150, 150, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [2, 2],
+            yAxisID: 'y'
+          }] : []),
           {
             label: 'Pendiente (%)',
             data: data.map(d => ({ x: d.dist, y: d.slope })),
@@ -18410,8 +18627,30 @@
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         onClick: (event, activeElements) => {
+          // INTERVISIBILIDAD: Seleccionar hitos
+          if (isIntervisibilityMode) {
+              const {x} = elevationProfileChart.scales;
+              const xValue = x.getValueForPixel(event.x);
+              const range = x.max - x.min;
+              const threshold = range * 0.02;
+
+              const clickedPOI = elevationPOIs.find(p => Math.abs(p.dist - xValue) < threshold);
+              if (clickedPOI) {
+                  if (intervisibilityPoints.length >= 2) intervisibilityPoints = [];
+                  intervisibilityPoints.push(clickedPOI);
+                  
+                  if (intervisibilityPoints.length === 2) {
+                      showMapToast("Cálculo de visibilidad completado", "#4caf50");
+                  } else {
+                      showMapToast("Seleccionado punto 1/2", "#00bcd4");
+                  }
+                  renderElevationChart(window.currentElevationData);
+                  return;
+              }
+          }
+
           // Detectar clic en hito para borrarlo
-          if (elevationPOIs.length > 0) {
+          if (!isIntervisibilityMode && elevationPOIs.length > 0) {
               const {x} = elevationProfileChart.scales;
               const clickX = event.x;
               const chartLeft = elevationProfileChart.chartArea.left;
@@ -18548,6 +18787,7 @@
   function updateElevationAnalysis() {
     if (!window.currentElevationData || window.currentElevationData.length === 0) return;
     
+    updateTerritorialContext();
     updateElevationStats(window.currentElevationData);
     
     const interval = parseInt(document.getElementById('elevation-interval-select')?.value || 100);
@@ -18573,24 +18813,43 @@
     const avgSlope = totalDist > 0 ? (gain / totalDist) * 100 : 0; 
     const maxSlope = Math.max.apply(null, data.map(d => d.slope || 0));
 
+    // Cálculos Avanzados (Sinuosidad y Naismith)
+    const pStart = data[0];
+    const pEnd = data[data.length - 1];
+    const straightDist = window.L ? L.latLng(pStart.lat, pStart.lon || pStart.lng).distanceTo(L.latLng(pEnd.lat, pEnd.lon || pEnd.lng)) : totalDist;
+    const sinuosity = straightDist > 0 ? (totalDist / straightDist) : 1;
+    
+    // Regla de Naismith: 4km/h base + 1min por cada 10m de ascenso
+    // (15 min por km) + (0.1 min por metro de desnivel)
+    const baseTimeMinutes = (totalDist / 1000) * 15;
+    const extraTimeMinutes = gain * 0.1;
+    const totalTimeMinutes = baseTimeMinutes + extraTimeMinutes;
+    const hours = Math.floor(totalTimeMinutes / 60);
+    const minutes = Math.round(totalTimeMinutes % 60);
+    const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes} min`;
+
     const distStr = totalDist >= 1000 ? (totalDist/1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m';
     
     const statsHtml = `
-        <div class="text-center">
+        <div class="text-center" title="Distancia total recorrida">
             <div style="opacity: 0.7; font-size: 0.55rem;">DISTANCIA</div>
             <div>${distStr}</div>
         </div>
-        <div class="text-center">
+        <div class="text-center" title="Ascenso total acumulado">
             <div style="opacity: 0.7; font-size: 0.55rem;">DESNIVEL +</div>
             <div class="text-success">${Math.round(gain)} m</div>
         </div>
-        <div class="text-center">
+        <div class="text-center" title="Descenso total acumulado">
             <div style="opacity: 0.7; font-size: 0.55rem;">DESNIVEL -</div>
             <div class="text-danger">${Math.round(loss)} m</div>
         </div>
-        <div class="text-center">
-            <div style="opacity: 0.7; font-size: 0.55rem;">PEND. MEDIA</div>
-            <div>${avgSlope.toFixed(1)} %</div>
+        <div class="text-center" title="Estimación de tiempo de marcha (Regla de Naismith)">
+            <div style="opacity: 0.7; font-size: 0.55rem;">T. ESTIMADO</div>
+            <div style="color: #00bcd4;">${timeStr}</div>
+        </div>
+        <div class="text-center" title="Relación entre distancia real y distancia en línea recta">
+            <div style="opacity: 0.7; font-size: 0.55rem;">SINUOSIDAD</div>
+            <div>${sinuosity.toFixed(2)}</div>
         </div>
         <div class="text-center">
             <div style="opacity: 0.7; font-size: 0.55rem;">PEND. MÁX</div>
@@ -18604,6 +18863,33 @@
     
     const container = document.getElementById('elevation-stats-display');
     if (container) container.innerHTML = statsHtml;
+  }
+
+  /**
+   * Exporta los datos de elevación actuales a formato CSV
+   */
+  function exportElevationDataCSV() {
+    if (!window.currentElevationData || window.currentElevationData.length === 0) {
+      showMapToast("No hay datos para exportar", "#ff9800");
+      return;
+    }
+
+    const title = document.getElementById('elevation-panel-title').innerText.replace("VISTA: ", "").replace("ANÁLISIS: ", "");
+    let csv = "Distancia(m),Latitud,Longitud,Altitud(m),Pendiente(%)\n";
+    
+    window.currentElevationData.forEach(d => {
+      csv += `${d.dist.toFixed(2)},${d.lat.toFixed(6)},${(d.lon || d.lng).toFixed(6)},${d.alt.toFixed(2)},${(d.slope || 0).toFixed(2)}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `hesiox_perfil_${title.toLowerCase().replace(/\s+/g, '_')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   /**
@@ -19067,6 +19353,22 @@
     showMapToast("Ruta invertida (Inicio ↔ Final)", "#ff9800");
   }
 
+  /**
+   * Permite editar el nombre del perfil actual haciendo clic en el título
+   */
+  function editElevationProfileName() {
+      const titleEl = document.getElementById('elevation-panel-title');
+      if (!titleEl) return;
+      
+      const currentName = titleEl.innerText.replace('PERFIL DE ELEVACIÓN', '').replace('VISTA:', '').trim() || "PERFIL DE ELEVACIÓN";
+      const newName = prompt("Nombre del perfil:", currentName);
+      
+      if (newName !== null) {
+          titleEl.innerHTML = `<i class="fa-solid fa-chart-line me-2"></i>VISTA: ${newName.toUpperCase()}`;
+          showMapToast("Nombre del perfil actualizado", "#4caf50");
+      }
+  }
+
     async function saveElevationProfile() {
         if (!window.currentElevationData || window.currentElevationData.length === 0) {
             showMapToast("No hay perfil activo para guardar", "#ff9800");
@@ -19098,14 +19400,9 @@
         const defaultColor = isArch ? "#00bcd4" : "#ff9800"; // Cian para arqueo, Naranja para rutas
         const finalDescription = isArch ? "Corte arqueológico generado el " : "Perfil ciclista generado el ";
 
-        // Si no tenemos la capa de Leaflet (ej: cargado desde sidebar), reconstruimos la geometría desde los datos
-        let coords = [];
-        if (window.elevationLine) {
-            const latlngs = (window.elevationLine && typeof window.elevationLine.getLatLngs === "function") ? window.elevationLine.getLatLngs() : []
-            coords = latlngs.map(ll => [ll.lng, ll.lat]);
-        } else {
-            coords = window.currentElevationData.map(d => [d.lon || d.lng || (Array.isArray(d)?d[1]:null), d.lat || (Array.isArray(d)?d[0]:null)]);
-        }
+        // Extraer coordenadas siempre de currentElevationData (fuente de verdad del perfil)
+        // Esto evita errores si elevationLine es un LayerGroup o está vacío al sobreescribir
+        const coords = window.currentElevationData.map(d => [d.lon || d.lng, d.lat]);
 
         const geojson = {
             type: "FeatureCollection",
@@ -19183,6 +19480,7 @@
   window.refreshElevationData = refreshElevationData;
   window.startAddingElevationPOI = startAddingElevationPOI;
   window.reverseElevationProfile = reverseElevationProfile;
+  window.editElevationProfileName = editElevationProfileName;
 </script>
 <!-- Ghost controls -->
 <div style="display: none !important;">

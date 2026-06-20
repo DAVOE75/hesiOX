@@ -1644,7 +1644,16 @@ function renderFeatureOnMap(layer, feature) {
       });
     }
   } else if (geom.type === 'LineString') {
-    const coords = geom.coordinates.map(c => [c[1], c[0]]);
+    let coords = geom.coordinates.map(c => [c[1], c[0]]);
+    
+    // REPARACIÓN AUTOMÁTICA: Si las coordenadas están vacías pero es un perfil con datos, reconstruir
+    if (coords.length === 0 && feature.properties && feature.properties.type === 'elevation_profile' && feature.properties.data) {
+        console.warn(`[GIS] Reconstruyendo geometría vacía para perfil: ${feature.properties.name || 'Sin nombre'}`);
+        coords = feature.properties.data.map(d => [d.lat, d.lon || d.lng]);
+        // Actualizar el objeto original para futuros usos
+        feature.geometry.coordinates = feature.properties.data.map(d => [d.lon || d.lng, d.lat]);
+    }
+    
     leafletFeature = L.polyline(coords, {
       ...style,
       fill: false,
@@ -4947,6 +4956,11 @@ window.GISManager.viewElevationProfile = function(layerId, featureIdx = 0) {
         window.currentElevationData = feature.properties.data;
         if (typeof window.currentProfileLoadedID !== 'undefined') {
             window.currentProfileLoadedID = layerId; 
+        }
+
+        // Sincronizar referencia de la línea para permitir edición/inversión
+        if (feature.leafletLayer) {
+            window.elevationLine = feature.leafletLayer;
         }
         
         // Asegurar que el panel existe y es visible
