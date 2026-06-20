@@ -18099,7 +18099,7 @@
                       <div class="d-flex align-items-center bg-black bg-opacity-10 rounded border px-1" style="border-color: ${isDarkMode ? '#444' : '#ccc'} !important; height: 22px;">
                         <input type="number" id="elevation-speed-input" onchange="updateElevationAnalysis()" 
                              class="form-control form-control-sm py-0 border-0 bg-transparent text-center" 
-                             value="4.00" step="any" min="0.01" 
+                             value="4.0" step="0.1" min="0.1" 
                              style="width: 65px; font-size: 0.75rem; color: ${isDarkMode ? '#fff' : '#222'}; height: 18px; outline: none; box-shadow: none; font-weight: bold;">
                         <span style="font-size: 0.55rem; color: #888; font-weight: bold;">km/h</span>
                       </div>
@@ -18865,7 +18865,7 @@
         </div>
         <div class="text-center">
             <div style="opacity: 0.7; font-size: 0.55rem;">PEND. MÁX</div>
-            <div>${maxSlope.toFixed(2)} %</div>
+            <div>${maxSlope.toFixed(1)} %</div>
         </div>
         <div class="text-center">
             <div style="opacity: 0.7; font-size: 0.55rem;">ALT. MÁX</div>
@@ -18986,7 +18986,7 @@
 
         // Crear una pequeña "pastilla" de color para la pendiente en lugar de solo el texto
         const slopeBadge = `<span class="badge" style="background-color: ${slopeColor}; color: #fff; font-size: 0.7rem; min-width: 50px; display: inline-block;">
-            ${segmentSlope > 0 ? '+' : ''}${segmentSlope.toFixed(2)}%
+            ${segmentSlope > 0 ? '+' : ''}${segmentSlope.toFixed(1)}%
         </span>`;
 
         html += `
