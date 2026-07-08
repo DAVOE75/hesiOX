@@ -132,6 +132,12 @@ def ocr_advanced():
                 img = Image.open(filepath).convert('RGB')
             except: pass
 
+        # Validar page_number contra total_pages_detected
+        if page_number and total_pages_detected > 0 and page_number > total_pages_detected:
+            return jsonify({
+                'error': f'La página {page_number} no existe en este PDF. El documento tiene {total_pages_detected} páginas (1–{total_pages_detected}).'
+            }), 400
+
         # Pre-cargar imágenes si es PDF
         pages_to_process = []
         p_start = 1
@@ -351,7 +357,110 @@ def ocr_advanced():
 
                 text = "\n\n===PAGE_BREAK===\n\n".join(all_texts)
                 confidence = 100
-                ocr_skip_ai_correction = True 
+                ocr_skip_ai_correction = True
+
+            elif ocr_engine == 'expert':
+                # =============================================
+                # MOTOR EXPERTO: PIPELINE DE 3 PASOS
+                # Paso 1: Tesseract multi-PSM (borrador + coords)
+                # Paso 2: Gemini Vision con contexto Tesseract
+                # Paso 3: Gemini refinamiento final del texto
+                # =============================================
+                print(f"[OCR-Expert] === MODO EXPERTO 3 PASOS iniciado ===", file=sys.stderr)
+
+                provider = 'gemini'
+                model_variant = '2.0-flash'
+                if ocr_model and ':' in ocr_model:
+                    provider = ocr_model.split(':')[0]
+                    model_variant = ocr_model.split(':')[1]
+
+                expert_ai = AIService(provider=provider, model=model_variant, user=current_user)
+
+                # Re-convertir PDF a alta resolución (400 DPI) para mejor calidad de imagen
+                pages_hires = pages_to_process
+                if ext == '.pdf':
+                    try:
+                        from pdf2image import convert_from_path as cfp_hires
+                        print(f"[OCR-Expert] Re-convirtiendo PDF a 400 DPI...", file=sys.stderr)
+                        if page_number:
+                            pages_hires = cfp_hires(filepath, dpi=400, first_page=page_number, last_page=page_number)
+                        else:
+                            pages_hires = cfp_hires(filepath, dpi=400)
+                        print(f"[OCR-Expert] {len(pages_hires)} páginas a 400 DPI listas.", file=sys.stderr)
+                    except Exception as e_dpi:
+                        print(f"[OCR-Expert] Error a 400 DPI: {e_dpi}. Usando resolución estándar.", file=sys.stderr)
+
+                for i, page_img in enumerate(pages_hires):
+                    curr_p = p_start + i
+                    print(f"[OCR-Expert] --- Procesando página {curr_p} ---", file=sys.stderr)
+
+                    img_rgb = page_img.convert('RGB')
+                    width, height = img_rgb.size
+
+                    # Preparar imagen base64 para Gemini (calidad alta)
+                    buf = io.BytesIO()
+                    img_rgb.save(buf, format="JPEG", quality=92)
+                    img_bytes = buf.getvalue()
+                    page_base64 = f"data:image/jpeg;base64,{base64.b64encode(img_bytes).decode()}"
+
+                    if i == 0:
+                        image_data = page_base64
+
+                    # --- PASO 1: Tesseract multi-PSM ---
+                    print(f"[OCR-Expert] Paso 1 - Tesseract multi-PSM página {curr_p}...", file=sys.stderr)
+                    img_proc = preprocess_historical_image(page_img)
+
+                    # PSM 3: layout automático (mejor para docs con decoración y columnas)
+                    text_psm3 = pytesseract.image_to_string(img_proc, config='--psm 3 -l spa')
+                    # PSM 6: bloque de texto uniforme (mejor cobertura en texto corrido)
+                    text_psm6 = pytesseract.image_to_string(img_proc, config='--psm 6 -l spa')
+                    # Usar el que más texto extrae como borrador
+                    tess_draft = text_psm3 if len(text_psm3) >= len(text_psm6) else text_psm6
+                    print(f"[OCR-Expert] Tesseract: PSM3={len(text_psm3)}ch PSM6={len(text_psm6)}ch -> draft={len(tess_draft)}ch", file=sys.stderr)
+
+                    # Guardar coordenadas del PSM3 (mejor layout awareness)
+                    ocr_result = pytesseract.image_to_data(img_proc, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
+                    words_data.extend(extract_words_data(ocr_result, width, height, page=curr_p))
+
+                    # --- PASO 2: Gemini Vision con borrador Tesseract como contexto ---
+                    print(f"[OCR-Expert] Paso 2 - Gemini Vision expert página {curr_p}...", file=sys.stderr)
+                    vision_result = expert_ai.vision_ocr_expert(page_base64, tess_draft)
+
+                    page_text = vision_result.get('text', tess_draft)
+                    refined_words = vision_result.get('words', [])
+
+                    # Actualizar coordenadas con las de Gemini si las devolvió
+                    if refined_words:
+                        words_data = [w for w in words_data if w.get('p') != curr_p]
+                        for w_item in refined_words:
+                            box = w_item.get('box_2d', [0, 0, 0, 0])
+                            txt = w_item.get('text', '')
+                            words_data.append({
+                                'text': txt, 'word': txt,
+                                'x': box[1] / 10.0, 'y': box[0] / 10.0,
+                                'w': (box[3] - box[1]) / 10.0, 'h': (box[2] - box[0]) / 10.0,
+                                'bbox': box, 'p': curr_p
+                            })
+
+                    all_texts.append(page_text)
+                    print(f"[OCR-Expert] Página {curr_p} Paso 2 OK: {len(page_text)} chars.", file=sys.stderr)
+
+                text = "\n\n===PAGE_BREAK===\n\n".join(all_texts)
+
+                # --- PASO 3: Gemini refinamiento final del texto completo ---
+                print(f"[OCR-Expert] Paso 3 - Refinamiento final del documento ({len(text)} chars)...", file=sys.stderr)
+                try:
+                    final_result = expert_ai.correct_ocr_text(text, image_data=image_data)
+                    if final_result and final_result.get('corrected_text'):
+                        text = final_result['corrected_text']
+                        print(f"[OCR-Expert] Paso 3 OK. Texto final: {len(text)} chars.", file=sys.stderr)
+                    else:
+                        print(f"[OCR-Expert] Paso 3 sin resultado, manteniendo texto del Paso 2.", file=sys.stderr)
+                except Exception as e_p3:
+                    print(f"[OCR-Expert] Error en Paso 3: {e_p3}. Manteniendo texto del Paso 2.", file=sys.stderr)
+
+                confidence = 97
+                ocr_skip_ai_correction = True
 
         except Exception as e:
             print(f'[OCR ERROR Engine] {e}')

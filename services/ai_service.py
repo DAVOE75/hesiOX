@@ -3,7 +3,7 @@ import requests
 import json
 import sys
 import anthropic
-import google.generativeai as genai
+from google import genai as genai_new
 
 class AIService:
     def __init__(self, provider='gemini', model=None, user=None):
@@ -86,223 +86,83 @@ class AIService:
 
     def _generate_offline_fallback(self, prompt):
         """
-        Generador local de alta fidelidad que simula un informe de Lloyd's Register
-        de forma offline para asegurar la resiliencia del sistema frente a fallos de API.
+        Generador local de respaldo que se activa cuando fallan todos los proveedores externos.
         """
-        import re
-        import sys
-        
-        # Intentar extraer el nombre del proyecto o buque
-        proyecto_match = re.search(r'proyecto "([^"]+)"|buque "([^"]+)"', prompt)
-        proyecto_name = "S.S. Sirio"
-        if proyecto_match:
-            proyecto_name = proyecto_match.group(1) or proyecto_match.group(2)
-            
-        # Intentar extraer la sección
-        section_match = re.search(r'sección "([^"]+)"', prompt)
-        section_title = None
-        if section_match:
-            section_title = section_match.group(1)
-            
-        # Extraer los datos de la sección
-        datos = []
-        for line in prompt.split('\n'):
-            line = line.strip()
-            if line.startswith('- ') and ':' in line:
-                datos.append(line[2:])
-                
-        # Construir una respuesta de alta calidad
-        html = f"<h4>Análisis Técnico-Histórico Especializado (Offline)</h4>"
-        
-        if "MAQUINARIA" in prompt or "motores" in prompt.lower() or "motor" in prompt.lower() or (section_title and "maquinaria" in section_title.lower()):
-            if not section_title or "GLOBAL" in prompt:
-                html += f"""
-                <p>El análisis global de la planta motriz y propulsora del <strong>{proyecto_name}</strong> revela un exponente clásico de la transición tecnológica de la propulsión naval en la década de 1880. En este periodo, las máquinas de vapor de expansión múltiple y las calderas cilíndricas de alta presión consolidaron la viabilidad de las rutas transatlánticas mercantes y de pasaje.</p>
-                
-                <h5>1. Configuración de la Planta Propulsora</h5>
-                <p>La combinación del motor principal con sistemas de condensación y calderas de alta eficiencia mecánica representaba el estado del arte de la ingeniería de vapor. La adopción de múltiples cilindros de expansión permitió un aprovechamiento térmico óptimo, reduciendo significativamente el consumo de carbón por caballo de fuerza indicado (IHP) por hora.</p>
-                
-                <h5>2. Capacidad de Calderas y Sistemas Auxiliares</h5>
-                <p>Los parámetros de presión de trabajo y la superficie de calefacción documentados en el informe técnico sugieren un diseño equilibrado, capaz de sostener velocidades de crucero estables. Las calderas auxiliares y la disposición de las bombas de alimentación e inyección aseguran la redundancia crítica necesaria para emergencias en alta mar.</p>
-                
-                <h5>3. Diagnóstico y Conservación Arqueológica</h5>
-                <p>Desde la perspectiva de la arqueología industrial, los datos mecánicos presentados atestiguan el rigor de la inspección original de Lloyd's Register. El análisis de las dimensiones de los ejes de cola, las bielas y las camisas de los cilindros indica un sobredimensionamiento prudencial de seguridad, característico de los astilleros británicos de la época.</p>
-                """
-            else:
-                html += f"""
-                <p>El examen analítico de la sección <strong>"{section_title}"</strong> del <strong>{proyecto_name}</strong> proporciona evidencias directas del desarrollo tecnológico del buque. El diseño de este subsistema mecánico refleja las rigurosas normativas de seguridad impuestas por el comité técnico de Lloyd's Register en 1883.</p>
-                
-                <h5>Interpretación Técnica de la Sección:</h5>
-                <ul>
-                """
-                for d in datos:
-                    if ':' in d:
-                        parts = d.split(':', 1)
-                        html += f"<li><strong>{parts[0].strip()}</strong>: {parts[1].strip()}</li>"
-                    else:
-                        html += f"<li>{d}</li>"
-                html += f"""
-                </ul>
-                <p>El análisis comparativo de estas especificaciones revela un coeficiente de seguridad alineado con los estándares más exigentes de la época. Este subsistema jugaba un papel fundamental en garantizar la estabilidad térmica y la eficiencia mecánica del conjunto propulsor.</p>
-                """
-        else:
-            if not section_title or "GLOBAL" in prompt:
-                html += f"""
-                <p>El informe técnico global del <strong>{proyecto_name}</strong> desvela un diseño estructural sumamente robusto, característico de las construcciones de finales del siglo XIX bajo la supervisión de Lloyd's Register. Este buque representa el auge de los cascos de hierro y acero estructural con sistemas de cuadernas transversales reforzadas.</p>
-                
-                <h5>1. Análisis Estructural del Casco</h5>
-                <p>La combinación de escantillados de planchaje exterior, roda y codaste de forja maciza asegura una resistencia excepcional frente a los esfuerzos dinámicos de flexión y torsión generados por el oleaje. La distribución de los mamparos estancos cumple con las directrices más avanzadas del reglamento de 1883 para la compartimentación de seguridad.</p>
-                
-                <h5>2. Estado y Dimensionamiento de Elementos Clave</h5>
-                <p>Los datos técnicos recogidos en la ficha muestran un dimensionamiento generoso en la quilla y las cuadernas principales, lo que incrementaba notablemente la rigidez estructural. Los sistemas de fijación y remachado doble en las costuras del planchaje garantizaban una estanqueidad duradera ante las altas presiones hidrostáticas.</p>
-                
-                <h5>3. Contexto e Importancia Naval</h5>
-                <p>En el marco de la arqueología naval, el <strong>{proyecto_name}</strong> destaca como un testimonio material del refinamiento constructivo de la ingeniería naval decimonónica. Sus especificaciones técnicas integradas reflejan un balance impecable entre capacidad de carga, estabilidad hidrodinámica y robustez estructural.</p>
-                """
-            else:
-                html += f"""
-                <p>El estudio pormenorizado de la sección <strong>"{section_title}"</strong> del <strong>{proyecto_name}</strong> ofrece información valiosa sobre su arquitectura y robustez. La configuración de estos componentes estructurales sigue las estrictas directrices de cálculo y escantillado reguladas en la época.</p>
-                
-                <h5>Parámetros Técnicos Analizados:</h5>
-                <ul>
-                """
-                for d in datos:
-                    if ':' in d:
-                        parts = d.split(':', 1)
-                        html += f"<li><strong>{parts[0].strip()}</strong>: {parts[1].strip()}</li>"
-                    else:
-                        html += f"<li>{d}</li>"
-                html += f"""
-                </ul>
-                <p>La disposición geométrica y los materiales especificados en estos campos aseguran una distribución homogénea de las cargas y esfuerzos estructurales locales. Esto evitaba zonas de concentración de tensiones, prolongando la vida operativa del buque.</p>
-                """
-                
-        html += """
-        <div class="mt-3 text-end" style="font-size: 0.7rem; opacity: 0.5; font-style: italic;">
-            <i class="fa-solid fa-shield-halved"></i> Análisis local de respaldo HesiOX v2.5.1
+        return f"""
+        <div class="alert alert-warning border-0 bg-opacity-10 py-3" style="background: rgba(230, 162, 60, 0.1); border-radius: 8px;">
+            <h5 class="alert-heading text-warning"><i class="fa-solid fa-triangle-exclamation me-2"></i> IA en Modo de Respaldo</h5>
+            <p class="mb-0">Lo sentimos, la conexión con los servicios de IA (Gemini/OpenAI) no ha sido posible en este momento.</p>
+            <hr style="border-top-color: rgba(230, 162, 60, 0.2);">
+            <p class="small mb-0"><strong>Análisis preliminar:</strong> El sistema ha detectado picos significativos en los picos de los documentos. Por favor, verifica la configuración de tus API Keys en el perfil o reintenta en unos minutos.</p>
+            <div class="mt-2 text-end" style="font-size: 0.65rem; opacity: 0.5;">HesiOX Offline Engine v2.5</div>
         </div>
         """
-        return html
 
     def _call_gemini(self, prompt, temperature, image_data=None, top_p=None):
-        import sys
         try:
-            # Version-resilient model mapping for Gemini (Updated for 2026 models)
+            # Mapa de alias a nombres de modelo reales (SDK google.genai 2026)
             model_map = {
-                'flash': 'gemini-2.0-flash-exp', # Fallback a estable/expediente si 3.0 falla
-                'pro': 'gemini-2.0-pro-exp',
-                '1.5-pro': 'gemini-1.5-pro-latest',
-                '1.5-flash': 'gemini-1.5-flash-latest',
-                '2.0-flash': 'gemini-2.0-flash-exp',
-                '3-flash-preview': 'gemini-2.0-flash-exp', # Re-mapeo por seguridad si el nombre no es exacto
-                'gemini-3-flash-preview': 'gemini-2.0-flash-exp'
+                'flash': 'gemini-2.5-flash',
+                'pro': 'gemini-2.5-pro',
+                '1.5-flash': 'gemini-2.5-flash',
+                '1.5-pro': 'gemini-2.5-pro',
+                '2.0-flash': 'gemini-2.5-flash',
+                'gemini-1.5-flash': 'gemini-2.5-flash',
+                'gemini-1.5-pro': 'gemini-2.5-pro',
+                'gemini-2.0-flash': 'gemini-2.5-flash',
+                'gemini-2.0-flash-exp': 'gemini-2.5-flash',
+                '3-flash-preview': 'gemini-2.5-flash',
+                'gemini-3-flash-preview': 'gemini-2.5-flash',
+                'gemini-3-pro': 'gemini-2.5-pro',
             }
-            # Intentar usar el modelo solicitado, si no está en el mapa usarlo directamente
-            model_name = model_map.get(self.model, self.model or "gemini-2.0-flash-exp")
-            
-            # Forzar nombres conocidos si hay dudas
-            if "3-flash" in str(model_name).lower():
-                model_name = "gemini-2.0-flash-exp" # Temporalmente hasta validar 3.0 exacto
-            
-            # Verificar origen de la API KEY para log
-            usando_key_usuario = self.user and hasattr(self.user, 'api_key_gemini') and getattr(self.user, 'api_key_gemini', None)
-            user_id = str(getattr(self.user, 'id', 'Unknown')) if self.user else "None"
-            key_info = f"Usuario (ID: {user_id})" if usando_key_usuario else "Sistema (Environment)"
-            
-            print(f"[AIService Gemini] Configurando Gemini con modelo: {model_name} | Key source: {key_info}", file=sys.stderr)
-            genai.configure(api_key=self.api_key)
-            
-            try:
-                model = genai.GenerativeModel(model_name)
-            except Exception as e:
-                print(f"[AIService Gemini] Error inicializando {model_name}: {e}. Intentando fallback a gemini-flash-latest.", file=sys.stderr)
-                model = genai.GenerativeModel('gemini-flash-latest')
-            
-            parts = [prompt]
+            model_name = model_map.get(self.model, self.model or 'gemini-2.5-flash')
+            # Si el modelo solicitado no existe en el mapa, usar flash como seguridad
+            if not model_name or 'gemini' not in model_name.lower():
+                model_name = 'gemini-2.5-flash'
+
+            usando_key_usuario = self.user and getattr(self.user, 'api_key_gemini', None)
+            user_id = str(getattr(self.user, 'id', 'Unknown')) if self.user else 'None'
+            key_info = f'Usuario (ID: {user_id})' if usando_key_usuario else 'Sistema (Environment)'
+            print(f'[AIService Gemini] Modelo: {model_name} | Key: {key_info}', file=sys.stderr)
+
+            client = genai_new.Client(api_key=self.api_key)
+
+            # Construir contenidos
+            from google.genai import types as genai_types
+            parts = [genai_types.Part.from_text(text=prompt)]
+
             if image_data:
-                # Handle base64 image/document data
+                import base64
                 base64_content = image_data
-                mime_type = "image/jpeg" # Default
-                if "," in image_data:
-                    header, base64_content = image_data.split(",", 1)
-                    # Extraer MIME type de forma más robusta
-                    if ":" in header and ";" in header:
-                        mime_type = header.split(":")[1].split(";")[0]
-                
-                parts.append({
-                    "mime_type": mime_type,
-                    "data": base64_content
-                })
-                
-            gen_config_kwargs = {
-                'temperature': temperature,
-                'max_output_tokens': 8192
-            }
+                mime_type = 'image/jpeg'
+                if ',' in image_data:
+                    header, base64_content = image_data.split(',', 1)
+                    if ':' in header and ';' in header:
+                        mime_type = header.split(':')[1].split(';')[0]
+                raw_bytes = base64.b64decode(base64_content)
+                parts.append(genai_types.Part.from_bytes(data=raw_bytes, mime_type=mime_type))
+
+            config_kwargs = {'temperature': temperature, 'max_output_tokens': 8192}
             if top_p is not None:
-                gen_config_kwargs['top_p'] = top_p
-            
-            # Configuración de seguridad relajada para evitar bloqueos en prensa histórica
-            safety_settings = [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
-            
-            print(f"[AIService Gemini] Llamando a generate_content con {model_name}...", file=sys.stderr)
-            try:
-                # Simplificar llamada para evitar geani_config o errores de tipos
-                config = {"temperature": temperature, "max_output_tokens": 8192}
-                if top_p: config["top_p"] = top_p
+                config_kwargs['top_p'] = top_p
+            gen_config = genai_types.GenerateContentConfig(**config_kwargs)
 
-                response = model.generate_content(
-                    parts,
-                    generation_config=config,
-                    safety_settings=safety_settings
-                )
-            except Exception as e:
-                # Si falla por parámetros, intentar una llamada minimalista
-                print(f"[AIService Gemini] Reintento de llamada por error: {e}", file=sys.stderr)
-                try:
-                    response = model.generate_content(parts)
-                except Exception as e2:
-                    self.last_error = f"Error crítico en Gemini: {str(e2)}"
-                    return None
+            response = client.models.generate_content(
+                model=model_name,
+                contents=parts,
+                config=gen_config
+            )
 
-            # --- NUEVO: Validación de Seguridad y Bloqueo ---
-            if not response:
-                self.last_error = "Gemini devolvió una respuesta vacía."
-                return None
-            
-            try:
-                # Verificar si el texto está disponible (no bloqueado por seguridad)
-                if response.candidates and len(response.candidates) > 0:
-                    candidate = response.candidates[0]
-                    
-                    # Log de la respuesta cruda para depuración
-                    try:
-                        print(f"[AIService Gemini] Candidato detectado. Texto: {response.text[:100]}...", file=sys.stderr)
-                    except:
-                        print(f"[AIService Gemini] Candidato detectado pero .text no accesible (Finish Reason: {candidate.finish_reason})", file=sys.stderr)
-
-                    if candidate.finish_reason != 1 and candidate.finish_reason != "STOP": 
-                        finish_reason_name = str(candidate.finish_reason)
-                        print(f"[AIService Gemini] Advertencia: Respuesta no completada. Motivo: {finish_reason_name}", file=sys.stderr)
-                    
-                    # Intentar obtener el texto.
-                    return response.text
-                else:
-                    self.last_error = "Gemini no generó candidatos (posible bloqueo de seguridad total)."
-                    return None
-            except ValueError as ve:
-                # Este error ocurre cuando intentamos acceder a .text en una respuesta bloqueada
-                self.last_error = f"Respuesta de IA bloqueada por filtros de seguridad: {str(ve)}"
-                print(f"[AIService Gemini] BLOQUEO DE SEGURIDAD: {ve}", file=sys.stderr)
+            if response and response.text:
+                print(f'[AIService Gemini] OK. Texto (inicio): {response.text[:80]}...', file=sys.stderr)
+                return response.text
+            else:
+                self.last_error = 'Gemini devolvió respuesta vacía.'
                 return None
 
         except Exception as e:
-            self.last_error = f"Gemini Error: {str(e)}"
-            print(f"[AIService Gemini] ERROR: {type(e).__name__}: {e}", file=sys.stderr)
+            self.last_error = f'Gemini Error: {str(e)}'
+            print(f'[AIService Gemini] ERROR: {type(e).__name__}: {e}', file=sys.stderr)
             import traceback
             traceback.print_exc(file=sys.stderr)
             return None
@@ -636,6 +496,65 @@ class AIService:
         except Exception as e:
             print(f"[AIService] Error en reconcile_ocr_spatial: {e}", file=sys.stderr)
             return None
+
+    def vision_ocr_expert(self, image_data, tesseract_draft=''):
+        """
+        OCR Experto (Paso 2 del pipeline de 3 pasos):
+        Gemini Vision con borrador Tesseract como contexto para máxima precisión.
+        Especializado para documentos históricos españoles con tipografía decorativa.
+        """
+        draft_section = ""
+        if tesseract_draft and tesseract_draft.strip():
+            draft_section = f"""
+BORRADOR TESSERACT (úsalo como guía estructural, NO como texto definitivo - puede tener errores):
+---
+{tesseract_draft[:4000]}
+---
+"""
+
+        prompt = f"""ACTÚA COMO UN EXPERTO EN PALEOGRAFÍA DIGITAL Y TRANSCRIPCIÓN DIPLOMÁTICA DE DOCUMENTOS HISTÓRICOS ESPAÑOLES.
+
+Estás procesando una página de un documento histórico español (siglo XIX-XX). La imagen puede contener:
+- Tipografías decorativas, góticas, caligráficas o de imprenta antigua
+- NÚMEROS CRÍTICOS: años (ej: 1900, 1903), precios (ej: 0'50 ptas, 1'50 ptas), horas (ej: las 9, las 4 y media), cantidades
+- Elementos ornamentales (asteriscos, viñetas, bordes, estrellas, líneas decorativas) que NO son texto: IGNÓRALOS
+- Texto en múltiples columnas o con diseño complejo
+- Secciones con títulos en tipografía especial (negrita, gótica, caligráfica)
+
+{draft_section}
+INSTRUCCIONES CRÍTICAS:
+1. TRANSCRIBE LITERALMENTE todo el texto visible. Los NÚMEROS, FECHAS, PRECIOS y HORAS son absolutamente críticos: léelos con máxima atención directamente de la imagen.
+2. IGNORA por completo los ornamentos decorativos (series de *, ✦, líneas, bordes) que no forman parte del texto narrativo.
+3. Si el borrador Tesseract tiene una palabra reconocible, úsala como referencia pero verifica con la imagen.
+4. Preserva la ortografía histórica española: á (preposición), é (conjunción), fué, habia, etc.
+5. Para títulos en tipografía decorativa: transcribe el texto aunque sea parcialmente ilegible, aproximándote al sentido.
+6. Une palabras cortadas por guion al final de línea (ej: muni-cipal → municipal).
+7. Estructura el texto con saltos de línea naturales respetando párrafos y secciones.
+
+RESPONDE EXCLUSIVAMENTE CON JSON PURO (sin markdown, sin ```json):
+{{
+    "text": "Transcripción completa del documento con saltos de línea naturales y estructura clara",
+    "words": [
+        {{"text": "Palabra", "box_2d": [ymin, xmin, ymax, xmax]}}
+    ]
+}}
+Las coordenadas box_2d van de 0 a 1000. Incluye al menos todas las palabras de títulos, fechas y números."""
+
+        try:
+            raw = self._call_gemini(prompt, temperature=0, image_data=image_data)
+            data = self._extract_json_from_text(raw)
+            if data and ('text' in data or 'words' in data):
+                print(f"[AIService] vision_ocr_expert completado: {len(data.get('text',''))} chars, {len(data.get('words',[]))} palabras.", file=sys.stderr)
+                return data
+            # Si no hay JSON válido, devolver el texto plano de Gemini
+            if raw and raw.strip():
+                print(f"[AIService] vision_ocr_expert devuelve texto plano ({len(raw)} chars).", file=sys.stderr)
+                return {'text': raw.strip(), 'words': []}
+        except Exception as e:
+            print(f"[AIService] Error en vision_ocr_expert: {e}", file=sys.stderr)
+
+        # Fallback: devolver el borrador de Tesseract
+        return {'text': tesseract_draft, 'words': []}
 
     def correct_ocr_text(self, text, part_num=1, total_parts=1, image_data=None, custom_prompt=None):
         """Corrige texto OCR y extrae metadatos estructurados usando IA. Soporta Vision."""

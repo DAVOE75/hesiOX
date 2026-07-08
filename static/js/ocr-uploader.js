@@ -263,19 +263,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             } else if (action === 'range') {
                 // Procesar rango de páginas
+                const totalHint = pdfPageCount > 0 ? `<div style="text-align:center;color:#ff9800;font-size:0.85em;margin-top:8px;"><i class="fa-solid fa-file-pdf me-1"></i>PDF detectado: <strong>${pdfPageCount} páginas</strong> en total</div>` : '';
                 const { value: rangeValues } = await Swal.fire({
                     title: 'Definir Rango de Páginas',
                     html: `
                         <div class="row g-3" style="margin-top:10px;">
                             <div class="col-6 text-start">
                                 <label class="sirio-label mb-2">Página Inicio</label>
-                                <input id="swal-range-start" type="number" class="swal2-input m-0 w-100" value="1" min="1" max="${pdfPageCount || 999}">
+                                <input id="swal-range-start" type="number" class="swal2-input m-0 w-100" value="1" min="1">
                             </div>
                             <div class="col-6 text-start">
                                 <label class="sirio-label mb-2">Página Fin</label>
-                                <input id="swal-range-end" type="number" class="swal2-input m-0 w-100" value="${pdfPageCount || 1}" min="1" max="${pdfPageCount || 999}">
+                                <input id="swal-range-end" type="number" class="swal2-input m-0 w-100" value="${pdfPageCount || 1}" min="1">
                             </div>
                         </div>
+                        ${totalHint}
                     `,
                     focusConfirm: false,
                     showCancelButton: true,
@@ -286,8 +288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     preConfirm: () => {
                         const start = parseInt(document.getElementById('swal-range-start').value);
                         const end = parseInt(document.getElementById('swal-range-end').value);
-                        if (!start || !end || start > end) {
-                            Swal.showValidationMessage('El rango no es válido');
+                        if (!start || !end || start < 1 || end < 1 || start > end) {
+                            Swal.showValidationMessage('El rango no es válido (inicio debe ser ≤ fin y ambos ≥ 1)');
                             return false;
                         }
                         return { start, end };
@@ -299,69 +301,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 return;
             } else if (action === 'single') {
-                // Elegir página específica
+                // Elegir página específica — siempre input numérico (sin lista para PDFs grandes)
                 let page;
-                if (pdfPageCount > 0) {
-                    const inputOptions = {};
-                    for (let i = 1; i <= pdfPageCount; i++) {
-                        inputOptions[i] = `Página ${i}`;
+                const totalInfo = pdfPageCount > 0 ? ` <span style="color:#ff9800;">(total: ${pdfPageCount} pág.)</span>` : '';
+                const { value: selectedPage } = await Swal.fire({
+                    title: 'Seleccionar Página',
+                    html: `
+                        <div style="margin-top: 15px; text-align: left;">
+                            <label class="sirio-label" style="display: block; margin-bottom: 10px; color: #ff9800;">
+                                Número de página a transcribir${totalInfo}:
+                            </label>
+                            <input id="swal-single-page" type="number" class="swal2-input w-100 m-0"
+                                value="1" min="1" style="font-size:1.4em; text-align:center;">
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Extraer Página',
+                    confirmButtonColor: '#ff9800',
+                    background: '#1a1d21',
+                    color: '#fff',
+                    didOpen: () => {
+                        const inp = document.getElementById('swal-single-page');
+                        if (inp) inp.focus();
+                    },
+                    preConfirm: () => {
+                        const val = parseInt(document.getElementById('swal-single-page').value);
+                        if (!val || val < 1) {
+                            Swal.showValidationMessage('Introduce un número de página válido (≥ 1)');
+                            return false;
+                        }
+                        return val;
                     }
-
-                    const { value: selectedPage } = await Swal.fire({
-                        title: 'Seleccionar Página',
-                        html: `
-                            <div style="margin-top: 15px; text-align: left;">
-                                <label class="sirio-label" style="display: block; margin-bottom: 12px; color: #ff9800;">
-                                    Haz clic en la página que deseas transcribir:
-                                </label>
-                                <div id="swal-page-list" class="custom-scrollbar" style="max-height: 250px; overflow-y: auto; background: #111; border: 1px solid #444; border-radius: 6px;">
-                                    ${Array.from({length: pdfPageCount}, (_, i) => i + 1).map(i => `
-                                        <div class="sirio-option" data-value="${i}" style="padding: 12px 15px; cursor: pointer; color: #ffd580; border-bottom: 1px solid #222;">
-                                            <i class="fas fa-file-alt" style="margin-right: 10px; opacity: 0.5;"></i> Página ${i}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `,
-                        showCancelButton: true,
-                        showConfirmButton: false, // El usuario elige al hacer clic
-                        cancelButtonText: 'Cancelar',
-                        background: '#1a1d21',
-                        color: '#fff',
-                        didOpen: () => {
-                            const list = document.getElementById('swal-page-list');
-                            list.querySelectorAll('.sirio-option').forEach(opt => {
-                                opt.onclick = () => {
-                                    window.selectedPageValue = opt.getAttribute('data-value');
-                                    Swal.clickConfirm();
-                                };
-                            });
-                        },
-                        preConfirm: () => {
-                            return window.selectedPageValue;
-                        }
-                    });
-                    page = selectedPage;
-                } else {
-                    // Fallback manual si por algún motivo técnico no sabemos el total
-                    const { value: manualPage } = await Swal.fire({
-                        title: 'Seleccionar Página (Manual)',
-                        input: 'number',
-                        inputLabel: `No se pudo detectar el total de páginas. Introduce el número manualmente:`,
-                        inputValue: 1,
-                        inputAttributes: { min: 1, max: 999, step: 1 },
-                        showCancelButton: true,
-                        confirmButtonText: 'Extraer',
-                        confirmButtonColor: '#ff9800',
-                        background: '#1a1d21',
-                        color: '#fff',
-                        customClass: {
-                            input: 'sirio-select',
-                            label: 'sirio-label'
-                        }
-                    });
-                    page = manualPage;
-                }
+                });
+                page = selectedPage;
 
                 if (page) {
                     console.log(`[OCR] Solicitando extracción de página específica: ${page}`);
@@ -1080,10 +1053,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
-
-    // ============================================================
-    // 🤖 MEJORAR OCR CON IA (CLAUDE)
-    // ============================================================
 
     // ============================================================
     // 🤖 MEJORAR OCR CON IA (CLAUDE/GEMINI)

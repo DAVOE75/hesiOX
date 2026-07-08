@@ -130,7 +130,11 @@
                     {% for p in publicaciones %}
                     <tr class="fila-medio {{ 'opacity-50' if not p.visible else '' }}">
                         <td>
+                            {% if p.url_publi %}
+                            <a href="{{ p.url_publi }}" target="_blank" rel="noopener noreferrer" class="text-white text-decoration-none" style="font-size: 13px; font-weight: bold; display: block;">{{ p.nombre }}</a>
+                            {% else %}
                             <strong class="text-white d-block" style="font-size: 13px;">{{ p.nombre }}</strong>
+                            {% endif %}
                             <div class="d-flex flex-wrap gap-1 mt-1">
                                 {% if p.tipo %}
                                 <span class="badge bg-dark border border-secondary text-muted rounded-0"

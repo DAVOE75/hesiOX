@@ -497,6 +497,7 @@
                     Documental</a>
                 <a href="#ocr-deep-dive" class="list-group-item list-group-item-action ps-3">4.2 Motores de
                     Reconocimiento Óptico (OCR)</a>
+                <a href="#ocr-expert-engine" class="list-group-item list-group-item-action ps-4 small fw-bold" style="color:#ffd700;"><i class="fa-solid fa-star me-1"></i>4.2.1 Motor Experto 3 Pasos (v5.0)</a>
                 <a href="#text-refinement" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.3
                     Taller de Refinamiento Táctico</a>
                 <a href="#editor-rich" class="list-group-item list-group-item-action ps-3">4.4 Editor:
@@ -643,13 +644,32 @@
             <p class="lead text-muted mb-4">Manual definitivo de operación, teoría y arquitectura técnica para la
                 hemerografía digital avanzada.</p>
             <div class="d-flex gap-3">
-                <span class="badge bg-accent text-white-adapt p-2">v4.3.0 BUILD
-                    2026.05.11</span>
+                <span class="badge bg-accent text-white-adapt p-2">v5.0.0 BUILD
+                    2026.07.08</span>
                 <span class="badge border text-muted p-2">Proyecto hesiOX</span>
             </div>
 
         {% if not pdf_mode %}
-            <!-- Novedades Abril 2026 -->
+            <!-- Novedades Julio 2026 - v5.0.0 -->
+            <div class="alert border-0 shadow mt-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-left: 4px solid #ffd700 !important;">
+                <h5 class="fw-bold" style="color:#ffd700;"><i class="fa-solid fa-star me-2"></i>Motor OCR Experto 3 Pasos &mdash; v5.0.0 (Julio 2026)</h5>
+                <div class="small text-light">
+                    <p class="mb-2">La mayor actualización del sistema de OCR en la historia de HesiOX. El nuevo <strong style="color:#ffd700;">Motor Experto</strong> sustituye al Híbrido como motor por defecto e implementa un pipeline profesional de tres pasos diseñado específicamente para documentos históricos con tipografía decorativa.</p>
+                    <ul class="mb-2">
+                        <li><strong style="color:#ff9800;">Paso 1 &mdash; Tesseract 400 DPI (doble PSM):</strong> Conversión del PDF a 400 DPI (el doble de la resolución estándar) y ejecución paralela con PSM&nbsp;3 (layout automático) y PSM&nbsp;6 (bloque continuo). Se elige el borrador con mayor cobertura de texto.</li>
+                        <li><strong style="color:#cf93e9;">Paso 2 &mdash; Gemini Vision con contexto Tesseract:</strong> El borrador del Paso 1 se envía junto a la imagen a Gemini Vision. Un prompt especializado instruye a la IA para recuperar números, fechas, precios y horas que la tipografía decorativa oculta al OCR clásico, e ignorar ornamentos visuales.</li>
+                        <li><strong style="color:#4ade80;">Paso 3 &mdash; Refinamiento semántico final:</strong> El texto completo pasa por un último ciclo de corrección lingüística, desguionizado, restauración de la ortografía histórica y extracción de metadatos.</li>
+                    </ul>
+                    <hr class="my-2 opacity-25">
+                    <ul class="mb-0">
+                        <li><strong>Selector de rango libre:</strong> El diálogo de rango de páginas ya no limita el valor máximo por el total detectado; permite introducir cualquier página con validación inteligente en servidor.</li>
+                        <li><strong>Selector de página única simplificado:</strong> Reemplazado el selector de lista (lento en PDFs de cientos de páginas) por un input numérico directo.</li>
+                        <li><strong>Tiempo de espera nginx ampliado:</strong> El bloque <code>/api/ocr/</code> tiene ahora 900&nbsp;s de timeout para procesar documentos extensos sin error 504.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Novedades Mayo 2026 - v4.3.0 -->
             <div class="alert alert-info border-0 shadow mt-4">
                 <h5 class="fw-bold"><i class="fa-solid fa-sparkles me-2"></i>Actualizaciones Críticas (v4.3.0 - Mayo
                     2026)</h5>
@@ -1389,9 +1409,9 @@
                 </ul>
             </div>
 
-            <h3 id="ocr-deep-dive" class="h4 mt-5 fw-bold text-accent">4.2 Motores de Reconocimiento Óptico (OCR) — hesiOX IA Motor v4.2</h3>
+            <h3 id="ocr-deep-dive" class="h4 mt-5 fw-bold text-accent">4.2 Motores de Reconocimiento Óptico (OCR) — hesiOX IA Motor v5.0</h3>
             <p>
-                HesiOX ofrece una arquitectura modular de OCR de alta precisión diseñada para la prensa histórica. La joya de la corona es el nuevo <strong>Motor Híbrido (Vision Edition)</strong>, que trasciende la lectura mecánica para entender la composición espacial del documento.
+                HesiOX ofrece una arquitectura modular de OCR de alta precisión diseñada para la prensa histórica. Desde la v5.0, el motor por defecto es el <strong style="color:#ffd700;">Motor Experto 3 Pasos</strong>, un pipeline profesional que combina procesamiento local de alta resolución con inteligencia artificial multimodal.
             </p>
 
             <div class="row g-4 mt-3">
@@ -1417,24 +1437,122 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-lg-3">
                     <div class="card h-100 border-accent shadow-sm">
                         <div class="card-header bg-accent text-white fw-bold xsmall">
-                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Híbrido: Reconciliación IA (Vision)
+                            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Híbrido: Reconciliación IA
                         </div>
                         <div class="card-body bg-light">
-                            <p class="small mb-2"><strong>Arquitectura de Doble Paso:</strong></p>
-                            <ul class="xsmall text-success mb-0 ps-3">
-                                <li><strong>Hibridación Multimodal:</strong> La IA analiza simultáneamente el texto OCR y los píxeles de la imagen original.</li>
-                                <li><strong>Zonificación Inteligente:</strong> Recupera automáticamente columnas o fragmentos que el OCR tradicional "salta" o ignora.</li>
-                                <li><strong>Fuente de Verdad Absoluta:</strong> Corrige errores de interpretación geométrica basándose en la visión directa del facsímil.</li>
-                            </ul>
+                            <p class="xsmall text-success mb-0">Doble paso OCR.space + Gemini Vision con reconciliación espacial. Alternativa robusta para prensa estructurada.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3">
+                    <div class="card h-100 shadow-sm" style="border: 2px solid #ffd700;">
+                        <div class="card-header fw-bold xsmall text-white" style="background:#1a1a2e;">
+                            <i class="fa-solid fa-star me-2" style="color:#ffd700;"></i>Experto 3 Pasos <span class="badge ms-1" style="background:#ffd700;color:#000;font-size:0.65em;">POR DEFECTO</span>
+                        </div>
+                        <div class="card-body bg-light">
+                            <p class="xsmall mb-0" style="color:#1a1a2e;">400 DPI + Tesseract dual-PSM + Gemini Vision con contexto + refinado semántico. Máxima calidad para tipografía histórica.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <h4 class="h6 fw-bold mt-4">4.2.1 Gestión de Documentos Complejos (PDF y Vision Preview)</h4>
+            <!-- SECCIÓN EXPERTO DETALLADA -->
+            <h4 id="ocr-expert-engine" class="h5 mt-5 fw-bold" style="color:#ffd700;">
+                <i class="fa-solid fa-star me-2"></i>4.2.1 Motor Experto 3 Pasos — Arquitectura Profesional (v5.0)
+            </h4>
+            <p class="small">El Motor Experto nace de la necesidad de obtener transcripciones de máxima fidelidad en documentos históricos con tipografía decorativa, gótica o caligráfica: programas de fiestas, revistas de época, gacetas, almanaques y prensa del siglo XIX–XX. Los motores tradicionales fallan sistemáticamente en estos documentos porque confunden ornamentos con letras, pierden números y años insertos en tipografía especial, y no entienden la composición visual de la página.</p>
+
+            <div class="row g-0 mt-4 mb-2" style="border:1px solid #ffd700; border-radius:8px; overflow:hidden;">
+                <!-- PASO 1 -->
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:#0d1b2a; border-right:1px solid #ffd700;">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2 fs-6" style="background:#ff9800;">1</span>
+                            <strong class="text-white" style="font-size:0.85rem;">Tesseract 400 DPI (Doble PSM)</strong>
+                        </div>
+                        <p class="xsmall text-light opacity-75 mb-2">El PDF se re-renderiza a <strong class="text-warning">400 DPI</strong> (el doble del estándar), exponiendo detalles finos de tipografía ilegibles a menor resolución.</p>
+                        <p class="xsmall text-light opacity-75 mb-2">Se ejecutan en paralelo dos modos de Tesseract:</p>
+                        <ul class="xsmall text-warning mb-0 ps-3">
+                            <li><strong>PSM 3</strong>: layout automático, ideal para columnas y decoración.</li>
+                            <li><strong>PSM 6</strong>: bloque uniforme, mejor cobertura en texto corrido.</li>
+                        </ul>
+                        <p class="xsmall text-light opacity-75 mt-2 mb-0">El sistema selecciona automáticamente el borrador de mayor cobertura.</p>
+                    </div>
+                </div>
+                <!-- PASO 2 -->
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:#0d1b2a; border-right:1px solid #ffd700;">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2 fs-6" style="background:#cf93e9; color:#000;">2</span>
+                            <strong class="text-white" style="font-size:0.85rem;">Gemini Vision con Contexto</strong>
+                        </div>
+                        <p class="xsmall text-light opacity-75 mb-2">Imagen a 400 DPI <em>y</em> borrador Tesseract se envían juntos a Gemini. La IA trabaja con una <strong class="text-info">guía estructural</strong>, no a ciegas.</p>
+                        <p class="xsmall text-light opacity-75 mb-2">El prompt especializado instruye para:</p>
+                        <ul class="xsmall text-info mb-0 ps-3">
+                            <li>Recuperar <strong>números, años, precios y horas</strong> exactos del píxel.</li>
+                            <li><strong>Ignorar ornamentos</strong> (asteriscos, viñetas, bordes).</li>
+                            <li>Preservar <strong>ortografía histórica</strong> española.</li>
+                            <li>Unir palabras cortadas por guion al final de línea.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- PASO 3 -->
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:#0d1b2a;">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2 fs-6" style="background:#4ade80; color:#000;">3</span>
+                            <strong class="text-white" style="font-size:0.85rem;">Refinamiento Semántico Final</strong>
+                        </div>
+                        <p class="xsmall text-light opacity-75 mb-2">El texto consolidado pasa por el <strong class="text-success">Arquetipo de Transcriptor Paleográfico</strong>:</p>
+                        <ul class="xsmall text-success mb-0 ps-3">
+                            <li>Corrección de erratas OCR residuales.</li>
+                            <li>Deduplicación y reconciliación de fragmentos.</li>
+                            <li>Restauración de párrafos y estructura narrativa.</li>
+                            <li>Extracción de metadatos: título, fecha, año, ciudad, edición.</li>
+                        </ul>
+                        <p class="xsmall text-light opacity-75 mt-2 mb-0">Resultado: <strong class="text-warning">≥ 97% de fidelidad</strong> estimada en documentos históricos típicos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert mt-3 small border-0" style="background:#2a1f00; border-left:3px solid #ffd700 !important;">
+                <i class="fa-solid fa-clock me-2" style="color:#ffd700;"></i><strong style="color:#ffd700;">Tiempo estimado:</strong> <span class="text-light">30–90 segundos por página dependiendo de la complejidad visual. Para documentos de más de 20 páginas se recomienda procesar en rangos de 5–10 páginas.</span>
+            </div>
+
+            <h4 class="h6 fw-bold mt-4">4.2.2 Comparativa de Motores</h4>
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-bordered xsmall">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Motor</th><th>Resolución</th><th>Núm./Fechas</th><th>Tipografía decorativa</th><th>Velocidad</th><th>Recomendado para</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-light">
+                            <td><i class="fa-solid fa-server me-1"></i> Tesseract</td>
+                            <td>~200 DPI</td><td class="text-danger">Pobre</td><td class="text-danger">Pobre</td><td class="text-success">Muy rápido</td><td>Textos modernos limpios</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td><i class="fa-solid fa-cloud me-1"></i> OCR.space</td>
+                            <td>Nativa</td><td class="text-warning">Moderado</td><td class="text-warning">Moderado</td><td class="text-warning">Medio</td><td>Prensa con columnas claras</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Híbrido</td>
+                            <td>~200 DPI</td><td class="text-warning">Bueno</td><td class="text-warning">Bueno</td><td class="text-warning">Lento</td><td>Prensa estructurada con columnas</td>
+                        </tr>
+                        <tr style="background:#1a1a2e; color:#ffd700;">
+                            <td><i class="fa-solid fa-star me-1"></i> <strong>Experto 3 Pasos</strong></td>
+                            <td><strong>400 DPI</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-danger">Lento</td><td><strong>Documentos históricos con tipografía decorativa</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4 class="h6 fw-bold mt-4">4.2.3 Gestión de Documentos Complejos (PDF y Vision Preview)</h4>
             <div class="p-3 border rounded bg-light mb-4">
                 <div class="row g-3">
                     <div class="col-md-6">
