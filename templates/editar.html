@@ -575,6 +575,18 @@
                                                 for="ocr-dest-original">
                                                 <i class="fa-solid fa-file-alt me-1"></i> Texto Original
                                             </label>
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-diplomatica" value="diplomatica">
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-diplomatica">
+                                                <i class="fa-solid fa-hotel me-1"></i> Diplomática
+                                            </label>
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-critica" value="critica">
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-critica">
+                                                <i class="fa-solid fa-pen-fancy me-1"></i> Crítica
+                                            </label>
                                         </div>
                                     </div>
                                     <div class="mb-3">
@@ -630,7 +642,7 @@
 
         <form method="POST" enctype="multipart/form-data" id="form-ficha">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64" />
+            
             <div class="row g-3" id="row-principal">
                 <div class="col-lg-4">
                     <div class="card-panel">

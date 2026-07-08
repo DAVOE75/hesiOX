@@ -48,21 +48,28 @@ def preprocess_historical_image(img_pil):
     return Image.fromarray(sharpened)
 
 def extract_words_data(ocr_result, width, height, page=1):
-    """ Extrae datos de palabras y coordenadas normalizadas (0-1000) """
+    """ Extrae datos de palabras y coordenadas normalizadas (0-100) para el frontend """
     words_data = []
     if not ocr_result or 'level' not in ocr_result:
         return []
     for i in range(len(ocr_result['text'])):
         # Nivel 5 son palabras en Pytesseract
         if int(ocr_result['level'][i]) == 5 and ocr_result['text'][i].strip():
-            ymin = int((ocr_result['top'][i] / height) * 1000)
-            xmin = int((ocr_result['left'][i] / width) * 1000)
-            ymax = int(((ocr_result['top'][i] + ocr_result['height'][i]) / height) * 1000)
-            xmax = int(((ocr_result['left'][i] + ocr_result['width'][i]) / width) * 1000)
+            # Calculamos en porcentaje (0-100) para compatibilidad con el visor
+            x = (ocr_result['left'][i] / width) * 100
+            y = (ocr_result['top'][i] / height) * 100
+            w = (ocr_result['width'][i] / width) * 100
+            h = (ocr_result['height'][i] / height) * 100
+            
             words_data.append({
-                'word': ocr_result['text'][i],
+                'text': ocr_result['text'][i],
+                'word': ocr_result['text'][i], # Para compatibilidad con frontend
                 'confidence': int(ocr_result['conf'][i]),
-                'bbox': [ymin, xmin, ymax, xmax],
+                'x': x,
+                'y': y,
+                'w': w,
+                'h': h,
+                'bbox': [y*10, x*10, (y+h)*10, (x+w)*10], # 0-1000 format
                 'p': page
             })
     return words_data
@@ -168,6 +175,7 @@ def ocr_advanced():
                 ai_service = AIService(provider=provider, model=model_variant, user=current_user)
                 for i, page_img in enumerate(pages_to_process):
                     curr_p = p_start + i
+                    print(f"[OCR] Procesando página {curr_p} con Vision IA...", file=sys.stderr)
                     # Preparar imagen para Gemini
                     buf = io.BytesIO()
                     page_img.convert('RGB').save(buf, format="JPEG", quality=85)
@@ -177,20 +185,22 @@ def ocr_advanced():
                     words_list = vision_res.get('words', [])
                     
                     page_text = ' '.join([w.get('text', '') for w in words_list])
-                    if len(pages_to_process) > 1:
-                        all_texts.append(f"--- [PÁGINA {curr_p}] ---\n{page_text}")
-                    else:
-                        text = page_text
+                    # No añadimos marcadores de página aquí, los añadiremos al final si es necesario
+                    # para evitar que limpieza_profunda_ocr los borre prematuramente
+                    all_texts.append(page_text)
                     
                     # Convertir coordenadas Gemini [ymin, xmin, ymax, xmax] (0-1000) a formato HesiOX (0-100)
                     for w_item in words_list:
                         box = w_item.get('box_2d', [0,0,0,0])
+                        txt = w_item.get('text', '')
                         words_data.append({
-                            'text': w_item.get('text', ''),
+                            'text': txt,
+                            'word': txt,
                             'x': box[1] / 10.0,
                             'y': box[0] / 10.0,
                             'w': (box[3] - box[1]) / 10.0,
                             'h': (box[2] - box[0]) / 10.0,
+                            'bbox': box,
                             'p': curr_p
                         })
                     
@@ -198,7 +208,8 @@ def ocr_advanced():
                         image_data = page_base64
 
                 if all_texts:
-                    text = '\n\n'.join(all_texts)
+                    # Unimos con separadores temporales únicos
+                    text = "\n\n===PAGE_BREAK===\n\n".join(all_texts)
                 
                 # Fallback de seguridad: Si la IA devolvió muy poco texto, algo fue mal (truncado/bloqueo)
                 # Usamos Tesseract como respaldo
@@ -230,18 +241,15 @@ def ocr_advanced():
                     img_proc = preprocess_historical_image(page_img)
                     w, h = img_proc.size
                     
-                    # Pase único PSM 3 (Layout automático) - El más estable para periódicos
-                    ocr_result = pytesseract.image_to_data(img_proc, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
+                    # Pase único PSM 3 (Layout automático) - EL MEJOR PARA PRESERVAR SALTOS DE LÍNEA
+                    page_text = pytesseract.image_to_string(img_proc, config='--psm 3 -l spa')
                     
-                    # Extraer texto limpio
-                    page_text = ' '.join([t for t in ocr_result['text'] if t.strip()])
+                    # Obtener coordenadas por separado
+                    ocr_result = pytesseract.image_to_data(img_proc, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
                     
                     print(f"[OCR] Página {curr_p} finalizada. Caracteres: {len(page_text)}", file=sys.stderr)
                     
-                    if len(pages_to_process) > 1:
-                        all_texts.append(f"--- [PÁGINA {curr_p}] ---\n{page_text}")
-                    else:
-                        text = page_text
+                    all_texts.append(page_text)
                     
                     words_data.extend(extract_words_data(ocr_result, w, h, page=curr_p))
                     
@@ -254,45 +262,96 @@ def ocr_advanced():
                         image_data = f"data:image/jpeg;base64,{base64_image}"
 
                 if all_texts:
-                    text = '\n\n'.join(all_texts)
+                    text = "\n\n===PAGE_BREAK===\n\n".join(all_texts)
 
             elif ocr_engine == 'hybrid':
+                import requests
                 for i, page_img in enumerate(pages_to_process):
                     curr_p = p_start + i
-                    print(f"[OCR-Hybrid-V3] Procesando página {curr_p}...", file=sys.stderr)
+                    print(f"[OCR-Hybrid] --- RECONCILIACIÓN MAESTRA PÁGINA {curr_p} ---", file=sys.stderr)
                     
-                    # 1. Preprocesado suave (Sharpening)
-                    img_restored = preprocess_historical_image(page_img)
                     img_rgb = page_img.convert('RGB')
-                    width, height = img_restored.size
-                    
-                    # 2. DOBLE PASADA TESSERACT
-                    # Pass 1: PSM 3 (Cuerpo)
-                    res1 = pytesseract.image_to_data(img_restored, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
-                    txt1 = ' '.join([t for t in res1['text'] if t.strip()])
-                    
-                    # Pass 2: PSM 6 (Cabeceras)
-                    res2 = pytesseract.image_to_data(img_restored, config='--psm 6 -l spa', output_type=pytesseract.Output.DICT)
-                    txt2 = ' '.join([t for t in res2['text'] if t.strip()])
-                    
-                    # 3. Borrador para IA (Más limpio)
-                    page_combined = f"--- [PÁGINA {curr_p}] ---\n\n[BORRADOR BASE]\n{txt1}\n\n[DATOS CABECERA]\n{txt2}"
-                    all_texts.append(page_combined)
-                    
-                    # 4. Fusión de Spatial Index
-                    words_v1 = extract_words_data(res1, width, height, page=curr_p)
-                    words_v2 = extract_words_data(res2, width, height, page=curr_p)
-                    words_data.extend(words_v1)
-                    words_data.extend([w for w in words_v2 if w['confidence'] > 50])
+                    width, height = img_rgb.size
+                    buf = io.BytesIO()
+                    img_rgb.save(buf, format="JPEG", quality=90)
+                    img_bytes = buf.getvalue()
+                    page_base64 = f"data:image/jpeg;base64,{base64.b64encode(img_bytes).decode()}"
                     
                     if i == 0:
-                        buf = io.BytesIO()
-                        img_rgb.save(buf, format="JPEG", quality=90)
-                        image_data = f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode()}"
+                        image_data = page_base64
 
-                text = '\n\n'.join(all_texts)
-                confidence = 92
-                ocr_skip_ai_correction = False
+                    # 1. PASO 1: OCR.space Engine 2 (Ancla Espacial)
+                    space_data = None
+                    try:
+                        r_space = requests.post('https://api.ocr.space/parse/image', 
+                                        files={'file': ('page.jpg', img_bytes, 'image/jpeg')}, 
+                                        data={'language': 'spa', 'apikey': 'K81234567888957', 'isOverlayRequired': True, 'OCREngine': '2'},
+                                        timeout=45)
+                        space_json = r_space.json()
+                        if space_json.get('OCRExitCode') == 1:
+                            space_data = space_json.get('ParsedResults', [{}])[0].get('TextOverlay', {})
+                        else:
+                            print(f"[OCR-Hybrid] Advertencia OCR.space: {space_json.get('ErrorMessage')}", file=sys.stderr)
+                    except Exception as e_space:
+                        print(f"[OCR-Hybrid] Error conectando a OCR.space: {e_space}", file=sys.stderr)
+
+                    # 2. PASO 2: Gemini Reconciliación (Visión + Anchor)
+                    try:
+                        provider = 'gemini'
+                        model_variant = '2.0-flash' # Usar estable
+                        curr_ai_service = AIService(provider=provider, model=model_variant, user=current_user)
+                        
+                        print(f"[OCR-Hybrid] Reconciliando página {curr_p}...", file=sys.stderr)
+                        reconciled = curr_ai_service.reconcile_ocr_spatial(page_base64, space_data, width=width, height=height)
+                        
+                        if reconciled and 'index' in reconciled and reconciled.get('transcription'):
+                            all_texts.append(reconciled.get('transcription', ''))
+                            for item in reconciled['index']:
+                                box = item.get('box', [0,0,0,0])
+                                t = item.get('text', '')
+                                words_data.append({
+                                    'text': t, 'word': t,
+                                    'x': box[1] / 10.0, 'y': box[0] / 10.0,
+                                    'w': (box[3] - box[1]) / 10.0, 'h': (box[2] - box[0]) / 10.0,
+                                    'bbox': box, 'p': curr_p
+                                })
+                        else:
+                            # FALLBACK 1: Vision OCR estándar
+                            print(f"[OCR-Hybrid] Reconciliación fallida en pág {curr_p}. Intentando Vision...", file=sys.stderr)
+                            v_res = curr_ai_service.vision_ocr(page_base64)
+                            v_words = v_res.get('words', [])
+                            
+                            v_text_final = ' '.join([w.get('text', '') for w in v_words])
+                            
+                            if v_text_final.strip():
+                                all_texts.append(v_text_final)
+                                for vw in v_words:
+                                    box = vw.get('box_2d', [0,0,0,0])
+                                    t = vw.get('text', '')
+                                    words_data.append({
+                                        'text': t, 'word': t,
+                                        'x': box[1] / 10.0, 'y': box[0] / 10.0,
+                                        'w': (box[3] - box[1]) / 10.0, 'h': (box[2] - box[0]) / 10.0,
+                                        'bbox': box, 'p': curr_p
+                                    })
+                            else:
+                                # FALLBACK 2: Tesseract (EL SALVAVIDAS FINAL)
+                                print(f"[OCR-Hybrid] IA falló totalmente (posible bloqueo). Usando Tesseract pág {curr_p}...", file=sys.stderr)
+                                img_proc = preprocess_historical_image(page_img)
+                                t_text = pytesseract.image_to_string(img_proc, config='--psm 3 -l spa')
+                                all_texts.append(t_text)
+                                # Extraer coordenadas base de tesseract para no dejar la página vacía de index
+                                t_data = pytesseract.image_to_data(img_proc, config='--psm 3 -l spa', output_type=pytesseract.Output.DICT)
+                                words_data.extend(extract_words_data(t_data, width, height, page=curr_p))
+                                
+                    except Exception as e_recon:
+                        print(f"[OCR-Hybrid] Error crítico en lógica de página {curr_p}: {e_recon}", file=sys.stderr)
+                        # Fallback de emergencia absoluto
+                        all_texts.append("[ERROR EN PROCESAMIENTO DE PÁGINA]")
+
+                text = "\n\n===PAGE_BREAK===\n\n".join(all_texts)
+                confidence = 100
+                ocr_skip_ai_correction = True 
 
         except Exception as e:
             print(f'[OCR ERROR Engine] {e}')
@@ -303,6 +362,10 @@ def ocr_advanced():
         # AI Service correction (Optional step)
         if not ocr_skip_ai_correction:
             try:
+                # [NUEVO] En modo híbrido NO limpiamos antes para no perder las etiquetas [BORRADOR BASE]
+                if ocr_engine != 'hybrid':
+                    text = limpieza_profunda_ocr(text)
+                
                 print(f"[OCR] Iniciando corrección IA con modelo: {ocr_model or 'default'}...", file=sys.stderr)
                 provider = 'gemini'
                 model_variant = ocr_model
@@ -316,18 +379,33 @@ def ocr_advanced():
                     # Preparar image_data si no existe
                     if not image_data:
                         try:
-                            with Image.open(filepath) as v_img:
-                                if v_img.mode != 'RGB': v_img = v_img.convert('RGB')
-                                v_img.thumbnail((2000, 2000))
+                            # Usar la primera imagen del set para el refinamiento
+                            if pages_to_process:
                                 buf = io.BytesIO()
-                                v_img.save(buf, format="JPEG", quality=85)
+                                pages_to_process[0].convert('RGB').save(buf, format="JPEG", quality=85)
                                 image_data = f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode()}"
                         except Exception as ve:
                             print(f"[OCR] No se pudo generar preview para IA: {ve}", file=sys.stderr)
                     
-                    prompt = None
-                    if request.form.get('reconcile_hybrid') == 'true':
-                        prompt = "Actúa como un experto paleógrafo. Compara y reconcilia estos borradores de OCR usando la imagen adjunta."
+                    # PROMPT UNIVERSAL PARA REFINAMIENTO DE OCR (MÁXIMA CALIDAD)
+                    prompt = f"""
+ACTÚA COMO UN EXPERTO EN PROCESAMIENTO DE DOCUMENTOS Y RECONSTRUCCIÓN TEXTUAL DE ALTA FIDELIDAD.
+Tu misión es depurar este OCR para generar una transcripción perfecta y coherente del documento original.
+
+INSTRUCCIONES DE PROCESAMIENTO:
+1. LIMPIEZA DE METADATOS: Elimina elementos ajenos al cuerpo del texto como números de página, encabezados repetitivos, pies de página, marcas de escaneo o ruido marginal.
+2. DEDUPLICACIÓN Y RECONCILIACIÓN: El texto puede contener fragmentos repetidos o versiones alternativas del mismo párrafo ([BORRADOR BASE] vs [TRANSCRIPCIÓN LIMPIA]). Reintégralos en un flujo narrativo único y lógico, eliminando las repeticiones y errores de lectura.
+3. RECONSTRUCCIÓN DE ESTRUCTURA: Une palabras divididas por guiones al final de línea y restaura los párrafos originales. Asegura que el texto fluya de manera natural sin interrupciones técnicas.
+4. INTEGRIDAD TEXTUAL: No resumas ni cambies el contenido. Usa la imagen proporcionada (si existe) para resolver dudas de lectura, pero cíñete estrictamente a lo que dice el documento.
+5. PRESERVACIÓN DE ESTILO: Mantén escrupulosamente el idioma, la ortografía y el estilo original del texto (ya sea técnico, legal, histórico o literario). No modernices el lenguaje.
+
+FORMATO DE SALIDA: Devuelve ÚNICAMENTE el texto limpio y estructurado. Sin comentarios, sin etiquetas de sistema y sin explicaciones adicionales.
+"""
+                    # Forzar el uso del prompt si el motor es híbrido
+                    if ocr_engine == 'hybrid' or request.form.get('reconcile_hybrid') == 'true':
+                        print(f"[OCR] Aplicando prompt de reconciliación híbrida.", file=sys.stderr)
+                    else:
+                        prompt = None
                     
                     ai_res = ai_service.correct_ocr_text(text, image_data=image_data, custom_prompt=prompt)
                     if ai_res and ai_res.get('corrected_text'):
@@ -352,9 +430,20 @@ def ocr_advanced():
         except Exception as e_nlp:
             print(f'[OCR ERROR NLP] {e_nlp}', file=sys.stderr)
 
+        # Re-insertar marcadores de página si venían de un PDF multipágina
+        # y no están presentes en el texto (fueron limpiados por la IA)
+        if len(pages_to_process) > 1 and "--- [PÁGINA" not in text:
+            # Si el texto es una sola masa, no podemos re-insertarlos fácilmente
+            # pero al menos aseguramos que limpieza_profunda no vea un bloque gigante duplicado
+            pass
+
         print(f"[OCR] Petición finalizada con éxito. Longitud texto: {len(text)}", file=sys.stderr)
+        
+        # Limpieza final profunda para eliminar cualquier eco que la IA haya dejado
+        final_text = limpieza_profunda_ocr(text)
+        
         return jsonify({
-            'text': limpieza_profunda_ocr(text),
+            'text': final_text,
             'confidence': confidence,
             'entities': entities,
             'words_data': words_data,
@@ -370,9 +459,26 @@ def ocr_corregir():
         data = request.get_json()
         ai_service = AIService(user=current_user)
         if ai_service.is_configured() and data.get('texto'):
-            res = ai_service.correct_ocr_text(data['texto'], image_data=data.get('image_data'))
-            if res:
-                return jsonify({'success': True, 'corrected_text': res.get('corrected_text'), 'metadatos': {**data.get('metadatos', {}), **res.get('metadata', {})}})
-        return jsonify({'success': True, 'corrected_text': data.get('texto'), 'metadatos': data.get('metadatos', {})})
+            # Prompt de refuerzo para evitar duplicados en el refinamiento global
+            prompt = """
+ACTÚA COMO UN EDITOR FINAL. 
+Recibirás el texto completo de un documento OCR.
+Tu tarea es:
+1. Eliminar repeticiones accidentales de párrafos o secciones.
+2. Corregir la continuidad entre páginas.
+3. NO añadidas comentarios personales.
+4. MANTÉN el texto íntegro pero sin duplicados.
+"""
+            res = ai_service.correct_ocr_text(data['texto'], image_data=data.get('image_data'), custom_prompt=prompt)
+            if res and res.get('corrected_text'):
+                # Aplicamos limpieza profunda al resultado de la IA para asegurar eliminación de ecos
+                clean_text = limpieza_profunda_ocr(res['corrected_text'])
+                return jsonify({
+                    'success': True, 
+                    'corrected_text': clean_text, 
+                    'metadatos': {**data.get('metadatos', {}), **res.get('metadata', {})}
+                })
+        return jsonify({'success': True, 'corrected_text': limpieza_profunda_ocr(data.get('texto', '')), 'metadatos': data.get('metadatos', {})})
     except Exception as e:
+        print(f"[OCR] Error en corregir: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

@@ -472,6 +472,18 @@
                                                 for="ocr-dest-original">
                                                 <i class="fa-solid fa-file-alt me-1"></i> Texto Original
                                             </label>
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-diplomatica" value="diplomatica">
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-diplomatica">
+                                                <i class="fa-solid fa-hotel me-1"></i> Diplomática
+                                            </label>
+                                            <input type="radio" class="btn-check" name="ocr-destination"
+                                                id="ocr-dest-critica" value="critica">
+                                            <label class="btn btn-sirio btn-active-warning btn-sm"
+                                                for="ocr-dest-critica">
+                                                <i class="fa-solid fa-pen-fancy me-1"></i> Crítica
+                                            </label>
                                         </div>
                                     </div>
                                     <div class="mb-3">
@@ -525,7 +537,7 @@
 
         <form method="POST" enctype="multipart/form-data" id="form-nuevo">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64" />
+            
             <div class="row g-3" id="row-principal">
                 <div class="col-lg-4">
                     <div class="card-panel">
@@ -961,7 +973,24 @@
                                         class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
                                         id="original-tab" data-bs-toggle="tab" data-bs-target="#original" type="button"
                                         style="white-space: nowrap; flex-shrink: 0;">Texto Original</button>
-
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="diplomatica-tab" data-bs-toggle="tab" data-bs-target="#diplomatica" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;">Diplomática (🏛️)</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="critica-tab" data-bs-toggle="tab" data-bs-target="#critica" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;">Crítica (✍️)</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button
+                                        class="nav-link small text-uppercase fw-bold bg-transparent text-muted border-0 rounded-0 ps-3"
+                                        id="prosopografia-tab" data-bs-toggle="tab" data-bs-target="#prosopografia" type="button"
+                                        style="white-space: nowrap; flex-shrink: 0;"><i class="fa-solid fa-brain me-1"></i> PROSOGRAF-IA</button>
                                 </li>
                             </ul>
                             <!-- AI Progress Bar (Global for both editors) -->
@@ -992,6 +1021,39 @@
                                     <div id="texto_original_editor" class="quill-editor"></div>
                                     <textarea name="texto_original" id="texto_original"
                                         class="d-none">{{ precargados.texto_original or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="diplomatica">
+                                    <div id="toolbar-contenido_diplomatico"></div>
+                                    <div id="contenido_diplomatico_editor" class="quill-editor"></div>
+                                    <textarea name="contenido_diplomatico" id="contenido_diplomatico"
+                                        class="d-none">{{ precargados.contenido_diplomatico or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="critica">
+                                    <div id="toolbar-contenido_critico"></div>
+                                    <div id="contenido_critico_editor" class="quill-editor"></div>
+                                    <textarea name="contenido_critico" id="contenido_critico"
+                                        class="d-none">{{ precargados.contenido_critico or '' }}</textarea>
+                                </div>
+                                <div class="tab-pane fade flex-grow-1 d-flex flex-column" id="prosopografia">
+                                    <div class="prosopografia-container p-3 bg-black-opacity rounded" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                                            <h6 class="text-info mb-0">
+                                                <i class="fa-solid fa-brain me-2"></i>Motor PROSOGRAF-IA (Híbrido)
+                                            </h6>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" id="btn-analizar-ner-tab" class="btn btn-xs btn-sirio">
+                                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i>RE-ANALIZAR (IA + SPACY)
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="entidades-list-container">
+                                            <div class="text-center p-5 text-muted">
+                                                <i class="fa-solid fa-robot fa-3x mb-3 opacity-25"></i>
+                                                <p>Todavía no hay entidades identificadas.</p>
+                                                <p class="small">El análisis prosopográfico se ejecutará automáticamente al guardar la noticia o puedes iniciarlo manualmente.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1028,6 +1090,36 @@
                                         <button type="button" class="btn btn-sm btn-sirio"
                                             id="btn-correct-txt-gemini-orig" style="width: auto !important;"
                                             title="Corregir texto original con inteligencia artificial">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="counter-contenido_diplomatico"
+                                    class="char-counter small mt-1 text-warning d-none align-items-center w-100">
+                                    <div class="ms-auto d-flex gap-3">
+                                        <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual-diplomatica"
+                                            style="width: auto !important;"
+                                            title="Aplicar limpieza profunda al texto diplomático">
+                                            <i class="fa-solid fa-broom me-1"></i> Limpieza
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-sirio"
+                                            id="btn-correct-txt-gemini-diplomatica" style="width: auto !important;"
+                                            title="Corregir texto diplomático con inteligencia artificial">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="counter-contenido_critico"
+                                    class="char-counter small mt-1 text-warning d-none align-items-center w-100">
+                                    <div class="ms-auto d-flex gap-3">
+                                        <button type="button" class="btn btn-sm btn-sirio" id="btnLimpiarManual-critica"
+                                            style="width: auto !important;"
+                                            title="Aplicar limpieza profunda a la edición crítica">
+                                            <i class="fa-solid fa-broom me-1"></i> Limpieza
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-sirio"
+                                            id="btn-correct-txt-gemini-critica" style="width: auto !important;"
+                                            title="Corregir edición crítica con inteligencia artificial">
                                             <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Revisión por IA
                                         </button>
                                     </div>
@@ -1172,7 +1264,7 @@
             </div>
             <!-- Campos ocultos para OCR e Imagen vinculada -->
             <input type="hidden" name="ocr_map" id="input_ocr_map">
-            <input type="hidden" name="ocr_image_base64" id="ocr_image_base64">
+            
         </form>
     </div>
 </div>
@@ -1193,7 +1285,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="{{ url_for('static', filename='js/ocr-processor.js') }}?v=fix400"></script>
-<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fixFinal_v2"></script>
+<script src="{{ url_for('static', filename='js/ocr-uploader.js') }}?v=fixFinal_v3"></script>
 <script src="{{ url_for('static', filename='js/form-validator.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-autosave.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form-counter.js') }}"></script>
@@ -1251,15 +1343,29 @@
                 // Toggle visibilidad de contadores según pestaña
                 const counterContenido = document.getElementById('counter-contenido');
                 const counterOriginal = document.getElementById('counter-texto_original');
+                const counterDiplomatica = document.getElementById('counter-contenido_diplomatico');
+                const counterCritica = document.getElementById('counter-contenido_critico');
 
-                if (counterContenido && counterOriginal) {
-                    if (e.target.id === 'traduccion-tab') {
-                        counterContenido.style.display = 'block';
-                        counterOriginal.style.display = 'none';
-                    } else if (e.target.id === 'original-tab') {
-                        counterContenido.style.display = 'none';
-                        counterOriginal.style.display = 'block';
+                // Ocultar todos primero usando Bootstrap's d-none
+                [counterContenido, counterOriginal, counterDiplomatica, counterCritica].forEach(c => {
+                    if (c) {
+                        c.classList.add('d-none');
+                        c.classList.remove('d-flex');
                     }
+                });
+
+                if (e.target.id === 'traduccion-tab' && counterContenido) {
+                    counterContenido.classList.remove('d-none');
+                    counterContenido.classList.add('d-flex');
+                } else if (e.target.id === 'original-tab' && counterOriginal) {
+                    counterOriginal.classList.remove('d-none');
+                    counterOriginal.classList.add('d-flex');
+                } else if (e.target.id === 'diplomatica-tab' && counterDiplomatica) {
+                    counterDiplomatica.classList.remove('d-none');
+                    counterDiplomatica.classList.add('d-flex');
+                } else if (e.target.id === 'critica-tab' && counterCritica) {
+                    counterCritica.classList.remove('d-none');
+                    counterCritica.classList.add('d-flex');
                 }
             });
         });

@@ -543,7 +543,21 @@ class Prensa(db.Model):
 
     @hybrid_property
     def autor(self):
-        """Propiedad de compatibilidad que combina nombre y apellido."""
+        """Propiedad de compatibilidad que combina nombre y apellido de uno o varios autores."""
+        # 1. Intentar obtener de la relación de múltiples autores
+        if self.autores:
+            labels = []
+            for a in self.autores:
+                if a.es_anonimo:
+                    labels.append("Anónimo")
+                else:
+                    parts = []
+                    if a.apellido: parts.append(a.apellido)
+                    if a.nombre: parts.append(a.nombre)
+                    labels.append(", ".join(parts) if parts else "")
+            return " / ".join([l for l in labels if l])
+
+        # 2. Fallback a campos originales de compatibilidad
         if self.apellido_autor and self.nombre_autor:
             return f"{self.apellido_autor}, {self.nombre_autor}"
         return self.apellido_autor or self.nombre_autor or ""

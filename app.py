@@ -2208,7 +2208,7 @@ def ia_expand_bio():
     """
     
     # Usar flash para mayor rapidez en biografía si está disponible
-    ai = AIService(provider='gemini', model='gemini-2.5-flash', user=current_user)
+    ai = AIService(provider='gemini', model='2.0-flash', user=current_user)
     try:
         # Debug: Imprimir el prompt
         print(f"[HesiOX IA] Enviando prompt para {full_name}")
@@ -2229,6 +2229,25 @@ def ia_expand_bio():
             
             try:
                 data = json.loads(clean_response)
+                
+                # CORRECCIÓN PARA "OBRAS PRINCIPALES"
+                # Si la IA devuelve objetos [object Object] o listas fallidas, las limpiamos
+                if 'obras_principales' in data and not isinstance(data['obras_principales'], str):
+                    if isinstance(data['obras_principales'], list):
+                        # Convertir lista de objetos o strings a un solo string con saltos de línea
+                        obras_limpias = []
+                        for item in data['obras_principales']:
+                            if isinstance(item, dict):
+                                # Extraer lo más relevante si es un objeto
+                                titulo = item.get('titulo') or item.get('nombre') or str(item)
+                                anio = item.get('anio') or item.get('fecha') or ""
+                                obras_limpias.append(f"{titulo} ({anio})".strip() if anio else titulo)
+                            else:
+                                obras_limpias.append(str(item))
+                        data['obras_principales'] = "\n".join(obras_limpias)
+                    else:
+                        data['obras_principales'] = str(data['obras_principales'])
+
                 return jsonify({"status": "success", "expanded": data})
             except Exception as e_json:
                 print(f"[HesiOX IA] Error json.loads: {e_json}")

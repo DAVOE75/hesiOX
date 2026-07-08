@@ -5656,21 +5656,64 @@ def crear_noticia_view(get_proyecto_activo_func):
             except Exception as e:
                 print(f"[OCR ERROR] Fallo al parsear ocr_map: {e}")
 
-        # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
-        ocr_b64 = request.form.get("ocr_image_base64")
-        if ocr_b64:
-            filename_ocr = save_base64_image(ocr_b64, nuevo.id)
-            if filename_ocr:
-                # Si tenemos el ocr_map, lo guardamos también en la imagen para acceso directo
-                nueva_img_ocr = ImagenPrensa(
-                    prensa_id=nuevo.id, 
-                    filename=filename_ocr,
-                    ocr_map=nuevo.ocr_map # Copiamos el mapa a la imagen específica
-                )
-                db.session.add(nueva_img_ocr)
-                print(f"[OCR] Imagen vinculada preparada para noticia {nuevo.id} con mapa de coordenadas")
+        # --- NUEVO: Procesar imágenes vinculadas del OCR (Base64) ---
+        ocr_images = request.form.getlist("ocr_image_base64")
+        if not ocr_images:
+            # Fallback por si acaso el navegador no envió los []
+            ocr_images = request.form.getlist("ocr_image_base64[]")
+            
+        ocr_maps = request.form.getlist("ocr_image_map")
+        if not ocr_maps:
+            ocr_maps = request.form.getlist("ocr_image_map[]")
+            
+        print(f"[DEBUG-OCR] Recibidas {len(ocr_images)} imágenes OCR y {len(ocr_maps)} mapas", file=sys.stderr)
+        
+        for i, ocr_b64 in enumerate(ocr_images):
+            if ocr_b64 and ocr_b64.strip():
+                filename_ocr = save_base64_image(ocr_b64, nuevo.id)
+                if filename_ocr:
+                    # Usar mapa específico si existe, si no el global de la noticia
+                    map_especifico = None
+                    if i < len(ocr_maps) and ocr_maps[i]:
+                        try:
+                            map_especifico = json.loads(ocr_maps[i]) if isinstance(ocr_maps[i], str) else ocr_maps[i]
+                        except Exception as e:
+                            logger.warning(f"Error al procesar map_especifico {i}: {e}")
+                            map_especifico = ocr_maps[i]
 
-        db.session.commit()
+                    # Intento ultraseguro de crear la entrada de imagen con savepoint (begin_nested)
+                    try:
+                        with db.session.begin_nested():
+                            nueva_img_ocr = ImagenPrensa(
+                                prensa_id=nuevo.id, 
+                                filename=filename_ocr
+                            )
+                            # Asignar ocr_map solo si existe la columna en el objeto
+                            if hasattr(nueva_img_ocr, 'ocr_map'):
+                                if map_especifico:
+                                    nueva_img_ocr.ocr_map = map_especifico
+                                elif hasattr(nuevo, 'ocr_map') and nuevo.ocr_map:
+                                    nueva_img_ocr.ocr_map = nuevo.ocr_map
+                            
+                            db.session.add(nueva_img_ocr)
+                        # El commit del subtransaction ocurre al salir del bloque 'with' exitosamente
+                        print(f"[DEBUG-OCR] Persistida imagen {i+1}/{len(ocr_images)}: {filename_ocr}", file=sys.stderr)
+                    except Exception as e:
+                        logger.error(f"Error al guardar ImagenPrensa {i} (se omite map si falló): {e}")
+                        # Si falló el savepoint, intentamos una versión aún más básica sin ocr_map
+                        try:
+                            with db.session.begin_nested():
+                                nueva_img_basica = ImagenPrensa(prensa_id=nuevo.id, filename=filename_ocr)
+                                db.session.add(nueva_img_basica)
+                        except Exception as e2:
+                            logger.error(f"Fallo total al persistir imagen OCR {i}: {e2}")
+                
+                
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        print(f"[OCR] Imágenes vinculadas ({len(ocr_images)}) persistidas para noticia {nuevo.id}")
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
             return jsonify({
@@ -5925,19 +5968,63 @@ def editar(id):
             
         db.session.commit()
 
-        # --- NUEVO: Procesar imagen vinculada del OCR (Base64) ---
-        ocr_b64 = request.form.get("ocr_image_base64")
-        if ocr_b64:
-            filename_ocr = save_base64_image(ocr_b64, noticia.id)
-            if filename_ocr:
-                nueva_img_ocr = ImagenPrensa(
-                    prensa_id=noticia.id, 
-                    filename=filename_ocr,
-                    ocr_map=noticia.ocr_map
-                )
-                db.session.add(nueva_img_ocr)
-                db.session.commit()
-                print(f"[OCR] Imagen vinculada persistida para noticia {noticia.id} con mapa de coordenadas")
+        # --- NUEVO: Procesar imágenes vinculadas del OCR (Base64) ---
+        ocr_images = request.form.getlist("ocr_image_base64")
+        if not ocr_images:
+            ocr_images = request.form.getlist("ocr_image_base64[]")
+            
+        ocr_maps = request.form.getlist("ocr_image_map")
+        if not ocr_maps:
+            ocr_maps = request.form.getlist("ocr_image_map[]")
+
+        print(f"[DEBUG-OCR-EDIT] Recibidas {len(ocr_images)} imágenes OCR y {len(ocr_maps)} mapas", file=sys.stderr)
+
+        for i, ocr_b64 in enumerate(ocr_images):
+            if ocr_b64 and ocr_b64.strip():
+                filename_ocr = save_base64_image(ocr_b64, noticia.id)
+                if filename_ocr:
+                    # Usar mapa específico si existe, si no el global
+                    map_especifico = None
+                    if i < len(ocr_maps) and ocr_maps[i]:
+                        try:
+                            map_especifico = json.loads(ocr_maps[i]) if isinstance(ocr_maps[i], str) else ocr_maps[i]
+                        except Exception as e:
+                            logger.warning(f"Error parseando map_especifico en edición {i}: {e}")
+                            map_especifico = ocr_maps[i]
+
+                    # Intento ultraseguro de crear la entrada de imagen con savepoint (begin_nested)
+                    try:
+                        with db.session.begin_nested():
+                            nueva_img_ocr = ImagenPrensa(
+                                prensa_id=noticia.id, 
+                                filename=filename_ocr
+                            )
+                            # Asignar ocr_map solo si existe la columna en el objeto
+                            if hasattr(nueva_img_ocr, 'ocr_map'):
+                                if map_especifico:
+                                    nueva_img_ocr.ocr_map = map_especifico
+                                elif hasattr(noticia, 'ocr_map') and noticia.ocr_map:
+                                    nueva_img_ocr.ocr_map = noticia.ocr_map
+                            
+                            db.session.add(nueva_img_ocr)
+                        # El savepoint se confirma al salir del 'with'
+                        print(f"[DEBUG-OCR-EDIT] Persistida imagen {i+1}/{len(ocr_images)}: {filename_ocr}", file=sys.stderr)
+                    except Exception as e:
+                        logger.error(f"Error al guardar ImagenPrensa en edición {i}: {e}")
+                        # Reintento básico si falló el mapa o algo similar
+                        try:
+                            with db.session.begin_nested():
+                                nueva_img_basica = ImagenPrensa(prensa_id=noticia.id, filename=filename_ocr)
+                                db.session.add(nueva_img_basica)
+                        except Exception as e2:
+                            logger.error(f"Fallo total persistencia imagen {i} en edición: {e2}")
+                            
+                            
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+        print(f"[OCR] Imágenes vinculadas ({len(ocr_images)}) procesadas para noticia {noticia.id}")
 
         # --- GESTIÃN DE VERSIONES (PRO) ---
         comentario = request.form.get("comentario_version") or "ActualizaciÃ³n de ficha"
@@ -6286,7 +6373,8 @@ def api_noticia_contenido(id):
     imagenes = []
     ocr_maps_by_url = {}
     
-    imgs_asociadas = noticia.imagenes.all()
+    # [FIX] Cargar imágenes asociadas ordenadas por ID (orden de subida)
+    imgs_asociadas = noticia.imagenes.order_by(ImagenPrensa.id.asc()).all()
     for img in imgs_asociadas:
         url = url_for('static', filename=f'uploads/{img.filename}')
         if url not in imagenes:
@@ -6324,6 +6412,7 @@ def api_noticia_contenido(id):
         'id': noticia.id,
         'titulo': noticia.titulo,
         'publicacion': noticia.publicacion,
+        'autor': noticia.autor,
         'fecha': str(noticia.fecha_original) if noticia.fecha_original else "",
         'contenido_html': noticia.contenido,
         'texto_puro': limpieza_profunda_ocr(noticia.contenido) if noticia.contenido else "",
@@ -7131,7 +7220,7 @@ def api_noticia_ai_vision_highlight():
         if not response_text:
             return jsonify({'success': False, 'error': 'El servicio de IA no devolviÃ³ respuesta.'}), 500
             
-        import json, re
+        import re
         boxes = []
         try:
             # Clean possible markdown wrap

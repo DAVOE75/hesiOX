@@ -9,6 +9,8 @@ class CharacterCounter {
             titulo: { recommended: 200, max: 500 },
             contenido: { recommended: 5000, max: 150000 },
             texto_original: { recommended: 5000, max: 150000 },
+            contenido_diplomatico: { recommended: 5000, max: 150000 },
+            contenido_critico: { recommended: 5000, max: 150000 },
             notas: { recommended: 500, max: 2000 },
 
             // Campos de publicaciones

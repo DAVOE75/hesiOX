@@ -187,16 +187,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // === PROCESAR DOCUMENTO (MODOS) ===
     // === FUNCIÓN PRINCIPAL DE PROCESAMIENTO ===
+    let isProcessingOCR = false;
+
     async function triggerOCRProcessing() {
         if (!currentFile) {
             alert('No hay archivo seleccionado');
             return;
         }
 
-        // Manejo de multi-página si es PDF (o forzar si es PDF y el conteo falló)
-        const isPDF = currentFile.type === 'application/pdf' || currentFile.name.toLowerCase().endsWith('.pdf');
-        
-        if (isPDF) {
+        if (isProcessingOCR) {
+            console.warn('[OCR] Ya hay un proceso en marcha');
+            return;
+        }
+
+        isProcessingOCR = true;
+        try {
+            // Manejo de multi-página si es PDF (o forzar si es PDF y el conteo falló)
+            const isPDF = currentFile.type === 'application/pdf' || currentFile.name.toLowerCase().endsWith('.pdf');
+            
+            if (isPDF) {
             // Si el conteo falló o es 0/1, intentamos preguntar de todos modos o dar opción manual
             const displayCount = pdfPageCount > 0 ? pdfPageCount : 'varias';
             
@@ -360,15 +369,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     extractedData = null;
                     await runOCR(parseInt(page));
                 }
-                return;
-            } else {
-                return; // Cancelado o cerrado
             }
+        } else {
+            // Caso normal (Imagen o PDF de 1 página)
+            await runOCR();
         }
-
-        // Caso normal (Imagen o PDF de 1 página)
-        await runOCR();
+    } finally {
+        isProcessingOCR = false;
     }
+}
 
     if (btnProcessOCR) {
         btnProcessOCR.addEventListener('click', triggerOCRProcessing);
@@ -392,35 +401,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Simulador de progreso para la página actual
             let currentProgress = 0;
             const progressInterval = setInterval(() => {
+                // Si llegamos al 90%, entramos en un modo de avance ultra-lento para indicar actividad
                 if (currentProgress < 90) {
-                    currentProgress += 5;
-                    // Si es secuencial, el progreso base es de las páginas anteriores
-                    let baseProgress = 0;
-                    let pageWeight = 100;
+                    currentProgress += (currentProgress < 70) ? 5 : 2;
+                } else if (currentProgress < 99) {
+                    currentProgress += 0.1; // Creep ultra-lento hasta el 99%
+                }
+                
+                // Si es secuencial, el progreso base es de las páginas anteriores
+                let baseProgress = 0;
+                let pageWeight = 100;
+                
+                // Asegurar que pdfPageCount sea al menos 1 para evitar NaN/Infinity
+                const safeTotal = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : (pageNumber || 1);
+                
+                if (safeTotal > 1 && pageNumber) {
+                    baseProgress = ((pageNumber - 1) / safeTotal) * 100;
+                    pageWeight = (1 / safeTotal) * 100;
+                }
+                
+                const totalProgress = Math.min(100, baseProgress + (currentProgress / 100) * pageWeight);
+                if (ocrProgressBar) ocrProgressBar.style.width = `${totalProgress}%`;
+                
+                const totalDisplay = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : '?';
+                const pageInfo = pageNumber ? ` Pág. ${pageNumber}` : ' Documento';
+                const progressDisplay = pageNumber ? `(${pageNumber}/${totalDisplay})` : '';
+                
+                if (ocrProgressText) {
+                    // Mostrar decimales si el progreso total es muy bajo (ej: muchas páginas) para ver movimiento
+                    const displayPercent = (safeTotal > 20) ? totalProgress.toFixed(1) : Math.round(totalProgress);
                     
-                    // Asegurar que pdfPageCount sea al menos 1 para evitar NaN/Infinity
-                    const safeTotal = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : (pageNumber || 1);
-                    
-                    if (safeTotal > 1 && pageNumber) {
-                        baseProgress = ((pageNumber - 1) / safeTotal) * 100;
-                        pageWeight = (1 / safeTotal) * 100;
-                    }
-                    
-                    const totalProgress = Math.min(100, baseProgress + (currentProgress / 100) * pageWeight);
-                    if (ocrProgressBar) ocrProgressBar.style.width = `${totalProgress}%`;
-                    
-                    const totalDisplay = (pdfPageCount && pdfPageCount > 0) ? pdfPageCount : '?';
-                    const pageInfo = pageNumber ? ` Pág. ${pageNumber}` : ' Documento';
-                    const progressDisplay = pageNumber ? `(${pageNumber}/${totalDisplay})` : '';
-                    
-                    if (ocrProgressText) {
-                        ocrProgressText.innerHTML = `
-                            <i class="fa-solid fa-microchip fa-spin me-2"></i>
-                            Procesando${pageInfo}... 
-                            <span class="text-white ms-1">${Math.round(totalProgress)}%</span> 
-                            <small class="text-muted">${progressDisplay}</small>
-                        `;
-                    }
+                    ocrProgressText.innerHTML = `
+                        <i class="fa-solid fa-microchip fa-spin me-2"></i>
+                        Procesando${pageInfo}... 
+                        <span class="text-white ms-1">${displayPercent}%</span> 
+                        <small class="text-muted">${progressDisplay}</small>
+                    `;
                 }
             }, 300);
 
@@ -445,6 +461,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (ocrEngineSelect) {
                 formData.append('ocr_engine', ocrEngineSelect.value);
                 console.log(`[OCR] Usando motor: ${ocrEngineSelect.value}`);
+                
+                // Si es motor híbrido, forzar reconciliación en el backend
+                if (ocrEngineSelect.value === 'hybrid') {
+                    formData.append('reconcile_hybrid', 'true');
+                }
             }
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -454,6 +475,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             let apiUrl = '/api/ocr/advanced';
             if (pageNumber) {
                 apiUrl += `?page_number=${pageNumber}`;
+                // Asegurar que también esté en FormData
+                formData.set('page_number', pageNumber.toString());
+            }
+
+            // [NUEVO] Asegurar que el archivo esté presente en CADA petición secuencial
+            if (currentFile) {
+                formData.set('file', currentFile);
             }
 
             const response = await fetch(apiUrl, {
@@ -476,7 +504,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             
             // Priorizar el texto corregido por la IA si existe
-            const finalPageText = data.corrected_text || data.text || '';
+            let finalPageText = data.corrected_text || data.text || '';
+            
+            // [CLIENT-SIDE DEDUPLICATION v3] - Optimizado para documentos largos
+            if (finalPageText.length > 200) {
+                const lines = finalPageText.split('\n');
+                const uniqueLines = [];
+                const seenNormThisPage = new Set();
+
+                lines.forEach(line => {
+                    const l = line.trim();
+                    if (!l) {
+                        uniqueLines.push("");
+                        return;
+                    }
+                    const norm = l.toLowerCase().replace(/[^a-z0-9]+/g, '');
+                    
+                    // Solo deduplicar si la línea es significativa (evitar borrar "El", "De", etc.)
+                    if (norm.length > 20) {
+                        if (seenNormThisPage.has(norm)) return;
+                        seenNormThisPage.add(norm);
+                    }
+
+                    uniqueLines.push(line);
+                });
+                finalPageText = uniqueLines.join('\n').replace(/\n{3,}/g, '\n\n');
+            }
             
             // Sincronizar el total de páginas si el cliente no lo sabía
             if (data.total_pages && (!pdfPageCount || pdfPageCount === 0)) {
@@ -487,9 +540,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Gestionar la acumulación de texto
             const pageHeader = pageNumber ? `\n\n--- [PÁGINA ${pageNumber}] ---\n\n` : '';
             
+            // Log para depurar acumulación
+            console.log(`[OCR] Procesando acumulación para página ${pageNumber}. Estado previo: ${extractedData ? 'existe' : 'null'}`);
+
             if (extractedData && pageNumber && pageNumber > 1) {
                 // Acumular si ya hay datos (modo secuencial)
-                extractedData.text += pageHeader + finalPageText;
+                // Evitar duplicar el header si el backend ya lo incluye (heurística simple)
+                const cleanFinalText = finalPageText.trim();
+                const alreadyHasHeader = cleanFinalText.includes(`--- [PÁGINA ${pageNumber}] ---`) || 
+                                       cleanFinalText.startsWith(`[PÁGINA ${pageNumber}]`);
+                
+                const textToAppend = alreadyHasHeader ? `\n\n${cleanFinalText}` : `${pageHeader}${cleanFinalText}`;
+                extractedData.text += textToAppend;
+                
+                console.log(`[OCR] Texto acumulado. Nueva longitud: ${extractedData.text.length}`);
+
                 if (data.metadata) {
                     extractedData.metadata = { ...extractedData.metadata, ...data.metadata };
                 }
@@ -503,13 +568,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             } else {
                 // Primer proceso o página única
+                // Evitar doble header inicial para pág 1
+                const alreadyHasHeader = finalPageText.includes(`--- [PÁGINA 1] ---`) || 
+                                       finalPageText.startsWith(`[PÁGINA 1]`);
+                
                 extractedData = {
-                    text: (pageNumber ? pageHeader : '') + finalPageText,
+                    text: (alreadyHasHeader ? '' : (pageNumber ? pageHeader : '')) + finalPageText,
                     confidence: data.confidence || 0,
                     metadata: data.metadata || (data.metadatos ? data.metadatos : {}),
                     imageData: data.image_data,
                     ocrMap: data.words_data ? data.words_data.map(w => ({...w, p: w.p || pageNumber || 1})) : []
                 };
+                console.log(`[OCR] Primer bloque creado. Longitud: ${extractedData.text.length}`);
             }
 
             // Marcar página actual con el porcentaje correspondiente
@@ -521,9 +591,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (ocrProgressBar) ocrProgressBar.style.width = '100%';
             }
 
-            // AUTO-VINCULACIÓN: Si es un proceso por rango o secuencial, vinculamos la imagen de la última página procesada
-            if (currentRangeEnd || (pdfPageCount > 1)) {
-                vincularImagenOCRAutomaticamente();
+            // AUTO-VINCULACIÓN: Vinculamos la imagen procesada automáticamente al uploader general
+            if (data && data.image_data) {
+                // Pasamos el mapa específico de esta página, no el acumulado
+                vincularImagenOCRAutomaticamente(data.image_data, data.words_data);
             }
 
             displayOCRResult(extractedData);
@@ -558,21 +629,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Siguiente página
-            p++;
+            const nextP = p + 1;
 
             // Si es un proceso automático de rango (endPage definido), seguimos directamente
             if (endPage) {
+                // Verificar si hemos excedido el rango por error de redondeo o lógica
+                if (nextP > targetEnd) {
+                    console.log(`[OCR] Se ha intentado exceder el rango final (${nextP} > ${targetEnd}). Deteniendo.`);
+                    break;
+                }
+                p = nextP;
                 continue;
             }
             
             // Si llegamos aquí (modo secuencial sin rango fijo), preguntamos si desea continuar
             const result = await Swal.fire({
                 title: `Página ${p} extraída`,
-                text: `¿Deseas continuar con la transcripción de la página ${p + 1}?`,
+                text: `¿Deseas continuar con la transcripción de la página ${nextP}?`,
                 icon: 'success',
                 footer: pdfPageCount > 0 ? `<span class="text-muted">Página ${p} de ${pdfPageCount}</span>` : '<span class="text-warning">Total de páginas desconocido</span>',
                 showCancelButton: true,
-                confirmButtonText: 'Continuar a pág. ' + (p + 1),
+                confirmButtonText: 'Continuar a pág. ' + nextP,
                 cancelButtonText: 'Terminar aquí',
                 confirmButtonColor: '#ff9800',
                 cancelButtonColor: '#294a60',
@@ -581,7 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (result.isConfirmed) {
-                p++;
+                p = nextP;
             } else {
                 stopSequentialOCR = true;
             }
@@ -590,16 +667,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Finalizar proceso: cerramos flags y actualizamos UI final
         stopSequentialOCR = true;
         currentRangeEnd = null;
+        
+        // Asegurar que la barra llegue al 100% al terminar
+        if (ocrProgressBar) ocrProgressBar.style.width = '100%';
+        if (ocrProgressText) ocrProgressText.innerHTML = '<i class="fa-solid fa-check-double me-2"></i>¡Proceso Completado! Finalizando...';
+        
         displayOCRResult(extractedData);
         
-        // AUTO-APLICACIÓN: Al terminar el rango completo, volcamos todo el texto al formulario
-        autoAplicarTextoCompleto();
-
+        // Ocultar barra con un pequeño delay para que el usuario vea el 100%
+        setTimeout(() => {
+            if (ocrProgressContainer) ocrProgressContainer.classList.add('d-none');
+            showNotification('✓ Extracción multi-página completada', 'success');
+        }, 1500);
+        
         if (extractedData && p > 1) {
             await performGlobalRefinement();
         }
-        
-        showNotification('✓ Extracción multi-página completada', 'success');
     }
 
     async function performGlobalRefinement() {
@@ -640,9 +723,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     displayOCRResult(extractedData);
 
-                    // RE-APLICAR: Tras el refinamiento por IA, actualizamos el formulario con el texto perfeccionado
-                    autoAplicarTextoCompleto();
-                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Refinamiento Completado',
@@ -676,19 +756,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- NUEVO: Vincular imagen OCR como material adjunto ---
+    // --- NUEVO: Vincular imágenes OCR como material adjunto ---
     const btnVincularImagenOCR = document.getElementById('btn-vincular-imagen-ocr');
     if (btnVincularImagenOCR) {
         btnVincularImagenOCR.addEventListener('click', () => {
             if (extractedData && extractedData.imageData) {
-                const hiddenInput = document.getElementById('ocr_image_base64');
-                if (hiddenInput) {
-                    hiddenInput.value = extractedData.imageData;
-                    
-                    // NUEVO: Mostrar preview inmediato en el formulario principal
-                    if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
-                        window.imageUploader.addOCRPreview(extractedData.imageData);
-                    }
+                // NUEVO: Mostrar preview inmediato en el formulario principal
+                // El preview ahora gestiona su propio input oculto para persistencia múltiple
+                if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
+                    window.imageUploader.addOCRPreview(extractedData.imageData, extractedData.ocrMap);
 
                     Swal.fire({
                         icon: 'success',
@@ -703,6 +779,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     btnVincularImagenOCR.classList.remove('btn-outline-info');
                     btnVincularImagenOCR.classList.add('btn-info');
                     btnVincularImagenOCR.disabled = true;
+                } else {
+                    console.warn('[OCR] imageUploader no disponible para vinculación');
                 }
             } else {
                 Swal.fire({
@@ -796,22 +874,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                     previewCtx.fillStyle = 'rgba(255, 152, 0, 0.4)'; // Resaltado visible
                     previewCtx.lineWidth = Math.max(2, img.width / 1000);
                     
-                    // Dibujar cada caja del mapa (normalizadas 0-1000)
+                    // Dibujar cada caja del mapa (normalizadas o relativas)
                     ocrMap.forEach(item => {
+                        let x, y, w, h;
+                        
+                        // Formato BBOX (Gemini 0-1000: [ymin, xmin, ymax, xmax])
                         if (item.bbox && Array.isArray(item.bbox) && item.bbox.length === 4) {
                             const [ymin, xmin, ymax, xmax] = item.bbox;
-                            
-                            // Convertir coordenadas normalizadas (0-1000) a píxeles del canvas
-                            const x = (xmin / 1000) * img.width;
-                            const y = (ymin / 1000) * img.height;
-                            const w = ((xmax - xmin) / 1000) * img.width;
-                            const h = ((ymax - ymin) / 1000) * img.height;
-                            
-                            // Dibujar si tiene dimensiones válidas
-                            if (w > 0 && h > 0) {
-                                previewCtx.fillRect(x, y, w, h);
-                                previewCtx.strokeRect(x, y, w, h);
-                            }
+                            x = (xmin / 1000) * img.width;
+                            y = (ymin / 1000) * img.height;
+                            w = ((xmax - xmin) / 1000) * img.width;
+                            h = ((ymax - ymin) / 1000) * img.height;
+                        } 
+                        // Formato BOX_2D (Gemini alternate 0-1000)
+                        else if (item.box_2d && Array.isArray(item.box_2d) && item.box_2d.length === 4) {
+                            const [ymin, xmin, ymax, xmax] = item.box_2d;
+                            x = (xmin / 1000) * img.width;
+                            y = (ymin / 1000) * img.height;
+                            w = ((xmax - xmin) / 1000) * img.width;
+                            h = ((ymax - ymin) / 1000) * img.height;
+                        }
+                        // Formato Porcentual (OCR.space 0-100)
+                        else if (item.x !== undefined && item.y !== undefined) {
+                            x = (item.x / 100) * img.width;
+                            y = (item.y / 100) * img.height;
+                            w = (item.w / 100) * img.width;
+                            h = (item.h / 100) * img.height;
+                        }
+                        
+                        // Dibujar si se pudo calcular
+                        if (x !== undefined && w > 0 && h > 0) {
+                            previewCtx.fillRect(x, y, w, h);
+                            previewCtx.strokeRect(x, y, w, h);
                         }
                     });
                     
@@ -831,17 +925,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayOCRResult(result) {
         console.log('[OCR Uploader] Mostrando resultado:', result);
 
-        // VALIDACIÓN: Asegurar que result.text existe
-        if (!result.text || result.text.trim().length === 0) {
-            console.warn('[OCR] ⚠️ ADVERTENCIA: No se extrajo texto del documento');
-        }
-
-        // NO ocultar progreso si estamos en un proceso secuencial/rango inacabado
-        if (!stopSequentialOCR && ocrProgressContainer && ocrResultContainer) {
-             // Si el proceso sigue, no ocultamos el progreso para que el usuario sepa que continúa
-             ocrProgressContainer.classList.remove('d-none');
-        } else {
-             ocrProgressContainer.classList.add('d-none');
+        // Si ocrProgressContainer existe, lo mantenemos visible si stopSequentialOCR es false.
+        // Si es true, NO lo ocultamos inmediatamente aquí, dejamos que el flujo principal (processSequentialOCR)
+        // lo haga con su propio delay para mejor UX, A MENOS que sea un OCR de una sola página.
+        if (ocrProgressContainer) {
+             if (!stopSequentialOCR) {
+                 ocrProgressContainer.classList.remove('d-none');
+             }
         }
 
         // Construir preview de metadatos (solo para mostrar)
@@ -970,9 +1060,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 html: `
                     <div class="text-start small">
                         <p class="mb-2"><i class="fa-solid ${mapIcon} me-2 text-accent"></i>Se han extraído <b>${result.text.split(/\s+/).length}</b> palabras correctamente.</p>
-                        <div class="p-2 bg-dark rounded border border-warning" style="background: rgba(255,152,0,0.1) !important;">
-                            <i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i> 
-                            <b>Recordatorio:</b> Pulsa <u>Vincular imagen procesada</u> para activar el resaltado en el Lector.
+                        <div class="p-2 bg-dark rounded border border-success" style="background: rgba(40,167,69,0.1) !important;">
+                            <i class="fa-solid fa-link me-1 text-success"></i> 
+                            <b>Éxito:</b> La imagen procesada se ha vinculado automáticamente para el Lector.
                         </div>
                     </div>
                 `,
@@ -1206,6 +1296,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnMejorarIA.addEventListener('click', improveWithAI);
     }
 
+    // Botón Descartar: Limpiar todo el estado de OCR
+    if (btnDiscardOCR) {
+        btnDiscardOCR.addEventListener('click', () => {
+            resetOCRUI();
+            console.log('[OCR] Datos descartados por el usuario');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'OCR Descartado',
+                    text: 'Se han limpiado los datos extraídos y se ha reseteado el cargador.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    background: '#1a1d21',
+                    color: '#fff'
+                });
+            }
+        });
+    }
+
     // ============================================================
     // APLICAR METADATOS AL FORMULARIO
     // ============================================================
@@ -1232,7 +1343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 inputOcrMap.value = JSON.stringify(extractedData.ocrMap);
             }
 
-            // Mapeo de campos OCR → formulario (Extracción total de metadatos)
+            // Mapeo de campos OCR → formulario
             const fieldMap = {
                 'titulo': 'titulo',
                 'publicacion': 'publicacion',
@@ -1248,7 +1359,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'editorial': 'editorial'
             };
 
-            // Aplicar valores básicos del mapa
             let appliedCount = 0;
             for (const [ocrField, formField] of Object.entries(fieldMap)) {
                 if (metadata[ocrField]) {
@@ -1256,8 +1366,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (input) {
                         input.value = metadata[ocrField];
                         input.dispatchEvent(new Event('change', { bubbles: true }));
-                        input.style.borderColor = '#4a7c2f';
-                        setTimeout(() => { input.style.borderColor = ''; }, 2000);
                         appliedCount++;
                     }
                 }
@@ -1266,194 +1374,50 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Lógica para AUTORES (HesiOX usa filas dinámicas)
             if (metadata.autor) {
                 const autorFull = metadata.autor.trim();
-                console.log('[OCR] Detectado autor para vincular:', autorFull);
-
                 if (typeof window.addAutorRow === 'function') {
-                    // Dividir nombre y apellido
-                    let nombre = "";
-                    let apellido = "";
+                    let nombre = ""; let apellido = "";
                     const parts = autorFull.split(' ');
                     if (parts.length > 1) {
                         apellido = parts.pop();
                         nombre = parts.join(' ');
-                    } else {
-                        nombre = autorFull;
-                    }
-
-                    // Añadir fila dinámica en el formulario
+                    } else { nombre = autorFull; }
                     window.addAutorRow(nombre, apellido, 'firmado', false);
                     appliedCount++;
-                    showNotification(`✓ Autor añadido: ${nombre} ${apellido}`, 'info');
-                } else {
-                    console.warn('[OCR] No se encontró la función addAutorRow para añadir el autor dinámicamente.');
                 }
             }
 
-            // Copiar texto completo según selector de destino
-            const destOriginal = document.getElementById('ocr-dest-original');
-            const esIdiomaOriginal = destOriginal && destOriginal.checked;
+            // Aplicar también el contenido principal (CON DEDUPLICACIÓN)
+            autoAplicarTextoCompleto();
 
-            if (extractedData.text) {
-                // Función interna para limpiar etiquetas de metadatos del OCR
-                const cleanText = (txt) => {
-                    if (!txt) return "";
-                    // Regex para eliminar [PÁGINA ...], [COLUMNA ...], [GRABADO ...], [CABECERA ...], [PIE ...], etc.
-                    return txt.replace(/\[(PÁGINA|COLUMNA|GRABADO|CABECERA|PAGE|COLUMN|HEADER|FOLL|FOLLE|PIE|PIE DE PÁGINA)[^\]]*\]/gi, "").trim();
-                };
+            // Vincular imagen y OCR map
+            vincularImagenOCRAutomaticamente();
 
-                const textToApply = cleanText(extractedData.text);
-
-                if (esIdiomaOriginal) {
-                    // Pegar en campo "Texto original"
-                    // Cambiar a la pestaña "Texto Original" PRIMERO
-                    const tabOriginal = document.getElementById('original-tab');
-                    if (tabOriginal) {
-                        new bootstrap.Tab(tabOriginal).show();
-                    }
-
-                    // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
-                    let textoCopiado = false;
-                    if (window.quillEditors && window.quillEditors.texto_original) {
-                        // USAR setText para preservar espacios y formato idéntico al OCR
-                        window.quillEditors.texto_original.setText(textToApply);
-                        textoCopiado = true;
-                        appliedCount++;
-                    }
-
-                    if (!textoCopiado && typeof tinymce !== 'undefined') {
-                        const editor = tinymce.get('texto_original');
-                        if (editor) {
-                            // Para TinyMCE usamos un pre-wrap si es posible
-                            editor.setContent('<pre style="font-family:inherit; white-space:pre-wrap;">' + textToApply + '</pre>');
-                            textoCopiado = true;
-                            appliedCount++;
-                            editor.focus();
-                        }
-                    }
-
-                    // Fallback a textarea nativo
-                    if (!textoCopiado) {
-                        const textareaOriginal = document.querySelector('textarea[name="texto_original"]');
-                        if (textareaOriginal) {
-                            textareaOriginal.value = textToApply;
-                            textareaOriginal.focus();
-                            appliedCount++;
-                        }
-                    }
-                } else {
-                    // Pegar en campo "Contenido" (español)
-                    console.log('[OCR] Intentando copiar a campo "contenido"...');
-
-                    // Cambiar a la pestaña "Traducción/Español" PRIMERO
-                    const tabTraduccion = document.getElementById('traduccion-tab');
-                    if (tabTraduccion) {
-                        const tab = new bootstrap.Tab(tabTraduccion);
-                        tab.show();
-                        console.log('[OCR] ✓ Pestaña "Traducción" activada');
-                    }
-
-                    // MÉTODO 0: Intentar con Quill (Especial para HesiOX News)
-                    let textoCopiado = false;
-                    if (window.quillEditors && window.quillEditors.contenido) {
-                        // USAR setText para preservar espacios y formato idéntico al OCR
-                        window.quillEditors.contenido.setText(textToApply);
-                        console.log('[OCR] ✓ Texto insertado en Quill (contenido)');
-                        textoCopiado = true;
-                        appliedCount++;
-                    }
-
-                    // MÉTODO 1: Intentar con TinyMCE (editor rico)
-                    if (!textoCopiado && typeof tinymce !== 'undefined') {
-                        const editor = tinymce.get('contenido');
-                        console.log('[OCR] Editor TinyMCE encontrado:', !!editor);
-                        if (editor) {
-                            editor.setContent(textToApply.replace(/\n/g, '<br>'));
-                            console.log('[OCR] ✓ Texto insertado en TinyMCE (contenido)');
-                            textoCopiado = true;
-                            appliedCount++;
-
-                            // Scroll al editor
-                            setTimeout(() => {
-                                const editorContainer = editor.getContainer();
-                                if (editorContainer) {
-                                    editorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    editor.focus();
-                                }
-                            }, 100);
-                        }
-                    }
-
-                    // MÉTODO 2: Fallback a textarea nativo (si TinyMCE no está activo)
-                    if (!textoCopiado) {
-                        const textareaContenido = document.querySelector('textarea[name="contenido"]');
-                        console.log('[OCR] Textarea nativo encontrado:', !!textareaContenido);
-                        if (textareaContenido) {
-                            textareaContenido.value = textToApply;
-                            textareaContenido.dispatchEvent(new Event('change', { bubbles: true }));
-                            textareaContenido.style.borderColor = '#4a7c2f';
-                            setTimeout(() => {
-                                textareaContenido.style.borderColor = '';
-                            }, 2000);
-                            console.log('[OCR] ✓ Texto copiado a textarea nativo (contenido)');
-                            appliedCount++;
-
-                            // Scroll al campo
-                            setTimeout(() => {
-                                textareaContenido.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                textareaContenido.focus();
-                            }, 100);
-                        }
-                    }
-                }
-            } else {
-                console.warn('[OCR] ⚠️ No hay texto extraído para copiar');
-            }
-
-            // Notificación de éxito
-            showNotification(`✓ ${appliedCount} campos completados`, 'success');
-
-            // Resetear OCR UI
-            resetOCRUI();
+            // Usar la función existente en el proyecto
+            showNotification(`Se han aplicado ${appliedCount} campos y el contenido de la noticia.`, 'success');
         });
     }
 
     // ============================================================
-    // DESCARTAR
-    // ============================================================
 
-    if (btnDiscardOCR) {
-        btnDiscardOCR.addEventListener('click', () => {
-            if (confirm('¿Descartar los datos extraídos?')) {
-                resetOCRUI();
+    function vincularImagenOCRAutomaticamente(specificImageData = null, specificOcrMap = null) {
+        const imageData = specificImageData || (extractedData ? extractedData.imageData : null);
+        const mapData = specificOcrMap || (extractedData ? extractedData.ocrMap : null);
+        
+        if (imageData) {
+            // Mostrar preview inmediato en el formulario principal si el uploader está disponible
+            // El preview ahora contiene el input oculto para soportar múltiples imágenes
+            if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
+                window.imageUploader.addOCRPreview(imageData, mapData);
+                console.log('[OCR] Imagen vinculada automáticamente al uploader general');
             }
-        });
-    }
 
-    // ============================================================
-    // VINCULAR IMAGEN OCR AUTOMÁTICAMENTE
-    // ============================================================
-
-    function vincularImagenOCRAutomaticamente() {
-        if (extractedData && extractedData.imageData) {
-            const hiddenInput = document.getElementById('ocr_image_base64');
-            if (hiddenInput) {
-                hiddenInput.value = extractedData.imageData;
-                
-                // Mostrar preview inmediato en el formulario principal si el uploader está disponible
-                if (window.imageUploader && typeof window.imageUploader.addOCRPreview === 'function') {
-                    window.imageUploader.addOCRPreview(extractedData.imageData);
-                }
-
-                // Actualizar estado del botón de vinculación si existe
-                const btnVincular = document.getElementById('btn-vincular-imagen-ocr');
-                if (btnVincular) {
-                    btnVincular.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada (Auto)';
-                    btnVincular.classList.remove('btn-outline-info');
-                    btnVincular.classList.add('btn-info');
-                    btnVincular.disabled = true;
-                }
-                
-                console.log('[OCR] Imagen vinculada automáticamente');
+            // Actualizar estado del botón de vinculación si existe
+            const btnVincular = document.getElementById('btn-vincular-imagen-ocr');
+            if (btnVincular) {
+                btnVincular.innerHTML = '<i class="fa-solid fa-check me-1"></i> Imagen vinculada (Auto)';
+                btnVincular.classList.remove('btn-outline-info');
+                btnVincular.classList.add('btn-info');
+                btnVincular.disabled = true;
             }
         }
     }
@@ -1464,46 +1428,150 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function autoAplicarTextoCompleto() {
         if (!extractedData || !extractedData.text) return;
+        
+        console.log("[OCR] Aplicando texto al formulario...");
 
         // Función interna para limpiar etiquetas de metadatos del OCR
         const cleanText = (txt) => {
             if (!txt) return "";
-            return txt.replace(/\[(PÁGINA|COLUMNA|GRABADO|CABECERA|PAGE|COLUMN|HEADER|FOLL|FOLLE|PIE|PIE DE PÁGINA)[^\]]*\]/gi, "").trim();
+            // Eliminamos las etiquetas y ruidos constantes detectados en Rodrigo Jiménez de Rada
+            return txt.replace(/-*\s*\[(PÁGINA|COLUMNA|GRABADO|CABECERA|PAGE|COLUMN|HEADER|FOLL|FOLLE|PIE|PIE DE PÁGINA|DATOS CABECERA|BORRADOR BASE)[^\]]*\]\s*-*/gi, "")
+                      .replace(/\d+\s+\d+\s+Rodrigo\s+Jiménez\s+de\s+Rada/gi, "")
+                      .replace(/Rodrigo\s+Jiménez\s+de\s+Rada/gi, "")
+                      .replace(/\s\d+\s(?=\s[a-zñ])/gi, " ") // Números aislados antes de palabra (contadores)
+                      .replace(/HF\s+o\s*!|o\s+o\s*!/gi, "")
+                      .trim();
         };
 
-        const textToApply = cleanText(extractedData.text);
+        let textToApply = cleanText(extractedData.text);
+        
+        // --- DEDUPLICACIÓN AGRESIVA (Anti-Hybrid) ---
+        // 1. Detección de bloques híbridos marcados por el motor
+        if (textToApply.includes('[BORRADOR BASE]') && textToApply.includes('[DATOS CABECERA]')) {
+             console.log("[OCR] Detectado formato híbrido duplicado. Limpiando...");
+             const parts = textToApply.split(/\[BORRADOR BASE\]|\[DATOS CABECERA\]/);
+             if (parts.length >= 3) {
+                 const base = parts[1].trim();
+                 const header = parts[2].trim();
+                 
+                 // Similitud normalizada (sin números)
+                 const normBase = base.toLowerCase().replace(/[^a-zñ]/g, '');
+                 const normHeader = header.toLowerCase().replace(/[^a-zñ]/g, '');
+                 
+                 if (normBase.includes(normHeader) || normHeader.includes(normBase) || Math.abs(normBase.length - normHeader.length) < 50) {
+                     textToApply = parts[0] + "\n" + (base.length >= header.length ? base : header);
+                 }
+             }
+        }
+
+        // --- EVITAR DUPLICIDAD GLOBAL Y ECOS DE LÍNEA (Normalización Extrema) ---
+        if (textToApply.length > 150) {
+            const blocks = textToApply.split(/\n\s*\n/);
+            const uniqueBlocks = [];
+            let seenNormalized = "";
+            let duplicateCount = 0;
+
+            for (let block of blocks) {
+                // Normalización extrema: solo letras minúsculas (sin números ni puntuación)
+                const normalized = block.toLowerCase().replace(/[^a-zñ]/g, '');
+                
+                if (normalized.length < 10) {
+                    uniqueBlocks.push(block);
+                    continue;
+                }
+
+                // A. Check exacto en el historial acumulado
+                if (seenNormalized.includes(normalized)) {
+                    duplicateCount++;
+                    continue;
+                }
+
+                // B. Check por fragmentos (si el 60% del bloque ya existe en piezas de 20 letras)
+                let pieceMatches = 0;
+                let pieces = [];
+                for (let i = 0; i < normalized.length; i += 20) {
+                    const piece = normalized.substring(i, i + 20);
+                    if (piece.length >= 18) {
+                        pieces.push(piece);
+                        if (seenNormalized.includes(piece)) pieceMatches++;
+                    }
+                }
+
+                if (pieces.length > 0 && (pieceMatches / pieces.length) >= 0.6) {
+                    duplicateCount++;
+                    continue;
+                }
+
+                uniqueBlocks.push(block);
+                seenNormalized += " [SEP] " + normalized;
+            }
+
+            if (duplicateCount > 0) {
+                console.warn(`[OCR] Detectados ${duplicateCount} bloques duplicados. Limpiando...`);
+                textToApply = uniqueBlocks.join('\n\n');
+            }
+        }
+
         const destOriginal = document.getElementById('ocr-dest-original');
+        const destDiplomatica = document.getElementById('ocr-dest-diplomatica');
+        const destCritica = document.getElementById('ocr-dest-critica');
+        
         const esIdiomaOriginal = destOriginal && destOriginal.checked;
+        const esDiplomatica = destDiplomatica && destDiplomatica.checked;
+        const esCritica = destCritica && destCritica.checked;
+
+        // Cambiar pestañas automáticamente
+        if (esIdiomaOriginal) {
+            const tab = document.getElementById('original-tab');
+            if (tab) new bootstrap.Tab(tab).show();
+        } else if (esDiplomatica) {
+            const tab = document.getElementById('diplomatica-tab');
+            if (tab) new bootstrap.Tab(tab).show();
+        } else if (esCritica) {
+            const tab = document.getElementById('critica-tab');
+            if (tab) new bootstrap.Tab(tab).show();
+        } else {
+            const tab = document.getElementById('traduccion-tab');
+            if (tab) new bootstrap.Tab(tab).show();
+        }
 
         let aplicado = false;
+        let targetField = 'contenido';
+        if (esIdiomaOriginal) targetField = 'texto_original';
+        if (esDiplomatica) targetField = 'contenido_diplomatico';
+        if (esCritica) targetField = 'contenido_critico';
+        
+        // 1. Intentar con Quill
+        if (window.quillEditors && window.quillEditors[targetField]) {
+            window.quillEditors[targetField].setText(''); // Limpiar antes
+            window.quillEditors[targetField].setText(textToApply);
+            aplicado = true;
+        }
 
-        if (esIdiomaOriginal) {
-            if (window.quillEditors && window.quillEditors.texto_original) {
-                window.quillEditors.texto_original.setText(textToApply);
+        // 2. Intentar con TinyMCE
+        if (!aplicado && typeof tinymce !== 'undefined') {
+            const editor = tinymce.get(targetField);
+            if (editor) {
+                editor.setContent(textToApply.replace(/\n/g, '<br>'));
                 aplicado = true;
-            } else {
-                const textareaOriginal = document.querySelector('textarea[name="texto_original"]');
-                if (textareaOriginal) {
-                    textareaOriginal.value = textToApply;
-                    aplicado = true;
-                }
             }
-        } else {
-            // Pegar en campo "Contenido"
-            if (window.quillEditors && window.quillEditors.contenido) {
-                window.quillEditors.contenido.setText(textToApply);
+        }
+
+        // 3. Fallback a Textarea
+        if (!aplicado) {
+            const textarea = document.querySelector(`textarea[name="${targetField}"]`);
+            if (textarea) {
+                textarea.value = textToApply;
+                textarea.dispatchEvent(new Event('change', { bubbles: true }));
                 aplicado = true;
-            } else {
-                const textareaContenido = document.querySelector('textarea[name="contenido"]');
-                if (textareaContenido) {
-                    textareaContenido.value = textToApply;
-                    aplicado = true;
-                }
             }
         }
 
         if (aplicado) {
-            console.log('[OCR] Bloque de texto completo auto-aplicado al formulario');
+            console.log(`[OCR] Texto aplicado con éxito a ${targetField}`);
+            // Scroll suave al editor
+            const el = document.getElementsByName(targetField)[0] || document.getElementById(targetField);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
@@ -1514,7 +1582,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function resetOCRUI() {
         currentFile = null;
         extractedData = null;
-        stopSequentialOCR = true;
+        // Resetear botones
+        const btnVincular = document.getElementById('btn-vincular-imagen-ocr');
+        if (btnVincular) {
+            btnVincular.innerHTML = '<i class="fa-solid fa-link me-1"></i> Vincular imagen procesada';
+            btnVincular.classList.add('btn-outline-info');
+            btnVincular.classList.remove('btn-info');
+            btnVincular.disabled = false;
+        }
 
         // Resetear drop zone
         dropZoneOCR.innerHTML = `

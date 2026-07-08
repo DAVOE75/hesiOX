@@ -155,49 +155,65 @@ class ImageUploader {
         return true;
     }
     
-    async compressAndPreview(file) {
-        const reader = new FileReader();
-        
-        reader.onload = async (e) => {
+    async compressAndPreview(file, fullBase64 = null) {
+        if (fullBase64) {
+            // Añadir a la lista interna si viene de OCR para que updateUI funcione y evitar duplicados
+            if (file.name && file.name.startsWith("OCR_Image_")) {
+                const alreadyInList = this.uploadedFiles.some(f => f.name === file.name);
+                if (!alreadyInList) {
+                    this.uploadedFiles.push(file);
+                }
+            }
+
+            // Si ya tenemos el base64 (ej. desde OCR), solo creamos el thumbnail para la UI
             const img = new Image();
-            img.src = e.target.result;
-            
+            img.src = fullBase64;
             img.onload = () => {
-                // Crear thumbnail
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // Tamaño máximo para preview
                 const maxWidth = 200;
                 const maxHeight = 200;
                 let width = img.width;
                 let height = img.height;
-                
                 if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
-                    }
+                    if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
                 } else {
-                    if (height > maxHeight) {
-                        width *= maxHeight / height;
-                        height = maxHeight;
-                    }
+                    if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
                 }
-                
                 canvas.width = width;
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
-                
-                // Crear preview card
+                this.createPreviewCard(file, canvas.toDataURL('image/jpeg', 0.7), fullBase64);
+            };
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxWidth = 200;
+                const maxHeight = 200;
+                let width = img.width;
+                let height = img.height;
+                if (width > height) {
+                    if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+                } else {
+                    if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
                 this.createPreviewCard(file, canvas.toDataURL('image/jpeg', 0.7));
             };
         };
-        
         reader.readAsDataURL(file);
     }
     
-    createPreviewCard(file, thumbnailUrl) {
+    createPreviewCard(file, thumbnailUrl, fullBase64 = null) {
         const card = document.createElement('div');
         card.style.cssText = `
             position: relative;
@@ -214,7 +230,23 @@ class ImageUploader {
         
         const sizeKB = (file.size / 1024).toFixed(1);
         
+        let hiddenInputHTML = '';
+        if (fullBase64 || (file.name && file.name.startsWith("OCR_Image_"))) {
+            const finalB64 = fullBase64 || thumbnailUrl;
+            // Quitamos los [] del nombre para máxima compatibilidad, Flask.getlist seguirá funcionando
+            hiddenInputHTML = `<input type="hidden" name="ocr_image_base64" value="${finalB64}">`;
+            
+            // --- NUEVO: Persistencia de Mapa OCR por imagen ---
+            if (file.ocrMap) {
+                const mapStr = typeof file.ocrMap === 'string' ? file.ocrMap : JSON.stringify(file.ocrMap);
+                // Escapar comillas simples para evitar romper el atributo HTML
+                const escapedMapStr = mapStr.replace(/'/g, "&apos;");
+                hiddenInputHTML += `<input type="hidden" name="ocr_image_map" value='${escapedMapStr}'>`;
+            }
+        }
+
         card.innerHTML = `
+            ${hiddenInputHTML}
             <div style="width: 100%; height: 140px; background-image: url('${thumbnailUrl}'); background-size: cover; background-position: center; cursor: pointer; position: relative;">
                 <button type="button" style="position: absolute; top: 8px; right: 8px; background: rgba(220, 53, 69, 0.95); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-weight: bold; font-size: 18px; line-height: 1; padding: 0;" title="Eliminar">×</button>
             </div>
@@ -289,30 +321,46 @@ class ImageUploader {
     }
     
     // NUEVO: Añadir preview de imagen proveniente de OCR
-    addOCRPreview(base64Data) {
+    addOCRPreview(base64Data, ocrMap = null) {
         if (!this.previewContainer) return;
+
+        // Evitar duplicados de OCR (comparación básica por tamaño de base64 si es idéntico)
+        const isDuplicate = this.uploadedFiles.some(f => 
+            f.name.startsWith("OCR_Image_") && 
+            f.size === (base64Data ? base64Data.length * 0.75 : 0)
+        );
         
-        const filename = "OCR_Image_" + new Date().getTime() + ".png";
-        const fakeFile = {
-            name: filename,
-            size: base64Data.length * 0.75
-        };
-        
-        // Crear la card
-        this.createPreviewCard(fakeFile, base64Data);
-        
-        // Personalizar la card para indicar que es de OCR
-        const card = this.previewContainer.querySelector(`[data-filename="${filename}"]`);
-        if (card) {
-            const label = card.querySelector('div[style*="padding: 10px"]');
-            if (label) {
-                label.innerHTML += `<div style="color: #ff9800; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">(VINCULADA DESDE OCR)</div>`;
-            }
+        if (isDuplicate) {
+            console.log('[Image Uploader] Imagen OCR ya existe en el listado, omitiendo duplicado.');
+            return;
         }
         
+        // Añadir sufijo aleatorio para evitar colisiones si se añaden muchas imágenes por segundo
+        const randomSuffix = Math.floor(Math.random() * 1000);
+        const filename = "OCR_Image_" + new Date().getTime() + "_" + randomSuffix + ".png";
+        const fakeFile = {
+            name: filename,
+            size: base64Data ? base64Data.length * 0.75 : 0,
+            ocrMap: ocrMap // Guardar el mapa en el objeto provisional
+        };
+        
+        // Crear la card con el base64 original para persistencia
+        this.compressAndPreview(fakeFile, base64Data);
+        
+        // El resto se ejecutará asíncronamente en compressAndPreview
+        // Para añadir el label (VINCULADA DESDE OCR), usaremos un observador o timeout corto
+        setTimeout(() => {
+            const card = this.previewContainer.querySelector(`[data-filename="${filename}"]`);
+            if (card) {
+                const label = card.querySelector('div[style*="padding: 10px"]');
+                if (label) {
+                    label.innerHTML += `<div style="color: #ff9800; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">(VINCULADA DESDE OCR)</div>`;
+                }
+            }
+        }, 500);
+
         // Asegurarse de que el contenedor de preview sea visible
         this.previewContainer.style.display = 'block';
-        
         console.log('[Image Uploader] Preview de OCR añadido correctamente');
     }
     

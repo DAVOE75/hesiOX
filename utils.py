@@ -594,96 +594,105 @@ def filtrar_palabras_significativas(texto):
 def limpieza_profunda_ocr(texto):
     """
     Realiza una limpieza exhaustiva de texto proveniente de OCR.
-    Versión HESIOX v2.0: Unifica lógica de crónicas medievales y prensa moderna.
+    Versión HESIOX v3.0: Deduplicación por Ventana Deslizante y Normalización Semántica.
     """
     if not texto:
         return ""
 
-    # 1. ELIMINAR RUIDO DE OCR (Ghosting y metadatos de escaneo)
+    # 1. ELIMINAR ETIQUETAS DE SISTEMA Y RUIDO REPETITIVO
     patrones_basura = [
+        r'-+\s*\[PÁGINA\s*\d+\]\s*-+', 
+        r'\[PÁGINA\s*\d+\]',
+        r'\[DATOS\s+CABECERA\]', 
+        r'\[BORRADOR\s+BASE\]', 
+        r'\[CONTINUA\]', 
+        r'\[FIN\]',
+        r'===PAGE_BREAK===',
+        r'\d+\s+\d+\s+Rodrigo\s+Jiménez\s+de\s+Rada(.*?)(?=\n|$)', 
+        r'Rodrigo\s+Jiménez\s+de\s+Rada',
         r'\d+\s+Viajes', r'por\s+España\.?\s+\d*', 
         r'[\^\|~¬\\{}]', r'WM\s+Pl', r'"{2,}', r'\.{2,}',
-        r'\s\d+\s(?=\n|$)', # Números sueltos al final de línea
-        r'[-_]{2,}', r'[=]{2,}', # Líneas divisorias de guiones o iguales
-        r'\[\s*\d+\s*\]', # Referencias a pie de página [1]
-        r'https?://\S+', # URLs accidentales
+        r'(?<=\s)\d+(?=\s\w)', # Números aislados seguidos de palabra (posibles contadores)
+        r'\b(5|10|15|20|25|30|35|40|45|50|55|60)\b', # Contadores de línea estándar
+        r'[-_]{3,}', r'[=]{3,}', 
+        r'\[\s*\d+\s*\]', 
+        r'https?://\S+',
+        r'HF\s+o\s*!', r'o\s+o\s*!', 
+        r'Rodrigo\s+Jiménez\s+de\s+Rada\s+e\s+intentaron', 
     ]
     for patron in patrones_basura:
-        texto = re.sub(patron, '', texto, flags=re.IGNORECASE)
+        texto = re.sub(patron, '', texto, flags=re.IGNORECASE | re.MULTILINE)
 
-    # 2. RECONSTRUCCIÓN DE LÉXICO (De-hyphenation)
-    # Soporta guiones, guiones largos (en/em dash) y otros caracteres similares de OCR
-    hyphens = r'[-\u2010-\u2015\u00ad\u2043/]'
+    # 2. DEDUPLICACIÓN AGRESIVA v7 (Normalización Extrema)
+    # Dividimos por bloques (párrafos)
+    bloques_raw = re.split(r'\n\s*\n', texto)
+    bloques = [b.strip() for b in bloques_raw if b.strip()]
+    
+    bloques_unicos = []
+    # Usaremos una versión "ultra-pelada" del buffer: solo letras a-z
+    buffer_comparacion = ""
+
+    for b in bloques:
+        # Normalización para comparación: solo letras a-z
+        # Esto elimina números de línea, notas al pie (1, 2, 3) y erratas de puntuación
+        norm_b = re.sub(r'[^a-z]+', '', b.lower())
+        
+        # Ignorar ruidos cortísimos (menos de 10 letras significativas)
+        if len(norm_b) < 10:
+            continue
+
+        found_overlap = False
+        
+        # A. Check de contención: ¿Este bloque (o el 80% de él) ya está en lo que llevamos?
+        if norm_b in buffer_comparacion:
+            found_overlap = True
+            
+        # B. Check de Similitud por Fragmentos (Ventana Deslizante)
+        if not found_overlap and len(norm_b) > 30:
+            # Si el bloque es largo, miramos si sus fragmentos existen
+            pieces = [norm_b[i:i+25] for i in range(0, len(norm_b), 25) if len(norm_b[i:i+25]) >= 20]
+            coincidencias = sum(1 for p in pieces if p in buffer_comparacion)
+            
+            # Si más de la mitad de los fragmentos existen, es un duplicado
+            if len(pieces) > 0 and (coincidencias / len(pieces)) >= 0.5:
+                found_overlap = True
+
+        if found_overlap:
+            # Si detectamos que es un eco, no lo añadimos
+            continue
+
+        # No es duplicado: añadimos el texto original (con su formato) a la lista
+        bloques_unicos.append(b)
+        # Y añadimos su versión pelada al historial de comparación
+        buffer_comparacion += norm_b
+
+    texto = '\n\n'.join(bloques_unicos)
+
+    # 3. RECONSTRUCCIÓN DE LÉXICO (De-hyphenation)
     letras = r'[a-zA-ZáéíóúÁÉÍÓÚñÑ]'
+    hyphens = r'[-\u2010-\u2015\u00ad\u2043/]'
     
-    # Une palabras cortadas al final de la línea: "bue- \n na" -> "buena"
-    texto = re.sub(fr'({letras}){hyphens}\s*\n\s*({letras})', r'\1\2', texto)
+    # "bue- \n na" -> "buena" o "ocupa- 10 ciones" -> "ocupaciones"
+    texto = re.sub(fr'({letras}){hyphens}\s*\d*\s*\n\s*({letras})', r'\1\2', texto)
+    # "tie- ne" -> "tiene" o "ocupa- 10 ciones" -> "ocupaciones" (en la misma línea)
+    texto = re.sub(fr'(\b{letras}+)\s*{hyphens}\s*\d*\s+({letras}+\b)', r'\1\2', texto)
+    texto = re.sub(fr'(\b{letras}+)\s+\d*\s*{hyphens}\s*({letras}+\b)', r'\1\2', texto)
     
-    # Une palabras cortadas por guion en la misma línea con cualquier espaciado: "tie- ne", "tie -ne", "tie - ne"
-    # Solo si el primer fragmento no es una palabra corta que podría ser legítima (ej: "de-", "la-") 
-    # proactivamente unimos si parece fragmento técnico.
-    texto = re.sub(fr'(\b{letras}+)\s*{hyphens}\s+({letras}+\b)', r'\1\2', texto)
-    texto = re.sub(fr'(\b{letras}+)\s+{hyphens}\s*({letras}+\b)', r'\1\2', texto)
-    
-    # Caso específico del usuario: "Arzo- bispo", "Infan- tado", "tie- ne"
-    # Unimos cualquier letra + guion + espacio(s) + letra
-    texto = re.sub(fr'({letras}){hyphens}\s+({letras})', r'\1\2', texto)
+    # 4. NORMALIZACIÓN FINAL PROTEGIENDO ESTRUCTURAS (Prensa, Teatro, Poesía)
+    def smarter_join(match):
+        # Capturamos la línea antes del salto para analizarla
+        text_before = texto[:match.start()].split('\n')[-1]
+        # Si la línea es corta, está en mayúsculas (personajes) o termina en ":", NO unimos
+        if len(text_before.strip()) < 15 or text_before.isupper() or text_before.strip().endswith(':'):
+            return match.group(0)
+        return ' '
 
-    # 3. PRESERVACIÓN DE ESTRUCTURA (Unificación inteligente)
-    # HESIOX v2.1: Somos conservadores con los saltos de línea para no romper tablas o listas
-    # Solo unificamos si hay un salto de línea simple que parece cortar una oración (sin puntuación final)
-    texto = re.sub(r'(?<![.:;])\n(?=[a-z])', ' ', texto) 
-
-    # 4. NORMALIZACIÓN DE ESPACIOS (Conservando alineación)
-    # Quitamos espacios al final de línea para limpieza básica,
-    # pero permitimos bloques de espacios internos para alineación de tablas.
+    # Unimos líneas que no terminan en puntuación fuerte, respetando estructuras de teatro/listas
+    texto = re.sub(r'(?<![.:;!?])\n(?=[a-zA-ZáéíóúÁÉÍÓÚñÑ])', smarter_join, texto) 
+    
+    # Limpieza de espacios múltiples conservando sangrías mínimas
+    texto = re.sub(r' {3,}', '  ', texto)
     texto = re.sub(r' +$', '', texto, flags=re.MULTILINE) 
-    # Asegurar un espacio mínimo después de puntuación si falta, pero preservando si ya hay más (alineación)
-    texto = re.sub(r'([.,;:])([a-zA-ZáéíóúÁÉÍÓÚñÑ])', r'\1 \2', texto)
-
-    # 5. ESTRUCTURACIÓN SEMÁNTICA (Párrafos inteligentes)
-    texto = texto.replace(" ítem", "\n\nítem")
-    
-    # Lista extendida de abreviaturas que NO deben romper el flujo
-    abreviaturas = r'(?:Sr|Sra|Srta|Sres|D|Da|Dr|Dra|Vd|Vds|Ud|Uds|Excmo|Ilmo|Pbro|Mons|Gral|Tte|Cap|Cor|Don|Doña|Mtro|Mtra|Prof|Profa|S\.A|S\.L)'
-    
-    # Regla A: Evitar saltos de párrafo tras abreviaturas en el flujo continuo (. A -> . A)
-    def smart_split(m):
-        prefix = m.string[max(0, m.start()-10):m.start()]
-        if re.search(fr'\b{abreviaturas}$', prefix, re.IGNORECASE):
-            return m.group(0) # Es abreviatura, mantener en la misma línea
-        return f'.\n\n{m.group(1)}'
-    
-    texto = re.sub(r'\. ([A-ZÁÉÍÓÚÑ])', smart_split, texto)
-
-    # Regla B: Unificar líneas si la anterior termina en una abreviatura (D. \n\n Jorge -> D. Jorge)
-    def smart_unify(m):
-        prefix = m.string[max(0, m.start()-10):m.start()]
-        if re.search(fr'\b{abreviaturas}\.?$', prefix, re.IGNORECASE):
-            return " " # Es abreviatura, ignorar el doble salto
-        return "\n\n"
-    
-    texto = re.sub(r'\n\n', smart_unify, texto)
-
-    # 6. CORRECCIONES DE ERRORES OCR FRECUENTES (Diccionario extendido con Regex)
-    reemplazos_manuales = {
-        r'seííora': 'señora',
-        r'seííoras': 'señoras',
-        r'\btn\s': 'en ',
-        r'ia vieja': 'la vieja',
-        r'\sde-\s': ' de ',
-        r'\bl-': ' la',
-        r'\be-': ' el',
-        r'\bqne\b': 'que',
-        r'\bdcl\b': 'del',
-        r'\beon\b': 'con',
-        r'\bporqne\b': 'porque',
-        r'\btado\b': 'todo',
-        r'\bsn\b': 'su',
-        r'\bsns\b': 'sus',
-    }
-    for error_pat, fix in reemplazos_manuales.items():
-        texto = re.sub(error_pat, fix, texto, flags=re.IGNORECASE)
 
     return texto.strip()
 

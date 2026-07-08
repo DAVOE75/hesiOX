@@ -523,8 +523,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const mappings = [
             { btn: 'btnLimpiarManual', editorKey: 'contenido' },
             { btn: 'btnLimpiarManual-orig', editorKey: 'texto_original' },
+            { btn: 'btnLimpiarManual-diplomatica', editorKey: 'contenido_diplomatico' },
+            { btn: 'btnLimpiarManual-critica', editorKey: 'contenido_critico' },
             { btn: 'btn-correct-txt-gemini', editorKey: 'contenido' },
-            { btn: 'btn-correct-txt-gemini-orig', editorKey: 'texto_original' }
+            { btn: 'btn-correct-txt-gemini-orig', editorKey: 'texto_original' },
+            { btn: 'btn-correct-txt-gemini-diplomatica', editorKey: 'contenido_diplomatico' },
+            { btn: 'btn-correct-txt-gemini-critica', editorKey: 'contenido_critico' }
         ];
 
         mappings.forEach(map => {

@@ -187,23 +187,22 @@ class AIService:
     def _call_gemini(self, prompt, temperature, image_data=None, top_p=None):
         import sys
         try:
-            # Version-resilient model mapping for Gemini (preferring -latest for stability in this env)
+            # Version-resilient model mapping for Gemini (Updated for 2026 models)
             model_map = {
-                'flash': 'gemini-2.0-flash',
-                'pro': 'gemini-1.5-pro',
-                '1.5-pro': 'gemini-1.5-pro',
+                'flash': 'gemini-2.0-flash-exp', # Fallback a estable/expediente si 3.0 falla
+                'pro': 'gemini-2.0-pro-exp',
+                '1.5-pro': 'gemini-1.5-pro-latest',
                 '1.5-flash': 'gemini-1.5-flash-latest',
-                'gemini-1.5-flash': 'gemini-1.5-flash-latest',
-                'gemini-1.5-pro': 'gemini-1.5-pro-latest',
-                '2.0-flash': 'gemini-2.0-flash',
-                'gemini-pro': 'gemini-1.5-pro'
+                '2.0-flash': 'gemini-2.0-flash-exp',
+                '3-flash-preview': 'gemini-2.0-flash-exp', # Re-mapeo por seguridad si el nombre no es exacto
+                'gemini-3-flash-preview': 'gemini-2.0-flash-exp'
             }
-            # Fallback direct names
-            model_name = model_map.get(self.model, self.model or "gemini-1.5-flash-latest")
+            # Intentar usar el modelo solicitado, si no está en el mapa usarlo directamente
+            model_name = model_map.get(self.model, self.model or "gemini-2.0-flash-exp")
             
-            # Robust prefix verification
-            if not model_name.startswith('gemini-') and not model_name.startswith('models/'):
-                model_name = 'gemini-1.5-flash-latest' # Final safety fallback
+            # Forzar nombres conocidos si hay dudas
+            if "3-flash" in str(model_name).lower():
+                model_name = "gemini-2.0-flash-exp" # Temporalmente hasta validar 3.0 exacto
             
             # Verificar origen de la API KEY para log
             usando_key_usuario = self.user and hasattr(self.user, 'api_key_gemini') and getattr(self.user, 'api_key_gemini', None)
@@ -532,32 +531,111 @@ class AIService:
     def vision_ocr(self, image_data):
         """
         Realiza OCR nativo con Gemini Vision y extrae coordenadas espaciales.
-        Esto proporciona un indexado mucho más preciso que Tesseract.
         """
+        print(f"[AIService] Iniciando vision_ocr con proveedor: {self.provider}", file=sys.stderr)
         prompt = """
-        Actúa como un Transcriptor Paleográfico Experto para un Archivo Histórico Digital.
-        Tu objetivo es realizar un OCR EXHAUSTIVO Y TOTAL de esta imagen de prensa antigua para fines de INVESTIGACIÓN Y PRESERVACIÓN.
+        ACTÚA COMO UN EXPERTO EN TRANSCRIPCIÓN PALEOGRÁFICA Y ANÁLISIS DE DISEÑO DOCUMENTAL (OLR).
+        Tu misión es realizar un OCR de precisión extrema de la imagen proporcionada.
         
-        INSTRUCCIONES CRÍTICAS:
-        1. NO OMITAS NINGUNA SECCIÓN. Transcribe cada columna, anuncio, cabecera y pie de página.
-        2. Proporciona las coordenadas de CAJA DELIMITADORA (bounding box) para cada PALABRA.
-        3. Mantén la ortografía original (ej. 'á', 'relox', 'estensión').
-        4. Las coordenadas deben ser NORMALIZADAS de 0 a 1000: [ymin, xmin, ymax, xmax].
+        INSTRUCCIONES DE INDIZACIÓN:
+        1. Identifica CADA PALABRA física en la imagen. No agrupes frases.
+        2. Proporciona las coordenadas exactas de la CAJA DELIMITADORA (bounding box) para cada palabra.
+        3. El formato de las coordenadas debe ser estrictamente [ymin, xmin, ymax, xmax] en una escala de 0 a 1000.
+        4. Transcribe el texto EXACTAMENTE como aparece (respeta tildes y grafías antiguas).
+        5. Procesa el documento siguiendo el orden de lectura natural (por columnas si las hubiera).
         
-        ESTRUCTURA DE RESPUESTA (JSON ÚNICAMENTE):
+        ESTRUCTURA DE SALIDA (JSON PURO):
         {
             "words": [
-                {"text": "palabra", "box_2d": [ymin, xmin, ymax, xmax]},
-                ...
+                {"text": "Palabra1", "box_2d": [ymin, xmin, ymax, xmax]},
+                {"text": "Palabra2", "box_2d": [ymin, xmin, ymax, xmax]}
             ]
         }
-        
-        Si la página es muy densa, asegúrate de procesar todas las columnas de izquierda a derecha.
         """
-        # Usar temperatura 0 para máxima precisión y fidelidad
-        raw_response = self._call_gemini(prompt, temperature=0, image_data=image_data)
-        data = self._extract_json_from_text(raw_response)
-        return data if data and 'words' in data else {'words': []}
+        try:
+            raw_response = self._call_gemini(prompt, temperature=0, image_data=image_data)
+            print(f"[AIService] Respuesta cruda de Gemini recibida (longitud: {len(raw_response) if raw_response else 0})", file=sys.stderr)
+            data = self._extract_json_from_text(raw_response)
+            if data and 'words' in data:
+                print(f"[AIService] JSON extraído con éxito. {len(data['words'])} palabras encontradas.", file=sys.stderr)
+                return data
+            else:
+                print(f"[AIService] No se pudo extraer JSON válido o no contiene 'words'.", file=sys.stderr)
+        except Exception as e:
+            print(f"[AIService] Error en vision_ocr: {e}", file=sys.stderr)
+            
+        return {'words': []}
+
+    def reconcile_ocr_spatial(self, image_data, ocr_space_data, width=1000, height=1000):
+        """
+        RECONCILIACIÓN MAESTRA:
+        Fusiona el texto de OCR.space con la inteligencia visual de Gemini.
+        Corrige erratas manteniendo la estructura espacial original.
+        """
+        print(f"[AIService] Iniciando Reconciliación OCR Espacial ({width}x{height})...", file=sys.stderr)
+        
+        # Normalizar data de OCR.space a escala 0-1000 para Gemini
+        simplified_overlay = []
+        if ocr_space_data and 'Lines' in ocr_space_data:
+            for line in ocr_space_data['Lines']:
+                for word in line.get('Words', []):
+                    # Convertir píxeles a escala 0-1000
+                    w_left = word.get('Left', 0)
+                    w_top = word.get('Top', 0)
+                    w_width = word.get('Width', 0)
+                    w_height = word.get('Height', 0)
+                    
+                    ymin = int((w_top / height) * 1000)
+                    xmin = int((w_left / width) * 1000)
+                    ymax = int(((w_top + w_height) / height) * 1000)
+                    xmax = int(((w_left + w_width) / width) * 1000)
+                    
+                    simplified_overlay.append({
+                        "t": word.get('WordText'),
+                        "b": [ymin, xmin, ymax, xmax]
+                    })
+
+        prompt = f"""
+        ACTÚA COMO UN MOTOR DE RECONCILIACIÓN OCR Y OLR (Object Layout Recognition) DE GRADO ARCHIVÍSTICO.
+        
+        TE PROPORCIONO:
+        1. Una IMAGEN de prensa histórica.
+        2. Un BORRADOR OCR (JSON) con palabras y coordenadas normalizadas (0-1000) de un motor tradicional.
+        
+        TU MISIÓN ES GENERAR LA "TRANSCRIPCIÓN DEFINITIVA" (GOLD STANDARD):
+        1. REVISIÓN VISUAL: Mira la imagen y compara cada palabra del BORRADOR.
+        2. CORRECCIÓN SEMÁNTICA: Si el borrador dice "0" pero es una "O", o si hay un error tipográfico histórico, CORRÍGELO en el campo "text".
+        3. AJUSTE ESPACIAL: Si el recuadro del borrador está ligeramente movido, AJÚSTALO para que encuadre perfectamente la palabra en la imagen.
+        4. PALABRAS FALTANTES: Si ves palabras en la imagen que NO están en el borrador, INCLÚYELAS con sus coordenadas [ymin, xmin, ymax, xmax].
+        5. ORDEN DE LECTURA: Asegura que la "transcription" final sea fluida y siga las columnas correctamente.
+        6. DESGUIONIZADO: En la "transcription", une las palabras cortadas por guion al final de línea, pero en el "index" mantén cada fragmento físico con su caja.
+        
+        BORRADOR OCR (Referencia):
+        {json.dumps(simplified_overlay[:200])}
+        
+        RESPONDE ÚNICAMENTE CON UN JSON PURO:
+        {{
+            "transcription": "Texto completo, limpio y desguionizado (sin etiquetas adicionales)",
+            "index": [
+                {{"text": "palabra", "box": [ymin, xmin, ymax, xmax]}},
+                ...
+            ],
+            "metadata": {{ "titulo": "...", "fecha_original": "...", "edicion": "..." }}
+        }}
+        """
+        
+        try:
+            raw_response = self._call_gemini(prompt, temperature=0, image_data=image_data)
+            data = self._extract_json_from_text(raw_response)
+            if data and 'index' in data:
+                print(f"[AIService] Reconciliación completada: {len(data['index'])} palabras.", file=sys.stderr)
+                return data
+            else:
+                print(f"[AIService] Reconciliación fallida o JSON inválido.", file=sys.stderr)
+                return None
+        except Exception as e:
+            print(f"[AIService] Error en reconcile_ocr_spatial: {e}", file=sys.stderr)
+            return None
 
     def correct_ocr_text(self, text, part_num=1, total_parts=1, image_data=None, custom_prompt=None):
         """Corrige texto OCR y extrae metadatos estructurados usando IA. Soporta Vision."""
@@ -585,6 +663,7 @@ Tu misión es realizar una HIFIBRIDACIÓN DE ALTA PRECISIÓN:
             Actúa como un Archivero Digital Senior y Especialista en Reconocimiento Óptico de Caracteres (OCR) y Análisis de Diseño de Documentos (OLR) de una Biblioteca Nacional. Tu objetivo es realizar una transcripción diplomática, INTEGRA y estructurada de la página de prensa histórica adjunta. 
             
             ES CRÍTICO: No debes omitir ni una sola palabra del documento original. Tu prioridad absoluta es la COBERTURA TOTAL (Full Coverage).
+            PROHIBICIÓN ESTRICTA: NO incluyas bajo ninguna circunstancia etiquetas de sistema en "corrected_text". Elimina cualquier [DATOS CABECERA], [BORRADOR BASE], [PÁGINA X], [CONTINUA], [FIN] o similares. Devuelve solo el contenido puro de la noticia.
             
             1. Extracción de Metadatos Críticos (Prioridad 1):
             Debes extraer con absoluta precisión los datos de identificación del ejemplar que suelen aparecer en la CABECERA:
