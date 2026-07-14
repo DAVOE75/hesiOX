@@ -6,7 +6,7 @@
 {% block top_actions %}
 <div class="d-flex align-items-center gap-3">
     <div class="text-muted small">
-        <i class="fa-solid fa-book-bible me-1 text-accent"></i> <strong>La Biblia de HesiOX</strong> v4.3.0 (Edición
+        <i class="fa-solid fa-book-bible me-1 text-accent"></i> <strong>La Biblia de HesiOX</strong> v5.0.0 (Edición
         Crítica: PDF Multimodal & Advanced OCR Sync Search)
     </div>
     <button class="btn btn-sirio btn-sirio-success px-3" onclick="window.open('/manual/pdf', '_blank')"
@@ -167,6 +167,63 @@
 
     html[data-theme="light"] .text-white-adapt {
         color: #212121 !important;
+    }
+
+    /* Banner "Motor OCR Experto 3 Pasos" legible en modo claro */
+    html[data-theme="light"] .manual-release-banner {
+        background: linear-gradient(135deg, #e9f1ff 0%, #dde8ff 100%) !important;
+        border-left-color: #2f5f9b !important;
+    }
+
+    html[data-theme="light"] .manual-release-banner h5,
+    html[data-theme="light"] .manual-release-banner h5 i {
+        color: #1f4f8b !important;
+    }
+
+    html[data-theme="light"] .manual-release-banner .text-light,
+    html[data-theme="light"] .manual-release-banner p,
+    html[data-theme="light"] .manual-release-banner li,
+    html[data-theme="light"] .manual-release-banner strong,
+    html[data-theme="light"] .manual-release-banner code {
+        color: #1f2a44 !important;
+    }
+
+    html[data-theme="light"] .manual-release-banner hr {
+        border-top-color: rgba(31, 42, 68, 0.25) !important;
+        opacity: 1 !important;
+    }
+
+    /* Bloques 4.2.1 (3 pasos) legibles en modo claro */
+    html[data-theme="light"] .manual-ocr-steps {
+        border-color: #2f5f9b !important;
+        background: #eef4ff !important;
+    }
+
+    html[data-theme="light"] .manual-ocr-step {
+        background: #eef4ff !important;
+        border-right-color: #9fb7da !important;
+    }
+
+    html[data-theme="light"] .manual-ocr-step:last-child {
+        border-right: none !important;
+    }
+
+    html[data-theme="light"] .manual-ocr-step .text-white,
+    html[data-theme="light"] .manual-ocr-step .text-light,
+    html[data-theme="light"] .manual-ocr-step p,
+    html[data-theme="light"] .manual-ocr-step li,
+    html[data-theme="light"] .manual-ocr-step strong {
+        color: #1f2a44 !important;
+        opacity: 1 !important;
+    }
+
+    html[data-theme="light"] .manual-ocr-time-alert {
+        background: #fff7df !important;
+        border-left-color: #c89b00 !important;
+    }
+
+    html[data-theme="light"] .manual-ocr-time-alert .text-light {
+        color: #4a3b00 !important;
     }
 
     html[data-theme="dark"] .text-white-adapt {
@@ -498,6 +555,7 @@
                 <a href="#ocr-deep-dive" class="list-group-item list-group-item-action ps-3">4.2 Motores de
                     Reconocimiento Óptico (OCR)</a>
                 <a href="#ocr-expert-engine" class="list-group-item list-group-item-action ps-4 small fw-bold" style="color:#ffd700;"><i class="fa-solid fa-star me-1"></i>4.2.1 Motor Experto 3 Pasos (v5.0)</a>
+                <a href="#ocr-prensa-engine" class="list-group-item list-group-item-action ps-4 small fw-bold" style="color:#4dd0e1;"><i class="fa-solid fa-newspaper me-1"></i>4.2.2 Motor Experto Prensa (v5.0)</a>
                 <a href="#text-refinement" class="list-group-item list-group-item-action ps-3 fw-bold text-accent">4.3
                     Taller de Refinamiento Táctico</a>
                 <a href="#editor-rich" class="list-group-item list-group-item-action ps-3">4.4 Editor:
@@ -651,7 +709,7 @@
 
         {% if not pdf_mode %}
             <!-- Novedades Julio 2026 - v5.0.0 -->
-            <div class="alert border-0 shadow mt-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-left: 4px solid #ffd700 !important;">
+            <div class="alert border-0 shadow mt-4 manual-release-banner" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-left: 4px solid #ffd700 !important;">
                 <h5 class="fw-bold" style="color:#ffd700;"><i class="fa-solid fa-star me-2"></i>Motor OCR Experto 3 Pasos &mdash; v5.0.0 (Julio 2026)</h5>
                 <div class="small text-light">
                     <p class="mb-2">La mayor actualización del sistema de OCR en la historia de HesiOX. El nuevo <strong style="color:#ffd700;">Motor Experto</strong> sustituye al Híbrido como motor por defecto e implementa un pipeline profesional de tres pasos diseñado específicamente para documentos históricos con tipografía decorativa.</p>
@@ -1466,10 +1524,10 @@
             </h4>
             <p class="small">El Motor Experto nace de la necesidad de obtener transcripciones de máxima fidelidad en documentos históricos con tipografía decorativa, gótica o caligráfica: programas de fiestas, revistas de época, gacetas, almanaques y prensa del siglo XIX–XX. Los motores tradicionales fallan sistemáticamente en estos documentos porque confunden ornamentos con letras, pierden números y años insertos en tipografía especial, y no entienden la composición visual de la página.</p>
 
-            <div class="row g-0 mt-4 mb-2" style="border:1px solid #ffd700; border-radius:8px; overflow:hidden;">
+            <div class="row g-0 mt-4 mb-2 manual-ocr-steps" style="border:1px solid #ffd700; border-radius:8px; overflow:hidden;">
                 <!-- PASO 1 -->
                 <div class="col-md-4">
-                    <div class="h-100 p-3" style="background:#0d1b2a; border-right:1px solid #ffd700;">
+                    <div class="h-100 p-3 manual-ocr-step" style="background:#0d1b2a; border-right:1px solid #ffd700;">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge me-2 fs-6" style="background:#ff9800;">1</span>
                             <strong class="text-white" style="font-size:0.85rem;">Tesseract 400 DPI (Doble PSM)</strong>
@@ -1485,7 +1543,7 @@
                 </div>
                 <!-- PASO 2 -->
                 <div class="col-md-4">
-                    <div class="h-100 p-3" style="background:#0d1b2a; border-right:1px solid #ffd700;">
+                    <div class="h-100 p-3 manual-ocr-step" style="background:#0d1b2a; border-right:1px solid #ffd700;">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge me-2 fs-6" style="background:#cf93e9; color:#000;">2</span>
                             <strong class="text-white" style="font-size:0.85rem;">Gemini Vision con Contexto</strong>
@@ -1502,7 +1560,7 @@
                 </div>
                 <!-- PASO 3 -->
                 <div class="col-md-4">
-                    <div class="h-100 p-3" style="background:#0d1b2a;">
+                    <div class="h-100 p-3 manual-ocr-step" style="background:#0d1b2a;">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge me-2 fs-6" style="background:#4ade80; color:#000;">3</span>
                             <strong class="text-white" style="font-size:0.85rem;">Refinamiento Semántico Final</strong>
@@ -1519,40 +1577,90 @@
                 </div>
             </div>
 
-            <div class="alert mt-3 small border-0" style="background:#2a1f00; border-left:3px solid #ffd700 !important;">
+            <div class="alert mt-3 small border-0 manual-ocr-time-alert" style="background:#2a1f00; border-left:3px solid #ffd700 !important;">
                 <i class="fa-solid fa-clock me-2" style="color:#ffd700;"></i><strong style="color:#ffd700;">Tiempo estimado:</strong> <span class="text-light">30–90 segundos por página dependiendo de la complejidad visual. Para documentos de más de 20 páginas se recomienda procesar en rangos de 5–10 páginas.</span>
             </div>
 
-            <h4 class="h6 fw-bold mt-4">4.2.2 Comparativa de Motores</h4>
+            <h4 id="ocr-prensa-engine" class="h5 mt-5 fw-bold" style="color:#4dd0e1;">
+                <i class="fa-solid fa-newspaper me-2"></i>4.2.2 Motor Experto Prensa — Multicolumna Automático (v5.0)
+            </h4>
+            <p class="small">La prensa histórica española presenta un reto técnico radicalmente distinto al de los documentos de una sola columna: una página de periódico típica del siglo XIX-XX puede tener entre 3 y 6 columnas de texto estrechas, cada una con artículos independientes, secciones tituladas, anuncios y cajas. El Motor Experto genérico falla en este escenario porque <code>image_to_string</code> de Tesseract solo captura la columna dominante y Gemini sin contexto de columnas tiende a detenerse al terminar la primera.</p>
+
+            <p class="small">El <strong style="color:#4dd0e1;">Motor Experto Prensa</strong> resuelve este problema con una arquitectura de detección y separación física de columnas previa al OCR:</p>
+
+            <div class="row g-0 mt-3 mb-3" style="border:1px solid #4dd0e1; border-radius:8px; overflow:hidden;">
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:rgba(77,208,225,0.06); border-right:1px solid rgba(77,208,225,0.2);">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background:#4dd0e1; color:#000; font-size:.9rem; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;">1</span>
+                            <strong class="small">Histograma de Densidad Horizontal</strong>
+                        </div>
+                        <p class="xsmall mb-1">Se analiza la distribución X de todas las palabras detectadas por Tesseract, generando un histograma de densidad horizontal que revela los <em>gutters</em> (espacios vacíos entre columnas).</p>
+                        <p class="xsmall mb-0 text-muted">Zonas con densidad &lt; 8% del máximo = separador de columna.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:rgba(77,208,225,0.06); border-right:1px solid rgba(77,208,225,0.2);">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background:#4dd0e1; color:#000; font-size:.9rem; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;">2</span>
+                            <strong class="small">División en Franjas Verticales</strong>
+                        </div>
+                        <p class="xsmall mb-1">La imagen se divide en N franjas verticales siguiendo los <em>gutters</em> detectados. Cada franja se procesa con Tesseract <strong>PSM 6</strong> (bloque uniforme) de forma independiente.</p>
+                        <p class="xsmall mb-0 text-muted">Garantiza que cada columna se transcribe completa antes de pasar a la siguiente.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-3" style="background:rgba(77,208,225,0.06);">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge me-2" style="background:#4dd0e1; color:#000; font-size:.9rem; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%;">3</span>
+                            <strong class="small">Gemini Vision Especializado en Prensa</strong>
+                        </div>
+                        <p class="xsmall mb-1">Las columnas extraídas (marcadas como COL 1, COL 2…) se envían junto con la imagen a Gemini Vision con un prompt específico para prensa: cabecera del periódico, artículos con título, anuncios y números críticos.</p>
+                        <p class="xsmall mb-0 text-muted">PSM 11 (sparse text) como complemento para máxima cobertura.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3 small border-0" style="background:rgba(77,208,225,0.08); border-left:3px solid #4dd0e1 !important;">
+                <i class="fa-solid fa-circle-info me-2" style="color:#4dd0e1;"></i>
+                <strong style="color:#4dd0e1;">¿Cuándo usar cada motor experto?</strong>
+                <span class="text-muted"> — Usa <strong>Experto 3 Pasos</strong> para libros, folletos, programas de fiestas y cualquier documento sin columnas. Usa <strong>Experto Prensa</strong> para periódicos y revistas con 2 o más columnas verticales de texto.</span>
+            </div>
+
+            <h4 class="h6 fw-bold mt-4">4.2.3 Comparativa de Motores</h4>
             <div class="table-responsive mt-2">
                 <table class="table table-sm table-bordered xsmall">
                     <thead class="table-dark">
                         <tr>
-                            <th>Motor</th><th>Resolución</th><th>Núm./Fechas</th><th>Tipografía decorativa</th><th>Velocidad</th><th>Recomendado para</th>
+                            <th>Motor</th><th>Resolución</th><th>Núm./Fechas</th><th>Tipografía decorativa</th><th>Prensa multicolumna</th><th>Velocidad</th><th>Recomendado para</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="table-light">
                             <td><i class="fa-solid fa-server me-1"></i> Tesseract</td>
-                            <td>~200 DPI</td><td class="text-danger">Pobre</td><td class="text-danger">Pobre</td><td class="text-success">Muy rápido</td><td>Textos modernos limpios</td>
+                            <td>~200 DPI</td><td class="text-danger">Pobre</td><td class="text-danger">Pobre</td><td class="text-danger">No</td><td class="text-success">Muy rápido</td><td>Textos modernos limpios</td>
                         </tr>
                         <tr class="table-light">
                             <td><i class="fa-solid fa-cloud me-1"></i> OCR.space</td>
-                            <td>Nativa</td><td class="text-warning">Moderado</td><td class="text-warning">Moderado</td><td class="text-warning">Medio</td><td>Prensa con columnas claras</td>
+                            <td>Nativa</td><td class="text-warning">Moderado</td><td class="text-warning">Moderado</td><td class="text-warning">Parcial</td><td class="text-warning">Medio</td><td>Prensa con columnas claras</td>
                         </tr>
                         <tr class="table-light">
                             <td><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Híbrido</td>
-                            <td>~200 DPI</td><td class="text-warning">Bueno</td><td class="text-warning">Bueno</td><td class="text-warning">Lento</td><td>Prensa estructurada con columnas</td>
+                            <td>~200 DPI</td><td class="text-warning">Bueno</td><td class="text-warning">Bueno</td><td class="text-warning">Parcial</td><td class="text-warning">Lento</td><td>Prensa estructurada con columnas</td>
                         </tr>
                         <tr style="background:#1a1a2e; color:#ffd700;">
                             <td><i class="fa-solid fa-star me-1"></i> <strong>Experto 3 Pasos</strong></td>
-                            <td><strong>400 DPI</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-danger">Lento</td><td><strong>Documentos históricos con tipografía decorativa</strong></td>
+                            <td><strong>400 DPI</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-warning">Limitado</td><td class="text-danger">Lento</td><td><strong>Documentos históricos sin columnas (libros, folletos, programas)</strong></td>
+                        </tr>
+                        <tr style="background:#0a1a2e; color:#4dd0e1;">
+                            <td><i class="fa-solid fa-newspaper me-1"></i> <strong>Experto Prensa</strong></td>
+                            <td><strong>400 DPI</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-success"><strong>Excelente</strong></td><td class="text-success"><strong>Sí — Detección automática</strong></td><td class="text-danger">Lento</td><td><strong>Periódicos históricos con 2–6 columnas</strong></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <h4 class="h6 fw-bold mt-4">4.2.3 Gestión de Documentos Complejos (PDF y Vision Preview)</h4>
+            <h4 class="h6 fw-bold mt-4">4.2.4 Gestión de Documentos Complejos (PDF y Vision Preview)</h4>
             <div class="p-3 border rounded bg-light mb-4">
                 <div class="row g-3">
                     <div class="col-md-6">

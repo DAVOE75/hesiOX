@@ -2,13 +2,24 @@ import os
 import requests
 import json
 import sys
+import textwrap
 import anthropic
 from google import genai as genai_new
 
 class AIService:
     def __init__(self, provider='gemini', model=None, user=None):
-        self.provider = provider.lower()
+        self.provider = (provider or 'gemini').lower()
         self.model = model
+
+        # Soporta formato "proveedor:modelo" enviado por algunos frontends (ej: gemini:pro).
+        if isinstance(self.model, str) and ':' in self.model:
+            provider_hint, model_hint = self.model.split(':', 1)
+            provider_hint = provider_hint.strip().lower()
+            model_hint = model_hint.strip()
+            if provider_hint in ('gemini', 'openai', 'anthropic', 'local', 'llama'):
+                self.provider = provider_hint
+                self.model = model_hint
+
         self.user = user
         self.api_key = self._get_api_key()
         self.last_error = None
@@ -88,22 +99,26 @@ class AIService:
         """
         Generador local de respaldo que se activa cuando fallan todos los proveedores externos.
         """
-        return f"""
-        <div class="alert alert-warning border-0 bg-opacity-10 py-3" style="background: rgba(230, 162, 60, 0.1); border-radius: 8px;">
-            <h5 class="alert-heading text-warning"><i class="fa-solid fa-triangle-exclamation me-2"></i> IA en Modo de Respaldo</h5>
-            <p class="mb-0">Lo sentimos, la conexión con los servicios de IA (Gemini/OpenAI) no ha sido posible en este momento.</p>
-            <hr style="border-top-color: rgba(230, 162, 60, 0.2);">
-            <p class="small mb-0"><strong>Análisis preliminar:</strong> El sistema ha detectado picos significativos en los picos de los documentos. Por favor, verifica la configuración de tus API Keys en el perfil o reintenta en unos minutos.</p>
-            <div class="mt-2 text-end" style="font-size: 0.65rem; opacity: 0.5;">HesiOX Offline Engine v2.5</div>
-        </div>
-        """
+        return textwrap.dedent("""
+<div class="alert alert-warning border-0 bg-opacity-10 py-3" style="background: rgba(230, 162, 60, 0.1); border-radius: 8px;">
+    <h5 class="alert-heading text-warning"><i class="fa-solid fa-triangle-exclamation me-2"></i> IA en Modo de Respaldo</h5>
+    <p class="mb-0">Lo sentimos, la conexión con los servicios de IA (Gemini/OpenAI) no ha sido posible en este momento.</p>
+    <hr style="border-top-color: rgba(230, 162, 60, 0.2);">
+    <p class="small mb-0"><strong>Análisis preliminar:</strong> El sistema detectó patrones relevantes en la presencia y co-presencia de personajes, pero el resumen avanzado requiere conexión con IA. Verifica tus API Keys en el perfil o reintenta en unos minutos.</p>
+    <div class="mt-2 text-end" style="font-size: 0.65rem; opacity: 0.5;">HesiOX Offline Engine v2.6</div>
+</div>
+""").strip()
 
     def _call_gemini(self, prompt, temperature, image_data=None, top_p=None):
         try:
+            requested_model = str(self.model or '').strip().lower()
+
             # Mapa de alias a nombres de modelo reales (SDK google.genai 2026)
             model_map = {
                 'flash': 'gemini-2.5-flash',
                 'pro': 'gemini-2.5-pro',
+                '2.5-flash': 'gemini-2.5-flash',
+                '2.5-pro': 'gemini-2.5-pro',
                 '1.5-flash': 'gemini-2.5-flash',
                 '1.5-pro': 'gemini-2.5-pro',
                 '2.0-flash': 'gemini-2.5-flash',
@@ -111,11 +126,13 @@ class AIService:
                 'gemini-1.5-pro': 'gemini-2.5-pro',
                 'gemini-2.0-flash': 'gemini-2.5-flash',
                 'gemini-2.0-flash-exp': 'gemini-2.5-flash',
+                'gemini-flash-latest': 'gemini-2.5-flash',
+                'gemini-pro-latest': 'gemini-2.5-pro',
                 '3-flash-preview': 'gemini-2.5-flash',
                 'gemini-3-flash-preview': 'gemini-2.5-flash',
                 'gemini-3-pro': 'gemini-2.5-pro',
             }
-            model_name = model_map.get(self.model, self.model or 'gemini-2.5-flash')
+            model_name = model_map.get(requested_model, requested_model or 'gemini-2.5-flash')
             # Si el modelo solicitado no existe en el mapa, usar flash como seguridad
             if not model_name or 'gemini' not in model_name.lower():
                 model_name = 'gemini-2.5-flash'
@@ -147,11 +164,23 @@ class AIService:
                 config_kwargs['top_p'] = top_p
             gen_config = genai_types.GenerateContentConfig(**config_kwargs)
 
-            response = client.models.generate_content(
-                model=model_name,
-                contents=parts,
-                config=gen_config
-            )
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=parts,
+                    config=gen_config
+                )
+            except Exception as primary_err:
+                # Fallback de modelo dentro de Gemini (evita caer al modo respaldo si Pro falla por permisos/cuota).
+                if model_name != 'gemini-2.5-flash':
+                    print(f'[AIService Gemini] Reintentando con gemini-2.5-flash tras fallo de {model_name}: {primary_err}', file=sys.stderr)
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=parts,
+                        config=gen_config
+                    )
+                else:
+                    raise primary_err
 
             if response and response.text:
                 print(f'[AIService Gemini] OK. Texto (inicio): {response.text[:80]}...', file=sys.stderr)
@@ -512,33 +541,36 @@ BORRADOR TESSERACT (úsalo como guía estructural, NO como texto definitivo - pu
 ---
 """
 
-        prompt = f"""ACTÚA COMO UN EXPERTO EN PALEOGRAFÍA DIGITAL Y TRANSCRIPCIÓN DIPLOMÁTICA DE DOCUMENTOS HISTÓRICOS ESPAÑOLES.
+        prompt = f"""ACTÚA COMO UN EXPERTO EN PALEOGRAFÍA DIGITAL Y TRANSCRIPCIÓN DIPLOMÁTICA DE DOCUMENTOS HISTÓRICOS ESPAÑOLES (PRENSA SIGLO XIX-XX).
 
-Estás procesando una página de un documento histórico español (siglo XIX-XX). La imagen puede contener:
-- Tipografías decorativas, góticas, caligráficas o de imprenta antigua
-- NÚMEROS CRÍTICOS: años (ej: 1900, 1903), precios (ej: 0'50 ptas, 1'50 ptas), horas (ej: las 9, las 4 y media), cantidades
-- Elementos ornamentales (asteriscos, viñetas, bordes, estrellas, líneas decorativas) que NO son texto: IGNÓRALOS
-- Texto en múltiples columnas o con diseño complejo
-- Secciones con títulos en tipografía especial (negrita, gótica, caligráfica)
+ANÁLISIS PREVIO OBLIGATORIO: Antes de transcribir, examina la imagen completa e identifica:
+a) ¿Cuántas columnas de texto hay? (puede haber 2, 3, 4 o más)
+b) ¿Hay cabecera de periódico con título, fecha y número?
+c) ¿Hay anuncios publicitarios mezclados con artículos?
+d) ¿Qué bloques de texto son independientes?
+
+REGLA FUNDAMENTAL — COBERTURA TOTAL:
+Debes transcribir el texto de TODAS Y CADA UNA de las columnas y secciones visibles en la imagen. NO termines al acabar la primera columna. Recorre la imagen completa de izquierda a derecha y de arriba a abajo, procesando CADA bloque de texto independientemente.
 
 {draft_section}
 INSTRUCCIONES CRÍTICAS:
-1. TRANSCRIBE LITERALMENTE todo el texto visible. Los NÚMEROS, FECHAS, PRECIOS y HORAS son absolutamente críticos: léelos con máxima atención directamente de la imagen.
-2. IGNORA por completo los ornamentos decorativos (series de *, ✦, líneas, bordes) que no forman parte del texto narrativo.
-3. Si el borrador Tesseract tiene una palabra reconocible, úsala como referencia pero verifica con la imagen.
-4. Preserva la ortografía histórica española: á (preposición), é (conjunción), fué, habia, etc.
-5. Para títulos en tipografía decorativa: transcribe el texto aunque sea parcialmente ilegible, aproximándote al sentido.
-6. Une palabras cortadas por guion al final de línea (ej: muni-cipal → municipal).
-7. Estructura el texto con saltos de línea naturales respetando párrafos y secciones.
+1. MULTICOLUMNA: Si hay varias columnas, transcribe cada una completa antes de pasar a la siguiente. Separa las columnas con "\\n\\n--- [COLUMNA N] ---\\n\\n" para claridad.
+2. NÚMEROS CRÍTICOS: años (ej: 1906), fechas, precios (ej: 0'50 ptas), horas, números de edición — léelos directamente del píxel, son absolutamente prioritarios.
+3. CABECERA DEL PERIÓDICO: Transcribe siempre el nombre del periódico, la fecha completa, el número de edición y el precio que aparecen en la cabecera.
+4. ANUNCIOS: Incluye el texto de los anuncios publicitarios completos, aunque estén en tipografía especial.
+5. ORNAMENTOS: IGNORA completamente asteriscos, viñetas, cenefas y líneas decorativas que no sean texto.
+6. ORTOGRAFÍA HISTÓRICA: Preserva á (preposición), é (conjunción), fué, habia, á la vez, etc.
+7. GUIONES: Une palabras cortadas por guion al final de línea (muni-cipal → municipal).
+8. Si el borrador Tesseract omite columnas (problema conocido), búscalas tú mismo en la imagen.
 
 RESPONDE EXCLUSIVAMENTE CON JSON PURO (sin markdown, sin ```json):
 {{
-    "text": "Transcripción completa del documento con saltos de línea naturales y estructura clara",
+    "text": "Transcripción COMPLETA de toda la página, columna por columna, con separadores claros entre secciones",
     "words": [
         {{"text": "Palabra", "box_2d": [ymin, xmin, ymax, xmax]}}
     ]
 }}
-Las coordenadas box_2d van de 0 a 1000. Incluye al menos todas las palabras de títulos, fechas y números."""
+Las coordenadas box_2d van de 0 a 1000. Incluye palabras clave de todos los bloques: cabeceras, títulos de artículos, fechas, números."""
 
         try:
             raw = self._call_gemini(prompt, temperature=0, image_data=image_data)
@@ -554,6 +586,70 @@ Las coordenadas box_2d van de 0 a 1000. Incluye al menos todas las palabras de t
             print(f"[AIService] Error en vision_ocr_expert: {e}", file=sys.stderr)
 
         # Fallback: devolver el borrador de Tesseract
+        return {'text': tesseract_draft, 'words': []}
+
+    def vision_ocr_prensa(self, image_data, tesseract_draft='', num_columns=0):
+        """
+        OCR especializado para prensa histórica multicolumna.
+        Recibe el borrador con columnas separadas y produce transcripción completa.
+        """
+        col_hint = f"El análisis previo ha detectado aproximadamente {num_columns} columnas." if num_columns > 1 else ""
+        draft_section = ""
+        if tesseract_draft and tesseract_draft.strip():
+            draft_section = f"""
+BORRADOR TESSERACT POR COLUMNAS (referencia estructural — puede tener errores tipográficos):
+---
+{tesseract_draft[:5000]}
+---
+"""
+
+        prompt = f"""ACTÚAS COMO UN EXPERTO EN DIGITALIZACIÓN DE PRENSA HISTÓRICA ESPAÑOLA (SIGLO XIX-XX).
+
+{col_hint}
+Estás procesando una PÁGINA DE PERIÓDICO HISTÓRICO. Este tipo de documento tiene características específicas:
+- CABECERA con nombre del periódico, fecha (día, mes, año), número de edición y precio
+- MÚLTIPLES COLUMNAS de texto (2 a 6 columnas verticales)
+- ARTÍCULOS con título en negrita o tipografía mayor y cuerpo de texto en columna
+- ANUNCIOS PUBLICITARIOS intercalados con texto tipográfico variado
+- Cada columna es un bloque de texto INDEPENDIENTE que debe transcribirse completo
+
+{draft_section}
+INSTRUCCIONES ABSOLUTAS:
+
+1. **CABECERA PRIMERO**: Extrae y transcribe el nombre del periódico, fecha completa, número y precio que aparecen en la parte superior de la página.
+
+2. **TODAS LAS COLUMNAS**: Transcribe el texto de CADA columna de izquierda a derecha. NO te detengas al terminar la primera columna. Separa cada columna con "\\n\\n=== COLUMNA N ===\\n\\n".
+
+3. **NÚMEROS Y FECHAS**: Transcribe con máxima precisión años (ej: 1906), horas (ej: á las 7, á las 5 de la tarde), fechas (ej: 12 de Agosto), precios (ej: 5 céntimos), números de artículo. Son datos críticos irrecuperables si se pierden.
+
+4. **ARTÍCULOS COMPLETOS**: Cada artículo tiene título + cuerpo. Transcribe ambos. Los títulos en mayúsculas o negrita son secciones del periódico (SECCIÓN RELIGIOSA, NOTICIAS, etc.).
+
+5. **ANUNCIOS**: Incluye el texto completo de los anuncios publicitarios.
+
+6. **ORTOGRAFÍA HISTÓRICA**: Preserva á, é, fué, habia, á la vez, los puntos suspensivos en abreviaturas (Sr., D., Sra.).
+
+7. **NO OMITAS**: Si el borrador Tesseract tiene columnas incompletas, búscalas tú mismo en la imagen pixel a pixel.
+
+RESPONDE EXCLUSIVAMENTE CON JSON PURO:
+{{
+    "text": "TRANSCRIPCIÓN COMPLETA: cabecera + todas las columnas con separadores claros",
+    "words": [
+        {{"text": "Palabra", "box_2d": [ymin, xmin, ymax, xmax]}}
+    ]
+}}
+Coordenadas de 0 a 1000. Incluye palabras clave de TODAS las columnas: títulos, fechas, números."""
+
+        try:
+            raw = self._call_gemini(prompt, temperature=0, image_data=image_data)
+            data = self._extract_json_from_text(raw)
+            if data and ('text' in data or 'words' in data):
+                print(f"[AIService] vision_ocr_prensa OK: {len(data.get('text',''))} chars, {len(data.get('words',[]))} palabras.", file=sys.stderr)
+                return data
+            if raw and raw.strip():
+                return {'text': raw.strip(), 'words': []}
+        except Exception as e:
+            print(f"[AIService] Error en vision_ocr_prensa: {e}", file=sys.stderr)
+
         return {'text': tesseract_draft, 'words': []}
 
     def correct_ocr_text(self, text, part_num=1, total_parts=1, image_data=None, custom_prompt=None):

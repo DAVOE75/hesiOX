@@ -378,7 +378,7 @@ function interpretarAtribucionIA() {
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Analizando...';
   content.innerHTML = '<div class="text-center p-3"><i class="fa-solid fa-gear fa-spin me-2"></i>Consultando modelos de IA PRO...</div>';
 
-  console.log("[DEBUG] Solicitando interpretación IA con modelo:", document.getElementById('ai-model-selector')?.value || 'gemini:pro');
+  console.log("[DEBUG] Solicitando interpretación IA con modelo:", document.getElementById('ai-model-selector')?.value || 'flash');
   
   fetch('/teatral/interpretar_atribucion', {
     method: 'POST',
@@ -388,7 +388,7 @@ function interpretarAtribucionIA() {
     },
     body: JSON.stringify({
       delta_results: datosActuales,
-      model: document.getElementById('ai-model-selector')?.value || 'gemini:pro'
+      model: document.getElementById('ai-model-selector')?.value || 'flash'
     })
   })
     .then(res => res.json())

@@ -928,7 +928,7 @@ def regex_search():
         if usar_ia and len(resultados) > 0:
             try:
                 from services.ai_service import AIService
-                ai_service = AIService(current_user)
+                ai_service = AIService(model=modelo_ia, user=current_user)
                 
                 # Tomar muestra de snippets para análisis (máx 20 para no saturar)
                 muestra_snippets = [r['snippet'] for r in resultados[:20] if r['snippet']]
@@ -945,11 +945,10 @@ Genera un resumen analítico breve (máximo 150 palabras) que incluya:
 
 Responde en formato conciso y profesional."""
 
-                respuesta = ai_service.generar_texto(
+                respuesta = ai_service.generate_content(
                     prompt=prompt,
-                    model=modelo_ia,
                     temperature=temperatura,
-                    max_tokens=300
+                    auto_fallback=True
                 )
                 analisis_ia = respuesta.strip()
                 print(f"[IA] Análisis generado: {analisis_ia[:100]}...")
@@ -1743,7 +1742,7 @@ def interpretar_intertextualidad_ia():
         from services.ai_service import AIService
         data = request.get_json() or {}
         chart_data = data.get('chart_data', {})
-        modelo_ia = data.get('modelo', 'gemini-1.5-pro')
+        modelo_ia = data.get('modelo', 'flash')
         
         prompt = (
             "Actúa como un experto en análisis de redes y sociología de la comunicación. "
@@ -1814,21 +1813,21 @@ def interpretar_emociones_ia():
         if chart_type == 'radar':
             prompt = (
                 "Actúa como un experto lingüista y psico-historiador especializado en humanidades digitales. "
-                "A continuación te presento un conteo de palabras extraído de un corpus con las 8 emociones básicas de Plutchik:\n"
+                "A continuación te presento los valores extraídos directamente del GRÁFICO DE RADAR de emociones de Plutchik del corpus actual:\n"
                 f"{str(chart_data)}\n\n"
-                "Realiza una hermenéutica analítica breve (2-3 párrafos formatados en Markdown básico sin títulos grandes) "
-                "interpretando la huella emocional, identificando las emociones predominantes, la posible polarización discursiva "
-                "o el equilibrio del mismo."
+                "Realiza una hermenéutica analítica breve (2-3 párrafos en Markdown básico) "
+                "basándote EXCLUSIVAMENTE en la morfología de este gráfico. "
+                "Explica qué picos emocionales dominan y qué sugieren sobre el 'clima' de los documentos analizados. "
+                "Sé preciso y evita generalidades."
             )
         else:
             prompt = (
-                "Actúa como un experto lingüista y psico-historiador especializado en humanidades digitales. "
-                "A continuación te presento la evolución temporal de las 8 emociones básicas de Plutchik de un corpus, "
-                "donde 'labels' corresponde al eje temporal en formato mensual/anual y el resto son las series:\n"
+                "Actúa como un experto lingüista y experto en análisis diacrónico. "
+                "A continuación te presento los datos de EVOLUCIÓN TEMPORAL del gráfico de líneas del corpus:\n"
                 f"{str(chart_data)}\n\n"
-                "Realiza un análisis diacrónico breve (2-3 párrafos formatados en Markdown básico sin títulos grandes) "
-                "destacando los hitos temporales más prominentes, cruces narrativos relevantes (cuando una emoción sobrepasa a otra de forma súbita) "
-                "y la volatilidad a lo largo del tiempo."
+                "Realiza una interpretación diacrónica breve (2-3 párrafos en Markdown básico). "
+                "Analiza la trayectoria del gráfico: identifica los hitos temporales donde hay cruces de emociones, "
+                "picos de volatilidad o tendencias de consolidación. Responde analizando específicamente la forma y los datos del gráfico."
             )
             
         from flask_login import current_user
@@ -1973,24 +1972,24 @@ def analisis_subtexto_ia():
             return jsonify({'exito': False, 'error': 'No hay documentos para analizar'}), 400
             
         # Extraer una muestra representativa de diálogos
-        # Para no saturar el prompt, tomamos fragmentos de los personajes principales
         reparto_muestra = {}
-        for pub in publicaciones_db[:5]: # Máximo 5 documentos para contexto
+        for pub in publicaciones_db[:15]: # Aumentado a 15 documentos para mayor contexto
             contenido = pub.contenido or ""
             # Limpieza básica
             texto = re.sub(r'<[^>]*?>', '', contenido)
             # Intentar detectar diálogos (NOMBRE: texto)
             lineas = texto.split('\n')
             for linea in lineas:
-                match = re.match(r'^\s*([A-ZÁÉÍÓÚÑ ]+)\s*[:\.]\s*(.*)', linea)
+                # Regex mejorada para capturar diálogos en diversos formatos teatrales
+                match = re.search(r'(?:^|\n)\s*([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,})*)\s*[:\.]\s*(.*)', linea)
                 if match:
                     personaje = match.group(1).strip().upper()
-                    # Ignorar acotaciones y nombres cortos
-                    if len(personaje) > 2 and personaje not in ['ACTO', 'ESCENA', 'FIN']:
+                    # Filtro de ruido para términos comunes en teatro que no son personajes
+                    if personaje not in ['ACTO', 'ESCENA', 'FIN', 'CUADRO', 'MUTACIÓN', 'TELÓN', 'PAUSA']:
                         if personaje not in reparto_muestra:
                             reparto_muestra[personaje] = []
-                        if len(reparto_muestra[personaje]) < 15: # Máximo 15 intervenciones por personaje
-                            reparto_muestra[personaje].append(match.group(2).strip()[:200])
+                        if len(reparto_muestra[personaje]) < 25: # Aumentado a 25 intervenciones para mejor análisis
+                            reparto_muestra[personaje].append(match.group(2).strip()[:300])
 
         # Consolidar data para el prompt
         dialogos_data = ""
@@ -1999,12 +1998,17 @@ def analisis_subtexto_ia():
             dialogos_data += "\n".join([f"- {i}" for i in d]) + "\n"
 
         if not dialogos_data:
-            return jsonify({'exito': False, 'error': 'No se detectaron diálogos claros para el análisis de subtexto'}), 400
+            # Fallback: Si no hay formato NOMBRE: usar primer bloque de texto como muestra genérica
+            muestra_generica = " ".join([p.contenido[:500] for p in publicaciones_db[:5]])
+            dialogos_data = f"MUESTRA DE TEXTO (Formato no detectado):\n{muestra_generica}"
 
-        prompt = f"""Actúa como un analista literario y experto en dramaturgia profesional. 
-Analiza los siguientes diálogos de una obra teatral y clasifica las "Acciones Dramáticas" (tácticas) de cada personaje según su subtexto.
+        prompt = f"""Actúa como un analista literario y experto en semiótica dramática. 
+Analiza el subtexto, las intenciones ocultas y las tácticas de comunicación en los siguientes fragmentos extraídos de la obra.
 
-CATEGORÍAS DE ACCIÓN:
+DATOS DEL CORPUS:
+{dialogos_data}
+
+RECOMIENDA ACCIONES DRAMÁTICAS (Tácticas posibles):
 1. Persuadir/Convencer
 2. Atacar/Confrontar
 3. Seducir/Cortejar
@@ -2015,53 +2019,43 @@ CATEGORÍAS DE ACCIÓN:
 8. Informar/Exponer
 9. Reflexionar/Dudar
 
-DATOS DE DIÁLOGOS:
-{dialogos_data}
-
-Responde ÚNICAMENTE con un objeto JSON válido con el siguiente formato (sin bloques de código markdown, solo el JSON):
+Responde ÚNICAMENTE con un objeto JSON válido con el siguiente formato (SIN bloques de código markdown, solo el JSON puro):
 {{
   "personajes": {{
     "NOMBRE_PERSONAJE": {{
-      "tacticas": {{ "Persuadir/Convencer": 30, "Atacar/Confrontar": 10, ... }},
-      "resumen_estrategico": "Breve descripción de su meta",
-      "evolucion": "Cómo cambia su táctica"
+      "tacticas": {{ "Persuadir/Convencer": 30, "Atacar/Confrontar": 10 }},
+      "resumen_estrategico": "Meta de este personaje",
+      "evolucion": "De X a Y"
     }}
   }},
   "conflicto_dominante": "Choque de intenciones principal",
   "clima_escenico": "Tono general del subtexto",
   "evolucion_temporal": [
-    {{ "acto": "I", "tactica": "Persuadir", "valor": 40 }},
-    {{ "acto": "I", "tactica": "Atacar", "valor": 20 }},
-    {{ "acto": "II", "tactica": "Manipular", "valor": 60 }},
-    ...
+    {{ "acto": "Fase inicial", "tactica": "Predominante", "valor": 80 }}
   ]
 }}
 """
+        from flask_login import current_user
         ai_service = AIService(model=modelo_ia, user=current_user)
-        respuesta_raw = ai_service.generate_content(prompt, temperature=0.3)
+        respuesta = ai_service.generate_content(prompt, temperature=0.7, auto_fallback=True)
         
-        # Limpiar respuesta por si la IA añade markdown
-        if "```json" in respuesta_raw:
-            respuesta_raw = respuesta_raw.split("```json")[1].split("```")[0].strip()
-        elif "```" in respuesta_raw:
-            respuesta_raw = respuesta_raw.split("```")[1].split("```")[0].strip()
+        # Intentar extraer JSON si viene envuelto en markdown
+        if respuesta:
+            import json
+            json_text = respuesta.strip()
+            if json_text.startswith("```json"):
+                json_text = json_text[7:-3].strip()
+            elif json_text.startswith("```"):
+                json_text = json_text[3:-3].strip()
             
-        try:
-            resultado_ia = json.loads(respuesta_raw)
+            try:
+                ia_data = json.loads(json_text)
+                return jsonify({'exito': True, 'data': ia_data})
+            except:
+                return jsonify({'exito': True, 'raw_text': respuesta}) # Fallback a texto plano si falla el parseo
+        else:
+            return jsonify({'exito': False, 'error': 'La IA no devolvió respuesta'}), 500
             
-            # Generar Streamgraph si hay datos de evolución
-            streamgraph_spec = None
-            if resultado_ia.get('evolucion_temporal'):
-                innovador = AnalisisInnovador()
-                tema = request.args.get('theme', 'dark') # O usar cookie
-                streamgraph_spec = innovador.generar_streamgraph_tactico(resultado_ia['evolucion_temporal'], theme=tema)
-            
-            resultado_ia['streamgraph_spec'] = streamgraph_spec
-            return jsonify({'exito': True, 'analisis': resultado_ia})
-        except Exception as e:
-            print(f"[SUBTEXTO ERROR] Fallo al parsear JSON: {e}\nRespuesta: {respuesta_raw}")
-            return jsonify({'exito': False, 'error': 'La IA no devolvió un formato válido', 'raw': respuesta_raw}), 500
-
     except Exception as e:
         import traceback
         traceback.print_exc()

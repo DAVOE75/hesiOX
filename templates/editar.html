@@ -490,6 +490,7 @@
                                     <option value="paddle">PaddleOCR (IA, multilingüe)</option>
                                     <option value="yolo">YOLO Layout (IA, estructurado)</option>
                                     <option value="expert" selected style="background-color:#1a1a2e;font-weight:bold;color:#ffd700;">⭐ Experto 3 Pasos (400DPI + Tesseract + Gemini Vision + Refinado)</option>
+                                    <option value="expert_prensa" style="background-color:#0a1a2e;font-weight:bold;color:#4dd0e1;"><i class="fa-solid fa-newspaper"></i> 📰 Experto Prensa (Multicolumna + Detección Automática de Columnas)</option>
                                 </select>
                             </div>
                             <div class="alert alert-info mt-2 py-2 px-3" style="font-size:0.95em;">
@@ -2458,6 +2459,52 @@
                 console.error(err);
                 Swal.fire('Error', 'Fallo en la comunicación con el servidor', 'error');
             }
+        }
+    }
+
+    async function eliminarEntidad(index) {
+        const result = await Swal.fire({
+            title: '¿Eliminar entidad?',
+            text: 'Esta entidad se eliminará solo del texto actual.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            background: '#1a1a1a',
+            color: '#fff'
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        Swal.fire({
+            title: 'Eliminando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            background: '#1a1a1a',
+            color: '#fff'
+        });
+
+        try {
+            const response = await fetch(`/api/noticias/{{ ref.id }}/entidades/eliminar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({ index: parseInt(index, 10) })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                Swal.fire('Error', data.error || 'No se pudo eliminar la entidad', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Fallo en la comunicación con el servidor', 'error');
         }
     }
 

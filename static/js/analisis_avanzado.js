@@ -30,6 +30,30 @@ let datosActuales = {};
 let chartsInstances = {};
 window._ia_modelo = 'flash'; // Global model selection (flash by default)
 
+function renderAIResponse(rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return '';
+
+  // Si la respuesta ya es HTML, no pasar por Markdown.
+  if (/^\s*<\/?[a-z][\s\S]*>$/i.test(text)) {
+    return text;
+  }
+
+  if (typeof marked !== 'undefined') {
+    const parsed = marked.parse(text);
+    const parsedTrim = String(parsed || '').trim();
+
+    // Si Markdown envolvió HTML en <pre><code>, devolver el HTML original.
+    if (/^<pre><code[\s>]/i.test(parsedTrim) && /<div[\s\S]*class=["'][^"']*alert/i.test(text)) {
+      return text;
+    }
+
+    return parsed;
+  }
+
+  return text.replace(/\n/g, '<br>');
+}
+
 /**
  * Cambia la potencia de la IA seleccionada y actualiza la UI
  */
@@ -2951,13 +2975,14 @@ function interpretarEmocionesIA(tipo) {
   btn.disabled = true;
   const originalHtml = btn.innerHTML;
   btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando Neurolectura...`;
-  resultDiv.style.display = 'none';
-  resultDiv.innerHTML = '';
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = `<div class="text-center py-3"><div class="spinner-grow text-accent spinner-grow-sm" role="status"></div><span class="ms-2">La IA está interpretando los datos del gráfico...</span></div>`;
 
   fetch('/api/analisis/innovador/interpretar_emociones', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content
     },
     body: JSON.stringify({
       chart_type: tipo,
@@ -2971,21 +2996,20 @@ function interpretarEmocionesIA(tipo) {
     btn.innerHTML = originalHtml;
     
     if (data.exito) {
-      resultDiv.style.display = 'block';
       let formattedText = data.interpretacion.replace(/\n/g, '<br/>');
       formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
       
-      resultDiv.innerHTML = `<div class="mb-2"><span class="badge" style="background: rgba(155, 89, 182, 0.3); border: 1px solid #9b59b6;"><i class="fa-solid fa-microchip me-1"></i> ${modeloIA}</span></div>` + formattedText;
+      resultDiv.innerHTML = `<div class="mb-2"><span class="badge" style="background: rgba(155, 89, 182, 0.3); border: 1px solid #9b59b6;"><i class="fa-solid fa-microchip me-1"></i> ${modeloIA}</span></div><div class="animate__animated animate__fadeIn">${formattedText}</div>`;
     } else {
-      alert("No se pudo generar la interpretación. Motivo: " + data.error);
+      resultDiv.innerHTML = `<div class="alert alert-danger py-2">Error: ${data.error}</div>`;
     }
   })
   .catch(err => {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
     console.error(err);
-    alert("Error de conexión con el servicio de IA.");
+    resultDiv.innerHTML = `<div class="alert alert-danger py-2">Error de conexión con el servidor.</div>`;
   });
 }
 
@@ -3122,14 +3146,15 @@ function interpretarSesgosIA() {
   // UX: Loading state
   btn.disabled = true;
   const originalHtml = btn.innerHTML;
-  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Detectando Sesgos Críticos...`;
-  resultDiv.style.display = 'none';
-  resultDiv.innerHTML = '';
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Realizando Neurolectura de Sesgos...`;
+  resultDiv.style.display = 'block'; // Mostrar de inmediato para feedback
+  resultDiv.innerHTML = `<div class="text-center py-3"><div class="spinner-grow text-accent spinner-grow-sm" role="status"></div><span class="ms-2">La IA está analizando las asimetrías del gráfico...</span></div>`;
 
   fetch('/api/analisis/innovador/interpretar_sesgos', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content
     },
     body: JSON.stringify({
       chart_data: chartDataToSend,
@@ -3141,22 +3166,22 @@ function interpretarSesgosIA() {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
     if (data.exito) {
-      resultDiv.style.display = 'block';
       let formattedText = data.interpretacion.replace(/\n/g, '<br/>');
       formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      resultDiv.innerHTML = `<div class="mb-2"><span class="badge bg-primary px-2 py-1" style="font-size: 10px;"><i class="fa-solid fa-microchip me-1"></i> ${modeloIA}</span></div><div class="ia-content-markdown">${formattedText}</div>`;
+      resultDiv.innerHTML = `<div class="mb-2"><span class="badge" style="background: rgba(155, 89, 182, 0.3); border: 1px solid #9b59b6;"><i class="fa-solid fa-microchip me-1"></i> ${modeloIA}</span></div><div class="ia-content-markdown animate__animated animate__fadeIn">${formattedText}</div>`;
     } else {
-      alert("Error: " + data.error);
+      resultDiv.innerHTML = `<div class="alert alert-danger py-2">Error: ${data.error}</div>`;
     }
   })
   .catch(err => {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
     console.error(err);
-    alert("Error de conexión con el servicio de IA.");
+    resultDiv.innerHTML = `<div class="alert alert-danger py-2">Error de conexión con el servidor.</div>`;
   });
 }
+
 /**
  * ANALISIS DRAMÁTICO (TEATRO)
  * Migrado y robustecido para trabajar en la vista avanzada.
@@ -3922,7 +3947,7 @@ function loadDramatico(data) {
             <h5 class="mb-0 fw-bold text-warning" style="letter-spacing: 1px;">SÍNTESIS ESTRATÉGICA IA</h5>
         </div>
         <div class="markdown-content" style="color: ${textWhite}; line-height: 1.6;">
-            ${marked.parse(data.analisis_ia)}
+            ${renderAIResponse(data.analisis_ia)}
         </div>
     </div>
   ` : '';
@@ -4422,7 +4447,7 @@ window.generarInformeDramaticoIA = function() {
         if (data.analisis_ia) {
             const isLight = UI_COLORS.isLight();
             const textColor = isLight ? '#212121' : '#fff';
-            const formatted = (typeof marked !== 'undefined') ? marked.parse(data.analisis_ia) : data.analisis_ia.replace(/\n/g, '<br>');
+            const formatted = renderAIResponse(data.analisis_ia);
             
             container.innerHTML = `
                 <div class="p-4 mb-4 animate__animated animate__fadeIn border border-warning border-opacity-20 rounded" 
@@ -4552,7 +4577,7 @@ window.interpretarSeccionDramatica = function(tipo, targetId) {
     .then(data => {
         if (data.interpretacion) {
             const isLight = UI_COLORS.isLight();
-            const formatted = (typeof marked !== 'undefined') ? marked.parse(data.interpretacion) : data.interpretacion.replace(/\n/g, '<br>');
+            const formatted = renderAIResponse(data.interpretacion);
             resDiv.innerHTML = `
                 <div class="p-3 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" 
                      style="background: ${isLight ? 'rgba(41, 74, 96, 0.05)' : 'rgba(0,0,0,0.3)'};">

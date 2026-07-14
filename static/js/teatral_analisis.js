@@ -11,6 +11,30 @@ let filtros = {
 let datosActuales = {};
 let chartsInstances = {};
 
+function renderAIResponse(rawText) {
+    const text = String(rawText || '').trim();
+    if (!text) return '';
+
+    // Si la respuesta ya es HTML, no pasar por Markdown.
+    if (/^\s*<\/?[a-z][\s\S]*>$/i.test(text)) {
+        return text;
+    }
+
+    if (typeof marked !== 'undefined') {
+        const parsed = marked.parse(text);
+        const parsedTrim = String(parsed || '').trim();
+
+        // Si Markdown envolvió HTML en <pre><code>, devolver el HTML original.
+        if (/^<pre><code[\s>]/i.test(parsedTrim) && /<div[\s\S]*class=["'][^"']*alert/i.test(text)) {
+            return text;
+        }
+
+        return parsed;
+    }
+
+    return text.replace(/\n/g, '<br>');
+}
+
 const UI_COLORS = {
   isLight: () => document.documentElement.getAttribute('data-theme') === 'light',
   grid: (opacity = 0.2) => UI_COLORS.isLight() ? `rgba(0,0,0,${opacity})` : `rgba(255,255,255,0.1)`,
@@ -267,14 +291,14 @@ window.interpretarSeccionDramatica = function(tipo, targetId) {
             chart_data: chartData,
             proyecto_id: filtros.proyecto_id,
             publicacion_id: publicacion_id,
-            modelo: document.getElementById('ai-model-selector')?.value || 'gemini:pro'
+            modelo: document.getElementById('ai-model-selector')?.value || 'flash'
         })
     })
     .then(res => res.json())
     .then(data => {
         if (data.interpretacion) {
             const isLight = UI_COLORS.isLight();
-            const formatted = (typeof marked !== 'undefined') ? marked.parse(data.interpretacion) : data.interpretacion.replace(/\n/g, '<br>');
+            const formatted = renderAIResponse(data.interpretacion);
             resDiv.innerHTML = `
                 <div class="p-3 rounded border border-warning border-opacity-20 animate__animated animate__fadeIn" 
                      style="background: ${isLight ? 'rgba(41, 74, 96, 0.05)' : 'rgba(0,0,0,0.3)'};">
@@ -323,7 +347,7 @@ function loadDramatico(data) {
             <h5 class="mb-0 fw-bold text-warning" style="letter-spacing: 1px;">SÍNTESIS ESTRATÉGICA IA</h5>
         </div>
         <div class="markdown-content" style="color: ${textWhite}; line-height: 1.6;">
-            ${marked.parse(data.analisis_ia)}
+                        ${renderAIResponse(data.analisis_ia)}
         </div>
     </div>
   ` : '';
